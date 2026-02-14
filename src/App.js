@@ -1,23 +1,17 @@
-import logo from './logo.svg';
+import { Routes, Route } from 'react-router-dom';
+import MainRoutes from './routes/MainRoutes';
+import AdminRoutes from './routes/AdminRoutes';
 import './App.css';
+import './css/Layout.css';
+import './css/Common.css';
 
 function App() {
+   const isLoggedIn = useSelector((state) => state.auth.isAuthenticated); 
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className=''>
+      <Routes>
+        <Route path="/*" element={isLoggedIn ? <MainRoutes /> : <Authentication />} />
+      </Routes>
     </div>
   );
 }

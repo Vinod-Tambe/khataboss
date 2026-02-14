@@ -1,0 +1,170 @@
+import React from "react";
+import { Routes, Route, Link } from "react-router-dom";
+import UserHome from "../../components/user/UserHome";
+import AddLoan from "../../components/loan/AddLoan";
+import AddFinance from "../../components/finance/AddFinance";
+import Dropdown from "react-bootstrap/Dropdown";
+
+const UserHomeRoutes = () => {
+  return (
+    <div>
+      <div className="card p-3 pt-2 shadow-sm">
+
+        {/* ================= HEADER ================= */}
+        <div className="d-flex align-items-center justify-content-between flex-wrap mb-1">
+
+          {/* USER INFO */}
+          <Link className="text-decoration-none" to="/trans">
+            <div className="d-flex align-items-center me-3 mb-2 mb-lg-0">
+              <img
+                alt="User"
+                className="rounded-circle border border-dark"
+                width="40"
+                height="40"
+                src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+              />
+              <div className="ms-2">
+                <div className="fw-bold text-dark">Vinod Gokul Tambe</div>
+                <div className="text-muted small">9579082528</div>
+              </div>
+            </div>
+          </Link>
+
+          {/* ================= DESKTOP MENU ================= */}
+          <ul className="nav d-none d-lg-flex align-items-center">
+
+            <li className="nav-item mx-1">
+              <Link className="btn btn-outline-success" to="/user/home/add-loan">
+                Loan +
+              </Link>
+            </li>
+
+            <li className="nav-item mx-1">
+              <Link className="btn btn-outline-primary fw-bold" to="/user/home/add-finance">
+                Finance +
+              </Link>
+            </li>
+
+            {/* Finance Dropdown */}
+            <li className="nav-item mx-1">
+              <Dropdown>
+                <Dropdown.Toggle variant="outline-warning">
+                  Finance
+                </Dropdown.Toggle>
+                <Dropdown.Menu>
+                  <Dropdown.Item as={Link} to="/user/home/active-finance">
+                    Active Finance
+                  </Dropdown.Item>
+                  <Dropdown.Item as={Link} to="/user/home/inactive-finance">
+                    Inactive Finance
+                  </Dropdown.Item>
+                  <Dropdown.Item as={Link} to="/user/home/all-finance">
+                    All Finance
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
+            </li>
+
+            {/* Loan Dropdown */}
+            <li className="nav-item mx-1">
+              <Dropdown>
+                <Dropdown.Toggle variant="outline-secondary">
+                  Loan
+                </Dropdown.Toggle>
+                <Dropdown.Menu>
+                  <Dropdown.Item as={Link} to="/user/home/active-loan">
+                    Active Loan
+                  </Dropdown.Item>
+                  <Dropdown.Item as={Link} to="/user/home/release-loan">
+                    Release Loan
+                  </Dropdown.Item>
+                  <Dropdown.Item as={Link} to="/user/home/close-loan">
+                    Closed Loan
+                  </Dropdown.Item>
+                  <Dropdown.Item as={Link} to="/user/home/all-loan">
+                    All Loan
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
+            </li>
+
+            <li className="nav-item">
+              <span className="input-group-text fw-bold border border-secondary">
+                C-12
+              </span>
+            </li>
+
+          </ul>
+
+          {/* ================= MOBILE MENU ================= */}
+          <div className="d-lg-none">
+            <Dropdown align="end">
+              <Dropdown.Toggle variant="outline-secondary" size="sm">
+                C-12
+              </Dropdown.Toggle>
+
+              <Dropdown.Menu>
+
+                <Dropdown.Item as={Link} to="/user/home/add-loan">
+                  Loan +
+                </Dropdown.Item>
+
+                <Dropdown.Item as={Link} to="/user/home/add-finance">
+                  Finance +
+                </Dropdown.Item>
+
+                <Dropdown.Divider />
+
+                <Dropdown.Header>Finance</Dropdown.Header>
+
+                <Dropdown.Item as={Link} to="/user/home/active-finance">
+                  Active Finance
+                </Dropdown.Item>
+
+                <Dropdown.Item as={Link} to="/user/home/inactive-finance">
+                  Inactive Finance
+                </Dropdown.Item>
+
+                <Dropdown.Item as={Link} to="/user/home/all-finance">
+                  All Finance
+                </Dropdown.Item>
+
+                <Dropdown.Divider />
+
+                <Dropdown.Header>Loan</Dropdown.Header>
+
+                <Dropdown.Item as={Link} to="/user/home/active-loan">
+                  Active Loan
+                </Dropdown.Item>
+
+                <Dropdown.Item as={Link} to="/user/home/release-loan">
+                  Release Loan
+                </Dropdown.Item>
+
+                <Dropdown.Item as={Link} to="/user/home/close-loan">
+                  Closed Loan
+                </Dropdown.Item>
+
+                <Dropdown.Item as={Link} to="/user/home/all-loan">
+                  All Loan
+                </Dropdown.Item>
+
+              </Dropdown.Menu>
+            </Dropdown>
+          </div>
+
+        </div>
+
+        {/* ================= ROUTES ================= */}
+        <Routes>
+          <Route path="/*" element={<UserHome />} />
+          <Route path="/add-loan" element={<AddLoan />} />
+          <Route path="/add-finance" element={<AddFinance />} />
+        </Routes>
+
+      </div>
+    </div>
+  );
+};
+
+export default UserHomeRoutes;

@@ -1,38 +1,85 @@
-.App {
-  text-align: center;
+* {
+    font-family: "Calibri", sans-serif !important;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* ========== Buttons ========== */
+.btn-primary {
+    font-weight: bold !important;
+    color: #000080 !important;
+    background-color: #dfecff !important;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
+.bg-cust-primary {
+    background-color: #e9eff9 !important;
+}
+
+.bg-red {
+    background-color: #f4eaea !important;
+}
+
+.text-red {
+    color: #f999aa !important;
+}
+
+.text-green {
+    color: #86bc86 !important;
+}
+
+.text-orange {
+    color: #eca02b !important;
+}
+
+.text-brown {
+    color: #aa6600 !important;
+}
+
+.btn-success {
+    color: #006400 !important;
+    background-color: #d8f6d8 !important;
+    border: 1px solid #86bc86 !important;
+}
+
+.btn-danger {
+    color: #dc143c !important;
+    background-color: #ffdbe1 !important;
+    border: 1px solid #f999aa !important;
+}
+
+.btn-info {
+    color: #14d5dc !important;
+    background-color: #dbfbff !important;
+    border: 1px solid #99f6f9 !important;
+}
+
+.btn-yellow {
+    color: #dc143c !important;
+    background-color: rgba(252, 227, 191, 0.726) !important;
+    border: 1px solid #f999aa !important;
+}
+
+.btn-warning {
+    color: #aa6600 !important;
+    background-color: #fda !important;
+    border: 1px solid #eca02b !important;
+}
+
+/* ========== Background ========== */
+.bg-dark {
+    background-color: #20202e !important;
+}
+.cursor-pointer {
+  cursor: pointer !important;
+}
+
+.responsive-text {
+  font-size: 1rem !important; /* same as fs-6 */
+}
+
+@media (min-width: 768px) {
+  .responsive-text {
+    font-size: 1.5rem !important; /* same as fs-3 */
   }
 }
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.border-dashed {
+  border-style: dashed !important;
 }
