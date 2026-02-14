@@ -178,7 +178,7 @@ const StaffGrid = () => {
       <div className="row g-3">
         {users.map((user) => (
           <Link to={`/user/home`} key={user.id} className="col-12 col-md-6 col-lg-6 text-decoration-none">
-            <div className="card shadow border-dark h-100">
+            <div className="card bg-blue shadow border-dark h-100">
               <div className="card-body text-dark p-2">
                 <div className="row align-items-center">
                   <div className="col-3 text-center">

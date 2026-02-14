@@ -332,7 +332,7 @@ const AddFirm = () => {
     if (!isMobile) {
       return (
         <div className="card p-4 p-md-4 shadow-sm">
-          <h4 className="mb-1 text-center">Add New Firm</h4>
+          <h4 className="mb-1 card-title text-center fw-bold pb-md-0">Add New Firm</h4>
           {renderStep1()}
           <hr className="my-4" />
           {renderStep2()}
