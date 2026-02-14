@@ -1,11 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Collapse } from "bootstrap";
 import "../../css/Login.css";
 import { showToast } from "../common/ToastAlert";
-// Removed real redux imports since we're mocking
-// import { useDispatch, useSelector } from "react-redux";
-// import { loginOwner, sendOwnerOtp, loginOwnerWithOtp } from "../../redux/slices/auth.slice";
+import { loginWithCredentials, loginWithOtp, sendOtp } from "../../api/authApi";
+import { useAuth } from "../../context/AuthContext";
+// DataTables & extensions
+import "datatables.net-bs5";
+import "datatables.net-responsive-bs5";
+import "datatables.net-buttons-bs5";
+import "datatables.net-buttons/js/buttons.html5.min.js";
+import "datatables.net-buttons/js/buttons.print.min.js";
+import "datatables.net-bs5/css/dataTables.bootstrap5.min.css";
+
 
 const TypingEffect = ({ texts = [], speed = 100, pause = 1500 }) => {
   const [text, setText] = useState('');
@@ -91,6 +98,9 @@ const LoginForm = () => {
     }
   };
 
+  const { login: authLogin } = useAuth();
+  const navigate = useNavigate();
+
   const handleLogin = async (e) => {
     e.preventDefault();
 
@@ -101,20 +111,21 @@ const LoginForm = () => {
 
     setLoading(true);
 
-    // Small delay to simulate API call
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    // Mock check
-    if (password === "12345") {
-      showToast("Welcome back! Login successful.", "success");
-      // You can add redirect here later
-      // window.location.href = "/dashboard";
-      console.log("Login success with ID:", loginId);
-    } else {
-      showToast("Invalid Login Id or Password", "error");
+    try {
+      const response = await loginWithCredentials(loginId, password);
+      if (response.success) {
+        // Store user in context and localStorage
+        authLogin(response.user, response.token);
+        showToast(response.message, "success");
+        console.log("Login success with ID:", loginId, "Role:", response.user.role);
+        // Redirect to home/dashboard
+        navigate("/home");
+      }
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const handleSendOtp = async () => {
@@ -125,15 +136,24 @@ const LoginForm = () => {
 
     setOtpSending(true);
 
-    // Simulate sending OTP
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const response = await sendOtp(otpLoginId);
 
-    showToast("OTP sent successfully! (Mock - use 1234)", "success");
-    setOtpSent(true);
-    setResendTimer(30);
-    otpRefs.current[0]?.focus();
-
-    setOtpSending(false);
+      if (response.success) {
+        showToast(response.message, "success");
+        // For demo purposes, show the OTP (in production, this would be sent via SMS/email)
+        if (response.demoOtp) {
+          console.log("Demo OTP:", response.demoOtp);
+        }
+        setOtpSent(true);
+        setResendTimer(30);
+        otpRefs.current[0]?.focus();
+      }
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      setOtpSending(false);
+    }
   };
 
   const handleVerifyOtp = async (e) => {
@@ -147,20 +167,22 @@ const LoginForm = () => {
 
     setOtpVerifying(true);
 
-    // Simulate verification delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Mock check
-    if (otp === "1234") {
-      showToast("Login successful with OTP!", "success");
-      // You can add redirect here
-      // window.location.href = "/dashboard";
-      console.log("OTP login success with ID:", otpLoginId);
-    } else {
-      showToast("Invalid or expired OTP", "error");
+    try {
+      const response = await loginWithOtp(otpLoginId, otp);
+      console.log(response)
+      if (response.success) {
+        // Store user in context and localStorage
+        authLogin(response.user, response.token);
+        showToast(response.message, "success");
+        console.log("OTP login success with ID:", otpLoginId, "Role:", response.user.role);
+        // Redirect to home/dashboard
+        navigate("/home");
+      }
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      setOtpVerifying(false);
     }
-
-    setOtpVerifying(false);
   };
 
   const handleOtpChange = (index, value) => {
@@ -231,7 +253,7 @@ const LoginForm = () => {
             <ul className="nav nav-pills justify-content-center mb-3">
               {["username", "otp", "finger"].map((tab) => (
                 <li className="nav-item" key={tab}>
-                  <button 
+                  <button
                     className={`nav-link fw-bold text-secondary ${activeTab === tab ? "active" : ""}`}
                     onClick={() => setActiveTab(tab)}
                   >
@@ -279,9 +301,9 @@ const LoginForm = () => {
                         <i className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
                       </button>
                     </div>
-                    <button 
-                      type="submit" 
-                      className="btn btn-secondary w-100 fw-bold" 
+                    <button
+                      type="submit"
+                      className="btn btn-secondary w-100 fw-bold"
                       disabled={loading}
                     >
                       {loading && <span className="spinner-border spinner-border-sm me-2"></span>}
@@ -347,9 +369,9 @@ const LoginForm = () => {
                             />
                           ))}
                         </div>
-                        <button 
-                          type="submit" 
-                          className="btn btn-secondary w-100 fw-bold" 
+                        <button
+                          type="submit"
+                          className="btn btn-secondary w-100 fw-bold"
                           disabled={otpVerifying}
                         >
                           {otpVerifying ? (
@@ -373,8 +395,8 @@ const LoginForm = () => {
                     <p className="mb-4">Place your finger on the sensor to log in</p>
                     <i className="bi bi-fingerprint text-secondary" style={{ fontSize: "4rem" }}></i>
                     <div className="mt-3">
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         className="btn btn-secondary w-100 fw-bold"
                         onClick={() => showToast("Fingerprint login not implemented yet", "info")}
                       >

@@ -479,7 +479,7 @@ const AddStaff = () => {
         if (!isMobile) {
             return (
                 <div className="card p-4 shadow-sm">
-                    <h4 className="mb-1 text-center">Add New Staff</h4>
+                    <h4 className="mb-1 card-title text-center fw-bold pb-md-0">Add New Staff</h4>
                     {renderStep1()}
                     <hr className="my-3" />
                     {renderStep2()}

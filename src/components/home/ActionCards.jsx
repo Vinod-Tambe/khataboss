@@ -1,77 +1,78 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 
 const actionItems = [
   {
     title: "Add User",
     icon: "bi-person-plus",
     color: "success",
-    href: "/user/add"
+    to: "/user/add"
   },
   {
     title: "Add Staff",
     icon: "bi-people",
     color: "primary",
-    href: "staff/add"
+    to: "/staff/add"
   },
   {
     title: "Add Firm",
     icon: "bi-building",
     color: "info",
-    href: "firm/add"
+    to: "/firm/add"
   },
   {
     title: "Quick Finance",
     icon: "bi-currency-rupee",
     color: "warning",
-    href: "#"
+    to: "#"
   },
   {
     title: "Quick Loan",
     icon: "bi-hand-thumbs-up",
     color: "danger",
-    href: "#"
+    to: "#"
   },
   {
     title: "Daybook",
     icon: "bi-journal-text",
     color: "secondary",
-    href: "#"
+    to: "/daybook"
   },
   {
     title: "Balance Sheet",
     icon: "bi-clipboard-check",
     color: "success",
-    href: "#"
+    to: "/balance-sheet"
   },
   {
     title: "Trial Balance",
     icon: "bi-calculator",
     color: "info",
-    href: "#"
+    to: "/trial-balance"
   },
   {
     title: "Profit/Loss",
     icon: "bi-graph-up-arrow",
     color: "primary",
-    href: "#"
+    to: "/profit-loss"
   },
   {
     title: "User List",
     icon: "bi-list-ul",
     color: "info",
-    href: "user/list"
+    to: "/user/grid"
   },
   {
     title: "Staff List",
     icon: "bi-person-badge",
     color: "primary",
-    href: "staff/add"
+    to: "/staff/grid"
   },
   {
     title: "Ledger",
     icon: "bi-journal-bookmark",
     color: "secondary",
-    href: "#"
+    to: "#"
   },
 ]
 
@@ -80,7 +81,7 @@ const ActionCards = () => {
     <div className="row g-4 mt-1">
       {actionItems.map((item, index) => (
         <div key={index} className="col-4 col-md-2">
-          <a href={item.href} className="action-card border">
+          <Link to={item.to} className="action-card border">
             <div className="card-content">
               <div 
                 className={`card-icon bg-${item.color}-subtle text-${item.color} rounded-circle d-flex align-items-center justify-content-center mb-1`}
@@ -89,7 +90,7 @@ const ActionCards = () => {
               </div>
               <p className="text-muted mb-1 fw-medium small">{item.title}</p>
             </div>
-          </a>
+          </Link>
         </div>
       ))}
     </div>
