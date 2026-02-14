@@ -29,7 +29,7 @@ const STATIC_USERS = [
   {
     id: '3',
     loginId: 'demo',
-    password: 'demo123',
+    password: '123456',
     name: 'Demo User',
     email: 'demo@khataboss.com',
     mobile: '9999999999',
