@@ -35,12 +35,14 @@
     "web-vitals": "^2.1.4",
     "xlsx": "^0.18.5"
   },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
+ "scripts": {
+  "start": "react-scripts start",
+  "react-build": "react-scripts build",
+  "tauri": "tauri",
+  "tauri:dev": "tauri dev",
+  "tauri:build": "tauri build",
+  "clean": "rm -r -fo node_modules,build,dist"
+},
   "eslintConfig": {
     "extends": [
       "react-app",
@@ -58,5 +60,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.10.0"
   }
 }

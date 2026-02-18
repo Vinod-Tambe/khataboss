@@ -31,7 +31,7 @@ const UserList = () => {
     { key: "position", title: "Position", orderable: true, searchable: true },
     { key: "office", title: "Office", orderable: true, searchable: true },
     { key: "status", title: "Status", orderable: true, searchable: true },
-    { key: "salary", title: "Salary", orderable: true, searchable: true },
+    { key: "salary", title: "Salary", orderable: true, searchable: true,sum:true },
     { key: "createdAt", title: "Date", orderable: true, searchable: true, dateFilter: true },
   ];
 

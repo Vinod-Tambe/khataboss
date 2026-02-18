@@ -84,7 +84,7 @@ const AccountList = () => {
     { key: "id", title: "ID", orderable: true, searchable: true },
     { key: "accountName", title: "Account Name", orderable: true, searchable: true },
     { key: "openingBalanceDate", title: "Opening Balance Date", orderable: true, searchable: true, dateFilter: true },
-    { key: "accountBalance", title: "Account Balance", orderable: true, searchable: true },
+    { key: "accountBalance", title: "Account Balance", orderable: true, searchable: true,sum: true },
     { key: "balanceType", title: "Balance Type", orderable: true, searchable: true },
     { key: "primaryAccount", title: "Primary Account", orderable: true, searchable: true },
     { key: "bankAccountNumber", title: "Bank Account Number", orderable: false, searchable: true },
