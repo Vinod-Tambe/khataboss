@@ -53,22 +53,7 @@ const AddFinance = () => {
     setNewPayment((prev) => ({ ...prev, [name]: value }));
   };
 
-  const addPayment = (type) => {
-    if (!newPayment.bankAccountId || !newPayment.bankAmount.trim()) {
-      alert('Please select account and enter amount');
-      return;
-    }
 
-    // For now just log – you can later push to payments array
-    console.log('New payment added:', { ...newPayment, accountType: type });
-
-    setNewPayment({
-      accountType: type,
-      bankAccountId: '',
-      bankAmount: '',
-      bankInfo: '',
-    });
-  };
 
   const handleNext = () => {
     if (currentStep === 1) {

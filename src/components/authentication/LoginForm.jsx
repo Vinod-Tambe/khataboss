@@ -3,15 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { Collapse } from "bootstrap";
 import "../../css/Login.css";
 import { showToast } from "../common/ToastAlert";
-import { loginWithCredentials, loginWithOtp, sendOtp } from "../../api/authApi";
-import { useAuth } from "../../context/AuthContext";
-// DataTables & extensions
-import "datatables.net-bs5";
-import "datatables.net-responsive-bs5";
-import "datatables.net-buttons-bs5";
-import "datatables.net-buttons/js/buttons.html5.min.js";
-import "datatables.net-buttons/js/buttons.print.min.js";
-import "datatables.net-bs5/css/dataTables.bootstrap5.min.css";
+import { sendOtp } from "../../api/authApi";
+import { useDispatch, useSelector } from "react-redux";
+import { login as reduxLogin, loginWithOtp as reduxLoginWithOtp } from "../../store/slices/authSlice";
 
 
 const TypingEffect = ({ texts = [], speed = 100, pause = 1500 }) => {
@@ -58,12 +52,12 @@ const LoginForm = () => {
   const [password, setPassword] = useState("");
 
   const [otpLoginId, setOtpLoginId] = useState("");
-  const [otpDigits, setOtpDigits] = useState(["", "", "", ""]);
+  const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
   const [otpSent, setOtpSent] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  const dispatch = useDispatch();
+  const { loginLoading } = useSelector((state) => state.auth);
   const [otpSending, setOtpSending] = useState(false);
-  const [otpVerifying, setOtpVerifying] = useState(false);
-  const [loading, setLoading] = useState(false); // Mock loading state
 
   const otpRefs = useRef([]);
   const loginIdRef = useRef(null);
@@ -98,7 +92,6 @@ const LoginForm = () => {
     }
   };
 
-  const { login: authLogin } = useAuth();
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -109,22 +102,16 @@ const LoginForm = () => {
       return;
     }
 
-    setLoading(true);
-
     try {
-      const response = await loginWithCredentials(loginId, password);
-      if (response.success) {
-        // Store user in context and localStorage
-        authLogin(response.user, response.token);
-        showToast(response.message, "success");
-        console.log("Login success with ID:", loginId, "Role:", response.user.role);
-        // Redirect to home/dashboard
+      const resultAction = await dispatch(reduxLogin({ login_id: loginId, password }));
+      if (reduxLogin.fulfilled.match(resultAction)) {
+        showToast(resultAction.payload.message, "success");
         navigate("/home");
+      } else {
+        showToast(resultAction.payload, "error");
       }
     } catch (error) {
       showToast(error.message, "error");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -138,16 +125,12 @@ const LoginForm = () => {
 
     try {
       const response = await sendOtp(otpLoginId);
-
       if (response.success) {
         showToast(response.message, "success");
-        // For demo purposes, show the OTP (in production, this would be sent via SMS/email)
-        if (response.demoOtp) {
-          console.log("Demo OTP:", response.demoOtp);
-        }
         setOtpSent(true);
         setResendTimer(30);
-        otpRefs.current[0]?.focus();
+        setOtpDigits(["", "", "", "", "", ""]); // Clear digits on resend
+        setTimeout(() => otpRefs.current[0]?.focus(), 100);
       }
     } catch (error) {
       showToast(error.message, "error");
@@ -156,32 +139,25 @@ const LoginForm = () => {
     }
   };
 
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    const otp = otpDigits.join("");
+  const handleVerifyOtp = async (e, customOtp = null) => {
+    if (e) e.preventDefault();
+    const otp = customOtp || otpDigits.join("");
 
-    if (otp.length < 4) {
-      showToast("Please enter 4-digit OTP", "error");
+    if (otp.length < 6) {
+      showToast("Please enter 6-digit OTP", "error");
       return;
     }
 
-    setOtpVerifying(true);
-
     try {
-      const response = await loginWithOtp(otpLoginId, otp);
-      console.log(response)
-      if (response.success) {
-        // Store user in context and localStorage
-        authLogin(response.user, response.token);
-        showToast(response.message, "success");
-        console.log("OTP login success with ID:", otpLoginId, "Role:", response.user.role);
-        // Redirect to home/dashboard
+      const resultAction = await dispatch(reduxLoginWithOtp({ own_login_id: otpLoginId, otp }));
+      if (reduxLoginWithOtp.fulfilled.match(resultAction)) {
+        showToast(resultAction.payload.message, "success");
         navigate("/home");
+      } else {
+        showToast(resultAction.payload, "error");
       }
     } catch (error) {
       showToast(error.message, "error");
-    } finally {
-      setOtpVerifying(false);
     }
   };
 
@@ -191,8 +167,23 @@ const LoginForm = () => {
     newOtp[index] = value;
     setOtpDigits(newOtp);
 
-    if (value && index < otpRefs.current.length - 1) {
-      otpRefs.current[index + 1].focus();
+    if (value && index < 5) {
+      otpRefs.current[index + 1]?.focus();
+    } else if (value && index === 5) {
+      // Auto submit on last digit
+      handleVerifyOtp(null, newOtp.join(""));
+    }
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === "Backspace") {
+      if (!otpDigits[index] && index > 0) {
+        // Move back and clear previous
+        otpRefs.current[index - 1]?.focus();
+        const newOtp = [...otpDigits];
+        newOtp[index - 1] = "";
+        setOtpDigits(newOtp);
+      }
     }
   };
 
@@ -257,7 +248,7 @@ const LoginForm = () => {
                     className={`nav-link fw-bold text-secondary ${activeTab === tab ? "active" : ""}`}
                     onClick={() => setActiveTab(tab)}
                   >
-                    {tab === "username" ? "Login Id" : tab === "otp" ? "Mobile OTP" : "Fingerprint"}
+                    {tab === "username" ? "Login Id" : tab === "otp" ? "Login with OTP" : "Fingerprint"}
                   </button>
                 </li>
               ))}
@@ -304,10 +295,16 @@ const LoginForm = () => {
                     <button
                       type="submit"
                       className="btn btn-secondary w-100 fw-bold"
-                      disabled={loading}
+                      disabled={loginLoading}
                     >
-                      {loading && <span className="spinner-border spinner-border-sm me-2"></span>}
-                      {loading ? "Logging In..." : "Log In"}
+                      {loginLoading ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-2"></span>
+                          Logging In...
+                        </>
+                      ) : (
+                        "Log In"
+                      )}
                     </button>
                   </form>
                 </div>
@@ -333,25 +330,23 @@ const LoginForm = () => {
                       />
                     </div>
 
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary w-100 mb-3"
-                      onClick={handleSendOtp}
-                      disabled={resendTimer > 0 || otpSending}
-                    >
-                      {otpSending ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                          Sending...
-                        </>
-                      ) : resendTimer > 0 ? (
-                        `Resend in ${resendTimer}s`
-                      ) : otpSent ? (
-                        "Resend OTP"
-                      ) : (
-                        "Send OTP"
-                      )}
-                    </button>
+                    {!otpSent && (
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary w-100 mb-3"
+                        onClick={handleSendOtp}
+                        disabled={otpSending}
+                      >
+                        {otpSending ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Sending...
+                          </>
+                        ) : (
+                          "Send OTP"
+                        )}
+                      </button>
+                    )}
 
                     {otpSent && (
                       <div className="otp-form">
@@ -361,20 +356,39 @@ const LoginForm = () => {
                               key={i}
                               type="text"
                               maxLength="1"
+                              inputMode="numeric"
                               placeholder="X"
                               value={digit}
                               onChange={(e) => handleOtpChange(i, e.target.value)}
+                              onKeyDown={(e) => handleOtpKeyDown(i, e)}
                               ref={(ref) => (otpRefs.current[i] = ref)}
-                              className="form-control text-center otp-input m-2 mt-0 mb-0"
+                              className="form-control text-center otp-input m-2 mt-0 mb-0 shadow-sm"
+                              style={{ width: "45px", height: "45px", fontSize: "1.2rem", fontWeight: "bold" }}
                             />
                           ))}
                         </div>
+                        
+                        <div className="d-flex justify-content-center mb-3">
+                          {resendTimer > 0 ? (
+                            <span className="text-muted small">Resend OTP in <strong>{resendTimer}s</strong></span>
+                          ) : (
+                            <button 
+                              type="button" 
+                              className="btn btn-link btn-sm text-secondary text-decoration-none fw-bold"
+                              onClick={handleSendOtp}
+                              disabled={otpSending}
+                            >
+                              {otpSending ? "Sending..." : "Resend OTP"}
+                            </button>
+                          )}
+                        </div>
+
                         <button
                           type="submit"
-                          className="btn btn-secondary w-100 fw-bold"
-                          disabled={otpVerifying}
+                          className="btn btn-secondary w-100 fw-bold py-2 mb-3"
+                          disabled={loginLoading}
                         >
-                          {otpVerifying ? (
+                          {loginLoading ? (
                             <>
                               <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                               Verifying...
@@ -383,6 +397,16 @@ const LoginForm = () => {
                             "Verify & Login"
                           )}
                         </button>
+
+                        <div className="text-center">
+                          <button 
+                            type="button" 
+                            className="btn btn-link btn-sm text-muted text-decoration-none"
+                            onClick={() => setOtpSent(false)}
+                          >
+                            <i className="bi bi-arrow-left me-1"></i> Change Login ID / Mobile
+                          </button>
+                        </div>
                       </div>
                     )}
                   </form>

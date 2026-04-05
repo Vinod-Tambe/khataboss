@@ -140,26 +140,7 @@ const AddLoan = () => {
     setNewPayment((prev) => ({ ...prev, [name]: value }));
   };
 
-  const addPayment = (type) => {
-    setNewPayment((prev) => ({ ...prev, accountType: type }));
 
-    if (!newPayment.bankAccountId || !newPayment.bankAmount.trim()) {
-      alert('Please select account and enter amount');
-      return;
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      payments: [...prev.payments, { ...newPayment, accountType: type }],
-    }));
-
-    setNewPayment({
-      accountType: type,
-      bankAccountId: '',
-      bankAmount: '',
-      bankInfo: '',
-    });
-  };
 
   const handleNext = () => {
     if (currentStep === 1) {

@@ -1,8 +1,16 @@
 import React from 'react';
 import { FiSearch, FiUser, FiMenu, FiBell } from 'react-icons/fi';
 import { Link } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { logout } from "../store/slices/authSlice";
 
 const Header = () => {
+  const dispatch = useDispatch();
+
+  const handleLogout = (e) => {
+    e.preventDefault();
+    dispatch(logout());
+  };
 
   return (
     <header className="header pb-2 pb-lg-0 sticky-top">
@@ -76,7 +84,7 @@ const Header = () => {
               <li><Link className="dropdown-item" to="#">Profile</Link></li>
               <li><Link className="dropdown-item" to="#">Settings</Link></li>
               <li><hr className="dropdown-divider" /></li>
-              <li><Link className="dropdown-item" to="#">Logout</Link></li>
+              <li><Link className="dropdown-item" to="#" onClick={handleLogout}>Logout</Link></li>
             </ul>
           </div>
         </div>

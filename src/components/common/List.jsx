@@ -84,8 +84,9 @@ const List = ({
       endDate: fyEnd.format("YYYY-MM-DD"),
     });
 
+    const dateInput = dateRef.current;
     return () => {
-      $(dateRef.current).data("daterangepicker")?.remove();
+      $(dateInput).data("daterangepicker")?.remove();
     };
   }, []);
 
@@ -228,7 +229,7 @@ const List = ({
 
         // Column search inputs
         api.columns().every(function (index) {
-          if (index >= columns.length) return; // skip action column
+          if (index >= columns.length) return true; // skip action column
 
           const th = $(this.header());
           const col = columns[index];
@@ -248,6 +249,7 @@ const List = ({
               }
             });
           }
+          return true;
         });
 
         $("th input.column-search").hide();
