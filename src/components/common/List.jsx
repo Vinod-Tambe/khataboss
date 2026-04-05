@@ -115,7 +115,9 @@ const List = ({
       searchable: col.searchable !== false,
       visible: col.visible !== false,
       className: col.sum ? "text-end" : col.className || "",
+      render: col.render || null,
     }));
+
 
     // Action column
     if (hasEdit || hasDelete || hasPrint) {
@@ -321,16 +323,24 @@ const List = ({
     const dateFilterIndex = columns.findIndex((col) => col.dateFilter);
     if (dateFilterIndex === -1) return;
 
-    const filterFn = (settings, data, dataIndex) => {
+    const filterFn = (settings, data, dataIndex, rowData) => {
       if (!dateRange.startDate || !dateRange.endDate) return true;
-      const dateStr = data[dateFilterIndex];
-      if (!dateStr) return true;
-      const empDate = moment(dateStr.trim(), "YYYY-MM-DD");
-      return empDate.isValid() && empDate.isBetween(dateRange.startDate, dateRange.endDate, null, "[]");
+      
+      const dateFilterCol = columns.find((col) => col.dateFilter);
+      if (!dateFilterCol) return true;
+
+      const rawDate = rowData[dateFilterCol.key];
+      if (!rawDate) return true;
+
+      const empDate = moment(rawDate);
+      if (!empDate.isValid()) return true;
+
+      return empDate.isBetween(dateRange.startDate, dateRange.endDate, "day", "[]");
     };
 
     $.fn.dataTable.ext.search.push(filterFn);
     tableInstance.draw();
+
 
     return () => {
       const idx = $.fn.dataTable.ext.search.indexOf(filterFn);
