@@ -1,11 +1,12 @@
 import React from 'react';
 import { FiSearch, FiUser, FiMenu, FiBell } from 'react-icons/fi';
 import { Link } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../store/slices/authSlice";
 
 const Header = () => {
   const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
 
   const handleLogout = (e) => {
     e.preventDefault();
@@ -27,16 +28,6 @@ const Header = () => {
         <div className="logo-title">
           <h1 className='p-0 m-0'>KhataBoss</h1>
         </div>
-
-          {/* DESKTOP Sidebar Toggle */}
-         {/* <button
-  className="btn btn-light me-2 border-secondary d-none d-lg-flex"
-  onClick={() => {
-    document.body.classList.toggle("sidebar-collapsed");
-  }}
->
-  <FiMenu size={22} />
-</button> */}
 
         {/* CENTER: Search Bar */}
         <div className={`search-bar`}>
@@ -80,7 +71,8 @@ const Header = () => {
             >
               <FiUser size={26} />
             </button>
-            <ul className="dropdown-menu profile-dropdown" aria-labelledby="profileDropdown">
+            <ul className="dropdown-menu profile-dropdown pt-0" aria-labelledby="profileDropdown">
+              <li><Link className="dropdown-item border rounded bg-cust-primary text-center" to="#"> {user.own_first_name} {user.own_last_name} <br />( {user.own_email} )</Link></li>
               <li><Link className="dropdown-item" to="#">Profile</Link></li>
               <li><Link className="dropdown-item" to="#">Settings</Link></li>
               <li><hr className="dropdown-divider" /></li>
