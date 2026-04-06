@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import List from "../common/List";
 import { getFirms, deleteFirm } from "../../api/firmApi";
 import { toast } from "react-hot-toast";
 
 const FirmList = () => {
+  const navigate = useNavigate();
   const [firms, setFirms] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,14 +48,13 @@ const FirmList = () => {
   ];
 
   const handleEdit = (rowData) => {
-    // Navigate to edit page - to be implemented
-    alert(`Edit Firm: ${rowData.firm_name} (ID: ${rowData.firm_id})`);
+    navigate(`/firm/edit/${rowData.firm_uuid}`);
   };
 
   const handleDelete = async (rowData) => {
     if (window.confirm(`Are you sure you want to delete ${rowData.firm_name}?`)) {
       try {
-        const response = await deleteFirm(rowData.firm_id);
+        const response = await deleteFirm(rowData.firm_uuid);
         toast.success(response.message || "Firm deleted successfully.");
         fetchFirms(); // Refresh the list
       } catch (error) {

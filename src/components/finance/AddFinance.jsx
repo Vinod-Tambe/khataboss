@@ -1,4 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import moment from 'moment';
+import $ from 'jquery';
+import 'daterangepicker';
+import 'daterangepicker/daterangepicker.css';
+import useFormNavigation from '../../hooks/useFormNavigation';
 
 const AddFinance = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -32,7 +37,26 @@ const AddFinance = () => {
     bankInfo: '',
   });
 
+  const startDateRef = useRef(null);
+
+  // Form Navigation
+  const formRef = useRef(null);
+  useFormNavigation(formRef);
+
   useEffect(() => {
+    if (startDateRef.current) {
+        $(startDateRef.current).daterangepicker({
+            singleDatePicker: true,
+            showDropdowns: true,
+            autoUpdateInput: true,
+            locale: {
+                format: 'DD/MM/YYYY'
+            }
+        }, (start) => {
+            setFormData(prev => ({ ...prev, startDate: start.format('YYYY-MM-DD') }));
+        });
+    }
+
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -88,12 +112,14 @@ const AddFinance = () => {
         <div className="col-12 col-md-4 col-lg-3">
           <label className="form-label fw-medium">PRINCIPAL AMOUNT <span className="text-danger">*</span></label>
           <input
-            type="text"
+            type="number"
             name="principalAmount"
             placeholder="0.00"
             className="form-control border-dark"
             value={formData.principalAmount}
             onChange={handleChange}
+            onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
+            step="0.01"
           />
         </div>
 
@@ -112,11 +138,11 @@ const AddFinance = () => {
         <div className="col-12 col-md-4 col-lg-3">
           <label className="form-label fw-medium">START DATE <span className="text-danger">*</span></label>
           <input
-            type="date"
+            type="text"
             name="startDate"
+            ref={startDateRef}
             className="form-control border-dark"
-            value={formData.startDate}
-            onChange={handleChange}
+            defaultValue={formData.startDate ? moment(formData.startDate).format('DD/MM/YYYY') : ''}
           />
         </div>
 
@@ -163,24 +189,28 @@ const AddFinance = () => {
         <div className="col-12 col-md-4 col-lg-3">
           <label className="form-label fw-medium">COLLECT AMOUNT</label>
           <input
-            type="text"
+            type="number"
             name="collectAmount"
             placeholder="0.00"
             className="form-control border-dark"
             value={formData.collectAmount}
             onChange={handleChange}
+            onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
+            step="0.01"
           />
         </div>
 
         <div className="col-12 col-md-4 col-lg-3">
           <label className="form-label fw-medium">PROCCESSING FEES</label>
           <input
-            type="text"
+            type="number"
             name="processingFees"
             placeholder="0.00"
             className="form-control border-dark"
             value={formData.processingFees}
             onChange={handleChange}
+            onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
+            step="0.01"
           />
         </div>
         
@@ -188,24 +218,28 @@ const AddFinance = () => {
         <div className="col-12 col-md-4 col-lg-3">
           <label className="form-label fw-medium">RATE OF INTEREST (ROI) <span className="text-danger">*</span></label>
           <input
-            type="text"
+            type="number"
             name="interestRate"
             placeholder="e.g. 2.5 % per month"
             className="form-control border-dark"
             value={formData.interestRate}
             onChange={handleChange}
+            onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
+            step="0.01"
           />
         </div>
 
         <div className="col-12 col-md-4 col-lg-3">
           <label className="form-label fw-medium">FINE AMOUNT</label>
           <input
-            type="text"
+            type="number"
             name="fineAmount"
             placeholder="0.00"
             className="form-control border-dark"
             value={formData.fineAmount}
             onChange={handleChange}
+            onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
+            step="0.01"
           />
         </div>
 
@@ -224,24 +258,28 @@ const AddFinance = () => {
         <div className="col-12 col-md-4 col-lg-3">
           <label className="form-label fw-medium">PER EMI AMOUNT</label>
           <input
-            type="text"
+            type="number"
             name="perEmiAmount"
             placeholder="0.00"
             className="form-control border-dark"
             value={formData.perEmiAmount}
             onChange={handleChange}
+            onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
+            step="0.01"
           />
         </div>
 
         <div className="col-12 col-md-4 col-lg-3 ms-auto">
           <label className="form-label fw-medium">TOTAL FINANCE AMOUNT</label>
           <input
-            type="text"
+            type="number"
             name="totalFinanceAmount"
             placeholder="0.00"
             className="form-control border-dark"
             value={formData.totalFinanceAmount}
             onChange={handleChange}
+            onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
+            step="0.01"
           />
         </div>
       </div>
@@ -488,7 +526,7 @@ const AddFinance = () => {
     <div className="card border-0">
       <h4 className="card-title text-center fw-bold">Add New Finance</h4>
 
-      <form noValidate onSubmit={handleSubmit}>
+      <form ref={formRef} noValidate onSubmit={handleSubmit}>
         {progressBar}
 
         {isMobile ? (

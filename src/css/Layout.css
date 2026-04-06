@@ -4,6 +4,12 @@
   flex-direction: column;
   min-height: 100vh;
 }
+
+.header-right .form-select {
+  text-align: center !important;
+  width: 150px !important;
+}
+
 /* #sidebar{
   font-size: 16px !important;
   font-weight: 900 !important;
@@ -27,7 +33,7 @@
 
 /* Header */
 .admin-header {
-  height: 64px;
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -167,8 +173,8 @@
 }
 
 .sidebar-profile {
-  padding-bottom: 12px !important;
-  padding-top: 12px !important;
+  padding-bottom: 5px !important;
+  padding-top: 5px !important;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -291,19 +297,20 @@
     display: none;
   }
 }
+
 /* add css gauri b */
 .bottom-nav {
-    align-items: center;
-    background: #fff;
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
-    bottom: 0;
-    box-shadow: 0 -2px 8px #0000001a;
-    display: flex;
-    justify-content: space-around;
-    left: 0;
-    padding: .5rem 0;
-    position: fixed;
-    right: 0;
-    z-index: 999;
+  align-items: center;
+  background: #fff;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  bottom: 0;
+  box-shadow: 0 -2px 8px #0000001a;
+  display: flex;
+  justify-content: space-around;
+  left: 0;
+  padding: .5rem 0;
+  position: fixed;
+  right: 0;
+  z-index: 999;
 }

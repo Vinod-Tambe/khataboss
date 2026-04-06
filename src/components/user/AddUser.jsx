@@ -1,9 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import DocumentUploadCard from '../common/DocumentUploadCard';
+import moment from 'moment';
+import $ from 'jquery';
+import 'daterangepicker';
+import 'daterangepicker/daterangepicker.css';
+import { toast } from 'react-hot-toast';
+import { validatePincode, validatePan, validateAadhaar, validateGstin, validateIfsc } from '../../utils/validation';
+import useFormNavigation from '../../hooks/useFormNavigation';
 
 const AddUser = () => {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [currentStep, setCurrentStep] = useState(1);
+
+    // Form Navigation
+    const formRef = useRef(null);
+    useFormNavigation(formRef);
 
     // Previews
     const [photoPreview, setPhotoPreview] = useState(null);
@@ -27,6 +38,7 @@ const AddUser = () => {
 
     // Signature
     const signatureRef = useRef(null);
+    const dateOfBirthRef = useRef(null);
     const [isDrawing, setIsDrawing] = useState(false);
 
     useEffect(() => {
@@ -141,6 +153,19 @@ const AddUser = () => {
 
     // ─── Signature Pad (unchanged) ────────────────────────────────────────
     useEffect(() => {
+        if (dateOfBirthRef.current) {
+            $(dateOfBirthRef.current).daterangepicker({
+                singleDatePicker: true,
+                showDropdowns: true,
+                autoUpdateInput: true,
+                locale: {
+                    format: 'DD/MM/YYYY'
+                }
+            }, (start) => {
+                setFormData(prev => ({ ...prev, dateOfBirth: start.format('YYYY-MM-DD') }));
+            });
+        }
+
         const canvas = signatureRef.current;
         if (!canvas) return;
 
@@ -199,13 +224,58 @@ const AddUser = () => {
             });
     };
 
-    const nextStep = () => { if (currentStep < 2) setCurrentStep(currentStep + 1); };
+    const validateStep1 = () => {
+        const requiredFields = ['firstName', 'lastName', 'mobileNo', 'emailId', 'gender'];
+        for (const field of requiredFields) {
+            if (!formData[field] || formData[field].toString().trim() === '') {
+                const readableName = field.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
+                toast.error(`${readableName} is required.`);
+                return false;
+            }
+        }
+
+        if (formData.panNo && !validatePan(formData.panNo)) {
+            toast.error('Invalid PAN Number. Format: ABCDE1234F');
+            return false;
+        }
+
+        if (formData.gstin && !validateGstin(formData.gstin)) {
+            toast.error('Invalid GSTIN. It should be a 15-character alphanumeric code.');
+            return false;
+        }
+
+        if (formData.adhaarNo && !validateAadhaar(formData.adhaarNo)) {
+            toast.error('Invalid Aadhaar Number. It should be 12 digits and not start with 0 or 1.');
+            return false;
+        }
+
+        return true;
+    };
+
+    const nextStep = () => { 
+        if (validateStep1()) {
+            if (currentStep < 2) setCurrentStep(currentStep + 1); 
+        }
+    };
     const prevStep = () => { if (currentStep > 1) setCurrentStep(currentStep - 1); };
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        if (!validateStep1()) return;
+
+        if (formData.pincode && !validatePincode(formData.pincode)) {
+            toast.error('Invalid Pincode. It should be 6 digits and not start with 0.');
+            return;
+        }
+
+        if (formData.ifscCode && !validateIfsc(formData.ifscCode)) {
+            toast.error('Invalid IFSC Code. Format: ABCD0123456 (11 characters).');
+            return;
+        }
+
         console.log('Form Data:', formData);
-        alert('Firm information submitted successfully!');
+        toast.success('User information submitted successfully!');
     };
 
     // ─── STEP 1 ─────────────────────────────────────────────────────────────
@@ -266,7 +336,13 @@ const AddUser = () => {
                 </div>
                 <div className="col-12 col-md-6 col-lg-3">
                     <label className="form-label">Date Of Birth</label>
-                    <input type="date" name="dateOfBirth" className="form-control border-dark" value={formData.dateOfBirth} onChange={handleChange} />
+                    <input 
+                        type="text" 
+                        name="dateOfBirth" 
+                        ref={dateOfBirthRef}
+                        className="form-control border-dark" 
+                        defaultValue={moment(formData.dateOfBirth).format('DD/MM/YYYY')} 
+                    />
                 </div>
 
                 {/* Identification */}
@@ -520,7 +596,7 @@ const AddUser = () => {
 
     return (
         <div className="">
-            <form onSubmit={handleSubmit}>
+            <form ref={formRef} onSubmit={handleSubmit}>
                 {renderContent()}
             </form>
 

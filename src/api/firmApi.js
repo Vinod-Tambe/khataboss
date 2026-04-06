@@ -35,13 +35,13 @@ export const getFirms = async () => {
 
 /**
  * Update an existing firm
- * @param {number|string} id - Firm ID
+ * @param {string} uuid - Firm UUID
  * @param {FormData} formData - Multipart form data containing updated details and files
  * @returns {Promise} - Response object with updated firm details
  */
-export const updateFirm = async (id, formData) => {
+export const updateFirm = async (uuid, formData) => {
   try {
-    const response = await axiosInstance.put(`/firm/${id}`, formData, {
+    const response = await axiosInstance.put(`/firm/${uuid}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -55,12 +55,27 @@ export const updateFirm = async (id, formData) => {
 
 /**
  * Delete a firm (soft delete)
- * @param {number|string} id - Firm ID
+ * @param {string} uuid - Firm UUID
  * @returns {Promise} - Response object confirming deletion
  */
-export const deleteFirm = async (id) => {
+export const deleteFirm = async (uuid) => {
   try {
-    const response = await axiosInstance.delete(`/firm/${id}`);
+    const response = await axiosInstance.delete(`/firm/${uuid}`);
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.error || error.response?.data?.message || error.message;
+    throw new Error(message);
+  }
+};
+
+/**
+ * Get a single firm by UUID
+ * @param {string} uuid - Firm UUID
+ * @returns {Promise} - Response object with firm details
+ */
+export const getFirmByUuid = async (uuid) => {
+  try {
+    const response = await axiosInstance.get(`/firm/${uuid}`);
     return response.data;
   } catch (error) {
     const message = error.response?.data?.error || error.response?.data?.message || error.message;
