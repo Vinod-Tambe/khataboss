@@ -1,16 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
+import { useParams, useNavigate } from 'react-router-dom';
 import moment from 'moment';
 import $ from 'jquery';
 import 'daterangepicker';
 import 'daterangepicker/daterangepicker.css';
 import useFormNavigation from '../../hooks/useFormNavigation';
 import { getFirmsDropdown } from '../../api/firmApi';
-import { getAccountsDropdown, createAccount } from '../../api/accountApi';
+import { getAccountsDropdown, getAccountByUuid, updateAccount } from '../../api/accountApi';
 import { toast } from 'react-hot-toast';
 import { validatePincode, validatePan, validateAccountNo, validateBsrCode } from '../../utils/validation';
 
-const AddAccount = () => {
+const UpdateAccount = () => {
+  const { uuid } = useParams();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     acc_name: '',
     acc_opening_date: moment().format('YYYY-MM-DD'),
@@ -35,6 +38,7 @@ const AddAccount = () => {
   const [firms, setFirms] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
 
   const { selectedFirmId, firms: reduxFirms } = useSelector((state) => state.firm);
 
@@ -59,18 +63,56 @@ const AddAccount = () => {
       });
     }
 
-    // Fetch firms initially
-    const fetchFirms = async () => {
+    // Fetch initial data
+    const fetchInitialData = async () => {
       try {
+        setFetching(true);
+        // Fetch firms
         const firmRes = await getFirmsDropdown();
         setFirms(firmRes.data || []);
+
+        // Fetch current account data
+        const accountRes = await getAccountByUuid(uuid);
+        const accountData = accountRes.data;
+
+        if (accountData) {
+          setFormData({
+            acc_name: accountData.acc_name || '',
+            acc_opening_date: accountData.acc_opening_date ? moment(accountData.acc_opening_date).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD'),
+            acc_cash_balance: accountData.acc_cash_balance || '',
+            acc_balance_type: accountData.acc_balance_type || 'CR',
+            acc_firm_id: accountData.acc_firm_id || '',
+            acc_pre_acc: accountData.acc_pre_acc || '',
+            acc_bank_no: accountData.acc_bank_no || '',
+            acc_ifsc_code: accountData.acc_ifsc_code || '',
+            acc_branch_name: accountData.acc_branch_name || '',
+            acc_pan_no: accountData.acc_pan_no || '',
+            acc_bsr_no: accountData.acc_bsr_no || '',
+            acc_address: accountData.acc_address || '',
+            acc_pincode: accountData.acc_pincode || '',
+            acc_country: accountData.acc_country || 'IN',
+            acc_state: accountData.acc_state || 'Rajasthan',
+            acc_city: accountData.acc_city || '',
+            acc_desc: accountData.acc_desc || '',
+            acc_other_info: accountData.acc_other_info || ''
+          });
+
+          // Also update the date picker display
+          if (openingDateRef.current) {
+            $(openingDateRef.current).data('daterangepicker').setStartDate(moment(accountData.acc_opening_date).format('DD/MM/YYYY'));
+            $(openingDateRef.current).data('daterangepicker').setEndDate(moment(accountData.acc_opening_date).format('DD/MM/YYYY'));
+          }
+        }
       } catch (error) {
-        console.error("Error fetching firms:", error);
+        console.error("Error fetching account data:", error);
+        toast.error("Failed to load account details");
+      } finally {
+        setFetching(false);
       }
     };
 
-    fetchFirms();
-  }, []);
+    fetchInitialData();
+  }, [uuid]);
 
   // Fetch filtered accounts whenever firm changes
   useEffect(() => {
@@ -80,13 +122,6 @@ const AddAccount = () => {
         const accountRes = await getAccountsDropdown(formData.acc_firm_id);
         const fetchedAccounts = accountRes.data || [];
         setAccounts(fetchedAccounts);
-
-        // Set default primary account name if not set or if accounts changed
-        if (fetchedAccounts.length > 0) {
-          setFormData(prev => ({ ...prev, acc_pre_acc: fetchedAccounts[0].acc_name }));
-        } else {
-          setFormData(prev => ({ ...prev, acc_pre_acc: '' }));
-        }
       } catch (error) {
         console.error("Error fetching filtered accounts:", error);
       }
@@ -95,49 +130,32 @@ const AddAccount = () => {
     fetchFilteredAccounts();
   }, [formData.acc_firm_id]);
 
-  // Sync firm ID with Header selection
-  useEffect(() => {
-    if (selectedFirmId === 'all') {
-      if (reduxFirms.length > 0) {
-        setFormData(prev => ({ ...prev, acc_firm_id: reduxFirms[0].firm_id }));
-      }
-    } else {
-      setFormData(prev => ({ ...prev, acc_firm_id: selectedFirmId }));
-    }
-  }, [selectedFirmId, reduxFirms]);
-
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const validateForm = () => {
-    // Required fields check (handled by HTML5 required, but adding manual check for safety)
     if (!formData.acc_name || !formData.acc_firm_id || !formData.acc_pre_acc) {
       toast.error('Please fill in all required fields.');
       return false;
     }
 
-    // Pincode validation
     if (formData.acc_pincode && !validatePincode(formData.acc_pincode)) {
       toast.error('Invalid Pincode. It should be 6 digits and not start with 0.');
       return false;
     }
 
-    // PAN validation
     if (formData.acc_pan_no && !validatePan(formData.acc_pan_no)) {
       toast.error('Invalid PAN Number. Format: ABCDE1234F');
       return false;
     }
 
-    // Account Number validation
     if (formData.acc_bank_no && !validateAccountNo(formData.acc_bank_no)) {
       toast.error('Invalid Bank Account Number. It should be 9 to 18 digits.');
       return false;
     }
 
-    // BSR Code validation
     if (formData.acc_bsr_no && !validateBsrCode(formData.acc_bsr_no)) {
       toast.error('Invalid BSR Code. It should be exactly 7 digits.');
       return false;
@@ -153,39 +171,29 @@ const AddAccount = () => {
 
     setLoading(true);
     try {
-      await createAccount(formData);
-      toast.success('Account saved successfully!');
-      // Reset form or navigate
-      setFormData({
-        acc_name: '',
-        acc_opening_date: moment().format('YYYY-MM-DD'),
-        acc_cash_balance: '',
-        acc_balance_type: 'CR',
-        acc_firm_id: selectedFirmId === 'all' ? (reduxFirms[0]?.firm_id || '') : selectedFirmId,
-        acc_pre_acc: accounts[0]?.acc_name || '',
-        acc_bank_no: '',
-        acc_ifsc_code: '',
-        acc_branch_name: '',
-        acc_pan_no: '',
-        acc_bsr_no: '',
-        acc_address: '',
-        acc_pincode: '',
-        acc_country: 'IN',
-        acc_state: 'Rajasthan',
-        acc_city: '',
-        acc_desc: '',
-        acc_other_info: ''
-      });
+      await updateAccount(uuid, formData);
+      toast.success('Account updated successfully!');
+      navigate('/account/list');
     } catch (error) {
-      toast.error(error.message || 'Error saving account');
+      toast.error(error.message || 'Error updating account');
     } finally {
       setLoading(false);
     }
   };
 
+  if (fetching) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="card p-4 shadow-sm border-0 border-md-1 border-secondary">
-      <h4 className="card-title text-center fw-bold pb-md-0">Add New Account</h4>
+      <h4 className="card-title text-center fw-bold pb-md-0">Update Account</h4>
 
       <form ref={formRef} noValidate onSubmit={handleSubmit}>
         <h5 className="text-muted" >Account & Bank Details</h5>
@@ -406,7 +414,10 @@ const AddAccount = () => {
 
         <div className="d-grid d-md-block text-center mt-5">
           <button type="submit" className="btn btn-primary btn-lg px-5" disabled={loading}>
-            {loading ? 'Saving...' : 'Save Account'}
+            {loading ? 'Updating...' : 'Update Account'}
+          </button>
+          <button type="button" className="btn btn-outline-secondary btn-lg px-5 ms-md-3 mt-3 mt-md-0" onClick={() => navigate('/account/list')}>
+            Cancel
           </button>
         </div>
       </form>
@@ -414,4 +425,4 @@ const AddAccount = () => {
   );
 };
 
-export default AddAccount;
+export default UpdateAccount;

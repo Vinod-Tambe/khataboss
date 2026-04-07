@@ -1,5 +1,5 @@
-import React from 'react'
 import List from '../common/List'
+import { ConfirmAlert } from '../common/ConfirmAlert';
 
 const UserList = () => {
   const userData = [
@@ -39,8 +39,9 @@ const UserList = () => {
     alert(`Edit user: ${rowData.name} (ID: ${rowData.id})`);
   };
 
-  const handleDelete = (rowData) => {
-    if (window.confirm(`Are you sure you want to delete user: ${rowData.name} (ID: ${rowData.id})?`)) {
+  const handleDelete = async (rowData) => {
+    const isConfirmed = await ConfirmAlert(`Are you sure you want to delete user: ${rowData.name} (ID: ${rowData.id})?`);
+    if (isConfirmed) {
       alert(`User ${rowData.name} deleted (mock)`);
     }
   };

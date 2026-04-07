@@ -82,4 +82,16 @@ export const getFirmByUuid = async (uuid) => {
     throw new Error(message);
   }
 };
-
+/**
+ * Get all firms for dropdown (id, uuid and name only)
+ * @returns {Promise} - Response object with list of firms for dropdown
+ */
+export const getFirmsDropdown = async () => {
+  try {
+    const response = await axiosInstance.get('/firm/dropdown');
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.error || error.response?.data?.message || error.message;
+    throw new Error(message);
+  }
+};

@@ -34,6 +34,7 @@ const List = ({
   hasEdit = false,
   hasDelete = false,
   hasPrint = false,
+  isLoading = false,
 }) => {
   const tableRef = useRef(null);
   const dateRef = useRef(null);
@@ -124,6 +125,7 @@ const List = ({
       dtColumns.push({
         data: null,
         title: "Action",
+        key: "action-column",
         orderable: false,
         searchable: false,
         defaultContent: "",
@@ -144,177 +146,182 @@ const List = ({
       });
     }
 
-    const dt = $(tableRef.current).DataTable({
-      data: data,
-      columns: dtColumns,
+    try {
+      const dt = $(tableRef.current).DataTable({
+        data: data,
+        columns: dtColumns,
 
-      // ─── Footer totals logic ───────────────────────────────
-      footerCallback: function () {
-        const api = this.api();
+        // ─── Footer totals logic ───────────────────────────────
+        footerCallback: function () {
+          const api = this.api();
 
-        columns.forEach((col, idx) => {
-          if (!col.sum) return;
+          columns.forEach((col, idx) => {
+            if (!col.sum) return;
 
-          // Total across **all** filtered data (not just current page)
-          const total = api
-            .column(idx)
-            .data()
-            .reduce((a, b) => intVal(a) + intVal(b), 0);
+            // Total across **all** filtered data (not just current page)
+            const total = api
+              .column(idx)
+              .data()
+              .reduce((a, b) => intVal(a) + intVal(b), 0);
 
-          // Format with Indian number style (1,23,456.00)
-          const formatted = total.toLocaleString("en-IN", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
+            // Format with Indian number style (1,23,456.00)
+            const formatted = total.toLocaleString("en-IN", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            });
+
+            // Optional: add ₹ prefix
+            // const display = total === 0 ? "-" : `₹ ${formatted}`;
+            const display = total === 0 ? "0.00" : formatted;
+
+            $(api.column(idx).footer()).html(`<strong>${display}</strong>`);
           });
+        },
 
-          // Optional: add ₹ prefix
-          // const display = total === 0 ? "-" : `₹ ${formatted}`;
-          const display = total === 0 ? "0.00" : formatted;
-
-          $(api.column(idx).footer()).html(`<strong>${display}</strong>`);
-        });
-      },
-
-      buttons: [
-        {
-          extend: "excelHtml5",
-          text: "Export Excel",
-          title: (title || "List") + "_" + moment().format("YYYY-MM-DD"),
-          exportOptions: {
-            columns: ":not(:last-child)",
-            format: {
-              header: function (data, columnIdx) {
-                const $temp = $("<div>" + data + "</div>");
-                $temp.find("input, span").remove();
-                return $temp.text().trim() || columns[columnIdx]?.title || "";
+        buttons: [
+          {
+            extend: "excelHtml5",
+            text: "Export Excel",
+            title: (title || "List") + "_" + moment().format("YYYY-MM-DD"),
+            exportOptions: {
+              columns: ":not(:last-child)",
+              format: {
+                header: function (data, columnIdx) {
+                  const $temp = $("<div>" + data + "</div>");
+                  $temp.find("input, span").remove();
+                  return $temp.text().trim() || columns[columnIdx]?.title || "";
+                },
               },
             },
+            footer: true, // ← include footer in Excel export
           },
-          footer: true, // ← include footer in Excel export
-        },
-        {
-          extend: "pdfHtml5",
-          text: "Export PDF",
-          title: (title || "List") + "_" + moment().format("YYYY-MM-DD"),
-          orientation: "landscape",
-          pageSize: "A4",
-          exportOptions: { columns: ":not(:last-child)" },
-          footer: true,
-        },
-        {
-          extend: "print",
-          text: "Print",
-          title: title || "List",
-          exportOptions: { columns: ":not(:last-child)" },
-          footer: true,
-        },
-        {
-          extend: "copy",
-          text: "<i class='bi bi-copy'></i>",
-          title: (title || "List") + "_" + moment().format("YYYY-MM-DD"),
-        },
-      ],
+          {
+            extend: "pdfHtml5",
+            text: "Export PDF",
+            title: (title || "List") + "_" + moment().format("YYYY-MM-DD"),
+            orientation: "landscape",
+            pageSize: "A4",
+            exportOptions: { columns: ":not(:last-child)" },
+            footer: true,
+          },
+          {
+            extend: "print",
+            text: "Print",
+            title: title || "List",
+            exportOptions: { columns: ":not(:last-child)" },
+            footer: true,
+          },
+          {
+            extend: "copy",
+            text: "<i class='bi bi-copy'></i>",
+            title: (title || "List") + "_" + moment().format("YYYY-MM-DD"),
+          },
+        ],
 
-      dom: "Bfrtip",
-      lengthChange: false,
-      pageLength: 15,
-      paging: true,
-      searching: true,
-      ordering: true,
-      info: true,
-      responsive: false,
-      scrollX: true,
-      autoWidth: true,
+        dom: "Bfrtip",
+        lengthChange: false,
+        pageLength: 15,
+        paging: true,
+        searching: true,
+        ordering: true,
+        info: true,
+        responsive: false,
+        scrollX: true,
+        autoWidth: true,
 
-      initComplete: function () {
-        const api = this.api();
+        initComplete: function () {
+          const api = this.api();
 
-        // Column search inputs
-        api.columns().every(function (index) {
-          if (index >= columns.length) return true; // skip action column
+          // Column search inputs
+          api.columns().every(function (index) {
+            if (index >= columns.length) return true; // skip action column
 
-          const th = $(this.header());
-          const col = columns[index];
+            const th = $(this.header());
+            const col = columns[index];
 
-          if (th.find("input.column-search").length === 0) {
-            const inputType = col.dateFilter ? "date" : "text";
-            const $input = $(
-              `<input type="${inputType}" placeholder="search..." class="form-control form-control-sm column-search" ` +
-                `style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; display: none;" />`
-            );
+            if (th.find("input.column-search").length === 0) {
+              const inputType = col.dateFilter ? "date" : "text";
+              const $input = $(
+                `<input type="${inputType}" placeholder="search..." class="form-control form-control-sm column-search" ` +
+                  `style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; display: none;" />`
+              );
 
-            th.append($input);
+              th.append($input);
 
-            $input.on("keyup change", function () {
-              if (api.column(index).search() !== this.value) {
-                api.column(index).search(this.value).draw();
+              $input.on("keyup change", function () {
+                if (api.column(index).search() !== this.value) {
+                  api.column(index).search(this.value).draw();
+                }
+              });
+            }
+            return true;
+          });
+
+          $("th input.column-search").hide();
+
+          $("thead th").on("click", function (e) {
+            if ($(e.target).is("input") || $(e.target).closest("button").length) return;
+
+            const th = $(this);
+            const $input = th.find("input.column-search");
+            const $titleSpan = th.find("span.title-text");
+
+            if ($input.length) {
+              if ($input.is(":visible")) {
+                $input.hide();
+                $titleSpan.show();
+              } else {
+                $input.show().focus();
+                $titleSpan.hide();
               }
+            }
+          });
+
+          $("tbody").on("click", () => {
+            $("th input.column-search").hide();
+            $("th span.title-text").show();
+          });
+
+          // Action handlers
+          if (onEdit) {
+            $(tableRef.current).on("click", ".edit-btn", function (e) {
+              e.stopPropagation();
+              const tr = $(this).closest("tr");
+              const rowData = api.row(tr).data();
+              onEdit(rowData);
             });
           }
-          return true;
-        });
 
-        $("th input.column-search").hide();
-
-        $("thead th").on("click", function (e) {
-          if ($(e.target).is("input") || $(e.target).closest("button").length) return;
-
-          const th = $(this);
-          const $input = th.find("input.column-search");
-          const $titleSpan = th.find("span.title-text");
-
-          if ($input.length) {
-            if ($input.is(":visible")) {
-              $input.hide();
-              $titleSpan.show();
-            } else {
-              $input.show().focus();
-              $titleSpan.hide();
-            }
+          if (onDelete) {
+            $(tableRef.current).on("click", ".delete-btn", function (e) {
+              e.stopPropagation();
+              const tr = $(this).closest("tr");
+              const rowData = api.row(tr).data();
+              onDelete(rowData);
+            });
           }
-        });
 
-        $("tbody").on("click", () => {
-          $("th input.column-search").hide();
-          $("th span.title-text").show();
-        });
+          if (onPrint) {
+            $(tableRef.current).on("click", ".print-btn", function (e) {
+              e.stopPropagation();
+              const tr = $(this).closest("tr");
+              const rowData = api.row(tr).data();
+              onPrint(rowData);
+            });
+          }
+        },
+      });
 
-        // Action handlers
-        if (onEdit) {
-          $(tableRef.current).on("click", ".edit-btn", function (e) {
-            e.stopPropagation();
-            const tr = $(this).closest("tr");
-            const rowData = api.row(tr).data();
-            onEdit(rowData);
-          });
-        }
+      setTableInstance(dt);
 
-        if (onDelete) {
-          $(tableRef.current).on("click", ".delete-btn", function (e) {
-            e.stopPropagation();
-            const tr = $(this).closest("tr");
-            const rowData = api.row(tr).data();
-            onDelete(rowData);
-          });
-        }
-
-        if (onPrint) {
-          $(tableRef.current).on("click", ".print-btn", function (e) {
-            e.stopPropagation();
-            const tr = $(this).closest("tr");
-            const rowData = api.row(tr).data();
-            onPrint(rowData);
-          });
-        }
-      },
-    });
-
-    setTableInstance(dt);
-
-    return () => {
-      dt?.destroy(true);
-    };
+      return () => {
+        dt?.destroy(true);
+      };
+    } catch (err) {
+      console.error("Error initializing DataTable:", err);
+    }
   }, [data, columns, title, onEdit, onDelete, onPrint, hasEdit, hasDelete, hasPrint]);
+  
 
   // ─── Date Range Filter ────────────────────────────────────────
   useEffect(() => {
@@ -323,19 +330,33 @@ const List = ({
     const dateFilterIndex = columns.findIndex((col) => col.dateFilter);
     if (dateFilterIndex === -1) return;
 
-    const filterFn = (settings, data, dataIndex, rowData) => {
-      if (!dateRange.startDate || !dateRange.endDate) return true;
-      
-      const dateFilterCol = columns.find((col) => col.dateFilter);
-      if (!dateFilterCol) return true;
+    const filterFn = (settings, searchData, dataIndex, originalRow) => {
+      try {
+        if (!dateRange.startDate || !dateRange.endDate) return true;
+        
+        const dateFilterCol = columns.find((col) => col.dateFilter);
+        if (!dateFilterCol) return true;
 
-      const rawDate = rowData[dateFilterCol.key];
-      if (!rawDate) return true;
+        const colIndex = columns.indexOf(dateFilterCol);
+        // Try getting date from original object first, then from the search data array
+        const rawDate = (originalRow && originalRow[dateFilterCol.key]) || searchData[colIndex];
+        
+        if (!rawDate || rawDate === "N/A" || rawDate === "-" || rawDate === "") return true;
 
-      const empDate = moment(rawDate);
-      if (!empDate.isValid()) return true;
+        // Parse date - handles DD/MM/YYYY, YYYY-MM-DD, and ISO
+        const empDate = moment(rawDate, ["DD/MM/YYYY", "YYYY-MM-DD", "DD-MM-YYYY"], true);
+        if (!empDate.isValid()) {
+          // Fallback to loose parsing if strict fails
+          const looseDate = moment(rawDate);
+          if (!looseDate.isValid()) return true;
+          return looseDate.isBetween(dateRange.startDate, dateRange.endDate, "day", "[]");
+        }
 
-      return empDate.isBetween(dateRange.startDate, dateRange.endDate, "day", "[]");
+        return empDate.isBetween(dateRange.startDate, dateRange.endDate, "day", "[]");
+      } catch (err) {
+        console.error("Error in DataTable filterFn:", err);
+        return true; // Show row if filter fails
+      }
     };
 
     $.fn.dataTable.ext.search.push(filterFn);
@@ -412,7 +433,17 @@ const List = ({
       </div>
 
       {/* Table */}
-      <div className="table-wrapper">
+      <div className="table-wrapper position-relative">
+        {isLoading && (
+          <div 
+            className="position-absolute w-100 h-100 d-flex justify-content-center align-items-center bg-white bg-opacity-75" 
+            style={{ zIndex: 10, top: 0, left: 0 }}
+          >
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        )}
         <table
           ref={tableRef}
           className="table table-striped table-hover table-bordered border-secondary mb-2 dataTable dtr-inline text-capitalize"
@@ -428,7 +459,7 @@ const List = ({
                 </th>
               ))}
               {(hasEdit || hasDelete || hasPrint) && (
-                <th style={{ position: "relative" }}>
+                <th key="action-header" style={{ position: "relative" }}>
                   <span className="title-text" style={{ display: "block", pointerEvents: "none" }}>
                     Action
                   </span>
@@ -446,7 +477,7 @@ const List = ({
                   style={{ backgroundColor: col.sum ? "#e9ecef" : "inherit" }}
                 />
               ))}
-              {(hasEdit || hasDelete || hasPrint) && <th />}
+              {(hasEdit || hasDelete || hasPrint) && <th key="action-footer" />}
             </tr>
           </tfoot>
 

@@ -1,16 +1,39 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { FiSearch, FiUser, FiMenu, FiBell } from 'react-icons/fi';
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../store/slices/authSlice";
+import { getFirmsDropdown } from "../api/firmApi";
+import { setFirms, setSelectedFirmId, setLoading as setFirmLoading, setError as setFirmError } from "../store/slices/firmSlice";
 
 const Header = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const { firms, selectedFirmId } = useSelector((state) => state.firm);
+
+  useEffect(() => {
+    const fetchFirms = async () => {
+      dispatch(setFirmLoading(true));
+      try {
+        const response = await getFirmsDropdown();
+        dispatch(setFirms(response.data || []));
+      } catch (error) {
+        dispatch(setFirmError(error.message));
+      } finally {
+        dispatch(setFirmLoading(false));
+      }
+    };
+
+    fetchFirms();
+  }, [dispatch]);
 
   const handleLogout = (e) => {
     e.preventDefault();
     dispatch(logout());
+  };
+
+  const handleFirmChange = (e) => {
+    dispatch(setSelectedFirmId(e.target.value));
   };
 
   return (
@@ -49,10 +72,18 @@ const Header = () => {
 
         {/* RIGHT: User Actions */}
         <div className="header-right">
-          <select class="form-select d-none d-md-block me-2 w-50 cursor-pointer border-dark" aria-label="Default select example">
-            <option value="1">Ram</option>
-            <option value="2">Two</option>
-            <option value="3">Three</option>
+          <select 
+            className="form-select d-none d-md-block me-2 w-50 cursor-pointer border-dark" 
+            aria-label="Firm selection"
+            value={selectedFirmId}
+            onChange={handleFirmChange}
+          >
+            <option value="all">All Firm</option>
+            {firms.map((firm) => (
+              <option key={firm.firm_id} value={firm.firm_id}>
+                {firm.firm_name}
+              </option>
+            ))}
           </select>
           <button
             className="btn me-2 bg-success-subtle rounded-circle d-flex align-items-center justify-content-center mb-1"
