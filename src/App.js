@@ -11,7 +11,7 @@ import ProtectedRoute from './routes/ProtectedRoute';
 
 // Wrapper component to access Redux state
 function AppContent() {
-  const { isAuthenticated, loading } = useSelector((state) => state.auth);
+  const { isAuthenticated } = useSelector((state) => state.auth);
 
 
   return (

@@ -120,7 +120,8 @@ const useFormNavigation = (formRef, autoFocus = true) => {
 
     form.addEventListener('keydown', handleKeyDown);
     return () => form.removeEventListener('keydown', handleKeyDown);
-  }, [formRef]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formRef, autoFocus]);
 };
 
 export default useFormNavigation;

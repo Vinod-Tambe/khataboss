@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { LogoutAlert } from '../components/common/LogoutAlert';
+
 
 const axiosInstance = axios.create({
   baseURL: 'http://localhost:9000/api/v1',
@@ -24,12 +26,18 @@ axiosInstance.interceptors.request.use(
 // Add a response interceptor to handle errors globally
 axiosInstance.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 401) {
+  async (error) => {
+    const isTokenError = error.response && (
+      error.response.status === 401 || 
+      (error.response.data && error.response.data.error === "Access denied. No token provided.")
+    );
+
+    if (isTokenError) {
       // Handle unauthorized (session expired)
+      await LogoutAlert();
       localStorage.removeItem('user');
       localStorage.removeItem('token');
-      // window.location.href = '/'; // Optional: Redirect to login
+      window.location.href = '/'; // Redirect to login
     }
     return Promise.reject(error);
   }

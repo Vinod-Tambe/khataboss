@@ -10,7 +10,7 @@ import { useSelector } from 'react-redux';
  * @returns {React.ReactNode} - Protected component or redirect
  */
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useSelector((state) => state.auth);
+  const { isAuthenticated } = useSelector((state) => state.auth);
   const location = useLocation();
 
 

@@ -175,7 +175,7 @@ const UpdateFirm = () => {
   };
 
   const validateStep1 = () => {
-    const requiredFields = ['firmName', 'shopName', 'registrationNo', 'phoneNo', 'emailId', 'city', 'pincode', 'address'];
+    const requiredFields = ['firmName', 'shopName', 'registrationNo'];
     for (const field of requiredFields) {
       if (!formData[field] || formData[field].toString().trim() === '') {
         const readableName = field.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
@@ -207,10 +207,7 @@ const UpdateFirm = () => {
 
     if (!validateStep1()) return;
 
-    if (!formData.financialStartDate) {
-      toast.error('Financial Year Start Date is required.');
-      return;
-    }
+    // financialStartDate is now optional
 
     // Optional fields validations
     if (formData.ifscCode && !validateIfsc(formData.ifscCode)) {
@@ -308,8 +305,8 @@ const UpdateFirm = () => {
       <h5 className="mb-3">Basic Information</h5>
       <div className="row g-3">
         <div className="col-12 col-md-4 col-lg-3">
-          <label className="form-label">Firm Name <span className="text-danger">*</span></label>
-          <input type="text" name="firmName" className="form-control border-dark" value={formData.firmName} onChange={handleChange} placeholder="Enter Firm Name" />
+          <label className="form-label">Firm ID <span className="text-danger">*</span></label>
+          <input type="text" name="firmName" className="form-control border-dark" value={formData.firmName} onChange={handleChange} placeholder="FIRM ID (PR,DR)" />
         </div>
         <div className="col-12 col-md-4 col-lg-3">
           <label className="form-label">Shop Name <span className="text-danger">*</span></label>
@@ -320,11 +317,11 @@ const UpdateFirm = () => {
           <input type="text" name="registrationNo" className="form-control border-dark" value={formData.registrationNo} onChange={handleChange} placeholder="Enter Registration Number" />
         </div>
         <div className="col-12 col-md-4 col-lg-3">
-          <label className="form-label">Phone No <span className="text-danger">*</span></label>
+          <label className="form-label">Phone No</label>
           <input type="tel" name="phoneNo" className="form-control border-dark" value={formData.phoneNo} onChange={handleChange} placeholder="Enter Phone Number" />
         </div>
         <div className="col-12 col-md-6 col-lg-3">
-          <label className="form-label">Email ID <span className="text-danger">*</span></label>
+          <label className="form-label">Email ID</label>
           <input type="email" name="emailId" className="form-control border-dark" value={formData.emailId} onChange={handleChange} placeholder="Enter Email ID" />
         </div>
         <div className="col-12 col-md-6 col-lg-3">
@@ -332,11 +329,11 @@ const UpdateFirm = () => {
           <input type="url" name="websiteLink" className="form-control border-dark" value={formData.websiteLink} onChange={handleChange} placeholder="Enter Website URL" />
         </div>
         <div className="col-12 col-md-6 col-lg-3">
-          <label className="form-label">City <span className="text-danger">*</span></label>
+          <label className="form-label">City</label>
           <input type="text" name="city" className="form-control border-dark" value={formData.city} onChange={handleChange} placeholder="Enter City" />
         </div>
         <div className="col-12 col-md-6 col-lg-3">
-          <label className="form-label">Pincode <span className="text-danger">*</span></label>
+          <label className="form-label">Pincode</label>
           <input type="text" name="pincode" className="form-control border-dark" value={formData.pincode} onChange={handleChange} placeholder="Enter Pincode" />
         </div>
         <div className="col-12 col-md-6 col-lg-3">
@@ -366,7 +363,7 @@ const UpdateFirm = () => {
           <textarea name="firmDescription" className="form-control border-dark" rows={1} value={formData.firmDescription} onChange={handleChange} placeholder="Enter Firm Description" />
         </div>
         <div className="col-12 col-md-6 col-lg-6">
-          <label className="form-label">Full Address <span className="text-danger">*</span></label>
+          <label className="form-label">Full Address</label>
           <textarea name="address" className="form-control border-dark" rows={1} value={formData.address} onChange={handleChange} placeholder="Enter Full Address" />
         </div>
       </div>
@@ -426,7 +423,7 @@ const UpdateFirm = () => {
           <label className="form-label">Payment Declaration</label>
           <textarea name="paymentDescription" className="form-control border-dark" rows={1} value={formData.paymentDescription} onChange={handleChange} placeholder="Enter Payment Declaration" />
         </div>
-        
+
         <div className="row g-3 mt-2">
           <div className="col-12 col-md-4 col-lg-3">
             <DocumentUploadCard
@@ -502,7 +499,7 @@ const UpdateFirm = () => {
         </div>
 
         <div className="col-12 col-md-6 col-lg-4 mt-3">
-          <label className="form-label">Financial Year Start Date <span className="text-danger">*</span></label>
+          <label className="form-label">Financial Year Start Date</label>
           <div className="input-group border-dark">
             <span className="input-group-text bg-light border-dark">01 / 04 /</span>
             <select
