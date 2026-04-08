@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { setSelectedUser } from '../../store/slices/userSlice';
 import List from '../common/List';
 import { ConfirmAlert } from '../common/ConfirmAlert';
 import { getUsers, deleteUser } from '../../api/userApi';
@@ -8,6 +9,7 @@ import { toast } from 'react-toastify';
 
 const UserList = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [userData, setUserData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -51,6 +53,11 @@ const UserList = () => {
     { key: "user_city", title: "City", orderable: true, searchable: true },
     { key: "user_add_date", title: "Date", orderable: true, searchable: true, dateFilter: true },
   ];
+
+  const handleView = (rowData) => {
+    dispatch(setSelectedUser(rowData));
+    navigate('/user/home');
+  };
 
   const handleEdit = (rowData) => {
     navigate(`/user/edit/${rowData.user_uuid}`);
@@ -98,9 +105,11 @@ const UserList = () => {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onPrint={handlePrint}
+        onView={handleView}
         hasEdit={true}
         hasDelete={true}
         hasPrint={true}
+        hasView={true}
         loading={loading}
       />
     </div>

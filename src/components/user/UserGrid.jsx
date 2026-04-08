@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { getUsers, deleteUser } from "../../api/userApi";
+import { setSelectedUser } from "../../store/slices/userSlice";
 import { toast } from "react-toastify";
 import { ConfirmAlert } from "../common/ConfirmAlert";
 
 const UserGrid = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [userData, setUserData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -103,7 +105,14 @@ const UserGrid = () => {
           userData.map((user) => (
             <div key={user.user_id} className="col-12 col-md-6 col-lg-6">
               <div className="card shadow border-dark h-100 position-relative">
-                <Link to={`/user/home`} className="text-decoration-none">
+                <div 
+                  className="text-decoration-none cursor-pointer" 
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => {
+                    dispatch(setSelectedUser(user));
+                    navigate('/user/home');
+                  }}
+                >
                   <div className="card-body text-dark p-2">
                     <div className="row align-items-center">
                       <div className="col-3 text-center">
@@ -132,7 +141,7 @@ const UserGrid = () => {
                       </div>
                     </div>
                   </div>
-                </Link>
+                </div>
 
                 <div className="card-footer bg-transparent border-dark d-flex align-items-center p-2 m-0 mt-auto">
                   <button

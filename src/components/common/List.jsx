@@ -31,9 +31,11 @@ const List = ({
   onEdit,
   onDelete,
   onPrint,
+  onView,
   hasEdit = false,
   hasDelete = false,
   hasPrint = false,
+  hasView = false,
   isLoading = false,
 }) => {
   const tableRef = useRef(null);
@@ -121,7 +123,7 @@ const List = ({
 
 
     // Action column
-    if (hasEdit || hasDelete || hasPrint) {
+    if (hasEdit || hasDelete || hasPrint || hasView) {
       dtColumns.push({
         data: null,
         title: "Action",
@@ -132,6 +134,9 @@ const List = ({
         className: "text-center",
         render: function (data, type, row) {
           let buttons = "";
+          if (hasView) {
+            buttons += `<button class="btn btn-sm btn-info pt-0 mt-0 pb-0 mb-0 view-btn me-1" data-id="${row.id || ""}"><i class="bi bi-eye text-white"></i></button>`;
+          }
           if (hasEdit) {
             buttons += `<button class="btn btn-sm btn-primary pt-0 mt-0 pb-0 mb-0 edit-btn me-1" data-id="${row.id || ""}"><i class="bi bi-pencil"></i></button>`;
           }
@@ -283,6 +288,15 @@ const List = ({
           });
 
           // Action handlers
+          if (onView) {
+            $(tableRef.current).on("click", ".view-btn", function (e) {
+              e.stopPropagation();
+              const tr = $(this).closest("tr");
+              const rowData = api.row(tr).data();
+              onView(rowData);
+            });
+          }
+
           if (onEdit) {
             $(tableRef.current).on("click", ".edit-btn", function (e) {
               e.stopPropagation();
@@ -477,7 +491,7 @@ const List = ({
                   style={{ backgroundColor: col.sum ? "#e9ecef" : "inherit" }}
                 />
               ))}
-              {(hasEdit || hasDelete || hasPrint) && <th key="action-footer" />}
+              {(hasEdit || hasDelete || hasPrint || hasView) && <th key="action-footer" />}
             </tr>
           </tfoot>
 
