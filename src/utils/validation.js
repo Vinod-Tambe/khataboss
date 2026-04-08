@@ -6,6 +6,8 @@ export const REGEX = {
   IFSC: /^[A-Z]{4}0[A-Z0-9]{6}$/,
   BSR_CODE: /^[0-9]{7}$/,
   ACCOUNT_NO: /^[0-9]{9,18}$/,
+  MOBILE: /^[6-9][0-9]{9}$/,
+  PHONE: /^[0-9]{10,12}$/,
 };
 
 export const validatePincode = (pincode) => REGEX.PINCODE.test(pincode);
@@ -15,6 +17,8 @@ export const validateGstin = (gstin) => REGEX.GSTIN.test(gstin?.toUpperCase());
 export const validateIfsc = (ifsc) => REGEX.IFSC.test(ifsc?.toUpperCase());
 export const validateBsrCode = (bsr) => REGEX.BSR_CODE.test(bsr);
 export const validateAccountNo = (accNo) => REGEX.ACCOUNT_NO.test(accNo);
+export const validateMobile = (mobile) => REGEX.MOBILE.test(mobile);
+export const validatePhone = (phone) => REGEX.PHONE.test(phone);
 
 export const getValidationMessage = (field, value) => {
   if (!value) return null; // If optional and empty, it's fine (unless required check is separate)
