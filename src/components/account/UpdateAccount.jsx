@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import moment from 'moment';
 import $ from 'jquery';
@@ -40,7 +39,7 @@ const UpdateAccount = () => {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
 
-  const { selectedFirmId, firms: reduxFirms } = useSelector((state) => state.firm);
+
 
   const openingDateRef = useRef(null);
 
