@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import $ from "jquery";
 import moment from "moment";
 import "daterangepicker";
@@ -8,10 +8,7 @@ import DayBookSummary from "./DayBookSummary";
 
 const Daybook = () => {
   const dateRef = useRef(null);
-  const [dateRange, setDateRange] = useState({
-    startDate: "",
-    endDate: "",
-  });
+
   const dayBookData = {
     "FINANCE EMI DEPOSIT": {
       total_cash_amt: 1000,
@@ -89,10 +86,7 @@ const Daybook = () => {
           `${start.format("DD-MM-YYYY")} - ${end.format("DD-MM-YYYY")}`
         );
 
-        setDateRange({
-          startDate: start.format("YYYY-MM-DD"),
-          endDate: end.format("YYYY-MM-DD"),
-        });
+
       }
     );
 
@@ -101,13 +95,11 @@ const Daybook = () => {
       `${fyStart.format("DD-MM-YYYY")} - ${fyEnd.format("DD-MM-YYYY")}`
     );
 
-    setDateRange({
-      startDate: fyStart.format("YYYY-MM-DD"),
-      endDate: fyEnd.format("YYYY-MM-DD"),
-    });
 
+
+    const dateInput = dateRef.current;
     return () => {
-      $(dateRef.current).data("daterangepicker")?.remove();
+      $(dateInput).data("daterangepicker")?.remove();
     };
   }, []);
 

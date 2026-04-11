@@ -1,11 +1,35 @@
 import React from "react";
 import { Routes, Route, Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 import UserHome from "../../components/user/UserHome";
 import AddLoan from "../../components/loan/AddLoan";
 import AddFinance from "../../components/finance/AddFinance";
 import Dropdown from "react-bootstrap/Dropdown";
 
 const UserHomeRoutes = () => {
+  const { selectedUser } = useSelector((state) => state.user);
+
+  if (!selectedUser) {
+    return (
+      <div className="card p-5 text-center shadow-sm">
+        <h3 className="text-danger">No active user selected.</h3>
+        <p className="text-muted">Please select a user from the User List/Grid first.</p>
+        <Link to="/user/list" className="btn btn-primary mt-3">Go to User List</Link>
+      </div>
+    );
+  }
+
+  const {
+    user_first_name,
+    user_last_name,
+    user_mobile_no,
+    user_profile_img
+  } = selectedUser;
+
+  const profileImg = user_profile_img?.path 
+    ? `http://localhost:9000/${user_profile_img.path}` 
+    : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+
   return (
     <div>
       <div className="card p-3 pt-2 shadow-sm">
@@ -21,11 +45,14 @@ const UserHomeRoutes = () => {
                 className="rounded-circle border border-dark"
                 width="40"
                 height="40"
-                src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                src={profileImg}
+                onError={(e) => {
+                  e.target.src = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+                }}
               />
               <div className="ms-2">
-                <div className="fw-bold text-dark">Vinod Gokul Tambe</div>
-                <div className="text-muted small">9579082528</div>
+                <div className="fw-bold text-dark">{user_first_name} {user_last_name}</div>
+                <div className="text-muted small">{user_mobile_no}</div>
               </div>
             </div>
           </Link>

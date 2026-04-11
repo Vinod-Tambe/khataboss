@@ -23,8 +23,7 @@ export const ProfitLossAccount = () => {
   // Calculate totals
   const totalExpenditure = expenditure.reduce((sum, e) => sum + e.amount, 0);
   const totalRevenue = revenue.reduce((sum, r) => sum + r.amount, 0);
-  const difference = Math.abs(totalRevenue - totalExpenditure);
-  const isProfit = totalRevenue > totalExpenditure;
+
 
   useEffect(() => {
     const table = $('#profiLossTable').DataTable({

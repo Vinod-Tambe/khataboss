@@ -1,57 +1,103 @@
-import React from 'react'
-import List from '../common/List'
+import React, { useState, useEffect, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { setSelectedUser } from '../../store/slices/userSlice';
+import List from '../common/List';
+import { ConfirmAlert } from '../common/ConfirmAlert';
+import { getUsers, deleteUser } from '../../api/userApi';
+import { toast } from 'react-toastify';
 
 const UserList = () => {
-  const userData = [
-    { id: 1, name: "John Doe", position: "Manager", office: "New York", status: "Active", salary: "$90,000", createdAt: "2026-01-05" },
-    { id: 2, name: "Anna Smith", position: "Developer", office: "London", status: "Pending", salary: "$75,000", createdAt: "2026-01-05" },
-    { id: 3, name: "Michael Brown", position: "Designer", office: "San Francisco", status: "Inactive", salary: "$65,000", createdAt: "2026-01-05" },
-    { id: 4, name: "Emily Davis", position: "Analyst", office: "Chicago", status: "Active", salary: "$80,000", createdAt: "2026-01-10" },
-    { id: 5, name: "David Wilson", position: "Engineer", office: "Seattle", status: "Pending", salary: "$85,000", createdAt: "2026-01-15" },
-    { id: 6, name: "Sarah Johnson", position: "Consultant", office: "Boston", status: "Active", salary: "$95,000", createdAt: "2026-01-20" },
-    { id: 7, name: "Robert Lee", position: "Director", office: "Los Angeles", status: "Inactive", salary: "$120,000", createdAt: "2026-01-25" },
-    { id: 8, name: "Lisa Garcia", position: "Specialist", office: "Miami", status: "Active", salary: "$70,000", createdAt: "2026-01-30" },
-    { id: 9, name: "James Martinez", position: "Coordinator", office: "Denver", status: "Pending", salary: "$60,000", createdAt: "2026-02-05" },
-    { id: 10, name: "Maria Rodriguez", position: "Supervisor", office: "Phoenix", status: "Active", salary: "$100,000", createdAt: "2026-02-10" },
-    { id: 11, name: "William Anderson", position: "Technician", office: "Portland", status: "Inactive", salary: "$55,000", createdAt: "2026-02-15" },
-    { id: 12, name: "Jennifer Taylor", position: "Manager", office: "Austin", status: "Active", salary: "$90,000", createdAt: "2026-02-20" },
-    { id: 13, name: "Christopher Thomas", position: "Developer", office: "Raleigh", status: "Pending", salary: "$75,000", createdAt: "2026-02-25" },
-    { id: 14, name: "Amanda Jackson", position: "Designer", office: "Nashville", status: "Active", salary: "$65,000", createdAt: "2026-03-01" },
-    { id: 15, name: "Matthew White", position: "Analyst", office: "Salt Lake City", status: "Inactive", salary: "$80,000", createdAt: "2026-03-05" },
-    { id: 16, name: "Ashley Harris", position: "Engineer", office: "Orlando", status: "Active", salary: "$85,000", createdAt: "2026-03-10" },
-    { id: 17, name: "Daniel Martin", position: "Consultant", office: "Minneapolis", status: "Pending", salary: "$95,000", createdAt: "2026-03-15" },
-    { id: 18, name: "Jessica Thompson", position: "Director", office: "Tampa", status: "Active", salary: "$120,000", createdAt: "2026-03-20" },
-    { id: 19, name: "Anthony Garcia", position: "Specialist", office: "Pittsburgh", status: "Inactive", salary: "$70,000", createdAt: "2026-03-25" },
-    { id: 20, name: "Harper King", position: "Finance Analyst", office: "Dubai", status: "Active", salary: "$90,000", createdAt: "2026-03-30" },
-  ];
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const [userData, setUserData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const { selectedFirmId } = useSelector((state) => state.firm);
+
+  const fetchUsers = useCallback(async (search = "") => {
+    setLoading(true);
+    try {
+      const firmId = selectedFirmId === 'all' ? null : selectedFirmId;
+      const response = await getUsers(firmId, search);
+      setUserData(response.data || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast.error(error.message || 'Failed to fetch users');
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedFirmId]);
+
+  // Debounce search term
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    fetchUsers(debouncedSearchTerm);
+  }, [fetchUsers, debouncedSearchTerm]);
 
   const columns = [
-    { key: "id", title: "ID", orderable: true, searchable: true },
-    { key: "name", title: "Name", orderable: true, searchable: true },
-    { key: "position", title: "Position", orderable: true, searchable: true },
-    { key: "office", title: "Office", orderable: true, searchable: true },
-    { key: "status", title: "Status", orderable: true, searchable: true },
-    { key: "salary", title: "Salary", orderable: true, searchable: true },
-    { key: "createdAt", title: "Date", orderable: true, searchable: true, dateFilter: true },
+    { key: "user_id", title: "ID", orderable: true, searchable: true },
+    { key: "user_first_name", title: "First Name", orderable: true, searchable: true },
+    { key: "user_last_name", title: "Last Name", orderable: true, searchable: true },
+    { key: "user_father_name", title: "Father Name", orderable: true, searchable: true },
+    { key: "user_mobile_no", title: "Mobile No", orderable: true, searchable: true },
+    { key: "user_gender", title: "Gender", orderable: true, searchable: true },
+    { key: "user_city", title: "City", orderable: true, searchable: true },
+    { key: "user_add_date", title: "Date", orderable: true, searchable: true, dateFilter: true },
   ];
 
-  const handleEdit = (rowData) => {
-    alert(`Edit user: ${rowData.name} (ID: ${rowData.id})`);
+  const handleView = (rowData) => {
+    dispatch(setSelectedUser(rowData));
+    navigate('/user/home');
   };
 
-  const handleDelete = (rowData) => {
-    if (window.confirm(`Are you sure you want to delete user: ${rowData.name} (ID: ${rowData.id})?`)) {
-      alert(`User ${rowData.name} deleted (mock)`);
+  const handleEdit = (rowData) => {
+    navigate(`/user/edit/${rowData.user_uuid}`);
+  };
+
+  const handleDelete = async (rowData) => {
+    const isConfirmed = await ConfirmAlert(`Are you sure you want to delete user: ${rowData.user_first_name} ${rowData.user_last_name}?`);
+    if (isConfirmed) {
+      try {
+        await deleteUser(rowData.user_uuid);
+        toast.success('User deleted successfully');
+        fetchUsers(); // Refresh list
+      } catch (error) {
+        toast.error(error.message || 'Failed to delete user');
+      }
     }
   };
 
   const handlePrint = (rowData) => {
-    // Replace with your custom invoice print logic
-    alert(`Print invoice for user: ${rowData.name} (ID: ${rowData.id})`);
+    window.print();
   };
 
   return (
     <div>
+      <div className="row mb-3">
+        <div className="col-md-4">
+          <div className="input-group">
+            <span className="input-group-text bg-white border-secondary">
+              <i className="bi bi-search"></i>
+            </span>
+            <input
+              type="text"
+              className="form-control border-secondary"
+              placeholder="Search users (Backend)..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
       <List
         data={userData}
         columns={columns}
@@ -59,12 +105,15 @@ const UserList = () => {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onPrint={handlePrint}
+        onView={handleView}
         hasEdit={true}
         hasDelete={true}
         hasPrint={true}
+        hasView={true}
+        loading={loading}
       />
     </div>
-  )
-}
+  );
+};
 
-export default UserList
+export default UserList;
