@@ -8,7 +8,6 @@ import 'daterangepicker/daterangepicker.css';
 import { toast } from 'react-hot-toast';
 import { validatePincode, validatePan, validateAadhaar, validateGstin, validateIfsc, validateMobile, validatePhone } from '../../utils/validation';
 import useFormNavigation from '../../hooks/useFormNavigation';
-import { useSelector } from 'react-redux';
 import { getFirmsDropdown } from '../../api/firmApi';
 import { getUser, updateUser } from '../../api/userApi';
 
@@ -49,7 +48,7 @@ const UpdateUser = () => {
 
     const [firms, setFirms] = useState([]);
     const [loading, setLoading] = useState(false);
-    const { firms: reduxFirms } = useSelector((state) => state.firm);
+
 
     const [formData, setFormData] = useState({
         firstName: '', lastName: '', fatherName: '', motherName: '',
