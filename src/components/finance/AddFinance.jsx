@@ -510,8 +510,7 @@ const AddFinance = () => {
 
       {/* Cash Payment Row */}
       <div className="row g-3">
-        <div className="col-12 col-md-4 col-lg-4">
-          <label className="form-label fw-medium">Cash Account</label>
+        <div className="col-12 col-md-4 col-lg-4 mb-3">
           <select
             name="fin_cash_acc_id"
             className="form-select border-dark"
@@ -524,8 +523,7 @@ const AddFinance = () => {
             ))}
           </select>
         </div>
-        <div className="col-12 col-md-4 col-lg-4">
-          <label className="form-label fw-medium">Amount</label>
+        <div className="col-12 col-md-4 col-lg-4  mb-3">
           <input
             type="text"
             inputMode="decimal"
@@ -536,8 +534,7 @@ const AddFinance = () => {
             onChange={handleChange}
           />
         </div>
-        <div className="col-12 col-md-4 col-lg-4">
-          <label className="form-label fw-medium">Information</label>
+        <div className="col-12 col-md-4 col-lg-4  mb-3">
           <input
             type="text"
             name="fin_cash_info"
@@ -551,8 +548,7 @@ const AddFinance = () => {
 
       {/* Bank Payment Row */}
       <div className="row g-3">
-        <div className="col-12 col-md-4 col-lg-4">
-          <label className="form-label fw-medium">Bank Account</label>
+        <div className="col-12 col-md-4 col-lg-4  mb-3">
           <select
             name="fin_bank_acc_id"
             className="form-select border-dark"
@@ -565,8 +561,7 @@ const AddFinance = () => {
             ))}
           </select>
         </div>
-        <div className="col-12 col-md-4 col-lg-4">
-          <label className="form-label fw-medium">Amount</label>
+        <div className="col-12 col-md-4 col-lg-4  mb-3">
           <input
             type="text"
             inputMode="decimal"
@@ -577,8 +572,7 @@ const AddFinance = () => {
             onChange={handleChange}
           />
         </div>
-        <div className="col-12 col-md-4 col-lg-4">
-          <label className="form-label fw-medium">Information</label>
+        <div className="col-12 col-md-4 col-lg-4  mb-3">
           <input
             type="text"
             name="fin_bank_info"
@@ -592,8 +586,7 @@ const AddFinance = () => {
 
       {/* Online Payment Row */}
       <div className="row g-3">
-        <div className="col-12 col-md-4 col-lg-4">
-          <label className="form-label fw-medium">Online Account</label>
+        <div className="col-12 col-md-4 col-lg-4  mb-3">
           <select
             name="fin_online_acc_id"
             className="form-select border-dark"
@@ -606,8 +599,7 @@ const AddFinance = () => {
             ))}
           </select>
         </div>
-        <div className="col-12 col-md-4 col-lg-4">
-          <label className="form-label fw-medium">Amount</label>
+        <div className="col-12 col-md-4 col-lg-4 mb-3">
           <input
             type="text"
             inputMode="decimal"
@@ -618,8 +610,7 @@ const AddFinance = () => {
             onChange={handleChange}
           />
         </div>
-        <div className="col-12 col-md-4 col-lg-4">
-          <label className="form-label fw-medium">Information</label>
+        <div className="col-12 col-md-4 col-lg-4  mb-3">
           <input
             type="text"
             name="fin_online_info"
@@ -633,8 +624,7 @@ const AddFinance = () => {
 
       {/* Card Payment Row */}
       <div className="row g-3">
-        <div className="col-12 col-md-4 col-lg-4">
-          <label className="form-label fw-medium">Card Account</label>
+        <div className="col-12 col-md-4 col-lg-4  mb-3">
           <select
             name="fin_card_acc_id"
             className="form-select border-dark"
@@ -647,8 +637,7 @@ const AddFinance = () => {
             ))}
           </select>
         </div>
-        <div className="col-12 col-md-4 col-lg-4">
-          <label className="form-label fw-medium">Amount</label>
+        <div className="col-12 col-md-4 col-lg-4  mb-3">
           <input
             type="text"
             inputMode="decimal"
@@ -659,8 +648,7 @@ const AddFinance = () => {
             onChange={handleChange}
           />
         </div>
-        <div className="col-12 col-md-4 col-lg-4">
-          <label className="form-label fw-medium">Information</label>
+        <div className="col-12 col-md-4 col-lg-4  mb-3">
           <input
             type="text"
             name="fin_card_info"

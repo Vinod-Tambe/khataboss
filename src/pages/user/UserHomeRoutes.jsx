@@ -6,6 +6,7 @@ import AddLoan from "../../components/loan/AddLoan";
 import AddFinance from "../../components/finance/AddFinance";
 import ListFinance from "../../components/finance/ListFinance";
 import Dropdown from "react-bootstrap/Dropdown";
+import Finance from "../../components/finance/Finance";
 
 const UserHomeRoutes = () => {
   const { selectedUser } = useSelector((state) => state.user);
@@ -191,6 +192,7 @@ const UserHomeRoutes = () => {
           <Route path="/active-finance" element={<ListFinance status="ACTIVE" />} />
           <Route path="/inactive-finance" element={<ListFinance status="INACTIVE" />} />
           <Route path="/all-finance" element={<ListFinance status="ALL" />} />
+          <Route path="/finance" element={<Finance />} />
         </Routes>
 
       </div>
