@@ -1,9 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import DocumentUploadCard from '../common/DocumentUploadCard';
+import moment from 'moment';
+import $ from 'jquery';
+import 'daterangepicker';
+import 'daterangepicker/daterangepicker.css';
+import { toast } from 'react-hot-toast';
+import { validatePincode, validatePan, validateAadhaar, validateGstin, validateIfsc, validateMobile, validatePhone } from '../../utils/validation';
+import useFormNavigation from '../../hooks/useFormNavigation';
+import { useSelector } from 'react-redux';
+import { getFirmsDropdown } from '../../api/firmApi';
+import { createUser } from '../../api/userApi';
 
 const AddUser = () => {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [currentStep, setCurrentStep] = useState(1);
+
+    // Form Navigation
+    const formRef = useRef(null);
+    useFormNavigation(formRef);
 
     // Previews
     const [photoPreview, setPhotoPreview] = useState(null);
@@ -27,7 +41,12 @@ const AddUser = () => {
 
     // Signature
     const signatureRef = useRef(null);
+    const dateOfBirthRef = useRef(null);
     const [isDrawing, setIsDrawing] = useState(false);
+
+    const [firms, setFirms] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const { selectedFirmId, firms: reduxFirms } = useSelector((state) => state.firm);
 
     useEffect(() => {
         const handleResize = () => {
@@ -39,9 +58,34 @@ const AddUser = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    useEffect(() => {
+        // Fetch firms initially
+        const fetchFirms = async () => {
+            try {
+                const firmRes = await getFirmsDropdown();
+                setFirms(firmRes.data || []);
+            } catch (error) {
+                console.error("Error fetching firms:", error);
+            }
+        };
+
+        fetchFirms();
+    }, []);
+
+    // Sync firm ID with Header selection
+    useEffect(() => {
+        if (selectedFirmId === 'all') {
+            if (reduxFirms.length > 0) {
+                setFormData(prev => ({ ...prev, firmId: reduxFirms[0].firm_id }));
+            }
+        } else {
+            setFormData(prev => ({ ...prev, firmId: selectedFirmId }));
+        }
+    }, [selectedFirmId, reduxFirms]);
+
     const [formData, setFormData] = useState({
         firstName: '', lastName: '', fatherName: '', motherName: '',
-        mobileNo: '', emailId: '', gender: '', cast: '', maritalStatus: '',
+        mobileNo: '', phoneNo: '', emailId: '', gender: 'Male', cast: '', maritalStatus: '',
         dateOfBirth: new Date().toISOString().split('T')[0], panNo: '', gstin: '', taxNo: '', adhaarNo: '',
         bankName: '', bankAccNo: '', ifscCode: '',
         shopName: '', officeAddress: '', permanentAddress: '', currentAddress: '',
@@ -49,6 +93,7 @@ const AddUser = () => {
         pincode: '', state: '', otherInformation: '',
         photo: null, adhaarFront: null, adhaarBack: null, panCard: null,
         signature: null,
+        firmId: '',
     });
 
     const handleChange = (e) => {
@@ -141,6 +186,19 @@ const AddUser = () => {
 
     // ─── Signature Pad (unchanged) ────────────────────────────────────────
     useEffect(() => {
+        if (dateOfBirthRef.current) {
+            $(dateOfBirthRef.current).daterangepicker({
+                singleDatePicker: true,
+                showDropdowns: true,
+                autoUpdateInput: true,
+                locale: {
+                    format: 'DD/MM/YYYY'
+                }
+            }, (start) => {
+                setFormData(prev => ({ ...prev, dateOfBirth: start.format('YYYY-MM-DD') }));
+            });
+        }
+
         const canvas = signatureRef.current;
         if (!canvas) return;
 
@@ -199,13 +257,155 @@ const AddUser = () => {
             });
     };
 
-    const nextStep = () => { if (currentStep < 2) setCurrentStep(currentStep + 1); };
+    const validateStep1 = () => {
+        const requiredFields = ['firstName', 'lastName', 'mobileNo', 'gender'];
+        for (const field of requiredFields) {
+            if (!formData[field] || formData[field].toString().trim() === '') {
+                const readableName = field.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
+                toast.error(`${readableName} is required.`);
+                return false;
+            }
+        }
+
+        if (!formData.firmId) {
+            toast.error('Firm Name is required.');
+            return false;
+        }
+
+        if (formData.panNo && !validatePan(formData.panNo)) {
+            toast.error('Invalid PAN Number. Format: ABCDE1234F');
+            return false;
+        }
+
+        if (formData.mobileNo && !validateMobile(formData.mobileNo)) {
+            toast.error('Invalid Mobile Number. It should be 10 digits starting with 6-9.');
+            return false;
+        }
+
+        if (formData.phoneNo && !validatePhone(formData.phoneNo)) {
+            toast.error('Invalid Phone Number. It should be 10-12 digits.');
+            return false;
+        }
+
+        if (formData.gstin && !validateGstin(formData.gstin)) {
+            toast.error('Invalid GSTIN. It should be a 15-character alphanumeric code.');
+            return false;
+        }
+
+        if (formData.adhaarNo && !validateAadhaar(formData.adhaarNo)) {
+            toast.error('Invalid Aadhaar Number. It should be 12 digits and not start with 0 or 1.');
+            return false;
+        }
+
+        if (formData.taxNo && formData.taxNo.length < 5) {
+            toast.error('Tax No should be at least 5 characters.');
+            return false;
+        }
+
+        return true;
+    };
+
+    const nextStep = () => {
+        if (validateStep1()) {
+            if (currentStep < 2) setCurrentStep(currentStep + 1);
+        }
+    };
     const prevStep = () => { if (currentStep > 1) setCurrentStep(currentStep - 1); };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Form Data:', formData);
-        alert('Firm information submitted successfully!');
+
+        if (!validateStep1()) return;
+
+        if (formData.pincode && !validatePincode(formData.pincode)) {
+            toast.error('Invalid Pincode. It should be 6 digits and not start with 0.');
+            return;
+        }
+
+        if (formData.ifscCode && !validateIfsc(formData.ifscCode)) {
+            toast.error('Invalid IFSC Code. Format: ABCD0123456 (11 characters).');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const data = new FormData();
+
+            // Map frontend fields to original database column names
+            const mapping = {
+                firmId: 'user_firm_id',
+                firstName: 'user_first_name',
+                lastName: 'user_last_name',
+                fatherName: 'user_father_name',
+                motherName: 'user_mother_name',
+                mobileNo: 'user_mobile_no',
+                phoneNo: 'user_phone_no',
+                emailId: 'user_email_id',
+                gender: 'user_gender',
+                cast: 'user_cast',
+                maritalStatus: 'user_marital_status',
+                occupation: 'user_occupation',
+                dateOfBirth: 'user_birth_date',
+                gstin: 'user_gstin',
+                taxNo: 'user_tax_no',
+                panNo: 'user_pan_no',
+                adhaarNo: 'user_adhaar_no',
+                bankName: 'user_bank_name',
+                bankAccNo: 'user_bank_acc_no',
+                ifscCode: 'user_ifsc_code',
+                permanentAddress: 'user_per_address',
+                currentAddress: 'user_curr_address',
+                village: 'user_village',
+                wardNumber: 'user_ward_no',
+                tehsil: 'user_tehsil',
+                city: 'user_city',
+                state: 'user_state',
+                country: 'user_country',
+                pincode: 'user_pincode',
+                otherInformation: 'user_other_info'
+            };
+
+            Object.keys(formData).forEach(key => {
+                if (mapping[key] && formData[key] !== null && !(formData[key] instanceof File)) {
+                    data.append(mapping[key], formData[key]);
+                }
+            });
+
+            // Append files
+            if (formData.photo) data.append('photo', formData.photo);
+            if (formData.adhaarFront) data.append('adhaarFront', formData.adhaarFront);
+            if (formData.adhaarBack) data.append('adhaarBack', formData.adhaarBack);
+            if (formData.panCard) data.append('panCard', formData.panCard);
+            if (formData.signature) data.append('signature', formData.signature);
+
+            const result = await createUser(data);
+            toast.success(result.message || 'User information submitted successfully!');
+
+            // Reset form
+            setFormData({
+                firstName: '', lastName: '', fatherName: '', motherName: '',
+                mobileNo: '', phoneNo: '', emailId: '', gender: 'Male', cast: '', maritalStatus: '',
+                dateOfBirth: new Date().toISOString().split('T')[0], panNo: '', gstin: '', taxNo: '', adhaarNo: '',
+                bankName: '', bankAccNo: '', ifscCode: '',
+                shopName: '', officeAddress: '', permanentAddress: '', currentAddress: '',
+                village: '', wardNumber: '', tehsil: '', city: '', country: '',
+                pincode: '', state: '', otherInformation: '',
+                photo: null, adhaarFront: null, adhaarBack: null, panCard: null,
+                signature: null,
+                firmId: selectedFirmId === 'all' ? (reduxFirms[0]?.firm_id || '') : selectedFirmId,
+            });
+            setPhotoPreview(null);
+            setAadhaarFrontPreview(null);
+            setAadhaarBackPreview(null);
+            setPanCardPreview(null);
+            clearSignature();
+            if (isMobile) setCurrentStep(1);
+
+        } catch (error) {
+            toast.error(error.message || 'Error creating user');
+        } finally {
+            setLoading(false);
+        }
     };
 
     // ─── STEP 1 ─────────────────────────────────────────────────────────────
@@ -230,12 +430,27 @@ const AddUser = () => {
                     <input type="text" name="motherName" placeholder='Enter your mother name' className="form-control border-dark" value={formData.motherName} onChange={handleChange} />
                 </div>
                 <div className="col-12 col-md-6 col-lg-3">
-                    <label className="form-label">Mobile No <span className="text-danger">*</span></label>
-                    <input type="tel" name="mobileNo" placeholder='Enter your mobile no | phone no..' className="form-control border-dark" required value={formData.mobileNo} onChange={handleChange} />
+                    <label className="form-label">Firm Name <span className="text-danger">*</span></label>
+                    <select name="firmId" className="form-select border-dark" required value={formData.firmId} onChange={handleChange}>
+                        <option value="">Select Firm</option>
+                        {firms.map(firm => (
+                            <option key={firm.firm_id} value={firm.firm_id}>
+                                {firm.firm_name}
+                            </option>
+                        ))}
+                    </select>
                 </div>
                 <div className="col-12 col-md-6 col-lg-3">
-                    <label className="form-label">Email Id <span className="text-danger">*</span></label>
-                    <input type="email" name="emailId" placeholder='Enter your email Id.' className="form-control border-dark" required value={formData.emailId} onChange={handleChange} />
+                    <label className="form-label">Mobile No <span className="text-danger">*</span></label>
+                    <input type="tel" name="mobileNo" placeholder='Enter mobile no' className="form-control border-dark" required value={formData.mobileNo} onChange={handleChange} />
+                </div>
+                <div className="col-12 col-md-6 col-lg-3">
+                    <label className="form-label">Phone No</label>
+                    <input type="tel" name="phoneNo" placeholder='Enter phone no' className="form-control border-dark" value={formData.phoneNo} onChange={handleChange} />
+                </div>
+                <div className="col-12 col-md-6 col-lg-3">
+                    <label className="form-label">Email Id</label>
+                    <input type="email" name="emailId" placeholder='Enter your email Id.' className="form-control border-dark" value={formData.emailId} onChange={handleChange} />
                 </div>
                 <div className="col-12 col-md-6 col-lg-3">
                     <label className="form-label">Gender <span className="text-danger">*</span></label>
@@ -266,7 +481,13 @@ const AddUser = () => {
                 </div>
                 <div className="col-12 col-md-6 col-lg-3">
                     <label className="form-label">Date Of Birth</label>
-                    <input type="date" name="dateOfBirth" className="form-control border-dark" value={formData.dateOfBirth} onChange={handleChange} />
+                    <input
+                        type="text"
+                        name="dateOfBirth"
+                        ref={dateOfBirthRef}
+                        className="form-control border-dark"
+                        defaultValue={moment(formData.dateOfBirth).format('DD/MM/YYYY')}
+                    />
                 </div>
 
                 {/* Identification */}
@@ -472,8 +693,8 @@ const AddUser = () => {
                     <hr className="my-3" />
                     {renderStep2()}
                     <div className="d-grid gap-2 col-12 mx-auto mt-5">
-                        <button type="submit" className="btn btn-primary btn-lg">
-                            SUBMIT <i className="bi bi-check-circle ms-2"></i>
+                        <button type="submit" className="btn btn-primary btn-lg" disabled={loading}>
+                            {loading ? 'SUBMITTING...' : 'SUBMIT'} <i className="bi bi-check-circle ms-2"></i>
                         </button>
                     </div>
                 </div>
@@ -509,8 +730,9 @@ const AddUser = () => {
                         <button
                             type="submit"
                             className="btn btn-success flex-grow-1 ms-auto"
+                            disabled={loading}
                         >
-                            SUBMIT <i className="bi bi-check-circle ms-2"></i>
+                            {loading ? 'SUBMITTING...' : 'SUBMIT'} <i className="bi bi-check-circle ms-2"></i>
                         </button>
                     )}
                 </div>
@@ -520,7 +742,7 @@ const AddUser = () => {
 
     return (
         <div className="">
-            <form onSubmit={handleSubmit}>
+            <form ref={formRef} onSubmit={handleSubmit}>
                 {renderContent()}
             </form>
 

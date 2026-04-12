@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useRef, useEffect } from 'react'
 // import ProfitLossReport from './ProfitLossReport'
 import $ from "jquery";
 import moment from "moment";
@@ -10,10 +10,7 @@ import TradingAccount from './TradingAccount';
 
 const ProfitLoss = () => {
     const dateRef = useRef(null);
-    const [dateRange, setDateRange] = useState({
-        startDate: "",
-        endDate: "",
-    });
+
     useEffect(() => {
         if (!dateRef.current) return;
 
@@ -56,10 +53,7 @@ const ProfitLoss = () => {
                     `${start.format("DD-MM-YYYY")} - ${end.format("DD-MM-YYYY")}`
                 );
 
-                setDateRange({
-                    startDate: start.format("YYYY-MM-DD"),
-                    endDate: end.format("YYYY-MM-DD"),
-                });
+
             }
         );
 
@@ -68,13 +62,11 @@ const ProfitLoss = () => {
             `${fyStart.format("DD-MM-YYYY")} - ${fyEnd.format("DD-MM-YYYY")}`
         );
 
-        setDateRange({
-            startDate: fyStart.format("YYYY-MM-DD"),
-            endDate: fyEnd.format("YYYY-MM-DD"),
-        });
 
+
+        const dateInput = dateRef.current;
         return () => {
-            $(dateRef.current).data("daterangepicker")?.remove();
+            $(dateInput).data("daterangepicker")?.remove();
         };
     }, []);
     return (

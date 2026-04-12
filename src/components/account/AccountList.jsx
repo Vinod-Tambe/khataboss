@@ -1,128 +1,102 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import List from "../common/List";
+import { getAccounts, deleteAccount } from "../../api/accountApi";
+import { toast } from "react-hot-toast";
+import moment from "moment";
+import { ConfirmAlert } from "../common/ConfirmAlert";
 
 const AccountList = () => {
-  const accountData = [
-    {
-      id: 1,
-      accountName: "HDFC Current Account",
-      openingBalanceDate: "2026-01-01",
-      accountBalance: "₹1,50,000",
-      balanceType: "Debit",
-      primaryAccount: "Yes",
-      bankAccountNumber: "50200012345678",
-      ifscCode: "HDFC0001234",
-      branchName: "Hadapsar",
-      panNumber: "ABCDE1234F",
-      bsrCode: "1234567",
-      bankAddress: "Hadapsar, Pune, Maharashtra",
-      pincode: "411028",
-    },
-    {
-      id: 2,
-      accountName: "SBI Savings Account",
-      openingBalanceDate: "2026-01-10",
-      accountBalance: "₹75,000",
-      balanceType: "Credit",
-      primaryAccount: "No",
-      bankAccountNumber: "325689741258",
-      ifscCode: "SBIN0005678",
-      branchName: "Kothrud",
-      panNumber: "PQRSX5678L",
-      bsrCode: "2345678",
-      bankAddress: "Kothrud, Pune, Maharashtra",
-      pincode: "411038",
-    },
-    {
-      id: 3,
-      accountName: "ICICI Business Account",
-      openingBalanceDate: "2026-02-01",
-      accountBalance: "₹2,20,000",
-      balanceType: "Debit",
-      primaryAccount: "Yes",
-      bankAccountNumber: "784512369852",
-      ifscCode: "ICIC0009876",
-      branchName: "Viman Nagar",
-      panNumber: "LMNOP9876Z",
-      bsrCode: "3456789",
-      bankAddress: "Viman Nagar, Pune, Maharashtra",
-      pincode: "411014",
-    },
-    {
-      id: 4,
-      accountName: "Axis Salary Account",
-      openingBalanceDate: "2026-02-15",
-      accountBalance: "₹55,000",
-      balanceType: "Credit",
-      primaryAccount: "No",
-      bankAccountNumber: "456987123654",
-      ifscCode: "UTIB0001122",
-      branchName: "Baner",
-      panNumber: "ZXCVB1122K",
-      bsrCode: "4567890",
-      bankAddress: "Baner, Pune, Maharashtra",
-      pincode: "411045",
-    },
-    {
-      id: 5,
-      accountName: "Kotak Business Account",
-      openingBalanceDate: "2026-03-01",
-      accountBalance: "₹3,10,000",
-      balanceType: "Debit",
-      primaryAccount: "Yes",
-      bankAccountNumber: "998877665544",
-      ifscCode: "KKBK0004455",
-      branchName: "Wakad",
-      panNumber: "ASDFG4455P",
-      bsrCode: "5678901",
-      bankAddress: "Wakad, Pune, Maharashtra",
-      pincode: "411057",
-    },
-  ];
+  const [accounts, setAccounts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { selectedFirmId } = useSelector((state) => state.firm);
 
-  const columns = [
-    { key: "id", title: "ID", orderable: true, searchable: true },
-    { key: "accountName", title: "Account Name", orderable: true, searchable: true },
-    { key: "openingBalanceDate", title: "Opening Balance Date", orderable: true, searchable: true, dateFilter: true },
-    { key: "accountBalance", title: "Account Balance", orderable: true, searchable: true },
-    { key: "balanceType", title: "Balance Type", orderable: true, searchable: true },
-    { key: "primaryAccount", title: "Primary Account", orderable: true, searchable: true },
-    { key: "bankAccountNumber", title: "Bank Account Number", orderable: false, searchable: true },
-    { key: "ifscCode", title: "IFSC Code", orderable: true, searchable: true },
-    { key: "branchName", title: "Branch Name", orderable: true, searchable: true },
-    { key: "panNumber", title: "PAN Number", orderable: true, searchable: true },
-    { key: "bsrCode", title: "BSR Code", orderable: true, searchable: true },
-    { key: "bankAddress", title: "Bank Address", orderable: false, searchable: true },
-    { key: "pincode", title: "Pincode", orderable: true, searchable: true },
-  ];
+  const fetchAccounts = useCallback(async () => {
+    try {
+      setLoading(true);
+      const firmFilter = selectedFirmId === 'all' ? null : selectedFirmId;
+      const response = await getAccounts(firmFilter);
+      setAccounts(response.data || []);
+    } catch (error) {
+      console.error("Error fetching accounts:", error);
+      toast.error("Failed to load accounts");
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedFirmId]);
+
+  useEffect(() => {
+    fetchAccounts();
+  }, [fetchAccounts]);
+
+  const columns = React.useMemo(() => [
+    { key: "acc_id", title: "ID", orderable: true, searchable: true },
+    { key: "firm", title: "Firm Name", orderable: true, searchable: true, render: (val) => val?.firm_name || "N/A" },
+    { key: "acc_name", title: "Account Name", orderable: true, searchable: true },
+    { 
+      key: "acc_opening_date", 
+      title: "Opening Balance Date", 
+      orderable: true, 
+      searchable: true, 
+      dateFilter: true,
+      render: (val) => val ? moment(val).format("DD/MM/YYYY") : "N/A"
+    },
+    { key: "acc_cash_balance", title: "Account Balance", orderable: true, searchable: true, sum: true },
+    { key: "acc_balance_type", title: "Balance Type", orderable: true, searchable: true },
+    { key: "acc_pre_acc", title: "Primary Account", orderable: true, searchable: true },
+    { key: "acc_bank_no", title: "Bank Account Number", orderable: false, searchable: true },
+    { key: "acc_ifsc_code", title: "IFSC Code", orderable: true, searchable: true },
+    { key: "acc_branch_name", title: "Branch Name", orderable: true, searchable: true },
+    { key: "acc_pan_no", title: "PAN Number", orderable: true, searchable: true },
+    { key: "acc_bsr_no", title: "BSR Code", orderable: true, searchable: true },
+    { key: "acc_address", title: "Bank Address", orderable: false, searchable: true },
+    { key: "acc_pincode", title: "Pincode", orderable: true, searchable: true },
+  ], []);
 
   const handleEdit = (rowData) => {
-    alert(`Edit Account: ${rowData.accountName} (ID: ${rowData.id})`);
+    navigate(`/account/edit/${rowData.acc_uuid}`);
   };
 
-  const handleDelete = (rowData) => {
-    if (window.confirm(`Are you sure you want to delete ${rowData.accountName}?`)) {
-      alert("Account deleted (mock)");
+  const handleDelete = async (rowData) => {
+    const isConfirmed = await ConfirmAlert(`Are you sure you want to delete ${rowData.acc_name}?`);
+    if (isConfirmed) {
+      try {
+        await deleteAccount(rowData.acc_uuid);
+        toast.success("Account deleted successfully");
+        fetchAccounts();
+      } catch (error) {
+        toast.error(error.message || "Error deleting account");
+      }
     }
   };
 
   const handlePrint = (rowData) => {
-    alert(`Print Account Details: ${rowData.accountName}`);
+    alert(`Print Account Details: ${rowData.acc_name}`);
   };
 
   return (
     <div>
-      <List
-        data={accountData}
-        columns={columns}
-        title="All Account List"
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onPrint={handlePrint}
-        hasEdit={true}
-        hasDelete={true}
-        hasPrint={true}
-      />
+      {loading ? (
+        <div className="d-flex justify-content-center py-5">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      ) : (
+        <List
+          data={accounts}
+          columns={columns}
+          title="All Account List"
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onPrint={handlePrint}
+          hasEdit={true}
+          hasDelete={true}
+          hasPrint={true}
+        />
+      )}
     </div>
   );
 };

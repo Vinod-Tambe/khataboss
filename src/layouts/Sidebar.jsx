@@ -24,9 +24,17 @@ import {
   FiLogOut,
 } from "react-icons/fi";
 import { FaBook, FaBookOpen, FaBalanceScale } from "react-icons/fa";
+import { useDispatch } from "react-redux";
+import { logout } from "../store/slices/authSlice";
 
 const Sidebar = () => {
   const [openSubmenus, setOpenSubmenus] = useState({});
+  const dispatch = useDispatch();
+
+  const handleLogout = (e) => {
+    e.preventDefault();
+    dispatch(logout());
+  };
 
   useEffect(() => {
     const ps = new PerfectScrollbar("#sidebar-menu-scroll", {
@@ -205,6 +213,7 @@ const Sidebar = () => {
                     <NavLink
                       to={item.path}
                       className={({ isActive }) => (isActive ? "active" : "")}
+                      onClick={item.id === "logout" ? handleLogout : undefined}
                     >
                       {item.icon}
                       <span>{item.label}</span>

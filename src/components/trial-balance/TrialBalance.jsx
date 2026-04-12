@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useRef, useEffect } from 'react'
 import TrialBalanceReport from './TrialBalanceReport'
 import $ from "jquery";
 import moment from "moment";
@@ -7,10 +7,7 @@ import "daterangepicker/daterangepicker.css";
 
 const TrialBalance = () => {
   const dateRef = useRef(null);
-  const [dateRange, setDateRange] = useState({
-    startDate: "",
-    endDate: "",
-  });
+
   useEffect(() => {
     if (!dateRef.current) return;
 
@@ -53,10 +50,7 @@ const TrialBalance = () => {
           `${start.format("DD-MM-YYYY")} - ${end.format("DD-MM-YYYY")}`
         );
 
-        setDateRange({
-          startDate: start.format("YYYY-MM-DD"),
-          endDate: end.format("YYYY-MM-DD"),
-        });
+
       }
     );
 
@@ -65,13 +59,11 @@ const TrialBalance = () => {
       `${fyStart.format("DD-MM-YYYY")} - ${fyEnd.format("DD-MM-YYYY")}`
     );
 
-    setDateRange({
-      startDate: fyStart.format("YYYY-MM-DD"),
-      endDate: fyEnd.format("YYYY-MM-DD"),
-    });
 
+
+    const dateInput = dateRef.current;
     return () => {
-      $(dateRef.current).data("daterangepicker")?.remove();
+      $(dateInput).data("daterangepicker")?.remove();
     };
   }, []);
   return (

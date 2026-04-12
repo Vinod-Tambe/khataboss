@@ -1,37 +1,36 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { Provider, useSelector } from 'react-redux';
+import store from './store';
 import MainRoutes from './routes/MainRoutes';
 import './App.css';
 import './css/Layout.css';
 import './css/Common.css';
 import Authentication from './pages/authentication/Authentication';
-import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastAlert } from './components/common/ToastAlert';
+import ProtectedRoute from './routes/ProtectedRoute';
 
-// Wrapper component to access AuthContext
+// Wrapper component to access Redux state
 function AppContent() {
-  const { user, loading } = useAuth();
+  const { isAuthenticated } = useSelector((state) => state.auth);
 
-  if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
-        <div className="spinner-border text-secondary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className=''>
       <ToastAlert/>
       <Routes>
+        {/* Protected routes wrapped in ProtectedRoute */}
         <Route 
           path="/*" 
-          element={user ? <MainRoutes /> : <Navigate to="/" replace />} 
+          element={
+            <ProtectedRoute>
+              <MainRoutes />
+            </ProtectedRoute>
+          } 
         />
+        {/* Public route - Login page */}
         <Route 
           path="/" 
-          element={!user ? <Authentication /> : <Navigate to="/home" replace />} 
+          element={!isAuthenticated ? <Authentication /> : <Navigate to="/home" replace />} 
         />
       </Routes>
     </div>
@@ -40,9 +39,9 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
+    <Provider store={store}>
       <AppContent />
-    </AuthProvider>
+    </Provider>
   );
 }
 
