@@ -248,7 +248,7 @@ const List = ({
               const inputType = col.dateFilter ? "date" : "text";
               const $input = $(
                 `<input type="${inputType}" placeholder="search..." class="form-control form-control-sm column-search" ` +
-                  `style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; display: none;" />`
+                `style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; display: none;" />`
               );
 
               th.append($input);
@@ -335,7 +335,7 @@ const List = ({
       console.error("Error initializing DataTable:", err);
     }
   }, [data, columns, title, onEdit, onDelete, onPrint, onView, hasEdit, hasDelete, hasPrint, hasView]);
-  
+
 
   // ─── Date Range Filter ────────────────────────────────────────
   useEffect(() => {
@@ -347,14 +347,14 @@ const List = ({
     const filterFn = (settings, searchData, dataIndex, originalRow) => {
       try {
         if (!dateRange.startDate || !dateRange.endDate) return true;
-        
+
         const dateFilterCol = columns.find((col) => col.dateFilter);
         if (!dateFilterCol) return true;
 
         const colIndex = columns.indexOf(dateFilterCol);
         // Try getting date from original object first, then from the search data array
         const rawDate = (originalRow && originalRow[dateFilterCol.key]) || searchData[colIndex];
-        
+
         if (!rawDate || rawDate === "N/A" || rawDate === "-" || rawDate === "") return true;
 
         // Parse date - handles DD/MM/YYYY, YYYY-MM-DD, and ISO
@@ -450,8 +450,8 @@ const List = ({
       {/* <div className="table-wrapper position-relative"> */}
       <div className="table-wrapper position-relative" style={{ overflowX: "auto" }}>
         {isLoading && (
-          <div 
-            className="position-absolute w-100 h-100 d-flex justify-content-center align-items-center bg-white bg-opacity-75" 
+          <div
+            className="position-absolute w-100 h-100 d-flex justify-content-center align-items-center bg-white bg-opacity-75"
             style={{ zIndex: 10, top: 0, left: 0 }}
           >
             <div className="spinner-border text-primary" role="status">
