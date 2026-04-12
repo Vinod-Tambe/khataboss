@@ -100,7 +100,11 @@ const ListFinance = ({ status = "ALL" }) => {
               ) : (
                 finances.map((fin) => (
                   <tr key={fin.fin_id}>
-                    <td className="ps-4 fw-bold">{fin.fin_id}.</td>
+                    <td className="ps-4 fw-bold">
+                      <Link to="/user/home/finance" className="text-decoration-none">
+                        {fin.fin_id}.
+                      </Link>
+                    </td>
                     <td>
                       <div className="fw-bold">{fin.user?.user_first_name} {fin.user?.user_last_name}</div>
                       <div className="small text-muted">{fin.user?.user_mobile_no}</div>
