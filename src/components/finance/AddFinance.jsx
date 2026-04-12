@@ -8,7 +8,6 @@ import useFormNavigation from '../../hooks/useFormNavigation';
 import useAddFinanceCalculator from '../../hooks/useAddFinanceCalculator';
 import { getFirmsDropdown } from '../../api/firmApi';
 import { getAccountsDropdown } from '../../api/accountApi';
-import { getUsers } from '../../api/userApi';
 import { createFinance } from '../../api/financeApi';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -61,7 +60,6 @@ const AddFinance = () => {
 
   const [firms, setFirms] = useState([]);
   const [accounts, setAccounts] = useState([]);
-  const [users, setUsers] = useState([]);
   const { selectedUser } = useSelector((state) => state.user);
   const { selectedFirmId, firms: reduxFirms } = useSelector((state) => state.firm);
 
@@ -143,7 +141,7 @@ const AddFinance = () => {
     if (selectedUser && selectedUser.user_id !== formData.fin_user_id) {
       setFormData(prev => ({ ...prev, fin_user_id: selectedUser.user_id }));
     }
-  }, [selectedUser]);
+  }, [selectedUser, formData.fin_user_id]);
 
   // Fetch accounts when firm changes
   useEffect(() => {
@@ -161,20 +159,6 @@ const AddFinance = () => {
     };
 
     fetchAccounts();
-
-    const fetchUsers = async () => {
-      if (!formData.fin_firm_id) return;
-      try {
-        console.log(`Fetching users for firm ID: ${formData.fin_firm_id}...`);
-        const userRes = await getUsers(formData.fin_firm_id);
-        const userData = userRes.data || userRes || [];
-        setUsers(Array.isArray(userData) ? userData : []);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
-    };
-
-    fetchUsers();
   }, [formData.fin_firm_id]);
 
   // Auto-select default accounts when accounts list is loaded

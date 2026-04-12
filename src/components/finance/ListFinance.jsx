@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { getFinances, deleteFinance } from "../../api/financeApi";
 import { toast } from "react-toastify";
@@ -11,7 +11,7 @@ const ListFinance = ({ status = "ALL" }) => {
   const [finances, setFinances] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchFinances = async () => {
+  const fetchFinances = useCallback(async () => {
     try {
       setLoading(true);
       const filters = {
@@ -27,13 +27,13 @@ const ListFinance = ({ status = "ALL" }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedFirm?.firm_id, selectedUser?.user_id, status]);
 
   useEffect(() => {
     if (selectedUser?.user_id) {
       fetchFinances();
     }
-  }, [selectedUser, selectedFirm, status]);
+  }, [selectedUser?.user_id, fetchFinances]);
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this finance record?")) {
