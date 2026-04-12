@@ -8,25 +8,33 @@ import useFormNavigation from '../../hooks/useFormNavigation';
 import useAddFinanceCalculator from '../../hooks/useAddFinanceCalculator';
 import { getFirmsDropdown } from '../../api/firmApi';
 import { getAccountsDropdown } from '../../api/accountApi';
+import { getUsers } from '../../api/userApi';
+import { createFinance } from '../../api/financeApi';
+import { toast } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 
 const AddFinance = () => {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     fin_prin_amt: '',
     fin_no_of_emi: '',
     fin_start_date: moment().format('YYYY-MM-DD'),
     fin_firm_id: '',
-    fin_freq: 'MONTHLY',
-    fin_freq_type: '',
+    fin_freq: '',
+    fin_freq_type: 'MONTHLY',
     fin_roi: '',
     fin_collec_amt: '',
     fin_proccess_amt: '',
     fin_fine_amt: '',
     fin_fine_emi_no: '',
     fin_staff_id: '',
+    fin_user_id: '',
+    fin_dr_acc_id: '',
     fin_emi_amt: '0.00',
     fin_final_amt: '0.00',
 
@@ -53,6 +61,8 @@ const AddFinance = () => {
 
   const [firms, setFirms] = useState([]);
   const [accounts, setAccounts] = useState([]);
+  const [users, setUsers] = useState([]);
+  const { selectedUser } = useSelector((state) => state.user);
   const { selectedFirmId, firms: reduxFirms } = useSelector((state) => state.firm);
 
   const startDateRef = useRef(null);
@@ -65,17 +75,23 @@ const AddFinance = () => {
   const { fin_emi_amt, fin_final_amt } = useAddFinanceCalculator({
     fin_prin_amt: formData.fin_prin_amt,
     fin_no_of_emi: formData.fin_no_of_emi,
-    fin_freq_type: formData.fin_freq,
+    fin_freq_type: formData.fin_freq_type,
     fin_proccess_amt: formData.fin_proccess_amt,
   });
 
   // Sync calculated values to formData
   useEffect(() => {
-    setFormData(prev => ({
-      ...prev,
-      fin_emi_amt,
-      fin_final_amt
-    }));
+    setFormData(prev => {
+      const updates = {
+        fin_emi_amt,
+        fin_final_amt
+      };
+      // If cash amount is empty or was previously synced with final amount, update it
+      if (!prev.fin_cash_amt || prev.fin_cash_amt === prev.fin_final_amt) {
+        updates.fin_cash_amt = fin_final_amt;
+      }
+      return { ...prev, ...updates };
+    });
   }, [fin_emi_amt, fin_final_amt]);
 
   useEffect(() => {
@@ -122,6 +138,13 @@ const AddFinance = () => {
     }
   }, [selectedFirmId, reduxFirms, formData.fin_firm_id]);
 
+  // Sync User ID with Active User selection
+  useEffect(() => {
+    if (selectedUser && selectedUser.user_id !== formData.fin_user_id) {
+      setFormData(prev => ({ ...prev, fin_user_id: selectedUser.user_id }));
+    }
+  }, [selectedUser]);
+
   // Fetch accounts when firm changes
   useEffect(() => {
     const fetchAccounts = async () => {
@@ -138,6 +161,20 @@ const AddFinance = () => {
     };
 
     fetchAccounts();
+
+    const fetchUsers = async () => {
+      if (!formData.fin_firm_id) return;
+      try {
+        console.log(`Fetching users for firm ID: ${formData.fin_firm_id}...`);
+        const userRes = await getUsers(formData.fin_firm_id);
+        const userData = userRes.data || userRes || [];
+        setUsers(Array.isArray(userData) ? userData : []);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+
+    fetchUsers();
   }, [formData.fin_firm_id]);
 
   // Auto-select default accounts when accounts list is loaded
@@ -157,9 +194,9 @@ const AddFinance = () => {
           const onlineAcc = accounts.find(a => a.acc_name === "Online Account");
           if (onlineAcc) updates.fin_online_acc_id = onlineAcc.acc_id;
         }
-        if (!prev.fin_card_acc_id) {
-          const cardAcc = accounts.find(a => a.acc_name === "Card Account");
-          if (cardAcc) updates.fin_card_acc_id = cardAcc.acc_id;
+        if (!prev.fin_dr_acc_id) {
+          const drAcc = accounts.find(a => a.acc_name === "Finance Dr Account" || a.acc_name === "Loan Account");
+          if (drAcc) updates.fin_dr_acc_id = drAcc.acc_id;
         }
         return Object.keys(updates).length > 0 ? { ...prev, ...updates } : prev;
       });
@@ -175,26 +212,46 @@ const AddFinance = () => {
     const numericFields = [
       'fin_prin_amt', 'fin_no_of_emi', 'fin_collec_amt', 'fin_proccess_amt',
       'fin_roi', 'fin_fine_amt', 'fin_cash_amt', 'fin_bank_amt',
-      'fin_online_amt', 'fin_card_amt'
+      'fin_online_amt', 'fin_card_amt', 'fin_fine_emi_no', 'fin_freq'
     ];
 
     if (numericFields.includes(name)) {
-      // Allow only digits and a single decimal point
-      const sanitizedValue = value.replace(/[^0-9.]/g, '');
-      const parts = sanitizedValue.split('.');
-      const finalValue = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : sanitizedValue;
+      const integerFields = ['fin_no_of_emi', 'fin_fine_emi_no'];
+      let sanitizedValue;
+
+      if (integerFields.includes(name)) {
+        // Allow only digits
+        sanitizedValue = value.replace(/[^0-9]/g, '');
+      } else {
+        // Allow only digits and a single decimal point
+        sanitizedValue = value.replace(/[^0-9.]/g, '');
+        const parts = sanitizedValue.split('.');
+        sanitizedValue = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : sanitizedValue;
+      }
 
       setFormData((prev) => ({
         ...prev,
-        [name]: finalValue,
+        [name]: sanitizedValue,
       }));
       return;
     }
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+    setFormData((prev) => {
+      const updates = { [name]: type === 'checkbox' ? checked : value };
+
+      // If total finance amount is changed, update cash amount if no other payments are set
+      if (name === 'fin_final_amt') {
+        const hasOtherPayments = parseFloat(prev.fin_bank_amt || 0) > 0 ||
+          parseFloat(prev.fin_online_amt || 0) > 0 ||
+          parseFloat(prev.fin_card_amt || 0) > 0;
+
+        if (!hasOtherPayments) {
+          updates.fin_cash_amt = value; // Sync the entered value (including characters)
+        }
+      }
+
+      return { ...prev, ...updates };
+    });
   };
 
 
@@ -215,11 +272,49 @@ const AddFinance = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Submitted Finance Data:', formData);
-    // You can also log the last payment here if needed
-    alert('Finance record saved successfully! (check console)');
+    if (!formData.fin_firm_id) {
+      toast.error('Please select Firm');
+      return;
+    }
+    if (!formData.fin_user_id || formData.fin_user_id === '0') {
+      toast.error('Please select User / Customer');
+      return;
+    }
+    if (!formData.fin_prin_amt || !formData.fin_start_date) {
+      toast.error('Please fill required fields (Principal, Date)');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Validate payment sum
+      const total = parseFloat(formData.fin_final_amt || 0);
+      const cash = parseFloat(formData.fin_cash_amt || 0);
+      const bank = parseFloat(formData.fin_bank_amt || 0);
+      const online = parseFloat(formData.fin_online_amt || 0);
+      const card = parseFloat(formData.fin_card_amt || 0);
+
+      const sumPayments = cash + bank + online + card;
+
+      if (Math.abs(total - sumPayments) > 0.01) {
+        toast.error(`Total payment (${sumPayments.toFixed(2)}) must equal Total Finance Amount (${total.toFixed(2)})`);
+        setLoading(false);
+        return;
+      }
+
+      console.log('Sending Finance Data:', formData);
+      await createFinance(formData);
+      toast.success('Finance record saved successfully!');
+      // Reset form or navigate
+      // navigate('/finance/list'); 
+    } catch (error) {
+      console.error('Error saving finance:', error);
+      toast.error(error.message || 'Error saving finance record');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // ────────────────────────────────────────────────
@@ -286,9 +381,10 @@ const AddFinance = () => {
         <div className="col-12 col-md-4 col-lg-3">
           <label className="form-label fw-medium">Frequency Type</label>
           <select
-            name="fin_freq"
+            name="fin_freq_type"
+            placeholder="1 , 2"
             className="form-select border-dark"
-            value={formData.fin_freq}
+            value={formData.fin_freq_type}
             onChange={handleChange}
           >
             <option value="MONTHLY">Monthly</option>
@@ -301,10 +397,10 @@ const AddFinance = () => {
           <label className="form-label fw-medium">Frequency</label>
           <input
             type="text"
-            name="fin_freq_type"
+            name="fin_freq"
             placeholder="1 , 2 ,3"
             className="form-control border-dark"
-            value={formData.fin_freq_type}
+            value={formData.fin_freq}
             onChange={handleChange}
           />
         </div>
@@ -366,8 +462,9 @@ const AddFinance = () => {
           <label className="form-label fw-medium">Fine EMI No</label>
           <input
             type="text"
+            inputMode="numeric"
             name="fin_fine_emi_no"
-            placeholder="3, 5, 7"
+            placeholder="e.g. 3"
             className="form-control border-dark"
             value={formData.fin_fine_emi_no}
             onChange={handleChange}
@@ -385,6 +482,7 @@ const AddFinance = () => {
             readOnly
           />
         </div>
+
 
         <div className="col-12 col-md-4 col-lg-3 ms-auto">
           <label className="form-label fw-medium">Total Finance Amount</label>
@@ -627,15 +725,15 @@ const AddFinance = () => {
           Next
         </button>
       ) : (
-        <button type="submit" className="btn btn-primary btn-lg px-5">
-          Save Finance
+        <button type="submit" className="btn btn-primary btn-lg px-5" disabled={loading}>
+          {loading ? 'Saving...' : 'Save Finance'}
         </button>
       )}
     </div>
   ) : (
     <div className="d-grid d-md-block text-center mt-5">
-      <button type="submit" className="btn btn-primary btn-lg px-5">
-        Save Finance
+      <button type="submit" className="btn btn-primary btn-lg px-5" disabled={loading}>
+        {loading ? 'Saving...' : 'Save Finance'}
       </button>
     </div>
   );
