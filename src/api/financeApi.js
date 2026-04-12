@@ -20,10 +20,16 @@ export const createFinance = async (financeData) => {
  * @param {number|string} firmId - Optional firm ID to filter by
  * @returns {Promise} - Response object with list of finances
  */
-export const getFinances = async (firmId = null) => {
+export const getFinances = async (filters = {}) => {
   try {
-    const url = firmId ? `/finance?firmId=${firmId}` : '/finance';
-    const response = await axiosInstance.get(url);
+    const { firmId, userId, status } = filters;
+    let query = [];
+    if (firmId) query.push(`firmId=${firmId}`);
+    if (userId) query.push(`userId=${userId}`);
+    if (status) query.push(`status=${status}`);
+    
+    const queryString = query.length > 0 ? `?${query.join('&')}` : '';
+    const response = await axiosInstance.get(`/finance${queryString}`);
     return response.data;
   } catch (error) {
     const message = error.response?.data?.error || error.response?.data?.message || error.message;

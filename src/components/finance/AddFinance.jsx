@@ -282,8 +282,8 @@ const AddFinance = () => {
       toast.error('Please select User / Customer');
       return;
     }
-    if (!formData.fin_prin_amt || !formData.fin_start_date) {
-      toast.error('Please fill required fields (Principal, Date)');
+    if (!formData.fin_prin_amt || !formData.fin_start_date || !formData.fin_roi) {
+      toast.error('Please fill required fields (Principal, Date, ROI)');
       return;
     }
 
@@ -307,8 +307,7 @@ const AddFinance = () => {
       console.log('Sending Finance Data:', formData);
       await createFinance(formData);
       toast.success('Finance record saved successfully!');
-      // Reset form or navigate
-      // navigate('/finance/list'); 
+      navigate('/user/home/active-finance');
     } catch (error) {
       console.error('Error saving finance:', error);
       toast.error(error.message || 'Error saving finance record');

@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import UserHome from "../../components/user/UserHome";
 import AddLoan from "../../components/loan/AddLoan";
 import AddFinance from "../../components/finance/AddFinance";
+import ListFinance from "../../components/finance/ListFinance";
 import Dropdown from "react-bootstrap/Dropdown";
 
 const UserHomeRoutes = () => {
@@ -26,8 +27,8 @@ const UserHomeRoutes = () => {
     user_profile_img
   } = selectedUser;
 
-  const profileImg = user_profile_img?.path 
-    ? `http://localhost:9000/${user_profile_img.path}` 
+  const profileImg = user_profile_img?.path
+    ? `http://localhost:9000/${user_profile_img.path}`
     : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
 
   return (
@@ -187,6 +188,9 @@ const UserHomeRoutes = () => {
           <Route path="/*" element={<UserHome />} />
           <Route path="/add-loan" element={<AddLoan />} />
           <Route path="/add-finance" element={<AddFinance />} />
+          <Route path="/active-finance" element={<ListFinance status="ACTIVE" />} />
+          <Route path="/inactive-finance" element={<ListFinance status="INACTIVE" />} />
+          <Route path="/all-finance" element={<ListFinance status="ALL" />} />
         </Routes>
 
       </div>
