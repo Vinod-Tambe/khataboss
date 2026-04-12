@@ -231,7 +231,7 @@ const List = ({
         ordering: true,
         info: true,
         responsive: false,
-        scrollX: true,
+        // scrollX: true,
         autoWidth: true,
 
         initComplete: function () {
@@ -447,7 +447,8 @@ const List = ({
       </div>
 
       {/* Table */}
-      <div className="table-wrapper position-relative">
+      {/* <div className="table-wrapper position-relative"> */}
+      <div className="table-wrapper position-relative" style={{ overflowX: "auto" }}>
         {isLoading && (
           <div 
             className="position-absolute w-100 h-100 d-flex justify-content-center align-items-center bg-white bg-opacity-75" 

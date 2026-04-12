@@ -14,8 +14,21 @@ table {
   border-collapse: separate;
   border-spacing: 0;
   width: 100%;
+    scrollbar-width: thin; 
   min-width: 900px;
   /* forces horizontal scroll when needed */
+}
+.table-wrapper {
+  scrollbar-width: thin;
+   /* max-height: 400px;    */
+  scrollbar-color: #999 transparent;
+}
+html::-webkit-scrollbar {
+  width: 4px;
+}
+
+html {
+  scrollbar-width: thin;
 }
 
 th {
