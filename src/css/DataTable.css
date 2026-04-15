@@ -25,19 +25,27 @@ table {
   scrollbar-color: #999 transparent;
 }
 
-html::-webkit-scrollbar {
-  width: 4px;
+::-webkit-scrollbar {
+  width: 2px !important;
+  height: 2px !important;
 }
 
 html {
   scrollbar-width: thin;
 }
 
-th {
+.dynamic-data-table thead th {
   border: 1px solid grey !important;
   white-space: nowrap;
   color: maroon !important;
-  background-color: white !important;
+  background-color: rgb(231, 238, 255) !important;
+}
+
+.dynamic-data-table tfoot th {
+  border: 1px solid grey !important;
+  white-space: nowrap;
+  color: maroon !important;
+  background-color: #f4eaea !important;
 }
 
 td {
