@@ -3,7 +3,7 @@ import { LogoutAlert } from '../components/common/LogoutAlert';
 
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:9000/api/v1',
+  baseURL: 'https://carlie-atavic-tonita.ngrok-free.dev/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -28,7 +28,7 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const isTokenError = error.response && (
-      error.response.status === 401 || 
+      error.response.status === 401 ||
       (error.response.data && error.response.data.error === "Access denied. No token provided.")
     );
 
