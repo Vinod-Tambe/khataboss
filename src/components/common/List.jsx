@@ -461,7 +461,7 @@ const List = ({
         )}
         <table
           ref={tableRef}
-          className="table table-striped table-hover table-bordered border-secondary mb-2 dataTable dtr-inline text-capitalize"
+          className="table table-hover table-bordered border-secondary mb-2 dataTable dtr-inline text-capitalize dynamic-data-table"
           style={{ minWidth: "900px" }}
         >
           <thead className="table-secondary border-bottom border-dark-subtle">
