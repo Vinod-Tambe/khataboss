@@ -1,14 +1,14 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { loginWithCredentials, verifyAndLogin } from '../../api/authApi';
 
-// Initial state, checking localStorage for existing user
+// Initial state, checking storage for existing session
 const initialState = {
   user: JSON.parse(localStorage.getItem('user')) || null,
-  token: localStorage.getItem('token') || null,
+  token: sessionStorage.getItem('token') || null,
   loading: false,
   loginLoading: false,
   error: null,
-  isAuthenticated: !!localStorage.getItem('token'),
+  isAuthenticated: !!sessionStorage.getItem('token'),
 };
 
 // Async thunk for OTP login
@@ -19,9 +19,9 @@ export const loginWithOtp = createAsyncThunk(
       const response = await verifyAndLogin(own_login_id, otp);
       
       if (response && response.token) {
-        // Store in localStorage
+        // Store in respective storage
         localStorage.setItem('user', JSON.stringify(response.user));
-        localStorage.setItem('token', response.token);
+        sessionStorage.setItem('token', response.token);
         return response;
       } else {
         return rejectWithValue(response.message);
@@ -38,9 +38,9 @@ export const login = createAsyncThunk(
       const response = await loginWithCredentials(credentials.login_id, credentials.password);
       
       if (response && response.token) {
-        // Store in localStorage
+        // Store in respective storage
         localStorage.setItem('user', JSON.stringify(response.user));
-        localStorage.setItem('token', response.token);
+        sessionStorage.setItem('token', response.token);
         return response;
       } else {
         return rejectWithValue(response.message);
@@ -61,7 +61,9 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.error = null;
       localStorage.removeItem('user');
-      localStorage.removeItem('token');
+      sessionStorage.removeItem('token');
+      // For thoroughness, also clean up any legacy token in localStorage
+      localStorage.removeItem('token'); 
     },
     clearError: (state) => {
       state.error = null;
