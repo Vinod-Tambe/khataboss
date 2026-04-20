@@ -38,6 +38,7 @@ axiosInstance.interceptors.response.use(
       await LogoutAlert();
       localStorage.removeItem('user');
       sessionStorage.removeItem('token');
+
       // Clear legacy token if exists
       localStorage.removeItem('token');
       window.location.href = '/'; // Redirect to login
