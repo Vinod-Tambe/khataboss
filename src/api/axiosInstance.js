@@ -13,7 +13,7 @@ const axiosInstance = axios.create({
 // Add a request interceptor to add the auth token to headers
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -37,6 +37,9 @@ axiosInstance.interceptors.response.use(
       // Handle unauthorized (session expired)
       await LogoutAlert();
       localStorage.removeItem('user');
+      sessionStorage.removeItem('token');
+
+      // Clear legacy token if exists
       localStorage.removeItem('token');
       window.location.href = '/'; // Redirect to login
     }
