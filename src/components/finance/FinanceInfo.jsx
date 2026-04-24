@@ -98,16 +98,16 @@ const FinanceInfo = ({ data: externalData }) => {
 
             <div className="table-responsive">
                 <table className="table table-hover align-middle mb-0">
-                    <thead className="table-light text-muted">
+                    <thead className="table-light border text-muted">
                         <tr>
-                            <th className="fw-semibold">EMI No</th>
-                            <th className="fw-semibold">Start Date</th>
-                            <th className="fw-semibold text-end">EMI Amt</th>
-                            <th className="fw-semibold">Due Date</th>
-                            <th className="fw-semibold text-end">Paid Amt</th>
-                            <th className="fw-semibold text-end">Pending Amt</th>
-                            <th className="fw-semibold">Status</th>
-                            <th className="fw-semibold text-center">Actions</th>
+                            <th className="fw-semibold border">EMI No</th>
+                            <th className="fw-semibold border">Start Date</th>
+                            <th className="fw-semibold  border">EMI Amt</th>
+                            <th className="fw-semibold   border">Due Date</th>
+                            <th className="fw-semibold  border">Paid Amt</th>
+                            <th className="fw-semibold  border">Pending Amt</th>
+                            <th className="fw-semibold  text-center border">Status</th>
+                            <th className="fw-semibold text-center border">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -116,11 +116,11 @@ const FinanceInfo = ({ data: externalData }) => {
                                 <tr key={item.id || index}>
                                     <td className="fw-bold text-dark">{item.emiNo}</td>
                                     <td className="text-secondary">{item.startDate}</td>
-                                    <td className="text-end fw-medium text-dark">₹ {(item.emiAmt || 0).toLocaleString()}</td>
-                                    <td className="text-secondary">{item.dueDate}</td>
-                                    <td className="text-end text-success">₹ {(item.paidAmt || 0).toLocaleString()}</td>
-                                    <td className="text-end text-danger">₹ {(item.pendingAmt || 0).toLocaleString()}</td>
-                                    <td>
+                                    <td className=" fw-medium text-dark">₹ {(item.emiAmt || 0).toLocaleString()}</td>
+                                    <td className="">{item.dueDate}</td>
+                                    <td className=" text-success">₹ {(item.paidAmt || 0).toLocaleString()}</td>
+                                    <td className=" text-danger">₹ {(item.pendingAmt || 0).toLocaleString()}</td>
+                                    <td className="text-center">
                                         <span className={`badge rounded-pill ${item.status === 'Paid' ? 'bg-success-subtle text-success' :
                                             item.status === 'Partial' ? 'bg-warning-subtle text-warning' :
                                                 'bg-danger-subtle text-danger'
@@ -145,10 +145,10 @@ const FinanceInfo = ({ data: externalData }) => {
                         <tfoot className="table-light">
                             <tr className="fw-bold">
                                 <td colSpan="2" className="text-center text-dark">Grand Total</td>
-                                <td className="text-end text-primary">₹ {totals.emiAmt.toLocaleString()}</td>
+                                <td className=" text-primary">₹ {totals.emiAmt.toLocaleString()}</td>
                                 <td></td>
-                                <td className="text-end text-success">₹ {totals.paidAmt.toLocaleString()}</td>
-                                <td className="text-end text-danger">₹ {totals.pendingAmt.toLocaleString()}</td>
+                                <td className=" text-success">₹ {totals.paidAmt.toLocaleString()}</td>
+                                <td className=" text-danger">₹ {totals.pendingAmt.toLocaleString()}</td>
                                 <td colSpan="2"></td>
                             </tr>
                         </tfoot>

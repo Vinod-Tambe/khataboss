@@ -89,6 +89,7 @@ const FirmList = () => {
           hasEdit={true}
           hasDelete={true}
           hasPrint={true}
+            showFooter={false} 
         />
       )}
     </div>

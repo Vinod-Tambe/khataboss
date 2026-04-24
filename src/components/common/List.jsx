@@ -37,6 +37,7 @@ const List = ({
   hasPrint = false,
   hasView = false,
   isLoading = false,
+   showFooter = true  
 }) => {
   const tableRef = useRef(null);
   const dateRef = useRef(null);
@@ -157,31 +158,55 @@ const List = ({
         columns: dtColumns,
 
         // ─── Footer totals logic ───────────────────────────────
-        footerCallback: function () {
-          const api = this.api();
+        // footerCallback: function () {
+        //   const api = this.api();
 
-          columns.forEach((col, idx) => {
-            if (!col.sum) return;
+        //   columns.forEach((col, idx) => {
+        //     if (!col.sum) return;
 
-            // Total across **all** filtered data (not just current page)
-            const total = api
-              .column(idx)
-              .data()
-              .reduce((a, b) => intVal(a) + intVal(b), 0);
+        //     // Total across **all** filtered data (not just current page)
+        //     const total = api
+        //       .column(idx)
+        //       .data()
+        //       .reduce((a, b) => intVal(a) + intVal(b), 0);
 
-            // Format with Indian number style (1,23,456.00)
-            const formatted = total.toLocaleString("en-IN", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            });
+        //     // Format with Indian number style (1,23,456.00)
+        //     const formatted = total.toLocaleString("en-IN", {
+        //       minimumFractionDigits: 2,
+        //       maximumFractionDigits: 2,
+        //     });
 
-            // Optional: add ₹ prefix
-            // const display = total === 0 ? "-" : `₹ ${formatted}`;
-            const display = total === 0 ? "0.00" : formatted;
+        //     // Optional: add ₹ prefix
+        //     // const display = total === 0 ? "-" : `₹ ${formatted}`;
+        //     const display = total === 0 ? "0.00" : formatted;
 
-            $(api.column(idx).footer()).html(`<strong>${display}</strong>`);
-          });
-        },
+        //     $(api.column(idx).footer()).html(`<strong>${display}</strong>`);
+        //   });
+        // },
+
+        footerCallback: showFooter
+  ? function () {
+      const api = this.api();
+
+      columns.forEach((col, idx) => {
+        if (!col.sum) return;
+
+        const total = api
+          .column(idx)
+          .data()
+          .reduce((a, b) => intVal(a) + intVal(b), 0);
+
+        const formatted = total.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+
+        const display = total === 0 ? "0.00" : formatted;
+
+        $(api.column(idx).footer()).html(`<strong>${display}</strong>`);
+      });
+    }
+  : undefined,
 
         buttons: [
           {
@@ -483,7 +508,7 @@ const List = ({
             </tr>
           </thead>
 
-          <tfoot>
+          {/* <tfoot>
             <tr>
               {columns?.map((col, i) => (
                 <th
@@ -494,7 +519,22 @@ const List = ({
               ))}
               {(hasEdit || hasDelete || hasPrint || hasView) && <th key="action-footer" />}
             </tr>
-          </tfoot>
+          </tfoot> */}
+
+          {showFooter && (
+  <tfoot>
+    <tr>
+      {columns?.map((col, i) => (
+        <th
+          key={i}
+          className={col.sum ? "text-end fw-bold text-dark" : ""}
+          style={{ backgroundColor: col.sum ? "#e9ecef" : "inherit" }}
+        />
+      ))}
+      {(hasEdit || hasDelete || hasPrint || hasView) && <th />}
+    </tr>
+  </tfoot>
+)}
 
           <tbody />
         </table>

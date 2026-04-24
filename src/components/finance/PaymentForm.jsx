@@ -2,8 +2,8 @@ import React from 'react'
 
 const PaymentForm = () => {
     return (
-        <div className="col-md-6 border shadow-sm">
-            <h5 className="text-muted pt-1">Finance Payment</h5>
+        <div className="col-md-12 py-3 px-3 border rounded shadow-sm">
+            <h5 className="text-muted">Finance Payment</h5>
             <div className="row g-3">
                 <div className="col-md-4">
                     <label htmlFor="fm_trans_amt" className="form-label">Transaction Amount</label>

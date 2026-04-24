@@ -1,12 +1,14 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+
+import QuickAddUserModal from '../user/QuickAddUserModal'
 
 const actionItems = [
   {
     title: "Add User",
     icon: "bi-person-plus",
     color: "success",
-    to: "/user/add"
+     isModal: true
   },
   {
     title: "Add Staff",
@@ -76,25 +78,90 @@ const actionItems = [
   },
 ]
 
-const ActionCards = () => {
+const ActionCards = ({ firms, selectedFirmId }) => {
+  const [showModal, setShowModal] = useState(false);
+
   return (
-    <div className="row g-4 mt-1">
-      {actionItems.map((item, index) => (
-        <div key={index} className="col-4 col-md-2">
-          <Link to={item.to} className="action-card border">
-            <div className="card-content">
-              <div 
-                className={`card-icon bg-${item.color}-subtle text-${item.color} rounded-circle d-flex align-items-center justify-content-center mb-1`}
+    <>
+      <div className="row g-4 mt-1">
+        {actionItems.map((item, index) => (
+          <div key={index} className="col-4 col-md-2">
+
+            {/* ✅ MODAL ITEM */}
+            {item.isModal ? (
+              <div
+                className="action-card border cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();     // 🔥 stop any navigation
+                  e.stopPropagation();    // 🔥 stop bubbling
+                  setShowModal(true);
+                }}
               >
-                <i className={`bi ${item.icon} fs-4`}></i>
+                <div className="card-content text-center">
+                  <div className={`card-icon bg-${item.color}-subtle text-${item.color} rounded-circle d-flex align-items-center justify-content-center mb-1`}>
+                    <i className={`bi ${item.icon} fs-4`}></i>
+                  </div>
+                  <p className="text-muted small">{item.title}</p>
+                </div>
               </div>
-              <p className="text-muted mb-1 fw-medium small">{item.title}</p>
-            </div>
-          </Link>
-        </div>
-      ))}
-    </div>
+            ) : (
+              /* ✅ NORMAL NAVIGATION */
+              <Link
+                to={item.to}
+                className="action-card border"
+                onClick={(e) => {
+                  if (item.to === "#") e.preventDefault(); // avoid page jump
+                }}
+              >
+                <div className="card-content text-center">
+                  <div className={`card-icon bg-${item.color}-subtle text-${item.color} rounded-circle d-flex align-items-center justify-content-center mb-1`}>
+                    <i className={`bi ${item.icon} fs-4`}></i>
+                  </div>
+                  <p className="text-muted small">{item.title}</p>
+                </div>
+              </Link>
+            )}
+
+          </div>
+        ))}
+      </div>
+
+      {/* ✅ MODAL */}
+      <QuickAddUserModal
+        show={showModal}
+        onClose={() => setShowModal(false)}
+        firms={firms}
+        selectedFirmId={selectedFirmId}
+      />
+    </>
   )
 }
 
-export default ActionCards
+export default ActionCards;
+
+
+
+
+
+// const ActionCards = () => {
+//   return (
+//     <div className="row g-4 mt-1">
+//       {actionItems.map((item, index) => (
+//         <div key={index} className="col-4 col-md-2">
+//           <Link to={item.to} className="action-card border">
+//             <div className="card-content">
+//               <div 
+//                 className={`card-icon bg-${item.color}-subtle text-${item.color} rounded-circle d-flex align-items-center justify-content-center mb-1`}
+//               >
+//                 <i className={`bi ${item.icon} fs-4`}></i>
+//               </div>
+//               <p className="text-muted mb-1 fw-medium small">{item.title}</p>
+//             </div>
+//           </Link>
+//         </div>
+//       ))}
+//     </div>
+//   )
+// }
+
+// export default ActionCards
