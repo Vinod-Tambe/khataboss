@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { validateMobile } from '../../utils/validation';
 import { createUser } from '../../api/userApi';
 import DocumentUploadCard from '../common/DocumentUploadCard';
 
@@ -9,13 +8,6 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
     const [loading, setLoading] = useState(false);
     const [photoPreview, setPhotoPreview] = useState(null);
     const photoInputRef = useRef(null);
-    const videoRef = useRef(null); // Added the missing videoRef
-
-    // Webcam specific states (Moved inside)
-    const [activeCaptureField, setActiveCaptureField] = useState(null);
-    const [stream, setStream] = useState(null);
-    const [showWebcam, setShowWebcam] = useState(false);
-    const [captureTime, setCaptureTime] = useState(null);
 
     const [formData, setFormData] = useState({
         firstName: '',
@@ -47,24 +39,6 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
     const removeFile = (fieldName, setPreview) => {
         setFormData(prev => ({ ...prev, [fieldName]: null }));
         setPreview(null);
-    };
-
-    const startWebcam = (fieldName) => {
-        setActiveCaptureField(fieldName);
-        navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } })
-            .then(mediaStream => {
-                setStream(mediaStream);
-                if (videoRef.current) {
-                    videoRef.current.srcObject = mediaStream;
-                    videoRef.current.play().catch(e => console.error("Video play error:", e));
-                }
-                setShowWebcam(true);
-                setCaptureTime(null);
-            })
-            .catch(err => {
-                toast.error("Cannot access webcam: " + err.message);
-                setActiveCaptureField(null);
-            });
     };
 
     const handleChange = (e) => {
@@ -167,8 +141,7 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
                                     preview={photoPreview}
                                     setPreview={setPhotoPreview}
                                     inputRef={photoInputRef}
-                                    showCamera={true}
-                                    startWebcam={() => startWebcam('photo')}
+                                    showCamera={false}
                                     handleFileSelect={handleFileSelect}
                                     removeFile={removeFile}
                                 />
