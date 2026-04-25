@@ -29,13 +29,16 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
     });
 
     useEffect(() => {
-        if (selectedFirmId && selectedFirmId !== 'all') {
-            setFormData(prev => ({ ...prev, firmId: selectedFirmId }));
+        if (show) {
+            if (selectedFirmId && selectedFirmId !== 'all') {
+                setFormData(prev => ({ ...prev, firmId: selectedFirmId }));
+            } else if (firms.length === 1) {
+                setFormData(prev => ({ ...prev, firmId: firms[0].firm_id }));
+            }
         }
-    }, [selectedFirmId]);
+    }, [show, selectedFirmId, firms]);
 
     // ─── Handlers ────────────────────────────────────────────────────────
-
     const handleFileSelect = (e, fieldName, setPreview) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -131,7 +134,7 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
             setFormData({
                 firstName: '', lastName: '', fatherName: '',
                 mobileNo: '', gender: 'Male', adhaarNo: '',
-                firmId: selectedFirmId !== 'all' ? selectedFirmId : '',
+                firmId: (selectedFirmId && selectedFirmId !== 'all') ? selectedFirmId : (firms.length === 1 ? firms[0].firm_id : ''),
                 currentAddress: '', photo: null
             });
             setPhotoPreview(null);
@@ -155,7 +158,7 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
                     <div className="row g-2">
                         {/* Perfect Alignment for Photo and Names */}
                         <div className="col-md-2">
-                            <label className="form-label mb-1">&nbsp;</label>
+                            <label className="form-label fw-bold small text-muted mb-1">Profile Image</label>
                             <DocumentUploadCard
                                 title=""
                                 fieldName="photo"

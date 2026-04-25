@@ -33,12 +33,12 @@ const Finance = () => {
                 {view === 'info' ? (
                     <div className="col-md-12 py-3 px-3 rounded border shadow-sm bg-white">
                         <div className="d-flex justify-content-between align-items-center mb-2 px-2">
-                             <h5 className="text-primary fw-bold mb-0">Finance Information</h5>
+                            <h5 className="text-primary fw-bold mb-0">Finance Information</h5>
                         </div>
-                        <FinanceInfo 
-                            onPayment={handlePayment} 
-                            onRollback={handleRollback} 
-                            onHistory={handleHistory} 
+                        <FinanceInfo
+                            onPayment={handlePayment}
+                            onRollback={handleRollback}
+                            onHistory={handleHistory}
                         />
                     </div>
                 ) : (
@@ -54,9 +54,9 @@ const Finance = () => {
                 )}
             </div>
 
-            <CommonModal 
-                show={showModal} 
-                onHide={() => setShowModal(false)} 
+            <CommonModal
+                show={showModal}
+                onHide={() => setShowModal(false)}
                 title={modalConfig.title}
             >
                 <PaymentForm initialType={modalConfig.type} />

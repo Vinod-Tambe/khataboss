@@ -34,10 +34,9 @@ const UserHomeRoutes = () => {
 
   return (
     <div>
-      <div className="card p-3 pt-2 shadow-sm">
-
-        {/* ================= HEADER ================= */}
-        <div className="d-flex align-items-center justify-content-between flex-wrap mb-1">
+         {/* ================= HEADER ================= */}
+         <div className="card px-2 py-1 shadow-sm mb-2">
+           <div className="d-flex align-items-center justify-content-between flex-wrap mb-1">
 
           {/* USER INFO */}
           <Link className="text-decoration-none" to="/trans">
@@ -183,7 +182,8 @@ const UserHomeRoutes = () => {
           </div>
 
         </div>
-
+         </div>
+      <div className="card p-3 pt-2 shadow-sm">
         {/* ================= ROUTES ================= */}
         <Routes>
           <Route path="/*" element={<UserHome />} />
