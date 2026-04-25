@@ -359,7 +359,7 @@ const List = ({
     } catch (err) {
       console.error("Error initializing DataTable:", err);
     }
-  }, [data, columns, title, onEdit, onDelete, onPrint, onView, hasEdit, hasDelete, hasPrint, hasView]);
+  }, [data, columns, title, onEdit, onDelete, onPrint, onView, hasEdit, hasDelete, hasPrint, hasView, showFooter]);
 
 
   // ─── Date Range Filter ────────────────────────────────────────

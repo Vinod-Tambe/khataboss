@@ -10,10 +10,10 @@ const HomePage = () => {
 
   const [firms, setFirms] = useState([]);
 
-  // ✅ get selected firm from redux
+  // get selected firm from redux
   const { selectedFirmId } = useSelector((state) => state.firm);
 
-  // ✅ fetch firms
+  // fetch firms
   useEffect(() => {
     const fetchFirms = async () => {
       try {
@@ -31,7 +31,7 @@ const HomePage = () => {
     <div>
       <InfoCards />
 
-      {/* ✅ PASS PROPS HERE */}
+   
       <ActionCards 
         firms={firms}
         selectedFirmId={selectedFirmId}

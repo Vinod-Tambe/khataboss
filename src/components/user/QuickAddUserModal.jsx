@@ -1,41 +1,40 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { validateMobile } from '../../utils/validation';
 import { createUser } from '../../api/userApi';
 import DocumentUploadCard from '../common/DocumentUploadCard';
+import CommonModal from '../common/CommonModal';
 
 const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
-    // 1. ALL Hooks go inside the component function
     const [loading, setLoading] = useState(false);
     const [photoPreview, setPhotoPreview] = useState(null);
     const photoInputRef = useRef(null);
-    const videoRef = useRef(null); // Added the missing videoRef
 
-    // Webcam specific states (Moved inside)
-    const [activeCaptureField, setActiveCaptureField] = useState(null);
+    // Webcam Refs & State
+    const videoRef = useRef(null);
+    const canvasRef = useRef(null);
     const [stream, setStream] = useState(null);
     const [showWebcam, setShowWebcam] = useState(false);
-    const [captureTime, setCaptureTime] = useState(null);
+    const [activeCaptureField, setActiveCaptureField] = useState(null);
 
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
+        fatherName: '',
         mobileNo: '',
         gender: 'Male',
+        adhaarNo: '',
         firmId: '',
         currentAddress: '',
         photo: null
     });
 
-    // ✅ Auto set firm when selectedFirmId changes
     useEffect(() => {
-        if (selectedFirmId) {
+        if (selectedFirmId && selectedFirmId !== 'all') {
             setFormData(prev => ({ ...prev, firmId: selectedFirmId }));
         }
     }, [selectedFirmId]);
 
     // ─── Handlers ────────────────────────────────────────────────────────
-    
     const handleFileSelect = (e, fieldName, setPreview) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -49,6 +48,12 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
         setPreview(null);
     };
 
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    // ─── Webcam Logic ───────────────────────────────────────────────────
     const startWebcam = (fieldName) => {
         setActiveCaptureField(fieldName);
         navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } })
@@ -56,10 +61,8 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
                 setStream(mediaStream);
                 if (videoRef.current) {
                     videoRef.current.srcObject = mediaStream;
-                    videoRef.current.play().catch(e => console.error("Video play error:", e));
                 }
                 setShowWebcam(true);
-                setCaptureTime(null);
             })
             .catch(err => {
                 toast.error("Cannot access webcam: " + err.message);
@@ -67,23 +70,37 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
             });
     };
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        if (name === 'firstName' || name === 'lastName') {
-            if (!/^[A-Za-z\s]*$/.test(value)) return;
+    const stopWebcam = () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            setStream(null);
         }
-        if (name === 'mobileNo') {
-            if (!/^\d*$/.test(value)) return;
-            if (value.length > 10) return;
-        }
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setShowWebcam(false);
+        setActiveCaptureField(null);
+    };
+
+    const capturePhoto = () => {
+        if (!canvasRef.current || !videoRef.current || !activeCaptureField) return;
+
+        const context = canvasRef.current.getContext('2d');
+        context.drawImage(videoRef.current, 0, 0, 320, 240);
+
+        canvasRef.current.toBlob((blob) => {
+            const file = new File([blob], `${activeCaptureField}_captured.jpg`, { type: "image/jpeg" });
+            setFormData(prev => ({ ...prev, [activeCaptureField]: file }));
+
+            const previewUrl = URL.createObjectURL(file);
+            setPhotoPreview(previewUrl);
+            stopWebcam();
+        }, 'image/jpeg', 0.95);
     };
 
     const validateForm = () => {
-        if (!formData.firstName.trim()) return toast.error('First Name is required');
-        if (!formData.lastName.trim()) return toast.error('Last Name is required');
-        if (formData.mobileNo.length !== 10) return toast.error('Mobile must be 10 digits');
-        if (!formData.firmId) return toast.error('Firm is required');
+        if (!formData.firstName.trim()) { toast.error('First Name is required'); return false; }
+        if (!formData.lastName.trim()) { toast.error('Last Name is required'); return false; }
+        if (!formData.mobileNo.trim()) { toast.error('Mobile number is required'); return false; }
+        if (formData.mobileNo.length !== 10) { toast.error('Mobile must be 10 digits'); return false; }
+        if (!formData.firmId) { toast.error('Firm is required'); return false; }
         return true;
     };
 
@@ -95,8 +112,10 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
             const data = new FormData();
             data.append('user_first_name', formData.firstName);
             data.append('user_last_name', formData.lastName);
+            data.append('user_father_name', formData.fatherName);
             data.append('user_mobile_no', formData.mobileNo);
             data.append('user_gender', formData.gender);
+            data.append('user_adhaar_no', formData.adhaarNo);
             data.append('user_firm_id', formData.firmId);
             data.append('user_curr_address', formData.currentAddress);
 
@@ -106,8 +125,15 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
 
             const res = await createUser(data);
             toast.success(res.message || 'User created successfully');
-            
-            // Close and reset
+
+            // Clear form
+            setFormData({
+                firstName: '', lastName: '', fatherName: '',
+                mobileNo: '', gender: 'Male', adhaarNo: '',
+                firmId: selectedFirmId !== 'all' ? selectedFirmId : '',
+                currentAddress: '', photo: null
+            });
+            setPhotoPreview(null);
             onClose();
         } catch (err) {
             toast.error(err.message || 'Error creating user');
@@ -116,75 +142,159 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
         }
     };
 
-    if (!show) return null;
-
     return (
-        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-dialog-centered">
-                <div className="modal-content">
-                    <div className="modal-header">
-                        <h5 className="modal-title">Quick Add User</h5>
-                        <button className="btn-close" onClick={onClose}></button>
+        <>
+            <CommonModal
+                show={show}
+                onHide={onClose}
+                title="Quick Add User"
+                size="lg"
+            >
+                <div className="p-3">
+                    <div className="row g-2">
+                        {/* Perfect Alignment for Photo and Names */}
+                        <div className="col-md-2">
+                            <label className="form-label mb-1">&nbsp;</label>
+                            <DocumentUploadCard
+                                title=""
+                                fieldName="photo"
+                                preview={photoPreview}
+                                setPreview={setPhotoPreview}
+                                inputRef={photoInputRef}
+                                showCamera={true}
+                                startWebcam={() => startWebcam('photo')}
+                                handleFileSelect={handleFileSelect}
+                                removeFile={removeFile}
+                                small={true}
+                                noBorder={true}
+                                iconBorder={true}
+                                height="15px"
+                            />
+                        </div>
+                        <div className="col-md-5">
+                            <label className="form-label fw-bold small text-muted mb-1">First Name <span className="text-danger">*</span></label>
+                            <input
+                                name="firstName"
+                                className="form-control border-dark"
+                                placeholder="First Name"
+                                value={formData.firstName}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div className="col-md-5">
+                            <label className="form-label fw-bold small text-muted mb-1">Last Name <span className="text-danger">*</span></label>
+                            <input
+                                name="lastName"
+                                className="form-control border-dark"
+                                placeholder="Last Name"
+                                value={formData.lastName}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div className="col-md-4">
+                            <label className="form-label fw-bold small text-muted mb-1">Father Name</label>
+                            <input
+                                name="fatherName"
+                                className="form-control border-dark"
+                                placeholder="Father Name"
+                                value={formData.fatherName}
+                                onChange={handleChange}
+                            />
+                        </div>
+
+                        <div className="col-md-4">
+                            <label className="form-label fw-bold small text-muted mb-1">Mobile No <span className="text-danger">*</span></label>
+                            <input
+                                name="mobileNo"
+                                maxLength="10"
+                                className="form-control border-dark"
+                                placeholder="Mobile"
+                                value={formData.mobileNo}
+                                onChange={(e) => {
+                                    const val = e.target.value.replace(/\D/g, '');
+                                    setFormData(prev => ({ ...prev, mobileNo: val }));
+                                }}
+                            />
+                        </div>
+                        <div className="col-md-4">
+                            <label className="form-label fw-bold small text-muted mb-1">Gender <span className="text-danger">*</span></label>
+                            <select name="gender" className="form-select border-dark" value={formData.gender} onChange={handleChange}>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div className="col-md-4">
+                            <label className="form-label fw-bold small text-muted mb-1">Firm <span className="text-danger">*</span></label>
+                            <select name="firmId" className="form-select border-dark" value={formData.firmId} onChange={handleChange}>
+                                <option value="">Select Firm</option>
+                                {firms.map(f => (
+                                    <option key={f.firm_id} value={f.firm_id}>{f.firm_name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="col-md-4">
+                            <label className="form-label fw-bold small text-muted mb-1">Aadhaar No</label>
+                            <input
+                                name="adhaarNo"
+                                maxLength="12"
+                                className="form-control border-dark"
+                                placeholder="Aadhaar"
+                                value={formData.adhaarNo}
+                                onChange={(e) => {
+                                    const val = e.target.value.replace(/\D/g, '');
+                                    setFormData(prev => ({ ...prev, adhaarNo: val }));
+                                }}
+                            />
+                        </div>
+
+                        <div className="col-md-4 mt-2">
+                            <label className="form-label fw-bold small text-muted mb-1">Current Address</label>
+                            <textarea
+                                name="currentAddress"
+                                className="form-control border-dark"
+                                rows="1"
+                                placeholder="Enter address here..."
+                                value={formData.currentAddress}
+                                onChange={handleChange}
+                            />
+                        </div>
+
+                        <div className="col-12 text-center mt-3">
+                            <button className="btn btn-primary px-5 py-2 fw-bold" onClick={handleSubmit} disabled={loading}>
+                                {loading ? 'Processing...' : 'Submit User Details'}
+                            </button>
+                        </div>
                     </div>
+                </div>
+            </CommonModal>
 
-                    <div className="modal-body">
-                        <div className="row g-3">
-                            <div className="col-6">
-                                <label>First Name *</label>
-                                <input name="firstName" className="form-control" value={formData.firstName} onChange={handleChange} />
+            {/* Webcam Layer */}
+            {showWebcam && (
+                <div className="modal show d-block" style={{ background: 'rgba(0,0,0,0.8)', zIndex: 1100 }}>
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content shadow-lg border-0">
+                            <div className="modal-header py-2">
+                                <h6 className="modal-title fw-bold">Capture Photo</h6>
+                                <button className="btn-close" onClick={stopWebcam}></button>
                             </div>
-                            <div className="col-6">
-                                <label>Last Name *</label>
-                                <input name="lastName" className="form-control" value={formData.lastName} onChange={handleChange} />
+                            <div className="modal-body text-center bg-dark p-0">
+                                <video ref={videoRef} autoPlay playsInline className="w-100" style={{ transform: 'scaleX(-1)' }}></video>
+                                <canvas ref={canvasRef} width="320" height="240" className="d-none"></canvas>
                             </div>
-                            <div className="col-6">
-                                <label>Mobile *</label>
-                                <input name="mobileNo" className="form-control" value={formData.mobileNo} onChange={handleChange} />
-                            </div>
-                            <div className="col-6">
-                                <label>Gender *</label>
-                                <select name="gender" className="form-select" value={formData.gender} onChange={handleChange}>
-                                    <option value="Male">Male</option>
-                                    <option value="Female">Female</option>
-                                    <option value="Other">Other</option>
-                                </select>
-                            </div>
-
-                            <div className="col-12 col-md-6">
-                                <label>Firm *</label>
-                                <select name="firmId" className="form-select" value={formData.firmId} onChange={handleChange}>
-                                    <option value="">Select Firm</option>
-                                    {firms.map(f => (
-                                        <option key={f.firm_id} value={f.firm_id}>{f.firm_name}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="col-12 col-md-6">
-                                <DocumentUploadCard
-                                    title="Profile Photo"
-                                    fieldName="photo"
-                                    preview={photoPreview}
-                                    setPreview={setPhotoPreview}
-                                    inputRef={photoInputRef}
-                                    showCamera={true}
-                                    startWebcam={() => startWebcam('photo')}
-                                    handleFileSelect={handleFileSelect}
-                                    removeFile={removeFile}
-                                />
+                            <div className="modal-footer py-2 justify-content-center border-0">
+                                <button className="btn btn-light rounded-circle border p-2" onClick={stopWebcam}>
+                                    <i className="bi bi-x fs-4"></i>
+                                </button>
+                                <button className="btn btn-primary rounded-circle p-3 ms-4" onClick={capturePhoto}>
+                                    <i className="bi bi-camera-fill fs-5"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
-
-                    <div className="modal-footer">
-                        <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
-                        <button className="btn btn-primary" onClick={handleSubmit} disabled={loading}>
-                            {loading ? 'Saving...' : 'Save'}
-                        </button>
-                    </div>
                 </div>
-            </div>
-        </div>
+            )}
+        </>
     );
 };
 
