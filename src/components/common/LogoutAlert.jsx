@@ -5,10 +5,10 @@ import Swal from 'sweetalert2';
  * Displays a blocking modal to inform the user that their session has ended.
  * @returns {Promise<void>} - Resolves when the user clicks the "Log In" button.
  */
-export const LogoutAlert = () => {
+export const LogoutAlert = (message) => {
     return Swal.fire({
         title: 'Session Expired',
-        text: 'Your session has expired. Please log in again to continue.',
+        text: message || 'Your session has expired. Please log in again to continue.',
         icon: 'warning',
         showCancelButton: false,
         confirmButtonColor: '#3085d6',

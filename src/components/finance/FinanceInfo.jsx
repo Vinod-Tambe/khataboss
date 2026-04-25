@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 
-const FinanceInfo = ({ data: externalData }) => {
+const FinanceInfo = ({ data: externalData, onPayment, onRollback, onHistory }) => {
     // Mock data for fallback or demonstration
     const mockData = [
         { id: 1, emiNo: 1, startDate: '01-04-2026', emiAmt: 5000, dueDate: '01-05-2026', paidAmt: 5000, pendingAmt: 0, status: 'Paid' },
@@ -80,23 +80,37 @@ const FinanceInfo = ({ data: externalData }) => {
                     </select>
                     <span className="ms-2 text-muted small">Entries</span>
                 </div>
-                <div className="ms-auto" style={{ minWidth: '200px' }}>
-                    <div className="input-group input-group-sm">
-                        <span className="input-group-text bg-white border-secondary-subtle">
-                            <i className="bi bi-search text-muted"></i>
-                        </span>
-                        <input
-                            type="text"
-                            className="form-control border-secondary-subtle"
-                            placeholder="Search..."
-                            value={searchQuery}
-                            onChange={handleSearchChange}
-                        />
+
+                <div className="d-flex align-items-center gap-2">
+                    <button className="btn btn-sm btn-success px-3" onClick={onPayment}>
+                        <i className="bi bi-wallet2 me-1"></i> Payment
+                    </button>
+                    <button className="btn btn-sm btn-danger px-3" onClick={onRollback}>
+                        <i className="bi bi-arrow-counterclockwise me-1"></i> Rollback
+                    </button>
+                    <button className="btn btn-sm btn-info px-3 text-white" onClick={onHistory}>
+                        <i className="bi bi-clock-history me-1"></i> History
+                    </button>
+                    
+                    <div className="ms-2" style={{ minWidth: '200px' }}>
+                        <div className="input-group input-group-sm">
+                            <span className="input-group-text bg-white border-secondary-subtle">
+                                <i className="bi bi-search text-muted"></i>
+                            </span>
+                            <input
+                                type="text"
+                                className="form-control border-secondary-subtle"
+                                placeholder="Search..."
+                                value={searchQuery}
+                                onChange={handleSearchChange}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div className="table-responsive">
+
                 <table className="table table-hover align-middle mb-0">
                     <thead className="table-light border text-muted">
                         <tr>
