@@ -125,6 +125,7 @@ const ListFinance = ({ status = "ALL" }) => {
           className="btn btn-primary btn-sm"
         >
           Add Finance +
+
         </button>
       </div>
       <div className="card-body p-0">
