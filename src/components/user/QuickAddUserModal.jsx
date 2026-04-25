@@ -35,7 +35,6 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
     }, [selectedFirmId]);
 
     // ─── Handlers ────────────────────────────────────────────────────────
-
     const handleFileSelect = (e, fieldName, setPreview) => {
         const file = e.target.files?.[0];
         if (file) {
