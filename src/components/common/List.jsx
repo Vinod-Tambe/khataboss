@@ -354,7 +354,7 @@ const List = ({
       setTableInstance(dt);
 
       return () => {
-        dt?.destroy(true);
+        dt?.destroy();
       };
     } catch (err) {
       console.error("Error initializing DataTable:", err);
@@ -484,60 +484,49 @@ const List = ({
             </div>
           </div>
         )}
-        <table
-          ref={tableRef}
-          className="table table-hover table-bordered border-secondary mb-2 dataTable dtr-inline text-capitalize dynamic-data-table"
-          style={{ minWidth: "900px" }}
-        >
-          <thead className="table-secondary border-bottom border-dark-subtle">
-            <tr>
-              {columns?.map((col) => (
-                <th key={col.key} style={{ position: col.key === columns[0]?.key ? "sticky" : "relative", left: col.key === columns[0]?.key ? 0 : "auto" }}>
-                  <span className="title-text" style={{ display: "block", pointerEvents: "none" }}>
-                    {col.title}
-                  </span>
-                </th>
-              ))}
-              {(hasEdit || hasDelete || hasPrint) && (
-                <th key="action-header" style={{ position: "relative" }}>
-                  <span className="title-text" style={{ display: "block", pointerEvents: "none" }}>
-                    Action
-                  </span>
-                </th>
-              )}
-            </tr>
-          </thead>
+        <div className="dt-container-fixed">
+          <table
+            ref={tableRef}
+            className="table table-hover table-bordered border-secondary mb-2 dataTable dtr-inline text-capitalize dynamic-data-table"
+            style={{ minWidth: "900px" }}
+          >
+            <thead className="table-secondary border-bottom border-dark-subtle">
+              <tr>
+                {columns?.map((col) => (
+                  <th key={col.key} style={{ position: col.key === columns[0]?.key ? "sticky" : "relative", left: col.key === columns[0]?.key ? 0 : "auto" }}>
+                    <span className="title-text" style={{ display: "block", pointerEvents: "none" }}>
+                      {col.title}
+                    </span>
+                  </th>
+                ))}
+                {(hasEdit || hasDelete || hasPrint || hasView) && (
+                  <th key="action-header" style={{ position: "relative" }}>
+                    <span className="title-text" style={{ display: "block", pointerEvents: "none" }}>
+                      Action
+                    </span>
+                  </th>
+                )}
+              </tr>
+            </thead>
 
-          {/* <tfoot>
-            <tr>
-              {columns?.map((col, i) => (
-                <th
-                  key={i}
-                  className={col.sum ? "text-end fw-bold text-dark" : ""}
-                  style={{ backgroundColor: col.sum ? "#e9ecef" : "inherit" }}
-                />
-              ))}
-              {(hasEdit || hasDelete || hasPrint || hasView) && <th key="action-footer" />}
-            </tr>
-          </tfoot> */}
+            {showFooter && (
+              <tfoot>
+                <tr>
+                  {columns?.map((col, i) => (
+                    <th
+                      key={i}
+                      className={col.sum ? "text-end fw-bold text-dark" : ""}
+                      style={{ backgroundColor: col.sum ? "#e9ecef" : "inherit" }}
+                    />
+                  ))}
+                  {(hasEdit || hasDelete || hasPrint || hasView) && <th />}
+                </tr>
+              </tfoot>
+            )}
 
-          {showFooter && (
-  <tfoot>
-    <tr>
-      {columns?.map((col, i) => (
-        <th
-          key={i}
-          className={col.sum ? "text-end fw-bold text-dark" : ""}
-          style={{ backgroundColor: col.sum ? "#e9ecef" : "inherit" }}
-        />
-      ))}
-      {(hasEdit || hasDelete || hasPrint || hasView) && <th />}
-    </tr>
-  </tfoot>
-)}
-
-          <tbody />
-        </table>
+            <tbody />
+          </table>
+        </div>
       </div>
     </div>
   );
