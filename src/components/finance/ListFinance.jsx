@@ -1,11 +1,13 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { getFinances, deleteFinance } from "../../api/financeApi";
 import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
 import moment from "moment";
+import List from "../common/List";
 
 const ListFinance = ({ status = "ALL" }) => {
+  const navigate = useNavigate();
   const { selectedUser } = useSelector((state) => state.user);
   const { selectedFirm } = useSelector((state) => state.firm);
   const [finances, setFinances] = useState([]);
@@ -19,8 +21,12 @@ const ListFinance = ({ status = "ALL" }) => {
         userId: selectedUser?.user_id,
         status: status,
       };
+      console.log("Fetching finances with filters:", filters);
       const response = await getFinances(filters);
-      setFinances(response.data || []);
+      console.log("Finance API response:", response);
+      // Check if response is the array or contains a data property
+      const data = Array.isArray(response) ? response : (response.data || []);
+      setFinances(data);
     } catch (error) {
       console.error("Error fetching finances:", error);
       toast.error("Failed to load finance records");
@@ -35,10 +41,19 @@ const ListFinance = ({ status = "ALL" }) => {
     }
   }, [selectedUser?.user_id, fetchFinances]);
 
-  const handleDelete = async (id) => {
+  const handleView = (rowData) => {
+    navigate("/user/home/finance", { state: { finance: rowData } });
+  };
+
+  const handleEdit = (rowData) => {
+    // Navigate to edit page if implemented, for now using view logic or toast
+    navigate("/user/home/finance", { state: { finance: rowData } });
+  };
+
+  const handleDelete = async (rowData) => {
     if (window.confirm("Are you sure you want to delete this finance record?")) {
       try {
-        await deleteFinance(id);
+        await deleteFinance(rowData.fin_id);
         toast.success("Finance record deleted successfully");
         fetchFinances();
       } catch (error) {
@@ -47,24 +62,57 @@ const ListFinance = ({ status = "ALL" }) => {
     }
   };
 
-  const getStatusBadge = (financeStatus) => {
-    switch (financeStatus) {
-      case "ACTIVE":
-        return <span className="badge bg-success">Active</span>;
-      case "INACTIVE":
-        return <span className="badge bg-secondary">Inactive</span>;
-      case "CLOSED":
-        return <span className="badge bg-danger">Closed</span>;
-      case "COMPLETED":
-        return <span className="badge bg-primary">Completed</span>;
-      default:
-        return <span className="badge bg-info">{financeStatus}</span>;
+  const columns = useMemo(() => [
+    {
+      key: "fin_id",
+      title: "Fin No",
+      render: (data) => `${data}.`
+    },
+    {
+      key: "user",
+      title: "User / Customer",
+      render: (data, type, row) => `
+        ${row.user?.user_first_name || ""} ${row.user?.user_last_name || ""}
+      `
+    },
+    {
+      key: "fin_prin_amt",
+      title: "Principal",
+      sum: true,
+      render: (data, type, row) => `
+        ₹${Number(data).toLocaleString()}
+      `
+    },
+    {
+      key: "fin_emi_amt",
+      title: "EMI Details",
+      sum: true,
+      render: (data, type, row) => `
+         ₹${Number(data).toLocaleString()}
+      `
+    },
+    {
+      key: "fin_start_date",
+      title: "Start Date",
+      dateFilter: true,
+      render: (data) => moment(data).format("DD-MM-YYYY")
+    },
+    {
+      key: "fin_status",
+      title: "Status",
+      render: (data) => {
+        let text = data;
+        switch (data) {
+          case "ACTIVE": text = "Active"; break;
+          case "INACTIVE": text = "Inactive"; break;
+          case "CLOSED": text = "Closed"; break;
+          case "COMPLETED": text = "Completed"; break;
+          default: text = data; break;
+        }
+        return `${text}`;
+      }
     }
-  };
-
-  if (loading) {
-    return <div className="text-center p-5">Loading finances...</div>;
-  }
+  ], []);
 
   return (
     <div className="card shadow-sm border-0">
@@ -72,76 +120,32 @@ const ListFinance = ({ status = "ALL" }) => {
         <h5 className="mb-0 fw-bold">
           {status === "ALL" ? "All" : status.charAt(0) + status.slice(1).toLowerCase()} Finance List
         </h5>
-        <Link to="/user/home/add-finance" className="btn btn-primary btn-sm">
+        <button
+          onClick={() => navigate("/user/home/add-finance")}
+          className="btn btn-primary btn-sm"
+        >
           Add Finance +
-        </Link>
+
+        </button>
       </div>
-      <div className="card-body  p-0">
-        <div className="table-responsive">
-          <table className="table table-hover align-middle mb-0">
-            <thead className="bg-light text-muted">
-              <tr>
-                <th className="ps-4">Fin No</th>
-                <th>User / Customer</th>
-                <th>Principal</th>
-                <th>EMI Details</th>
-                <th>Start Date</th>
-                <th>Status</th>
-                <th className="text-end pe-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {finances.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="text-center py-5 text-muted">
-                    No finance records found.
-                  </td>
-                </tr>
-              ) : (
-                finances.map((fin) => (
-                  <tr key={fin.fin_id}>
-                    <td className="ps-4 fw-bold">
-                      <Link to="/user/home/finance" className="text-decoration-none">
-                        {fin.fin_id}.
-                      </Link>
-                    </td>
-                    <td>
-                      <div className="fw-bold">{fin.user?.user_first_name} {fin.user?.user_last_name}</div>
-                      <div className="small text-muted">{fin.user?.user_mobile_no}</div>
-                    </td>
-                    <td>
-                      <div className="fw-bold">₹{fin.fin_prin_amt?.toLocaleString()}</div>
-                      <div className="small text-success">ROI: {fin.fin_roi}%</div>
-                    </td>
-                    <td>
-                      <div>EMI: ₹{fin.fin_emi_amt?.toLocaleString()}</div>
-                      <div className="small text-muted">{fin.fin_no_of_emi} Installments</div>
-                    </td>
-                    <td>{moment(fin.fin_start_date).format("DD-MM-YYYY")}</td>
-                    <td>{getStatusBadge(fin.fin_status)}</td>
-                    <td className="text-end pe-4">
-                      <div className="btn-group btn-group-sm">
-                        <button className="btn btn-outline-info" title="View Details">
-                          <i className="bi bi-eye"></i>
-                        </button>
-                        <button
-                          className="btn btn-outline-danger"
-                          title="Delete"
-                          onClick={() => handleDelete(fin.fin_id)}
-                        >
-                          <i className="bi bi-trash"></i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+      <div className="card-body p-0">
+        <List
+          data={finances}
+          columns={columns}
+          title={`${status === "ALL" ? "All" : status.charAt(0) + status.slice(1).toLowerCase()} Finance List`}
+          onView={handleView}
+          onDelete={handleDelete}
+          onEdit={handleEdit}
+          hasView={true}
+          hasDelete={true}
+          hasEdit={true}
+          isLoading={loading}
+          showFooter={true}
+        />
       </div>
     </div>
   );
 };
 
 export default ListFinance;
+
