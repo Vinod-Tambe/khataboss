@@ -28,14 +28,26 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
+    if (!error.response) {
+      error.message = 'Server is down, please contact administrator';
+    }
+
     const isTokenError = error.response && (
-      error.response.status === 401 ||
+      (error.response.status === 401 && 
+       error.config && 
+       error.config.url && 
+       !error.config.url.includes('/auth/login') && 
+       !error.config.url.includes('/auth/verify-otp')) ||
       (error.response.data && error.response.data.error === "Access denied. No token provided.")
     );
 
     if (isTokenError) {
+      // Extract API message if available
+      const apiMessage = error.response?.data?.message || error.response?.data?.error;
+      
       // Handle unauthorized (session expired)
-      await LogoutAlert();
+      await LogoutAlert(apiMessage);
+      
       localStorage.removeItem('user');
       sessionStorage.removeItem('token');
 
