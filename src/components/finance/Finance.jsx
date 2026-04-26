@@ -10,7 +10,7 @@ import { toast } from 'react-toastify'
 const Finance = () => {
     const location = useLocation();
     const initialFinance = location.state?.finance;
-    
+
     const [view, setView] = useState('info'); // 'info' or 'history'
     const [showModal, setShowModal] = useState(false);
     const [modalConfig, setModalConfig] = useState({ title: '', type: '' });
@@ -86,7 +86,7 @@ const Finance = () => {
                                 <i className="bi bi-arrow-left me-1"></i> Back to Info
                             </button>
                         </div>
-                        <FinanceHistory 
+                        <FinanceHistory
                             data={financeData?.finance_money_trans || []}
                             isLoading={loading}
                         />
@@ -100,8 +100,8 @@ const Finance = () => {
                 title={modalConfig.title}
                 size="lg"
             >
-                <PaymentForm 
-                    initialType={modalConfig.type} 
+                <PaymentForm
+                    initialType={modalConfig.type}
                     finance={financeData}
                     onSuccess={handlePaymentSuccess}
                 />
@@ -110,4 +110,4 @@ const Finance = () => {
     )
 }
 
-export default Finance
+export default Finance
