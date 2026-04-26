@@ -1,20 +1,7 @@
 import React, { useState, useMemo } from 'react';
+import moment from 'moment';
 
-const FinanceInfo = ({ data: externalData, onPayment, onRollback, onHistory }) => {
-    // Mock data for fallback or demonstration
-    const mockData = [
-        { id: 1, emiNo: 1, startDate: '01-04-2026', emiAmt: 5000, dueDate: '01-05-2026', paidAmt: 5000, pendingAmt: 0, status: 'Paid' },
-        { id: 2, emiNo: 2, startDate: '01-05-2026', emiAmt: 5000, dueDate: '01-06-2026', paidAmt: 2500, pendingAmt: 2500, status: 'Paid' },
-        { id: 3, emiNo: 3, startDate: '01-06-2026', emiAmt: 5000, dueDate: '01-07-2026', paidAmt: 0, pendingAmt: 5000, status: 'Paid' },
-        { id: 4, emiNo: 4, startDate: '01-07-2026', emiAmt: 5000, dueDate: '01-08-2026', paidAmt: 0, pendingAmt: 5000, status: 'Partial' },
-        { id: 5, emiNo: 5, startDate: '01-08-2026', emiAmt: 5000, dueDate: '01-09-2026', paidAmt: 0, pendingAmt: 5000, status: 'Deu' },
-        { id: 6, emiNo: 6, startDate: '01-09-2026', emiAmt: 5000, dueDate: '01-10-2026', paidAmt: 0, pendingAmt: 5000, status: 'Deu' },
-        { id: 7, emiNo: 7, startDate: '01-10-2026', emiAmt: 5000, dueDate: '01-11-2026', paidAmt: 0, pendingAmt: 5000, status: 'Deu' },
-        { id: 8, emiNo: 8, startDate: '01-11-2026', emiAmt: 5000, dueDate: '01-12-2026', paidAmt: 0, pendingAmt: 5000, status: 'Deu' },
-    ];
-
-    const data = externalData || mockData;
-
+const FinanceInfo = ({ data = [], onPayment, onRollback, onHistory, isLoading }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -22,20 +9,20 @@ const FinanceInfo = ({ data: externalData, onPayment, onRollback, onHistory }) =
     // Search and Filter Logic
     const filteredData = useMemo(() => {
         return data.filter(item =>
-            (item.emiNo?.toString() || '').includes(searchQuery) ||
-            (item.startDate?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-            (item.dueDate?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-            (item.status?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-            (item.emiAmt?.toString() || '').includes(searchQuery)
+            (item.ft_emi_no?.toString() || '').includes(searchQuery) ||
+            (item.ft_start_date?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+            (item.ft_due_date?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+            (item.ft_emi_status?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+            (item.ft_emi_amt?.toString() || '').includes(searchQuery)
         );
     }, [data, searchQuery]);
 
     // Totals Calculation
     const totals = useMemo(() => {
         return filteredData.reduce((acc, current) => {
-            acc.emiAmt += (parseFloat(current.emiAmt) || 0);
-            acc.paidAmt += (parseFloat(current.paidAmt) || 0);
-            acc.pendingAmt += (parseFloat(current.pendingAmt) || 0);
+            acc.emiAmt += (parseFloat(current.ft_emi_amt) || 0);
+            acc.paidAmt += (parseFloat(current.ft_paid_amt) || 0);
+            acc.pendingAmt += (parseFloat(current.ft_pending_amt) || 0);
             return acc;
         }, { emiAmt: 0, paidAmt: 0, pendingAmt: 0 });
     }, [filteredData]);
@@ -63,6 +50,17 @@ const FinanceInfo = ({ data: externalData, onPayment, onRollback, onHistory }) =
         }
     };
 
+    if (isLoading) {
+        return (
+            <div className="text-center py-5">
+                <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </div>
+                <p className="mt-2 text-muted">Loading finance information...</p>
+            </div>
+        );
+    }
+
     return (
         <div className="card border-0 p-4">
             <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
@@ -82,10 +80,20 @@ const FinanceInfo = ({ data: externalData, onPayment, onRollback, onHistory }) =
                 </div>
 
                 <div className="d-flex align-items-center gap-2">
-                    <button className="btn btn-sm btn-success px-3" onClick={onPayment}>
+                    <button 
+                        className="btn btn-sm btn-success px-3" 
+                        onClick={onPayment}
+                        disabled={totals.pendingAmt <= 0}
+                        title={totals.pendingAmt <= 0 ? "All installments are paid" : "Make a payment"}
+                    >
                         <i className="bi bi-wallet2 me-1"></i> Payment
                     </button>
-                    <button className="btn btn-sm btn-danger px-3" onClick={onRollback}>
+                    <button 
+                        className="btn btn-sm btn-danger px-3" 
+                        onClick={onRollback}
+                        disabled={totals.paidAmt <= 0}
+                        title={totals.paidAmt <= 0 ? "No payment records to rollback" : "Rollback a payment"}
+                    >
                         <i className="bi bi-arrow-counterclockwise me-1"></i> Rollback
                     </button>
                     <button className="btn btn-sm btn-info px-3 text-white" onClick={onHistory}>
@@ -110,7 +118,6 @@ const FinanceInfo = ({ data: externalData, onPayment, onRollback, onHistory }) =
             </div>
 
             <div className="table-responsive">
-
                 <table className="table table-hover align-middle mb-0">
                     <thead className="table-light border text-muted">
                         <tr>
@@ -127,19 +134,19 @@ const FinanceInfo = ({ data: externalData, onPayment, onRollback, onHistory }) =
                     <tbody>
                         {paginatedData.length > 0 ? (
                             paginatedData.map((item, index) => (
-                                <tr key={item.id || index}>
-                                    <td className="fw-bold text-dark">{item.emiNo}</td>
-                                    <td className="text-secondary">{item.startDate}</td>
-                                    <td className=" fw-medium text-dark">₹ {(item.emiAmt || 0).toLocaleString()}</td>
-                                    <td className="">{item.dueDate}</td>
-                                    <td className=" text-success">₹ {(item.paidAmt || 0).toLocaleString()}</td>
-                                    <td className=" text-danger">₹ {(item.pendingAmt || 0).toLocaleString()}</td>
+                                <tr key={item.ft_id || index}>
+                                    <td className="fw-bold text-dark">{item.ft_emi_no}</td>
+                                    <td className="text-secondary">{item.ft_start_date ? moment(item.ft_start_date).format("DD-MM-YYYY") : '-'}</td>
+                                    <td className=" fw-medium text-dark">₹ {(item.ft_emi_amt || 0).toLocaleString()}</td>
+                                    <td className="">{item.ft_due_date ? moment(item.ft_due_date).format("DD-MM-YYYY") : '-'}</td>
+                                    <td className=" text-success">₹ {(item.ft_paid_amt || 0).toLocaleString()}</td>
+                                    <td className=" text-danger">₹ {(item.ft_pending_amt || 0).toLocaleString()}</td>
                                     <td className="text-center">
-                                        <span className={`badge rounded-pill ${item.status === 'Paid' ? 'bg-success-subtle text-success' :
-                                            item.status === 'Partial' ? 'bg-warning-subtle text-warning' :
+                                        <span className={`badge rounded-pill ${item.ft_emi_status === 'PAID' ? 'bg-success-subtle text-success' :
+                                            item.ft_emi_status === 'PARTIAL' ? 'bg-warning-subtle text-warning' :
                                                 'bg-danger-subtle text-danger'
                                             }`} style={{ fontSize: '0.75rem' }}>
-                                            {item.status}
+                                            {item.ft_emi_status}
                                         </span>
                                     </td>
                                     <td className='text-center'>

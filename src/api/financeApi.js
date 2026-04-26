@@ -51,3 +51,33 @@ export const deleteFinance = async (id) => {
     throw new Error(message);
   }
 };
+
+/**
+ * Get finance details by ID (including EMIs and History)
+ * @param {number|string} id - Finance ID
+ * @returns {Promise} - Response object with finance details
+ */
+export const getFinanceDetails = async (id) => {
+  try {
+    const response = await axiosInstance.get(`/finance/${id}`);
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.error || error.response?.data?.message || error.message;
+    throw new Error(message);
+  }
+};
+
+/**
+ * Create a new finance payment
+ * @param {object} paymentData - Payment details
+ * @returns {Promise} - Response object with created payment details
+ */
+export const createFinancePayment = async (paymentData) => {
+  try {
+    const response = await axiosInstance.post('/finance/payment', paymentData);
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.error || error.response?.data?.message || error.message;
+    throw new Error(message);
+  }
+};
