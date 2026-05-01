@@ -1,0 +1,200 @@
+/* --- Active Loan Panel Styles --- */
+.active-loan-panel {
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.active-loan-panel .section-header {
+  text-transform: uppercase;
+  color: #1a4f8b;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 5px;
+}
+
+.active-loan-panel .panel-section {
+  background: #fdfdfd;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.01);
+}
+
+.active-loan-panel .form-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #a33b43;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+}
+
+.active-loan-panel .form-control, .active-loan-panel .form-select {
+  font-size: 0.85rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  padding: 0.35rem 0.75rem;
+}
+
+.active-loan-panel .form-control[readonly] {
+  background-color: #e9ecef;
+}
+
+.active-loan-panel .table-responsive {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+}
+
+.active-loan-panel .table {
+  margin-bottom: 0;
+  font-size: 0.8rem;
+}
+
+.active-loan-panel .table thead th {
+  background-color: #fafafa;
+  color: #a33b43;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-bottom: 2px solid #e0e0e0;
+  vertical-align: middle;
+  text-align: center;
+  white-space: nowrap;
+  padding: 0.5rem;
+}
+
+.active-loan-panel .table tbody td {
+  vertical-align: middle;
+  text-align: center;
+  border-bottom: 1px solid #e0e0e0;
+  white-space: nowrap;
+  padding: 0.5rem;
+  color: #333;
+}
+
+.active-loan-panel .table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.active-loan-panel .table-striped tbody tr:nth-of-type(odd) {
+  background-color: #f8f9fa;
+}
+
+.active-loan-panel .profit {
+  color: #198754;
+  font-weight: bold;
+}
+
+.active-loan-panel .loss {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.active-loan-panel .action-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.active-loan-panel .action-footer .btn {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-radius: 20px;
+  padding: 0.4rem 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: white;
+  color: #0d6efd;
+  border: 1px solid #0d6efd;
+}
+
+.active-loan-panel .action-footer .btn:hover {
+  background-color: #f0f7ff;
+}
+
+.active-loan-panel .top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 10px;
+}
+
+.active-loan-panel .top-header h5 {
+  color: #1a4f8b;
+  font-weight: 700;
+  margin: 0;
+  text-transform: uppercase;
+  font-size: 1rem;
+}
+
+.active-loan-panel .top-actions .btn {
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 20px;
+  margin-left: 5px;
+  text-transform: uppercase;
+  padding: 0.2rem 0.7rem;
+  color: #a33b43;
+  border-color: #a33b43;
+  background-color: white;
+}
+
+.active-loan-panel .top-actions .btn:hover {
+  background-color: #fff0f0;
+}
+
+.active-loan-panel .loan-header-tag {
+  background-color: #d9534f;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.active-loan-panel .table-bordered th,
+.active-loan-panel .table-bordered td {
+  border: 1px solid #e0e0e0;
+}
+
+.active-loan-panel .summary-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.active-loan-panel .summary-card {
+  text-align: center;
+  padding: 10px;
+  flex: 1;
+  min-width: 120px;
+}
+
+.active-loan-panel .summary-card .summary-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #a33b43;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.active-loan-panel .summary-card .summary-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.active-loan-panel .input-group-text {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.5rem;
+}
