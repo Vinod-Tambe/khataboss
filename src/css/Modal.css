@@ -25,7 +25,9 @@
   width: 100%;
   max-width: 1200px;
   max-height: 95vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   border: 1px solid #d4e0d4;
   animation: slideUp 0.3s ease-out;
@@ -75,6 +77,8 @@
 
 .custom-modal-body {
   padding: 20px;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .custom-modal-body .section-title {
