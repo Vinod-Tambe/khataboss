@@ -137,3 +137,123 @@
   resize: vertical;
   min-height: 80px;
 }
+
+/* --- EMI Receipt Modal Styles --- */
+.emi-receipt-wrapper {
+    background-color: #f8f9fa;
+    padding: 1.5rem;
+}
+
+.emi-receipt-container {
+    border: 1px solid #ccc;
+    padding: 20px;
+    border-radius: 5px;
+    max-width: 600px;
+    margin: 0 auto;
+    background-color: #fff;
+}
+
+.emi-receipt-header {
+    border-bottom: 2px solid #000;
+    padding-bottom: 10px;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.emi-receipt-title {
+    font-weight: bold;
+    font-size: 1.25rem;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+}
+
+.emi-receipt-address {
+    font-size: 0.875rem;
+    margin-bottom: 0;
+}
+
+.emi-receipt-table {
+    font-size: 14px;
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 0;
+}
+
+.emi-receipt-table th {
+    width: 40%;
+    background-color: #f8f9fa;
+    font-weight: bold;
+    text-align: left;
+}
+
+.emi-receipt-table td {
+    text-align: left;
+}
+
+@media print {
+    body {
+        padding: 20px;
+        font-family: Arial, sans-serif;
+    }
+    .emi-receipt-container {
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+    }
+    
+    /* Ensure background colors and text colors print correctly */
+    .bg-primary {
+        background-color: #1a4f8b !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    .bg-light {
+        background-color: #f8f9fa !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    .text-primary {
+        color: #1a4f8b !important;
+    }
+    .text-success {
+        color: #198754 !important;
+    }
+    .text-danger {
+        color: #dc3545 !important;
+    }
+    .badge.bg-success {
+        background-color: #198754 !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    .badge.bg-warning {
+        background-color: #ffc107 !important;
+        color: #000 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    /* Clean up borders for printing */
+    .border, .border-bottom, .border-light-subtle {
+        border-color: #dee2e6 !important;
+    }
+    
+    /* Hide buttons and unnecessary elements during print if they somehow leak, though iframe handles this */
+    button {
+        display: none !important;
+    }
+
+    /* Force solid black borders for the table during print */
+    .table-bordered, .table-bordered th, .table-bordered td {
+        border: 1px solid #000 !important;
+    }
+
+    /* Make sure the outer box has a solid border */
+    .emi-receipt-print-box {
+        border: 1px solid #000 !important;
+    }
+}

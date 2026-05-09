@@ -76,6 +76,8 @@ const Finance = () => {
                             onRollback={handleRollback}
                             onHistory={handleHistory}
                             isLoading={loading}
+                            financeData={financeData}
+                            initialFinance={initialFinance}
                         />
                     </div>
                 ) : (
