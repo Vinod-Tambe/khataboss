@@ -1,10 +1,18 @@
 import React, { useState, useMemo } from 'react';
 import moment from 'moment';
+import EmiReceiptModal from './EmiReceiptModal';
 
-const FinanceInfo = ({ data = [], onPayment, onRollback, onHistory, isLoading }) => {
+const FinanceInfo = ({ data = [], onPayment, onRollback, onHistory, isLoading, financeData, initialFinance }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
+    const [selectedEmiData, setSelectedEmiData] = useState(null);
+
+    const handlePrintPreview = (row) => {
+        setSelectedEmiData(row);
+        setIsPrintPreviewOpen(true);
+    };
 
     // Search and Filter Logic
     const filteredData = useMemo(() => {
@@ -150,7 +158,11 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onHistory, isLoading })
                                         </span>
                                     </td>
                                     <td className='text-center'>
-                                        <button className="btn btn-sm btn-link text-warning p-0" title="Print Receipt">
+                                        <button 
+                                            className="btn btn-sm btn-link text-warning p-0" 
+                                            title="Print Receipt"
+                                            onClick={() => handlePrintPreview(item)}
+                                        >
                                             <i className="bi bi-printer-fill fs-5"></i>
                                         </button>
                                     </td>
@@ -203,6 +215,16 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onHistory, isLoading })
                     </nav>
                 )}
             </div>
+            <EmiReceiptModal 
+                show={isPrintPreviewOpen}
+                onHide={() => {
+                    setIsPrintPreviewOpen(false);
+                    setSelectedEmiData(null);
+                }}
+                emiData={selectedEmiData}
+                initialFinance={initialFinance}
+                financeData={financeData}
+            />
         </div>
     );
 };
