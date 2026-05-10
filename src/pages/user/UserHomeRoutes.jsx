@@ -40,8 +40,8 @@ const UserHomeRoutes = () => {
            <div className="d-flex align-items-center justify-content-between flex-wrap mb-1">
 
           {/* USER INFO */}
-          <Link className="text-decoration-none" to="/trans">
-            <div className="d-flex align-items-center me-3 mb-2 mb-lg-0">
+          <Link className="text-decoration-none" to="/user/home">
+            <div className="d-flex align-items-center me-3 mb-2 mb-lg-0 cursor-pointer">
               <img
                 alt="User"
                 className="rounded-circle border border-dark"

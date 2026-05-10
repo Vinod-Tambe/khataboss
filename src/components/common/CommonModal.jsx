@@ -13,17 +13,17 @@ import { Modal } from 'react-bootstrap';
  */
 const CommonModal = ({ show, onHide, title, children, size = 'lg' }) => {
     return (
-        <Modal 
-            show={show} 
-            onHide={onHide} 
-            size={size} 
-            centered 
+        <Modal
+            show={show}
+            onHide={onHide}
+            size={size}
+            centered
             backdrop="static"
             keyboard={false}
             className="common-modal"
         >
             <Modal.Header closeButton className="bg-light py-2">
-                <Modal.Title className="h6 fw-bold mb-0 text-primary">
+                <Modal.Title className="h6 fw-bold mb-0 text-brown">
                     {title}
                 </Modal.Title>
             </Modal.Header>

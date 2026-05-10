@@ -88,26 +88,26 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onHistory, isLoading, f
                 </div>
 
                 <div className="d-flex align-items-center gap-2">
-                    <button 
-                        className="btn btn-sm btn-success px-3" 
+                    <button
+                        className="btn btn-sm btn-success px-3 border-2"
                         onClick={onPayment}
                         disabled={totals.pendingAmt <= 0}
                         title={totals.pendingAmt <= 0 ? "All installments are paid" : "Make a payment"}
                     >
                         <i className="bi bi-wallet2 me-1"></i> Payment
                     </button>
-                    <button 
-                        className="btn btn-sm btn-danger px-3" 
+                    <button
+                        className="btn btn-sm btn-danger px-3"
                         onClick={onRollback}
                         disabled={totals.paidAmt <= 0}
                         title={totals.paidAmt <= 0 ? "No payment records to rollback" : "Rollback a payment"}
                     >
                         <i className="bi bi-arrow-counterclockwise me-1"></i> Rollback
                     </button>
-                    <button className="btn btn-sm btn-info px-3 text-white" onClick={onHistory}>
+                    <button className="btn btn-sm btn-primary px-3" onClick={onHistory}>
                         <i className="bi bi-clock-history me-1"></i> History
                     </button>
-                    
+
                     <div className="ms-2" style={{ minWidth: '200px' }}>
                         <div className="input-group input-group-sm">
                             <span className="input-group-text bg-white border-secondary-subtle">
@@ -126,8 +126,8 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onHistory, isLoading, f
             </div>
 
             <div className="table-responsive">
-                <table className="table table-hover align-middle mb-0">
-                    <thead className="table-light border text-muted">
+                <table className="table table-hover table-bordered border-secondary mb-2 dataTable dtr-inline text-capitalize dynamic-data-table">
+                    <thead className="table-secondary border-bottom border-dark-subtle">
                         <tr>
                             <th className="fw-semibold border">EMI No</th>
                             <th className="fw-semibold border">Start Date</th>
@@ -143,7 +143,7 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onHistory, isLoading, f
                         {paginatedData.length > 0 ? (
                             paginatedData.map((item, index) => (
                                 <tr key={item.ft_id || index}>
-                                    <td className="fw-bold text-dark">{item.ft_emi_no}</td>
+                                    <td className="fw-bold text-dark" >{item.ft_emi_no}</td>
                                     <td className="text-secondary">{item.ft_start_date ? moment(item.ft_start_date).format("DD-MM-YYYY") : '-'}</td>
                                     <td className=" fw-medium text-dark">₹ {(item.ft_emi_amt || 0).toLocaleString()}</td>
                                     <td className="">{item.ft_due_date ? moment(item.ft_due_date).format("DD-MM-YYYY") : '-'}</td>
@@ -158,12 +158,12 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onHistory, isLoading, f
                                         </span>
                                     </td>
                                     <td className='text-center'>
-                                        <button 
-                                            className="btn btn-sm btn-link text-warning p-0" 
+                                        <button
+                                            className="btn btn-sm btn-link text-warning p-0"
                                             title="Print Receipt"
                                             onClick={() => handlePrintPreview(item)}
                                         >
-                                            <i className="bi bi-printer-fill fs-5"></i>
+                                            <i className="bi bi-printer-fill fs-6"></i>
                                         </button>
                                     </td>
                                 </tr>
@@ -177,12 +177,12 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onHistory, isLoading, f
                     {filteredData.length > 0 && (
                         <tfoot className="table-light">
                             <tr className="fw-bold">
-                                <td colSpan="2" className="text-center text-dark">Grand Total</td>
-                                <td className=" text-primary">₹ {totals.emiAmt.toLocaleString()}</td>
-                                <td></td>
-                                <td className=" text-success">₹ {totals.paidAmt.toLocaleString()}</td>
-                                <td className=" text-danger">₹ {totals.pendingAmt.toLocaleString()}</td>
-                                <td colSpan="2"></td>
+                                <th colSpan="2" className="text-center text-dark">Grand Total</th>
+                                <th className=" text-primary">₹ {totals.emiAmt.toLocaleString()}</th>
+                                <th></th>
+                                <th className=" text-success">₹ {totals.paidAmt.toLocaleString()}</th>
+                                <th className=" text-danger">₹ {totals.pendingAmt.toLocaleString()}</th>
+                                <th colSpan="2"></th>
                             </tr>
                         </tfoot>
                     )}
@@ -215,7 +215,7 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onHistory, isLoading, f
                     </nav>
                 )}
             </div>
-            <EmiReceiptModal 
+            <EmiReceiptModal
                 show={isPrintPreviewOpen}
                 onHide={() => {
                     setIsPrintPreviewOpen(false);

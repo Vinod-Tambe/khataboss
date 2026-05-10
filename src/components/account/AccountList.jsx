@@ -31,15 +31,40 @@ const AccountList = () => {
     fetchAccounts();
   }, [fetchAccounts]);
 
+  useEffect(() => {
+    const handleAccountClick = (e) => {
+      const target = e.target.closest(".account-link");
+      if (target) {
+        const uuid = target.getAttribute("data-uuid");
+        if (uuid) {
+          navigate(`/account/details/${uuid}`);
+        }
+      }
+    };
+
+    document.addEventListener("click", handleAccountClick);
+    return () => {
+      document.removeEventListener("click", handleAccountClick);
+    };
+  }, [navigate]);
+
   const columns = React.useMemo(() => [
     { key: "acc_id", title: "ID", orderable: true, searchable: true },
     { key: "firm", title: "Firm Name", orderable: true, searchable: true, render: (val) => val?.firm_name || "N/A" },
-    { key: "acc_name", title: "Account Name", orderable: true, searchable: true },
-    { 
-      key: "acc_opening_date", 
-      title: "Opening Balance Date", 
-      orderable: true, 
-      searchable: true, 
+    {
+      key: "acc_name",
+      title: "Account Name",
+      orderable: true,
+      searchable: true,
+      render: (val, type, row) => {
+        return `<span class="text-brown cursor-pointer fw-bold account-link" data-uuid="${row.acc_uuid}">${val}</span>`;
+      }
+    },
+    {
+      key: "acc_opening_date",
+      title: "Opening Balance Date",
+      orderable: true,
+      searchable: true,
       dateFilter: true,
       render: (val) => val ? moment(val).format("DD/MM/YYYY") : "N/A"
     },

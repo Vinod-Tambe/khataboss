@@ -38,6 +38,27 @@ export const getFinances = async (filters = {}) => {
 };
 
 /**
+ * Get recent finance transactions
+ * @param {object} filters - Filters like userId, firmId
+ * @returns {Promise} - Response object with list of transactions
+ */
+export const getFinanceTransactions = async (filters = {}) => {
+  try {
+    const { firmId, userId } = filters;
+    let query = [];
+    if (firmId) query.push(`firmId=${firmId}`);
+    if (userId) query.push(`userId=${userId}`);
+    
+    const queryString = query.length > 0 ? `?${query.join('&')}` : '';
+    const response = await axiosInstance.get(`/finance/transactions${queryString}`);
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.error || error.response?.data?.message || error.message;
+    throw new Error(message);
+  }
+};
+
+/**
  * Delete a finance record
  * @param {number|string} id - Finance ID
  * @returns {Promise} - Response object with success message
