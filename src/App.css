@@ -14,7 +14,11 @@
 }
 
 .bg-red {
-    background-color: #f4eaea !important;
+    background-color: #f4edea !important;
+}
+
+.bg-green {
+    background-color: #edf4ea !important;
 }
 
 .text-red {
@@ -46,7 +50,7 @@
 }
 
 .btn-info {
-    color: #14d5dc !important;
+    color: #065658 !important;
     background-color: #dbfbff !important;
     border: 1px solid #99f6f9 !important;
 }

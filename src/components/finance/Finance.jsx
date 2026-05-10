@@ -66,8 +66,8 @@ const Finance = () => {
         <>
             <div className="row g-3">
                 {view === 'info' ? (
-                    <div className="col-md-12 py-3 px-3 rounded border shadow-sm bg-white">
-                        <div className="d-flex justify-content-between align-items-center mb-2 px-2">
+                    <div className="col-md-12 py-3 px-3">
+                        <div className="d-flex justify-content-between align-items-center mb-1 px-2">
                             <h5 className="text-primary fw-bold mb-0">Finance Information</h5>
                         </div>
                         <FinanceInfo
@@ -81,7 +81,7 @@ const Finance = () => {
                         />
                     </div>
                 ) : (
-                    <div className="col-md-12 py-3 px-3 rounded border shadow-sm bg-white">
+                    <div className="col-md-12 py-3 px-3">
                         <div className="d-flex justify-content-between align-items-center mb-3">
                             <h5 className="text-primary fw-bold mb-0">Finance History</h5>
                             <button className="btn btn-sm btn-outline-secondary px-3" onClick={handleBackToInfo}>
@@ -112,4 +112,4 @@ const Finance = () => {
     )
 }
 
-    export default Finance
+export default Finance

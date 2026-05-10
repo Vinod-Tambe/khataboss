@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { getAccountsDropdown } from '../../api/accountApi'
 import { createFinancePayment } from '../../api/financeApi'
-import { toast } from 'react-toastify'
+import { toast } from 'react-hot-toast'
 
 const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
     const { selectedFirm } = useSelector((state) => state.firm);
@@ -11,7 +11,6 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
     const [submitting, setSubmitting] = useState(false);
 
     const [formData, setFormData] = useState({
-        fm_trans_amt: 0,
         fm_trans_date: new Date().toISOString().split('T')[0],
         fm_cash_amt: 0,
         fm_bank_amt: 0,
@@ -81,23 +80,28 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
 
     const handleInputChange = (e) => {
         const { id, value } = e.target;
+        // Only sanitize if it's an amount field
+        let finalValue = value;
+        if (id.includes('_amt')) {
+            finalValue = value.replace(/[^0-9.]/g, '');
+        }
         setFormData(prev => ({
             ...prev,
-            [id]: value
+            [id]: finalValue
         }));
     };
 
-    const handleAmountChange = (e) => {
-        const val = e.target.value.replace(/[^0-9.]/g, ''); // Basic sanitization
+    const handleTotalChange = (e) => {
+        const val = e.target.value.replace(/[^0-9.]/g, '');
         setFormData(prev => ({
             ...prev,
-            fm_trans_amt: val, // Keep as string for text input
             fm_cash_amt: val,
-            fm_bank_amt: '0',
-            fm_online_amt: '0',
-            fm_card_amt: '0'
+            fm_bank_amt: 0,
+            fm_online_amt: 0,
+            fm_card_amt: 0
         }));
     };
+
 
     const totals = useMemo(() => {
         if (!finance?.finance_trans) return { pending: 0, paid: 0 };
@@ -115,10 +119,15 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
             (parseFloat(formData.fm_card_amt) || 0);
     }, [formData.fm_cash_amt, formData.fm_bank_amt, formData.fm_online_amt, formData.fm_card_amt]);
 
+    const isOverLimit = useMemo(() => {
+        const max = transType === 'PAID' ? totals.pending : totals.paid;
+        return totalDistributed > max + 0.01;
+    }, [totalDistributed, transType, totals]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const transAmt = parseFloat(formData.fm_trans_amt) || 0;
+        const transAmt = totalDistributed;
         if (transAmt <= 0) {
             toast.error("Amount must be greater than 0");
             return;
@@ -135,27 +144,22 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
             return;
         }
 
-        if (Math.abs(transAmt - totalDistributed) > 0.01) {
-            const diff = Math.abs(transAmt - totalDistributed).toFixed(2);
-            toast.error(`Payment distribution mismatch! The sum of individual payments (₹${totalDistributed.toLocaleString()}) must equal the Total Amount (₹${transAmt.toLocaleString()}). Difference: ₹${diff}`);
-            return;
-        }
 
         // Selected Account Validations
         if (parseFloat(formData.fm_cash_amt) > 0 && !formData.fm_cash_acc_id) {
-            toast.warning("Please select a Cash Account for the cash payment.");
+            toast.error("Please select a Cash Account for the cash payment.");
             return;
         }
         if (parseFloat(formData.fm_bank_amt) > 0 && !formData.fm_bank_acc_id) {
-            toast.warning("Please select a Bank Account for the bank payment.");
+            toast.error("Please select a Bank Account for the bank payment.");
             return;
         }
         if (parseFloat(formData.fm_online_amt) > 0 && !formData.fm_online_acc_id) {
-            toast.warning("Please select an Online Account for the online payment.");
+            toast.error("Please select an Online Account for the online payment.");
             return;
         }
         if (parseFloat(formData.fm_card_amt) > 0 && !formData.fm_card_acc_id) {
-            toast.warning("Please select a Card Account for the card payment.");
+            toast.error("Please select a Card Account for the card payment.");
             return;
         }
 
@@ -163,11 +167,12 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
             setSubmitting(true);
             const payload = {
                 ...formData,
+                fm_trans_amt: transAmt,
                 fm_fin_id: finance.fin_id,
                 fm_trans_type: transType
             };
             await createFinancePayment(payload);
-            toast.success("Payment processed successfully");
+            toast.success(`${transType === 'ROLLBACK' ? 'Rollback' : 'Payment'} processed successfully`);
 
             // Wait a bit so user can see toast before modal closes
             setTimeout(() => {
@@ -182,46 +187,32 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="p-4 bg-white rounded">
+        <form onSubmit={handleSubmit} className={`p-4 ${transType === 'PAID' ? 'bg-green' : 'bg-red'} rounded shadow-sm border`}>
             <div className="row g-3">
                 <div className="col-md-4">
-                    <div className="d-flex justify-content-between align-items-center">
-                        <label htmlFor="fm_trans_amt" className="form-label small fw-bold">Total Amount</label>
-                        <span className="badge bg-light text-dark border extra-small mb-1">
-                            {transType === 'PAID' ? `Max: ₹${totals.pending.toLocaleString()}` : `Max: ₹${totals.paid.toLocaleString()}`}
-                        </span>
-                    </div>
+                    <label className="form-label text-muted fw-bold mb-0">Total Amount</label>
                     <input
                         type="text"
-                        className="form-control"
-                        id="fm_trans_amt"
-                        placeholder="Enter Total Amount (e.g. 5000)"
-                        value={formData.fm_trans_amt}
-                        onChange={handleAmountChange}
-                        required
+                        className="form-control form-control-sm fw-bold border-dark-subtle"
+                        id="total_trans_amt_display"
+                        placeholder="Enter Total Amount"
+                        value={totalDistributed || ''}
+                        onChange={handleTotalChange}
                     />
                 </div>
-                <div className="col-md-4">
-                    <label htmlFor="fm_trans_type_main" className="form-label small fw-bold">Transaction Type</label>
-                    <select
-                        className="form-select"
-                        id="fm_trans_type_main"
-                        value={transType}
-                        onChange={(e) => setTransType(e.target.value)}
-                    >
-                        <option value="PAID" disabled={totals.pending <= 0}>
-                            PAID {totals.pending <= 0 ? '(No Pending Balance)' : ''}
-                        </option>
-                        <option value="ROLLBACK" disabled={totals.paid <= 0}>
-                            ROLLBACK {totals.paid <= 0 ? '(No Paid Balance)' : ''}
-                        </option>
-                    </select>
+                <div className="col-md-4 pt-4">
+                    {isOverLimit && (
+                        <div className="text-danger extra-small fw-bold  animate__animated animate__shakeX">
+                            <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                            You Paid maximum -  ₹ {transType === 'PAID' ? totals.pending.toLocaleString() : totals.paid.toLocaleString()}
+                        </div>
+                    )}
                 </div>
                 <div className="col-md-4">
-                    <label htmlFor="fm_trans_date" className="form-label small fw-bold">Transaction Date</label>
+                    <label className="form-label text-muted fw-bold mb-0">Transaction Date</label>
                     <input
                         type="date"
-                        className="form-control"
+                        className="form-control form-control-sm border-dark-subtle"
                         id="fm_trans_date"
                         value={formData.fm_trans_date}
                         onChange={handleInputChange}
@@ -229,17 +220,18 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                     />
                 </div>
 
-                <div className="col-12">
-                    <hr className="my-3" />
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                        <h6 className="text-muted fw-bold mb-0">Payment Distribution</h6>
+                <div className="col-12 mt-3">
+                    <div className="d-flex align-items-center gap-2 mb-1">
+                        <i className="bi bi-wallet2 text-primary"></i>
+                        <h6 className="mb-0 fw-bold text-dark text-uppercase letter-spacing-1 small">Payment Distribution</h6>
+                        <hr className="flex-grow-1 my-0 opacity-25" />
                     </div>
                 </div>
 
                 {/* Cash Account */}
                 <div className="col-md-4">
                     <select
-                        className="form-select form-select-sm"
+                        className="form-select form-select-sm border-dark-subtle"
                         id="fm_cash_acc_id"
                         value={formData.fm_cash_acc_id}
                         onChange={handleInputChange}
@@ -254,7 +246,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                     <input
                         type="text"
                         placeholder='Other Information'
-                        className="form-control form-control-sm"
+                        className="form-control form-control-sm border-dark-subtle"
                         id="fm_cash_info"
                         value={formData.fm_cash_info}
                         onChange={handleInputChange}
@@ -264,7 +256,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                     <input
                         type="text"
                         placeholder='Enter Cash Payment Amount'
-                        className="form-control form-control-sm"
+                        className="form-control form-control-sm border-dark-subtle"
                         id="fm_cash_amt"
                         value={formData.fm_cash_amt}
                         onChange={handleInputChange}
@@ -274,7 +266,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                 {/* Bank Account */}
                 <div className="col-md-4">
                     <select
-                        className="form-select form-select-sm"
+                        className="form-select form-select-sm border-dark-subtle"
                         id="fm_bank_acc_id"
                         value={formData.fm_bank_acc_id}
                         onChange={handleInputChange}
@@ -289,7 +281,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                     <input
                         type="text"
                         placeholder='Other Information'
-                        className="form-control form-control-sm"
+                        className="form-control form-control-sm border-dark-subtle"
                         id="fm_bank_info"
                         value={formData.fm_bank_info}
                         onChange={handleInputChange}
@@ -299,7 +291,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                     <input
                         type="text"
                         placeholder='Enter Bank Payment Amount'
-                        className="form-control form-control-sm"
+                        className="form-control form-control-sm border-dark-subtle"
                         id="fm_bank_amt"
                         value={formData.fm_bank_amt}
                         onChange={handleInputChange}
@@ -309,7 +301,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                 {/* Online Account */}
                 <div className="col-md-4">
                     <select
-                        className="form-select form-select-sm"
+                        className="form-select form-select-sm border-dark-subtle"
                         id="fm_online_acc_id"
                         value={formData.fm_online_acc_id}
                         onChange={handleInputChange}
@@ -324,7 +316,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                     <input
                         type="text"
                         placeholder='Other Information'
-                        className="form-control form-control-sm"
+                        className="form-control form-control-sm border-dark-subtle"
                         id="fm_online_info"
                         value={formData.fm_online_info}
                         onChange={handleInputChange}
@@ -334,7 +326,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                     <input
                         type="text"
                         placeholder='Enter Online Payment Amount'
-                        className="form-control form-control-sm"
+                        className="form-control form-control-sm border-dark-subtle"
                         id="fm_online_amt"
                         value={formData.fm_online_amt}
                         onChange={handleInputChange}
@@ -344,7 +336,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                 {/* Card Account */}
                 <div className="col-md-4">
                     <select
-                        className="form-select form-select-sm"
+                        className="form-select form-select-sm border-dark-subtle"
                         id="fm_card_acc_id"
                         value={formData.fm_card_acc_id}
                         onChange={handleInputChange}
@@ -359,7 +351,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                     <input
                         type="text"
                         placeholder='Other Information'
-                        className="form-control form-control-sm"
+                        className="form-control form-control-sm border-dark-subtle"
                         id="fm_card_info"
                         value={formData.fm_card_info}
                         onChange={handleInputChange}
@@ -369,7 +361,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                     <input
                         type="text"
                         placeholder='Enter Card Payment Amount'
-                        className="form-control form-control-sm"
+                        className="form-control form-control-sm border-dark-subtle"
                         id="fm_card_amt"
                         value={formData.fm_card_amt}
                         onChange={handleInputChange}
@@ -379,8 +371,8 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                 <div className="col-md-12 text-center mt-4">
                     <button
                         type="submit"
-                        className="btn btn-primary px-5 py-2 fw-bold"
-                        disabled={submitting}
+                        className={`btn ${(isOverLimit || totalDistributed <= 0) ? 'btn-secondary' : 'btn-primary'} px-5 py-2 fw-bold border-dark`}
+                        disabled={submitting || isOverLimit || totalDistributed <= 0}
                     >
                         {submitting ? (
                             <>
@@ -391,7 +383,6 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                             transType === 'PAID' ? 'Submit Payment' : 'Confirm Rollback'
                         )}
                     </button>
-                    <p className="small text-muted mt-2">All transactions are logged for audit purposes.</p>
                 </div>
             </div>
         </form>

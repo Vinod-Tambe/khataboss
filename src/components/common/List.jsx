@@ -37,7 +37,7 @@ const List = ({
   hasPrint = false,
   hasView = false,
   isLoading = false,
-   showFooter = true  
+  showFooter = true
 }) => {
   const tableRef = useRef(null);
   const dateRef = useRef(null);
@@ -136,7 +136,7 @@ const List = ({
         render: function (data, type, row) {
           let buttons = "";
           if (hasView) {
-            buttons += `<button class="btn btn-sm btn-info pt-0 mt-0 pb-0 mb-0 view-btn me-1" data-id="${row.id || ""}"><i class="bi bi-eye text-white"></i></button>`;
+            buttons += `<button class="btn btn-sm btn-yellow pt-0 mt-0 pb-0 mb-0 view-btn me-1" data-id="${row.id || ""}"><i class="bi bi-eye text-dark"></i></button>`;
           }
           if (hasEdit) {
             buttons += `<button class="btn btn-sm btn-primary pt-0 mt-0 pb-0 mb-0 edit-btn me-1" data-id="${row.id || ""}"><i class="bi bi-pencil"></i></button>`;
@@ -185,28 +185,28 @@ const List = ({
         // },
 
         footerCallback: showFooter
-  ? function () {
-      const api = this.api();
+          ? function () {
+            const api = this.api();
 
-      columns.forEach((col, idx) => {
-        if (!col.sum) return;
+            columns.forEach((col, idx) => {
+              if (!col.sum) return;
 
-        const total = api
-          .column(idx)
-          .data()
-          .reduce((a, b) => intVal(a) + intVal(b), 0);
+              const total = api
+                .column(idx)
+                .data()
+                .reduce((a, b) => intVal(a) + intVal(b), 0);
 
-        const formatted = total.toLocaleString("en-IN", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        });
+              const formatted = total.toLocaleString("en-IN", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              });
 
-        const display = total === 0 ? "0.00" : formatted;
+              const display = total === 0 ? "0.00" : formatted;
 
-        $(api.column(idx).footer()).html(`<strong>${display}</strong>`);
-      });
-    }
-  : undefined,
+              $(api.column(idx).footer()).html(`<strong>${display}</strong>`);
+            });
+          }
+          : undefined,
 
         buttons: [
           {
