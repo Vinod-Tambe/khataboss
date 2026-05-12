@@ -99,8 +99,8 @@ export const deleteAccount = async (uuid) => {
  */
 export const getAccountLedger = async (params) => {
   try {
-    const { startDate, endDate, acc_id } = params;
-    const response = await axiosInstance.get(`/account/ledger?startDate=${startDate}&endDate=${endDate}&acc_id=${acc_id}`);
+    const { startDate, endDate, acc_id, firmId } = params;
+    const response = await axiosInstance.get(`/account/ledger?startDate=${startDate}&endDate=${endDate}&acc_id=${acc_id}&firmId=${firmId || "N"}`);
     return response.data;
   } catch (error) {
     const message = error.response?.data?.error || error.response?.data?.message || error.message;

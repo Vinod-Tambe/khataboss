@@ -6,6 +6,7 @@ import "daterangepicker";
 import "daterangepicker/daterangepicker.css";
 import { useParams } from 'react-router-dom';
 import { getAccountLedger } from '../../api/accountApi';
+import { getFirmsDropdown } from '../../api/firmApi';
 
 const AccountDetails = () => {
     const { uuid } = useParams();
@@ -14,6 +15,8 @@ const AccountDetails = () => {
     const [ledgerData, setLedgerData] = useState([]);
     const [openingBalance, setOpeningBalance] = useState(0);
     const [ledgerLoading, setLedgerLoading] = useState(false);
+    const [firms, setFirms] = useState([]);
+    const [selectedFirm, setSelectedFirm] = useState("N");
 
     // Default FY dates
     const currentYear = moment().year();
@@ -31,6 +34,18 @@ const AccountDetails = () => {
     const dateRef = useRef(null);
 
     useEffect(() => {
+        const fetchFirms = async () => {
+            try {
+                const response = await getFirmsDropdown();
+                setFirms(response.data || []);
+            } catch (error) {
+                console.error("Error fetching firms:", error);
+            }
+        };
+        fetchFirms();
+    }, []);
+
+    useEffect(() => {
         const fetchLedger = async () => {
             if (!uuid || !startDate || !endDate) return;
             try {
@@ -38,7 +53,8 @@ const AccountDetails = () => {
                 const response = await getAccountLedger({
                     startDate,
                     endDate,
-                    acc_id: uuid // Use UUID directly
+                    acc_id: uuid, // Use UUID directly
+                    firmId: selectedFirm
                 });
                 setLedgerData(response.data.jurnal_trans_data || []);
                 setOpeningBalance(response.data.acc_open_balanace || 0);
@@ -59,7 +75,7 @@ const AccountDetails = () => {
         };
 
         fetchLedger();
-    }, [uuid, startDate, endDate]);
+    }, [uuid, startDate, endDate, selectedFirm]);
 
     useEffect(() => {
         if (!dateRef.current) return;
@@ -145,10 +161,17 @@ const AccountDetails = () => {
                     />
                 </div>
                 <div className="col-md-3 mt-2">
-                    <select className="form-select border-dark text-center">
-                        <option disabled>Select Firm</option>
-                        <option value="CR">Ram</option>
-                        <option value="DR">Sham</option>
+                    <select 
+                        className="form-select border-dark text-center"
+                        value={selectedFirm}
+                        onChange={(e) => setSelectedFirm(e.target.value)}
+                    >
+                        <option value="N">All Firms</option>
+                        {firms.map(firm => (
+                            <option key={firm.firm_id} value={firm.firm_id}>
+                                {firm.firm_name}
+                            </option>
+                        ))}
                     </select>
                 </div>
                 <div className="col-12 text-center">
