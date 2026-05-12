@@ -5,33 +5,61 @@ import moment from "moment";
 import "daterangepicker";
 import "daterangepicker/daterangepicker.css";
 import { useParams } from 'react-router-dom';
-import { getAccountByUuid } from '../../api/accountApi';
-import { toast } from 'react-hot-toast';
+import { getAccountLedger } from '../../api/accountApi';
 
 const AccountDetails = () => {
     const { uuid } = useParams();
     const [account, setAccount] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [ledgerData, setLedgerData] = useState([]);
+    const [openingBalance, setOpeningBalance] = useState(0);
+    const [ledgerLoading, setLedgerLoading] = useState(false);
+
+    // Default FY dates
+    const currentYear = moment().year();
+    const isAfterMarch = moment().month() >= 3;
+    const fyStart = isAfterMarch
+        ? moment(`${currentYear}-04-01`)
+        : moment(`${currentYear - 1}-04-01`);
+    const fyEnd = isAfterMarch
+        ? moment(`${currentYear + 1}-03-31`)
+        : moment(`${currentYear}-03-31`);
+
+    const [startDate, setStartDate] = useState(fyStart.format("YYYY-MM-DD"));
+    const [endDate, setEndDate] = useState(fyEnd.format("YYYY-MM-DD"));
+
     const dateRef = useRef(null);
 
     useEffect(() => {
-        const fetchAccount = async () => {
+        const fetchLedger = async () => {
+            if (!uuid || !startDate || !endDate) return;
             try {
-                setLoading(true);
-                const response = await getAccountByUuid(uuid);
-                setAccount(response.data);
+                setLedgerLoading(true);
+                const response = await getAccountLedger({
+                    startDate,
+                    endDate,
+                    acc_id: uuid // Use UUID directly
+                });
+                setLedgerData(response.data.jurnal_trans_data || []);
+                setOpeningBalance(response.data.acc_open_balanace || 0);
+                
+                // Set account info from ledger response
+                if (response.data.acc_name) {
+                    setAccount({
+                        acc_name: response.data.acc_name,
+                        acc_pre_acc: response.data.acc_pre_acc
+                    });
+                }
             } catch (error) {
-                console.error("Error fetching account:", error);
-                toast.error("Failed to load account details");
+                console.error("Error fetching ledger:", error);
             } finally {
+                setLedgerLoading(false);
                 setLoading(false);
             }
         };
 
-        if (uuid) {
-            fetchAccount();
-        }
-    }, [uuid]);
+        fetchLedger();
+    }, [uuid, startDate, endDate]);
 
     useEffect(() => {
         if (!dateRef.current) return;
@@ -74,8 +102,8 @@ const AccountDetails = () => {
                 $(dateRef.current).val(
                     `${start.format("DD-MM-YYYY")} - ${end.format("DD-MM-YYYY")}`
                 );
-
-
+                setStartDate(start.format("YYYY-MM-DD"));
+                setEndDate(end.format("YYYY-MM-DD"));
             }
         );
 
@@ -126,11 +154,14 @@ const AccountDetails = () => {
                 <div className="col-12 text-center">
                     <p className="pb-0 mb-0">
                         <strong className="text-info-emphasis fw-bold">FINANCIAL YEAR:</strong>{' '}
-                        12-12-2025 To 23-04-2025
+                        {moment(startDate).format("DD-MM-YYYY")} To {moment(endDate).format("DD-MM-YYYY")}
                     </p>
                     <p className="pb-0 mb-0">
                         <strong className="text-success-emphasis fw-bold">ASSESSMENT YEAR:</strong>{' '}
-                        2025 - 2026
+                        {moment(endDate).month() >= 3 
+                            ? `${moment(endDate).year()} - ${moment(endDate).year() + 1}`
+                            : `${moment(endDate).year() - 1} - ${moment(endDate).year()}`
+                        }
                     </p>
                     <p>
                         <strong className="text-primary-emphasis fw-bold">
@@ -139,12 +170,12 @@ const AccountDetails = () => {
                     </p>
                 </div>
                 <div className="col-md-12">
-                    <AccountDetailsReport />
+                    <AccountDetailsReport ledgerData={ledgerData} loading={ledgerLoading} openingBalanceProp={openingBalance} />
                 </div>
             </div>
-            <div class="text-center mt-3 mb-2">
-                <button class="btn btn-outline-success">
-                    Print <i class="bi bi-printer-fill"></i>
+            <div className="text-center mt-3 mb-2 no-print">
+                <button className="btn btn-outline-success" onClick={() => window.print()}>
+                    Print <i className="bi bi-printer-fill"></i>
                 </button>
             </div>
         </div>

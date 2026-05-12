@@ -92,3 +92,18 @@ export const deleteAccount = async (uuid) => {
     throw new Error(message);
   }
 };
+/**
+ * Get account ledger (transactions)
+ * @param {object} params - Search parameters (startDate, endDate, acc_id)
+ * @returns {Promise} - Response object with ledger data
+ */
+export const getAccountLedger = async (params) => {
+  try {
+    const { startDate, endDate, acc_id } = params;
+    const response = await axiosInstance.get(`/account/ledger?startDate=${startDate}&endDate=${endDate}&acc_id=${acc_id}`);
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.error || error.response?.data?.message || error.message;
+    throw new Error(message);
+  }
+};

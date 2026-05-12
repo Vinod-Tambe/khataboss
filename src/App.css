@@ -17,12 +17,21 @@
     background-color: #f4edea !important;
 }
 
+.bg-pink {
+    background-color: rgb(253, 240, 247) !important;
+}
+
+.bg-cust-info {
+    background-color: #eaf4f3 !important;
+}
+
+
 .bg-green {
     background-color: #edf4ea !important;
 }
 
 .text-red {
-    color: #f999aa !important;
+    color: rgb(255, 240, 239) !important;
 }
 
 .text-green {
@@ -90,4 +99,35 @@
 
 .border-dashed {
     border-style: dashed !important;
+}
+
+/* ========== Print Styles ========== */
+@media print {
+    .no-print, 
+    .sidebar, 
+    .header, 
+    .navbar, 
+    .btn, 
+    .daterangepicker,
+    select,
+    input {
+        display: none !important;
+    }
+
+    body, .main-content, .card, .content-wrapper {
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        width: 100% !important;
+        background: white !important;
+    }
+
+    .table-responsive {
+        overflow: visible !important;
+    }
+
+    .card {
+        display: block !important;
+    }
 }
