@@ -56,7 +56,7 @@ const DayBookTable = () => {
 
         <input
           type="search"
-          className="form-control form-control-sm border border-secondary w-auto mt-2 me-2"
+          className="form-control form-control-sm border border-dark w-auto mt-2 me-2"
           placeholder="Search In Finance Added"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -67,19 +67,19 @@ const DayBookTable = () => {
       <div className="table-responsive">
         <table
           ref={tableRef}
-          className="table table-striped table-hover table-bordered text-capitalize mb-1"
+          className="table table-hover table-bordered text-capitalize mb-1"
         >
-          <thead className="table-light">
+          <thead className="table-light ">
             <tr>
-              <th>DATE</th>
-              <th>FIRM</th>
-              <th>CUSTOMER NAME</th>
-              <th>CASH</th>
-              <th>BANK</th>
-              <th>ONLINE</th>
-              <th>CARD</th>
-              <th>DISC</th>
-              <th>TOTAL</th>
+              <th className="bg-pink border border-dark">DATE</th>
+              <th className="bg-pink border border-dark">FIRM</th>
+              <th className="bg-pink border border-dark">CUSTOMER NAME</th>
+              <th className="bg-pink border border-dark">CASH</th>
+              <th className="bg-pink border border-dark">BANK</th>
+              <th className="bg-pink border border-dark">ONLINE</th>
+              <th className="bg-pink border border-dark">CARD</th>
+              <th className="bg-pink border border-dark">DISC</th>
+              <th className="bg-pink border border-dark">TOTAL</th>
             </tr>
           </thead>
 
@@ -92,15 +92,15 @@ const DayBookTable = () => {
 
               return (
                 <tr key={item.id}>
-                  <td>{item.date}</td>
-                  <td>{item.firm}</td>
-                  <td>{item.name}</td>
-                  <td className="text-end">{item.cash.toFixed(2)}</td>
-                  <td className="text-end">{item.bank.toFixed(2)}</td>
-                  <td className="text-end">{online.toFixed(2)}</td>
-                  <td className="text-end">{card.toFixed(2)}</td>
-                  <td className="text-end text-danger">{disc.toFixed(2)}</td>
-                  <td className="text-end fw-bold text-success">
+                  <td className="border border-dark">{item.date}</td>
+                  <td className="border border-dark">{item.firm}</td>
+                  <td className="border border-dark">{item.name}</td>
+                  <td className="text-end border border-dark">{item.cash.toFixed(2)}</td>
+                  <td className="text-end border border-dark">{item.bank.toFixed(2)}</td>
+                  <td className="text-end border border-dark">{online.toFixed(2)}</td>
+                  <td className="text-end border border-dark">{card.toFixed(2)}</td>
+                  <td className="text-end text-danger border border-dark">{disc.toFixed(2)}</td>
+                  <td className="text-end fw-bold text-success border border-dark">
                     {total.toFixed(2)}
                   </td>
                 </tr>
@@ -110,18 +110,18 @@ const DayBookTable = () => {
 
           <tfoot>
             <tr>
-              <th className="text-end">
-                TOTAL AMOUNT :
+              <th className="text-end bg-cust-info border border-dark">
+                TOTAL AMT :
               </th>
-              <th colSpan={2} className="text-end">
-                
+              <th colSpan={2} className="text-end bg-cust-info border border-dark">
+
               </th>
-              <th className="text-end">{totalCash.toFixed(2)}</th>
-              <th className="text-end">{totalBank.toFixed(2)}</th>
-              <th className="text-end">{totalBank.toFixed(2)}</th>
-              <th className="text-end">{totalBank.toFixed(2)}</th>
-              <th ></th>
-              <th className="text-end fw-bold">
+              <th className="text-end  bg-cust-info border border-dark">{totalCash.toFixed(2)}</th>
+              <th className="text-end bg-cust-info border border-dark">{totalBank.toFixed(2)}</th>
+              <th className="text-end bg-cust-info border border-dark">{totalBank.toFixed(2)}</th>
+              <th className="text-end bg-cust-info border border-dark">{totalBank.toFixed(2)}</th>
+              <th className="bg-cust-info border border-dark"></th>
+              <th className="text-end fw-bold bg-cust-info border border-dark">
                 {(totalCash + totalBank).toFixed(2)}
               </th>
             </tr>
