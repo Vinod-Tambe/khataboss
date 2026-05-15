@@ -69,18 +69,11 @@ const ListFinance = ({ status = "ALL" }) => {
       render: (data) => `${data}.`
     },
     {
-      key: "user",
-      title: "User / Customer",
-      render: (data, type, row) => `
-        ${row.user?.user_first_name || ""} ${row.user?.user_last_name || ""}
-      `
-    },
-    {
       key: "fin_prin_amt",
       title: "Principal",
       sum: true,
       render: (data, type, row) => `
-        ₹${Number(data).toLocaleString()}
+        ${Number(data).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
       `
     },
     {
@@ -88,8 +81,32 @@ const ListFinance = ({ status = "ALL" }) => {
       title: "EMI Details",
       sum: true,
       render: (data, type, row) => `
-         ₹${Number(data).toLocaleString()}
+         ${Number(data).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
       `
+    },
+    {
+      key: "fin_cash_amt",
+      title: "Cash",
+      sum: true,
+      render: (data) => `${Number(data || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    },
+    {
+      key: "fin_bank_amt",
+      title: "Bank",
+      sum: true,
+      render: (data) => `${Number(data || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    },
+    {
+      key: "fin_online_amt",
+      title: "Online",
+      sum: true,
+      render: (data) => `${Number(data || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    },
+    {
+      key: "fin_card_amt",
+      title: "Card",
+      sum: true,
+      render: (data) => `${Number(data || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     },
     {
       key: "fin_start_date",

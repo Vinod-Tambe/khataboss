@@ -81,7 +81,7 @@ const EmiReceiptModal = ({ show, onHide, emiData, initialFinance }) => {
                                 </tr>
                                 <tr>
                                     <th className="fw-bold text-dark">Payment Amt :</th>
-                                    <td className="text-dark">₹ {Number(emiData.ft_paid_amt || 0).toLocaleString()}</td>
+                                    <td className="text-dark"> {Number(emiData.ft_paid_amt || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                 </tr>
                                 <tr>
                                     <th className="fw-bold text-dark">From Date :</th>
@@ -93,11 +93,11 @@ const EmiReceiptModal = ({ show, onHide, emiData, initialFinance }) => {
                                 </tr>
                                 <tr>
                                     <th className="fw-bold text-dark">Deposit Amt :</th>
-                                    <td className="text-dark">₹ {Number(depositAmt).toLocaleString()}</td>
+                                    <td className="text-dark"> {Number(depositAmt).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                 </tr>
                                 <tr>
                                     <th className="fw-bold text-dark">Rem. Amt :</th>
-                                    <td className="text-dark">₹ {Number(remAmt).toLocaleString()}</td>
+                                    <td className="text-dark"> {Number(remAmt).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                 </tr>
                                 <tr>
                                     <th className="fw-bold text-dark">EMI No :</th>
@@ -105,7 +105,7 @@ const EmiReceiptModal = ({ show, onHide, emiData, initialFinance }) => {
                                 </tr>
                                 <tr>
                                     <th className="fw-bold text-dark">EMI Amt :</th>
-                                    <td className="text-dark">₹ {Number(emiData.ft_emi_amt || 0).toLocaleString()}</td>
+                                    <td className="text-dark"> {Number(emiData.ft_emi_amt || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                 </tr>
                                 <tr>
                                     <th className="fw-bold text-dark">Status :</th>

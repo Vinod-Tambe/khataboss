@@ -42,8 +42,8 @@ const UserHome = () => {
           ...f,
           id: f.fin_id,
           finNo: `Fin-${f.fin_id}`,
-          principal: `₹${f.fin_prin_amt.toLocaleString()}`,
-          emi: `₹${f.fin_emi_amt.toLocaleString()}`,
+          principal: `${f.fin_prin_amt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          emi: `${f.fin_emi_amt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
           startDate: moment(f.fin_start_date).format("DD-MM-YYYY"),
           status: f.fin_status
         }));
@@ -53,7 +53,7 @@ const UserHome = () => {
         const dynamicTransactions = latestTransactions.map(t => ({
           id: t.fm_id,
           transNo: `TR-${t.fm_id}`,
-          amount: `₹${t.fm_trans_amt.toLocaleString()}`,
+          amount: `${t.fm_trans_amt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
           type: t.fm_trans_type,
           category: t.fm_trans_panel || "Finance",
           date: moment(t.fm_trans_date).format("DD-MM-YYYY"),
@@ -137,14 +137,14 @@ const UserHome = () => {
       <div className="row g-4 mb-4">
         <InfoCard
           title="TOTAL FINANCE AMT"
-          value={`₹${totals.totalFinanceAmount.toLocaleString()}`}
+          value={`${totals.totalFinanceAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           icon="bi-currency-rupee"
           colorClass="text-success"
           iconBgClass="bg-success-subtle"
         />
         <InfoCard
           title="FINANCE PENDING"
-          value={`₹${totals.totalFinancePending.toLocaleString()}`}
+          value={`${totals.totalFinancePending.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           icon="bi-clock-history"
           colorClass="text-danger"
           iconBgClass="bg-danger-subtle"
@@ -158,7 +158,7 @@ const UserHome = () => {
         />
         <InfoCard
           title="TOTAL LOAN AMT"
-          value={`₹${totals.totalLoanAmount.toLocaleString()}`}
+          value={`${totals.totalLoanAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           icon="bi-wallet2"
           colorClass="text-warning"
           iconBgClass="bg-warning-subtle"

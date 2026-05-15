@@ -47,7 +47,7 @@ const useFormNavigation = (formRef, autoFocus = true) => {
 
       // 2. Handle Enter (Next Field)
       if (e.key === 'Enter') {
-        // Skip for submit buttons (let default behavior work)
+        // Let default behavior handle submit buttons (which is to submit)
         if (document.activeElement.type === 'submit') return;
 
         // Skip for textareas if Shift is pressed (allow new line)
@@ -63,9 +63,6 @@ const useFormNavigation = (formRef, autoFocus = true) => {
           if (focusableElements[currentIndex + 1].select) {
             focusableElements[currentIndex + 1].select();
           }
-        } else if (currentIndex === focusableElements.length - 1) {
-          // Last element - Submit
-          form.requestSubmit();
         }
         return;
       }

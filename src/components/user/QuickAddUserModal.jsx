@@ -154,7 +154,7 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
                 title="Quick Add User"
                 size="lg"
             >
-                <div className="p-3">
+                <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="p-3">
                     <div className="row g-2">
                         {/* Perfect Alignment for Photo and Names */}
                         <div className="col-md-2">
@@ -265,12 +265,12 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
                         </div>
 
                         <div className="col-12 text-center mt-3">
-                            <button className="btn btn-primary px-5 py-2 fw-bold" onClick={handleSubmit} disabled={loading}>
+                            <button type="submit" className="btn btn-primary px-5 py-2 fw-bold" disabled={loading}>
                                 {loading ? 'Processing...' : 'Submit User Details'}
                             </button>
                         </div>
                     </div>
-                </div>
+                </form>
             </CommonModal>
 
             {/* Webcam Layer */}

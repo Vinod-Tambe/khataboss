@@ -70,7 +70,7 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onHistory, isLoading, f
     }
 
     return (
-        <div className="card border-0 p-4">
+        <div className="card border-0 p-4 ps-0 pe-0">
             <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <div className="d-flex align-items-center">
                     <span className="me-2 text-muted small">Show</span>
@@ -83,6 +83,7 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onHistory, isLoading, f
                         <option value={10}>10</option>
                         <option value={20}>20</option>
                         <option value={50}>50</option>
+                        <option value={1000000}>All</option>
                     </select>
                     <span className="ms-2 text-muted small">Entries</span>
                 </div>
@@ -124,7 +125,44 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onHistory, isLoading, f
                     </div>
                 </div>
             </div>
-
+            {financeData && (
+                <div className="bg-light border rounded mb-3 shadow-sm overflow-x-auto">
+                    <div className="row g-0 flex-nowrap align-items-center text-nowrap">
+                        <div className="col-auto px-3 py-2 border-end">
+                            <span className="text-muted small me-2">Prin Amt:</span>
+                            <span className="fw-bold text-primary">{Number(financeData.fin_prin_amt || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="col-auto px-3 py-2 border-end">
+                            <span className="text-muted small me-2">EMI Amt:</span>
+                            <span className="fw-bold text-dark">{Number(financeData.fin_emi_amt || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="col-auto px-3 py-2 border-end">
+                            <span className="text-muted small me-2">Cash Amt:</span>
+                            <span className="fw-bold text-success">{Number(financeData.fin_cash_amt || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="col-auto px-3 py-2 border-end">
+                            <span className="text-muted small me-2">Bank Amt:</span>
+                            <span className="fw-bold text-info">{Number(financeData.fin_bank_amt || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="col-auto px-3 py-2 border-end">
+                            <span className="text-muted small me-2">Online Amt:</span>
+                            <span className="fw-bold text-secondary">{Number(financeData.fin_online_amt || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="col-auto px-3 py-2 border-end">
+                            <span className="text-muted small me-2">Card Amt:</span>
+                            <span className="fw-bold text-warning">{Number(financeData.fin_card_amt || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="col-auto px-3 py-2 border-end bg-success bg-opacity-10">
+                            <span className="text-success small fw-bold me-2">Paid Amt:</span>
+                            <span className="fw-bold text-success">{Number(totals.paidAmt || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="col-auto px-3 py-2 bg-danger bg-opacity-10">
+                            <span className="text-danger small fw-bold me-2">Pen Amt:</span>
+                            <span className="fw-bold text-danger">{Number(totals.pendingAmt || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                    </div>
+                </div>
+            )}
             <div className="table-responsive">
                 <table className="table table-hover table-bordered border-secondary mb-2 dataTable dtr-inline text-capitalize dynamic-data-table">
                     <thead className="table-secondary border-bottom border-dark-subtle">
@@ -145,10 +183,10 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onHistory, isLoading, f
                                 <tr key={item.ft_id || index}>
                                     <td className="fw-bold text-dark" >{item.ft_emi_no}</td>
                                     <td className="text-secondary">{item.ft_start_date ? moment(item.ft_start_date).format("DD-MM-YYYY") : '-'}</td>
-                                    <td className=" fw-medium text-dark">₹ {(item.ft_emi_amt || 0).toLocaleString()}</td>
+                                    <td className=" fw-medium text-dark"> {(item.ft_emi_amt || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                     <td className="">{item.ft_due_date ? moment(item.ft_due_date).format("DD-MM-YYYY") : '-'}</td>
-                                    <td className=" text-success">₹ {(item.ft_paid_amt || 0).toLocaleString()}</td>
-                                    <td className=" text-danger">₹ {(item.ft_pending_amt || 0).toLocaleString()}</td>
+                                    <td className=" text-success"> {(item.ft_paid_amt || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                    <td className=" text-danger"> {(item.ft_pending_amt || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                     <td className="text-center">
                                         <span className={`badge rounded-pill ${item.ft_emi_status === 'PAID' ? 'bg-success-subtle text-success' :
                                             item.ft_emi_status === 'PARTIAL' ? 'bg-warning-subtle text-warning' :
@@ -178,10 +216,10 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onHistory, isLoading, f
                         <tfoot className="table-light">
                             <tr className="fw-bold">
                                 <th colSpan="2" className="text-center text-dark">Grand Total</th>
-                                <th className=" text-primary">₹ {totals.emiAmt.toLocaleString()}</th>
+                                <th className=" text-primary"> {totals.emiAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</th>
                                 <th></th>
-                                <th className=" text-success">₹ {totals.paidAmt.toLocaleString()}</th>
-                                <th className=" text-danger">₹ {totals.pendingAmt.toLocaleString()}</th>
+                                <th className=" text-success"> {totals.paidAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</th>
+                                <th className=" text-danger"> {totals.pendingAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</th>
                                 <th colSpan="2"></th>
                             </tr>
                         </tfoot>

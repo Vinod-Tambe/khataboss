@@ -7,9 +7,6 @@ const useAddFinanceCalculator = ({ fin_prin_amt,
     fin_proccess_amt = parseFloat(fin_proccess_amt) || 0;
 
     let adjustedNoOfEmi = fin_no_of_emi;
-    if (fin_freq_type === "YEARLY") {
-        adjustedNoOfEmi = fin_no_of_emi / 12;
-    }
     // Note: WEEKLY and MONTHLY might need specific logic depending on the requirements,
     // but based on previous logic, only quarterly/yearly had adjustments.
     // Assuming fin_no_of_emi is the count of intervals.

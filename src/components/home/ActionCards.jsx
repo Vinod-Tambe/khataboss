@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import QuickAddUserModal from '../user/QuickAddUserModal'
+import FinanceCollectionModal from '../finance/FinanceCollectionModal'
 
 const actionItems = [
   {
@@ -23,10 +24,10 @@ const actionItems = [
     to: "/firm/add"
   },
   {
-    title: "Quick Finance",
+    title: "Finance Collection",
     icon: "bi-currency-rupee",
     color: "warning",
-    to: "#"
+    isModal: true
   },
   {
     title: "Quick Loan",
@@ -80,6 +81,15 @@ const actionItems = [
 
 const ActionCards = ({ firms, selectedFirmId }) => {
   const [showModal, setShowModal] = useState(false);
+  const [showFinanceModal, setShowFinanceModal] = useState(false);
+
+  const handleItemClick = (item) => {
+    if (item.title === "Add User") {
+      setShowModal(true);
+    } else if (item.title === "Finance Collection") {
+      setShowFinanceModal(true);
+    }
+  };
 
   return (
     <>
@@ -94,7 +104,7 @@ const ActionCards = ({ firms, selectedFirmId }) => {
                 onClick={(e) => {
                   e.preventDefault();     // 🔥 stop any navigation
                   e.stopPropagation();    // 🔥 stop bubbling
-                  setShowModal(true);
+                  handleItemClick(item);
                 }}
               >
                 <div className="card-content text-center">
@@ -130,6 +140,13 @@ const ActionCards = ({ firms, selectedFirmId }) => {
       <QuickAddUserModal
         show={showModal}
         onClose={() => setShowModal(false)}
+        firms={firms}
+        selectedFirmId={selectedFirmId}
+      />
+
+      <FinanceCollectionModal
+        show={showFinanceModal}
+        onClose={() => setShowFinanceModal(false)}
         firms={firms}
         selectedFirmId={selectedFirmId}
       />

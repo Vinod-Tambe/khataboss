@@ -58,6 +58,8 @@ const AddFinance = () => {
     fin_other_info: '',
   });
 
+  const isEmiInvalid = formData.fin_emi_amt && parseFloat(formData.fin_emi_amt) % 1 !== 0;
+
   const [firms, setFirms] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const { selectedUser } = useSelector((state) => state.user);
@@ -99,7 +101,7 @@ const AddFinance = () => {
         showDropdowns: true,
         autoUpdateInput: true,
         locale: {
-          format: 'DD/MM/YYYY'
+          format: 'DD-MM-YYYY'
         }
       }, (start) => {
         setFormData(prev => ({ ...prev, fin_start_date: start.format('YYYY-MM-DD') }));
@@ -242,8 +244,8 @@ const AddFinance = () => {
 
   const handleNext = () => {
     if (currentStep === 1) {
-      if (!formData.fin_prin_amt || !formData.fin_start_date || !formData.fin_roi) {
-        alert('Please fill required fields: Principal Amount, Start Date, Rate of Interest');
+      if (!formData.fin_prin_amt || !formData.fin_start_date) {
+        alert('Please fill required fields: Principal Amount, Start Date');
         return;
       }
     }
@@ -266,8 +268,8 @@ const AddFinance = () => {
       toast.error('Please select User / Customer');
       return;
     }
-    if (!formData.fin_prin_amt || !formData.fin_start_date || !formData.fin_roi) {
-      toast.error('Please fill required fields (Principal, Date, ROI)');
+    if (!formData.fin_prin_amt || !formData.fin_start_date) {
+      toast.error('Please fill required fields (Principal, Date)');
       return;
     }
 
@@ -340,7 +342,7 @@ const AddFinance = () => {
             name="fin_start_date"
             ref={startDateRef}
             className="form-control border-dark"
-            defaultValue={formData.fin_start_date ? moment(formData.fin_start_date).format('DD/MM/YYYY') : ''}
+            defaultValue={formData.fin_start_date ? moment(formData.fin_start_date).format('DD-MM-YYYY') : ''}
           />
         </div>
 
@@ -370,6 +372,7 @@ const AddFinance = () => {
             value={formData.fin_freq_type}
             onChange={handleChange}
           >
+            <option value="DAILY">Daily</option>
             <option value="MONTHLY">Monthly</option>
             <option value="WEEKLY">Weekly</option>
             <option value="YEARLY">Yearly</option>
@@ -416,7 +419,7 @@ const AddFinance = () => {
 
 
         <div className="col-12 col-md-4 col-lg-3">
-          <label className="form-label fw-medium">Rate Of Interest (ROI) <span className="text-danger">*</span></label>
+          <label className="form-label fw-medium">Rate Of Interest (ROI)</label>
           <input
             type="text"
             inputMode="decimal"
@@ -460,10 +463,15 @@ const AddFinance = () => {
             type="text"
             name="fin_emi_amt"
             placeholder="0.00"
-            className="form-control border-dark"
+            className={`form-control border-dark ${isEmiInvalid ? 'is-invalid' : ''}`}
             value={formData.fin_emi_amt}
             readOnly
           />
+          {isEmiInvalid && (
+            <div className="invalid-feedback d-block fw-bold" style={{ fontSize: '0.8rem' }}>
+              EMI Amount must be a whole number.
+            </div>
+          )}
         </div>
 
 
@@ -501,7 +509,7 @@ const AddFinance = () => {
             value={formData.fin_cash_acc_id}
             onChange={handleChange}
           >
-            <option value="">Select account</option>
+            <option value="">Cash Account</option>
             {accounts.map(acc => (
               <option key={acc.acc_id} value={acc.acc_id}>{acc.acc_name}</option>
             ))}
@@ -510,21 +518,21 @@ const AddFinance = () => {
         <div className="col-12 col-md-4 col-lg-4  mb-3">
           <input
             type="text"
-            inputMode="decimal"
-            name="fin_cash_amt"
-            placeholder="0.00"
+            name="fin_cash_info"
+            placeholder="Cash Information"
             className="form-control border-dark"
-            value={formData.fin_cash_amt}
+            value={formData.fin_cash_info}
             onChange={handleChange}
           />
         </div>
         <div className="col-12 col-md-4 col-lg-4  mb-3">
           <input
             type="text"
-            name="fin_cash_info"
-            placeholder="Notes"
+            inputMode="decimal"
+            name="fin_cash_amt"
+            placeholder="Cash Amount"
             className="form-control border-dark"
-            value={formData.fin_cash_info}
+            value={formData.fin_cash_amt}
             onChange={handleChange}
           />
         </div>
@@ -539,7 +547,7 @@ const AddFinance = () => {
             value={formData.fin_bank_acc_id}
             onChange={handleChange}
           >
-            <option value="">Select account</option>
+            <option value="">Bank Account</option>
             {accounts.map(acc => (
               <option key={acc.acc_id} value={acc.acc_id}>{acc.acc_name}</option>
             ))}
@@ -548,21 +556,21 @@ const AddFinance = () => {
         <div className="col-12 col-md-4 col-lg-4  mb-3">
           <input
             type="text"
-            inputMode="decimal"
-            name="fin_bank_amt"
-            placeholder="0.00"
+            name="fin_bank_info"
+            placeholder="Bank Information"
             className="form-control border-dark"
-            value={formData.fin_bank_amt}
+            value={formData.fin_bank_info}
             onChange={handleChange}
           />
         </div>
         <div className="col-12 col-md-4 col-lg-4  mb-3">
           <input
             type="text"
-            name="fin_bank_info"
-            placeholder="UTR / Ref No"
+            inputMode="decimal"
+            name="fin_bank_amt"
+            placeholder="Bank Amount"
             className="form-control border-dark"
-            value={formData.fin_bank_info}
+            value={formData.fin_bank_amt}
             onChange={handleChange}
           />
         </div>
@@ -577,30 +585,30 @@ const AddFinance = () => {
             value={formData.fin_online_acc_id}
             onChange={handleChange}
           >
-            <option value="">Select account</option>
+            <option value="">Online Account</option>
             {accounts.map(acc => (
               <option key={acc.acc_id} value={acc.acc_id}>{acc.acc_name}</option>
             ))}
           </select>
+        </div>
+        <div className="col-12 col-md-4 col-lg-4  mb-3">
+          <input
+            type="text"
+            name="fin_online_info"
+            placeholder="Online Information"
+            className="form-control border-dark"
+            value={formData.fin_online_info}
+            onChange={handleChange}
+          />
         </div>
         <div className="col-12 col-md-4 col-lg-4 mb-3">
           <input
             type="text"
             inputMode="decimal"
             name="fin_online_amt"
-            placeholder="0.00"
+            placeholder="Online Amount"
             className="form-control border-dark"
             value={formData.fin_online_amt}
-            onChange={handleChange}
-          />
-        </div>
-        <div className="col-12 col-md-4 col-lg-4  mb-3">
-          <input
-            type="text"
-            name="fin_online_info"
-            placeholder="UPI / Ref No"
-            className="form-control border-dark"
-            value={formData.fin_online_info}
             onChange={handleChange}
           />
         </div>
@@ -615,7 +623,7 @@ const AddFinance = () => {
             value={formData.fin_card_acc_id}
             onChange={handleChange}
           >
-            <option value="">Select account</option>
+            <option value="">Card Account</option>
             {accounts.map(acc => (
               <option key={acc.acc_id} value={acc.acc_id}>{acc.acc_name}</option>
             ))}
@@ -624,21 +632,21 @@ const AddFinance = () => {
         <div className="col-12 col-md-4 col-lg-4  mb-3">
           <input
             type="text"
-            inputMode="decimal"
-            name="fin_card_amt"
-            placeholder="0.00"
+            name="fin_card_info"
+            placeholder="Card Information"
             className="form-control border-dark"
-            value={formData.fin_card_amt}
+            value={formData.fin_card_info}
             onChange={handleChange}
           />
         </div>
         <div className="col-12 col-md-4 col-lg-4  mb-3">
           <input
             type="text"
-            name="fin_card_info"
-            placeholder="Auth Code"
+            inputMode="decimal"
+            name="fin_card_amt"
+            placeholder="Card Amount"
             className="form-control border-dark"
-            value={formData.fin_card_info}
+            value={formData.fin_card_amt}
             onChange={handleChange}
           />
         </div>
@@ -696,14 +704,14 @@ const AddFinance = () => {
           Next
         </button>
       ) : (
-        <button type="submit" className="btn btn-primary btn-lg px-5" disabled={loading}>
+        <button type="submit" className="btn btn-primary btn-lg px-5" disabled={loading || isEmiInvalid}>
           {loading ? 'Saving...' : 'Save Finance'}
         </button>
       )}
     </div>
   ) : (
     <div className="d-grid d-md-block text-center mt-5">
-      <button type="submit" className="btn btn-primary btn-lg px-5" disabled={loading}>
+      <button type="submit" className="btn btn-primary btn-lg px-5" disabled={loading || isEmiInvalid}>
         {loading ? 'Saving...' : 'Save Finance'}
       </button>
     </div>

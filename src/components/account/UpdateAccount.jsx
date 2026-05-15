@@ -55,7 +55,7 @@ const UpdateAccount = () => {
         showDropdowns: true,
         autoUpdateInput: true,
         locale: {
-          format: 'DD/MM/YYYY'
+          format: 'DD-MM-YYYY'
         }
       }, (start) => {
         setFormData(prev => ({ ...prev, acc_opening_date: start.format('YYYY-MM-DD') }));
@@ -98,8 +98,8 @@ const UpdateAccount = () => {
 
           // Also update the date picker display
           if (openingDateRef.current) {
-            $(openingDateRef.current).data('daterangepicker').setStartDate(moment(accountData.acc_opening_date).format('DD/MM/YYYY'));
-            $(openingDateRef.current).data('daterangepicker').setEndDate(moment(accountData.acc_opening_date).format('DD/MM/YYYY'));
+            $(openingDateRef.current).data('daterangepicker').setStartDate(moment(accountData.acc_opening_date).format('DD-MM-YYYY'));
+            $(openingDateRef.current).data('daterangepicker').setEndDate(moment(accountData.acc_opening_date).format('DD-MM-YYYY'));
           }
         }
       } catch (error) {
@@ -217,7 +217,7 @@ const UpdateAccount = () => {
               name="acc_opening_date"
               ref={openingDateRef}
               className="form-control border-dark"
-              defaultValue={moment(formData.acc_opening_date).format('DD/MM/YYYY')}
+              defaultValue={moment(formData.acc_opening_date).format('DD-MM-YYYY')}
               required
             />
           </div>
