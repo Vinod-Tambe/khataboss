@@ -74,19 +74,26 @@ const BalanceSheetReport = ({ balanceSheetData }) => {
                         </tr>
 
                         {/* Show Profit or Loss */}
+                        {(diffBalance !== 0) && (
                             <tr>
-                                <td className="text-start fw-bold text-success ">  
-                                    <div className="row">
-                                    <div className="col-6">Net Profit</div>
-                                    <div className="col-6 text-end">{diffBalance.toLocaleString()}</div>
-                                </div>
+                                <td className="text-start fw-bold text-success">
+                                    {diffBalance > 0 && (
+                                        <div className="row">
+                                            <div className="col-6">NET PROFIT</div>
+                                            <div className="col-6 text-end">{diffBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                                        </div>
+                                    )}
                                 </td>
-                                <td className='text-start fw-bold text-danger '> 
-                                    <div className="row">
-                                    <div className="col-6">Net Loss</div>
-                                    <div className="col-6 text-end">{Math.abs(diffBalance).toLocaleString()}</div>
-                                </div></td>
+                                <td className="text-start fw-bold text-danger">
+                                    {diffBalance < 0 && (
+                                        <div className="row">
+                                            <div className="col-6">NET LOSS</div>
+                                            <div className="col-6 text-end">{Math.abs(diffBalance).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                                        </div>
+                                    )}
+                                </td>
                             </tr>
+                        )}
                     </tbody>
 
                     {/* Totals row */}
