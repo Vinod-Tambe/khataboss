@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { setSelectedUser } from '../../store/slices/userSlice';
 import List from '../common/List';
-import { ConfirmAlert } from '../common/ConfirmAlert';
 import { getUsers, deleteUser } from '../../api/userApi';
 import { toast } from 'react-toastify';
 
@@ -64,15 +63,12 @@ const UserList = () => {
   };
 
   const handleDelete = async (rowData) => {
-    const isConfirmed = await ConfirmAlert(`Are you sure you want to delete user: ${rowData.user_first_name} ${rowData.user_last_name}?`);
-    if (isConfirmed) {
-      try {
-        await deleteUser(rowData.user_uuid);
-        toast.success('User deleted successfully');
-        fetchUsers(); // Refresh list
-      } catch (error) {
-        toast.error(error.message || 'Failed to delete user');
-      }
+    try {
+      await deleteUser(rowData.user_uuid);
+      toast.success('User deleted successfully');
+      fetchUsers(); // Refresh list
+    } catch (error) {
+      toast.error(error.message || 'Failed to delete user');
     }
   };
 
@@ -111,6 +107,7 @@ const UserList = () => {
         hasPrint={true}
         hasView={true}
         loading={loading}
+        deleteConfirmMessage={(row) => `Are you sure you want to delete user: ${row?.user_first_name} ${row?.user_last_name}?`}
       />
     </div>
   );

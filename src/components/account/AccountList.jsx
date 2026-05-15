@@ -5,7 +5,6 @@ import List from "../common/List";
 import { getAccounts, deleteAccount } from "../../api/accountApi";
 import { toast } from "react-hot-toast";
 import moment from "moment";
-import { ConfirmAlert } from "../common/ConfirmAlert";
 
 const AccountList = () => {
   const [accounts, setAccounts] = useState([]);
@@ -85,15 +84,12 @@ const AccountList = () => {
   };
 
   const handleDelete = async (rowData) => {
-    const isConfirmed = await ConfirmAlert(`Are you sure you want to delete ${rowData.acc_name}?`);
-    if (isConfirmed) {
-      try {
-        await deleteAccount(rowData.acc_uuid);
-        toast.success("Account deleted successfully");
-        fetchAccounts();
-      } catch (error) {
-        toast.error(error.message || "Error deleting account");
-      }
+    try {
+      await deleteAccount(rowData.acc_uuid);
+      toast.success("Account deleted successfully");
+      fetchAccounts();
+    } catch (error) {
+      toast.error(error.message || "Error deleting account");
     }
   };
 
@@ -120,6 +116,7 @@ const AccountList = () => {
           hasEdit={true}
           hasDelete={true}
           hasPrint={true}
+          deleteConfirmMessage={(row) => `Are you sure you want to delete account: ${row?.acc_name}?`}
         />
       )}
     </div>

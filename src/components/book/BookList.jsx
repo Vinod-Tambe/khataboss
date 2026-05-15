@@ -88,9 +88,7 @@ const columns = [
   };
 
   const handleDelete = (rowData) => {
-    if (window.confirm(`Are you sure you want to delete user: ${rowData.name} (ID: ${rowData.id})?`)) {
-      alert(rowData);
-    }
+    alert(rowData);
   };
 
   const handlePrint = (rowData) => {
@@ -110,6 +108,7 @@ const columns = [
         hasEdit={false}
         hasDelete={false}
         hasPrint={false}
+        deleteConfirmMessage={(row) => `Are you sure you want to delete this journal entry?`}
       />
     </div>
   )

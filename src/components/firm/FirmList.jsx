@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import List from "../common/List";
 import { getFirms, deleteFirm } from "../../api/firmApi";
 import { toast } from "react-hot-toast";
-import { ConfirmAlert } from "../common/ConfirmAlert";
 
 const FirmList = () => {
   const navigate = useNavigate();
@@ -53,16 +52,13 @@ const FirmList = () => {
   };
 
   const handleDelete = async (rowData) => {
-    const isConfirmed = await ConfirmAlert(`Are you sure you want to delete ${rowData.firm_name}?`);
-    if (isConfirmed) {
-      try {
-        const response = await deleteFirm(rowData.firm_uuid);
-        toast.success(response.message || "Firm deleted successfully.");
-        fetchFirms(); // Refresh the list
-      } catch (error) {
-        console.error("Error deleting firm:", error);
-        toast.error(error.message || "Failed to delete firm.");
-      }
+    try {
+      const response = await deleteFirm(rowData.firm_uuid);
+      toast.success(response.message || "Firm deleted successfully.");
+      fetchFirms(); // Refresh the list
+    } catch (error) {
+      console.error("Error deleting firm:", error);
+      toast.error(error.message || "Failed to delete firm.");
     }
   };
 
@@ -86,10 +82,10 @@ const FirmList = () => {
           onEdit={handleEdit}
           onDelete={handleDelete}
           onPrint={handlePrint}
-          hasEdit={true}
           hasDelete={true}
           hasPrint={true}
-            showFooter={false} 
+          showFooter={false}
+          deleteConfirmMessage={(row) => `Are you sure you want to delete firm: ${row?.firm_name}?`}
         />
       )}
     </div>

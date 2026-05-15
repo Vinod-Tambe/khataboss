@@ -19,6 +19,7 @@ import "daterangepicker/daterangepicker.css";
 import JSZip from "jszip";
 import pdfMake from "pdfmake/build/pdfmake";
 import * as pdfFonts from "pdfmake/build/vfs_fonts";
+import Confirm from "./Confirm";
 
 // Register globally
 window.JSZip = JSZip;
@@ -37,12 +38,14 @@ const List = ({
   hasPrint = false,
   hasView = false,
   isLoading = false,
-  showFooter = true
+  showFooter = true,
+  deleteConfirmMessage = "Are you sure you want to delete this record?"
 }) => {
   const tableRef = useRef(null);
   const dateRef = useRef(null);
   const [dateRange, setDateRange] = useState({ startDate: null, endDate: null });
   const [tableInstance, setTableInstance] = useState(null);
+  const [confirmState, setConfirmState] = useState({ show: false, rowData: null });
 
   // ─── Date Range Picker ────────────────────────────────────────
   useEffect(() => {
@@ -336,7 +339,7 @@ const List = ({
               e.stopPropagation();
               const tr = $(this).closest("tr");
               const rowData = api.row(tr).data();
-              onDelete(rowData);
+              setConfirmState({ show: true, rowData });
             });
           }
 
@@ -420,8 +423,24 @@ const List = ({
     }
   };
 
+  const handleCloseConfirm = () => setConfirmState({ show: false, rowData: null });
+
+  const handleConfirmDelete = () => {
+    if (confirmState.rowData && onDelete) {
+      onDelete(confirmState.rowData);
+    }
+    handleCloseConfirm();
+  };
+
   return (
     <div className="card p-3 pt-1 shadow-sm">
+      {/* ... existing code ... */}
+      <Confirm
+        show={confirmState.show}
+        onHide={handleCloseConfirm}
+        onConfirm={handleConfirmDelete}
+        message={typeof deleteConfirmMessage === 'function' ? deleteConfirmMessage(confirmState.rowData) : deleteConfirmMessage}
+      />
       {title && <h5 className="mb-2 text-center text-brown p-0 m-0 fw-semibold mt-2">{title}</h5>}
 
       {/* Controls */}
