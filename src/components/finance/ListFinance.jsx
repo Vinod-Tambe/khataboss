@@ -51,14 +51,12 @@ const ListFinance = ({ status = "ALL" }) => {
   };
 
   const handleDelete = async (rowData) => {
-    if (window.confirm("Are you sure you want to delete this finance record?")) {
-      try {
-        await deleteFinance(rowData.fin_id);
-        toast.success("Finance record deleted successfully");
-        fetchFinances();
-      } catch (error) {
-        toast.error(error.message || "Failed to delete record");
-      }
+    try {
+      await deleteFinance(rowData.fin_id);
+      toast.success("Finance record deleted successfully");
+      fetchFinances();
+    } catch (error) {
+      toast.error(error.message || "Failed to delete record");
     }
   };
 
@@ -158,6 +156,7 @@ const ListFinance = ({ status = "ALL" }) => {
           hasEdit={true}
           isLoading={loading}
           showFooter={true}
+          deleteConfirmMessage="Are you sure you want to delete this finance record?"
         />
       </div>
     </div>

@@ -40,9 +40,7 @@ const StaffList = () => {
   };
 
   const handleDelete = (rowData) => {
-    if (window.confirm(`Are you sure you want to delete user: ${rowData.name} (ID: ${rowData.id})?`)) {
-      alert(`User ${rowData.name} deleted (mock)`);
-    }
+    alert(`User ${rowData.name} deleted (mock)`);
   };
 
   const handlePrint = (rowData) => {
@@ -62,6 +60,7 @@ const StaffList = () => {
         hasEdit={true}
         hasDelete={true}
         hasPrint={true}
+        deleteConfirmMessage={(row) => `Are you sure you want to delete user: ${row?.name} (ID: ${row?.id})?`}
       />
     </div>
   )
