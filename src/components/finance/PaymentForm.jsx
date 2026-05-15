@@ -135,12 +135,12 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
 
         // Limit Validation
         if (transType === 'PAID' && transAmt > totals.pending + 0.01) {
-            toast.error(`Maximum payable amount is ₹${totals.pending.toLocaleString()}`);
+            toast.error(`Maximum payable amount is ${totals.pending.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
             return;
         }
 
         if (transType === 'ROLLBACK' && transAmt > totals.paid + 0.01) {
-            toast.error(`Maximum rollback amount is ₹${totals.paid.toLocaleString()}`);
+            toast.error(`Maximum rollback amount is ${totals.paid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
             return;
         }
 
@@ -204,7 +204,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                     {isOverLimit && (
                         <div className="text-danger extra-small fw-bold  animate__animated animate__shakeX">
                             <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                            You Paid maximum -  ₹ {transType === 'PAID' ? totals.pending.toLocaleString() : totals.paid.toLocaleString()}
+                            You Paid maximum -   {transType === 'PAID' ? totals.pending.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : totals.paid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                     )}
                 </div>
@@ -236,7 +236,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                         value={formData.fm_cash_acc_id}
                         onChange={handleInputChange}
                     >
-                        <option value="">Select Cash Account</option>
+                        <option value="">Cash Account</option>
                         {accounts.map(acc => (
                             <option key={acc.acc_id} value={acc.acc_id}>{acc.acc_name}</option>
                         ))}
@@ -245,7 +245,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                 <div className="col-md-4">
                     <input
                         type="text"
-                        placeholder='Other Information'
+                        placeholder="Cash Information"
                         className="form-control form-control-sm border-dark-subtle"
                         id="fm_cash_info"
                         value={formData.fm_cash_info}
@@ -255,7 +255,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                 <div className="col-md-4">
                     <input
                         type="text"
-                        placeholder='Enter Cash Payment Amount'
+                        placeholder="Cash Amount"
                         className="form-control form-control-sm border-dark-subtle"
                         id="fm_cash_amt"
                         value={formData.fm_cash_amt}
@@ -271,7 +271,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                         value={formData.fm_bank_acc_id}
                         onChange={handleInputChange}
                     >
-                        <option value="">Select Bank Account</option>
+                        <option value="">Bank Account</option>
                         {accounts.map(acc => (
                             <option key={acc.acc_id} value={acc.acc_id}>{acc.acc_name}</option>
                         ))}
@@ -280,7 +280,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                 <div className="col-md-4">
                     <input
                         type="text"
-                        placeholder='Other Information'
+                        placeholder="Bank Information"
                         className="form-control form-control-sm border-dark-subtle"
                         id="fm_bank_info"
                         value={formData.fm_bank_info}
@@ -290,7 +290,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                 <div className="col-md-4">
                     <input
                         type="text"
-                        placeholder='Enter Bank Payment Amount'
+                        placeholder="Bank Amount"
                         className="form-control form-control-sm border-dark-subtle"
                         id="fm_bank_amt"
                         value={formData.fm_bank_amt}
@@ -306,7 +306,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                         value={formData.fm_online_acc_id}
                         onChange={handleInputChange}
                     >
-                        <option value="">Select Online Account</option>
+                        <option value="">Online Account</option>
                         {accounts.map(acc => (
                             <option key={acc.acc_id} value={acc.acc_id}>{acc.acc_name}</option>
                         ))}
@@ -315,7 +315,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                 <div className="col-md-4">
                     <input
                         type="text"
-                        placeholder='Other Information'
+                        placeholder="Online Information"
                         className="form-control form-control-sm border-dark-subtle"
                         id="fm_online_info"
                         value={formData.fm_online_info}
@@ -325,7 +325,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                 <div className="col-md-4">
                     <input
                         type="text"
-                        placeholder='Enter Online Payment Amount'
+                        placeholder="Online Amount"
                         className="form-control form-control-sm border-dark-subtle"
                         id="fm_online_amt"
                         value={formData.fm_online_amt}
@@ -341,7 +341,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                         value={formData.fm_card_acc_id}
                         onChange={handleInputChange}
                     >
-                        <option value="">Select Card Account</option>
+                        <option value="">Card Account</option>
                         {accounts.map(acc => (
                             <option key={acc.acc_id} value={acc.acc_id}>{acc.acc_name}</option>
                         ))}
@@ -350,7 +350,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                 <div className="col-md-4">
                     <input
                         type="text"
-                        placeholder='Other Information'
+                        placeholder="Card Information"
                         className="form-control form-control-sm border-dark-subtle"
                         id="fm_card_info"
                         value={formData.fm_card_info}
@@ -360,7 +360,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                 <div className="col-md-4">
                     <input
                         type="text"
-                        placeholder='Enter Card Payment Amount'
+                        placeholder="Card Amount"
                         className="form-control form-control-sm border-dark-subtle"
                         id="fm_card_amt"
                         value={formData.fm_card_amt}

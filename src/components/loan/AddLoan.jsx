@@ -11,8 +11,8 @@ const AddLoan = () => {
 
   const [formData, setFormData] = useState({
     principalAmount: '',
-    loanStartDate: '',
-    interestOption: '',
+    loanStartDate: moment().format('YYYY-MM-DD'),
+    interestOption: 'monthly',
     loanPacketNo: '',
     loanLockerNo: '',
     processingAmount: '',
@@ -59,16 +59,16 @@ const AddLoan = () => {
 
   useEffect(() => {
     if (loanStartDateRef.current) {
-        $(loanStartDateRef.current).daterangepicker({
-            singleDatePicker: true,
-            showDropdowns: true,
-            autoUpdateInput: true,
-            locale: {
-                format: 'DD/MM/YYYY'
-            }
-        }, (start) => {
-            setFormData(prev => ({ ...prev, loanStartDate: start.format('YYYY-MM-DD') }));
-        });
+      $(loanStartDateRef.current).daterangepicker({
+        singleDatePicker: true,
+        showDropdowns: true,
+        autoUpdateInput: true,
+        locale: {
+          format: 'DD-MM-YYYY'
+        }
+      }, (start) => {
+        setFormData(prev => ({ ...prev, loanStartDate: start.format('YYYY-MM-DD') }));
+      });
     }
 
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -218,12 +218,12 @@ const AddLoan = () => {
         </div>
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Loan Start Date <span className="text-danger">*</span></label>
-          <input 
-            type="text" 
-            name="loanStartDate" 
+          <input
+            type="text"
+            name="loanStartDate"
             ref={loanStartDateRef}
-            className="form-control border-dark" 
-            defaultValue={formData.loanStartDate ? moment(formData.loanStartDate).format('DD/MM/YYYY') : ''} 
+            className="form-control border-dark"
+            defaultValue={formData.loanStartDate ? moment(formData.loanStartDate).format('DD-MM-YYYY') : ''}
           />
         </div>
         <div className="col-12 col-md-6 col-lg-3">
@@ -314,22 +314,22 @@ const AddLoan = () => {
   const itemInformation = (
     <>
       <h5 className="text-muted mt-3">Item Information</h5>
-      <div className="table-responsive table-sticky-first">
-        <table className="table table-bordered table-hover">
+      <div className="table-responsive mb-3">
+        <table className="table table-bordered table-hover mb-0">
           <thead>
-            <tr>
-              <th className="text-center fw-bold">METAL TYPE</th>
-              <th className="text-center fw-bold">ITEM NAME</th>
-              <th className="text-center fw-bold">QTY</th>
-              <th className="text-center fw-bold">GS WT</th>
-              <th className="text-center fw-bold">GS TYPE</th>
-              <th className="text-center fw-bold">NT WT</th>
-              <th className="text-center fw-bold">NT TYPE</th>
-              <th className="text-center fw-bold">TUNCH</th>
-              <th className="text-center fw-bold">FN WT</th>
-              <th className="text-center fw-bold">VALUATION</th>
-              <th className="text-center fw-bold">IMAGE</th>
-              <th className="text-center fw-bold">ACTION</th>
+            <tr className="table-light">
+              <th className="text-center fw-bold" style={{ width: '50px' }}>METAL</th>
+              <th className="text-center fw-bold" style={{ width: '150px' }}>ITEM NAME</th>
+              <th className="text-center fw-bold" style={{ width: '60px' }}>QTY</th>
+              <th className="text-center fw-bold" style={{ width: '70px' }}>GS WT</th>
+              <th className="text-center fw-bold" style={{ width: '65px' }}>G TYPE</th>
+              <th className="text-center fw-bold" style={{ width: '70px' }}>NT WT</th>
+              <th className="text-center fw-bold" style={{ width: '65px' }}>N TYPE</th>
+              <th className="text-center fw-bold" style={{ width: '70px' }}>TUNCH</th>
+              <th className="text-center fw-bold" style={{ width: '70px' }}>FN WT</th>
+              <th className="text-center fw-bold" style={{ width: '110px' }}>VALUATION</th>
+              <th className="text-center fw-bold" style={{ width: '60px' }}>IMAGE</th>
+              <th className="text-center fw-bold" style={{ width: '50px' }}>ACTION</th>
             </tr>
           </thead>
           <tbody>
@@ -545,7 +545,7 @@ const AddLoan = () => {
                 )}
                 {newItem.imageName && (
                   <div className="small text-muted mt-1 text-truncate" title={newItem.imageName}>
-                   
+
                   </div>
                 )}
               </td>
@@ -606,7 +606,7 @@ const AddLoan = () => {
           <input type="text" name="bankInfo" placeholder="Information" className="form-control border-dark" value={newPayment.bankInfo} onChange={handlePaymentChange} />
         </div>
       </div>
-        <div className="row g-3">
+      <div className="row g-3">
         <div className="col-12 col-md-6 col-lg-4">
           <label className="form-label fw-medium">Select Cash Account <span className="text-danger">*</span></label>
           <select name="bankAccountId" className="form-select border-dark" value={newPayment.bankAccountId} onChange={handlePaymentChange} required>
@@ -627,7 +627,7 @@ const AddLoan = () => {
           <input type="text" name="bankInfo" placeholder="Information" className="form-control border-dark" value={newPayment.bankInfo} onChange={handlePaymentChange} />
         </div>
       </div>
-        <div className="row g-3">
+      <div className="row g-3">
         <div className="col-12 col-md-6 col-lg-4">
           <label className="form-label fw-medium">Select Cash Account <span className="text-danger">*</span></label>
           <select name="bankAccountId" className="form-select border-dark" value={newPayment.bankAccountId} onChange={handlePaymentChange} required>

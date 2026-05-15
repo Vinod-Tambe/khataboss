@@ -157,7 +157,7 @@ const AddStaff = () => {
                 showDropdowns: true,
                 autoUpdateInput: true,
                 locale: {
-                    format: 'DD/MM/YYYY'
+                    format: 'DD-MM-YYYY'
                 }
             }, (start) => {
                 setFormData(prev => ({ ...prev, dateOfBirth: start.format('YYYY-MM-DD') }));
@@ -294,7 +294,7 @@ const AddStaff = () => {
                         name="dateOfBirth" 
                         ref={dateOfBirthRef}
                         className="form-control border-dark" 
-                        defaultValue={moment(formData.dateOfBirth).format('DD/MM/YYYY')} 
+                        defaultValue={moment(formData.dateOfBirth).format('DD-MM-YYYY')} 
                     />
                 </div>
 

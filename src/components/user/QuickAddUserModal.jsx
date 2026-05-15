@@ -3,6 +3,7 @@ import { toast } from 'react-hot-toast';
 import { createUser } from '../../api/userApi';
 import DocumentUploadCard from '../common/DocumentUploadCard';
 import CommonModal from '../common/CommonModal';
+import { validateMobile, validateAadhaar } from '../../utils/validation';
 
 const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
     const [loading, setLoading] = useState(false);
@@ -16,17 +17,21 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
     const [showWebcam, setShowWebcam] = useState(false);
     const [activeCaptureField, setActiveCaptureField] = useState(null);
 
-    const [formData, setFormData] = useState({
+    const initialFormData = {
         firstName: '',
         lastName: '',
         fatherName: '',
+        motherName: '',
         mobileNo: '',
         gender: 'Male',
         adhaarNo: '',
+        emailId: '',
         firmId: '',
         currentAddress: '',
         photo: null
-    });
+    };
+
+    const [formData, setFormData] = useState(initialFormData);
 
     useEffect(() => {
         if (show) {
@@ -103,7 +108,17 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
         if (!formData.firstName.trim()) { toast.error('First Name is required'); return false; }
         if (!formData.lastName.trim()) { toast.error('Last Name is required'); return false; }
         if (!formData.mobileNo.trim()) { toast.error('Mobile number is required'); return false; }
-        if (formData.mobileNo.length !== 10) { toast.error('Mobile must be 10 digits'); return false; }
+
+        if (!validateMobile(formData.mobileNo)) {
+            toast.error('Invalid Mobile Number. It should be 10 digits starting with 6-9.');
+            return false;
+        }
+
+        if (formData.adhaarNo && !validateAadhaar(formData.adhaarNo)) {
+            toast.error('Invalid Aadhaar Number. It should be 12 digits and not start with 0 or 1.');
+            return false;
+        }
+
         if (!formData.firmId) { toast.error('Firm is required'); return false; }
         return true;
     };
@@ -114,14 +129,26 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
         setLoading(true);
         try {
             const data = new FormData();
-            data.append('user_first_name', formData.firstName);
-            data.append('user_last_name', formData.lastName);
-            data.append('user_father_name', formData.fatherName);
-            data.append('user_mobile_no', formData.mobileNo);
-            data.append('user_gender', formData.gender);
-            data.append('user_adhaar_no', formData.adhaarNo);
-            data.append('user_firm_id', formData.firmId);
-            data.append('user_curr_address', formData.currentAddress);
+
+            // Map frontend fields to backend column names
+            const mapping = {
+                firstName: 'user_first_name',
+                lastName: 'user_last_name',
+                fatherName: 'user_father_name',
+                motherName: 'user_mother_name',
+                mobileNo: 'user_mobile_no',
+                gender: 'user_gender',
+                adhaarNo: 'user_adhaar_no',
+                emailId: 'user_email_id',
+                firmId: 'user_firm_id',
+                currentAddress: 'user_curr_address'
+            };
+
+            Object.keys(formData).forEach(key => {
+                if (mapping[key] && formData[key] !== null && formData[key] !== '') {
+                    data.append(mapping[key], formData[key]);
+                }
+            });
 
             if (formData.photo) {
                 data.append('photo', formData.photo);
@@ -130,7 +157,7 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
             const res = await createUser(data);
             toast.success(res.message || 'User created successfully');
 
-            // Clear form
+            // Reset form
             setFormData({
                 firstName: '', lastName: '', fatherName: '',
                 mobileNo: '', gender: 'Male', adhaarNo: '',
@@ -154,9 +181,9 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
                 title="Quick Add User"
                 size="lg"
             >
-                <div className="p-3">
+                <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="p-3">
                     <div className="row g-2">
-                        {/* Perfect Alignment for Photo and Names */}
+                        {/* Profile Image Field */}
                         <div className="col-md-2">
                             <label className="form-label fw-bold small text-muted mb-1">Profile Image</label>
                             <DocumentUploadCard
@@ -172,9 +199,9 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
                                 small={true}
                                 noBorder={true}
                                 iconBorder={true}
-                                height="15px"
                             />
                         </div>
+
                         <div className="col-md-5">
                             <label className="form-label fw-bold small text-muted mb-1">First Name <span className="text-danger">*</span></label>
                             <input
@@ -195,6 +222,7 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
                                 onChange={handleChange}
                             />
                         </div>
+
                         <div className="col-md-4">
                             <label className="form-label fw-bold small text-muted mb-1">Father Name</label>
                             <input
@@ -205,7 +233,16 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
                                 onChange={handleChange}
                             />
                         </div>
-
+                        <div className="col-md-4">
+                            <label className="form-label fw-bold small text-muted mb-1">Mother Name</label>
+                            <input
+                                name="motherName"
+                                className="form-control border-dark"
+                                placeholder="Mother Name"
+                                value={formData.motherName}
+                                onChange={handleChange}
+                            />
+                        </div>
                         <div className="col-md-4">
                             <label className="form-label fw-bold small text-muted mb-1">Mobile No <span className="text-danger">*</span></label>
                             <input
@@ -220,6 +257,7 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
                                 }}
                             />
                         </div>
+
                         <div className="col-md-4">
                             <label className="form-label fw-bold small text-muted mb-1">Gender <span className="text-danger">*</span></label>
                             <select name="gender" className="form-select border-dark" value={formData.gender} onChange={handleChange}>
@@ -227,6 +265,17 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
                                 <option value="Female">Female</option>
                                 <option value="Other">Other</option>
                             </select>
+                        </div>
+                        <div className="col-md-4">
+                            <label className="form-label fw-bold small text-muted mb-1">Email ID</label>
+                            <input
+                                name="emailId"
+                                type="email"
+                                className="form-control border-dark"
+                                placeholder="Email Address"
+                                value={formData.emailId}
+                                onChange={handleChange}
+                            />
                         </div>
                         <div className="col-md-4">
                             <label className="form-label fw-bold small text-muted mb-1">Firm <span className="text-danger">*</span></label>
@@ -237,13 +286,14 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
                                 ))}
                             </select>
                         </div>
+
                         <div className="col-md-4">
                             <label className="form-label fw-bold small text-muted mb-1">Aadhaar No</label>
                             <input
                                 name="adhaarNo"
                                 maxLength="12"
                                 className="form-control border-dark"
-                                placeholder="Aadhaar"
+                                placeholder="Aadhaar No"
                                 value={formData.adhaarNo}
                                 onChange={(e) => {
                                     const val = e.target.value.replace(/\D/g, '');
@@ -251,26 +301,25 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
                                 }}
                             />
                         </div>
-
-                        <div className="col-md-4 mt-2">
+                        <div className="col-md-8">
                             <label className="form-label fw-bold small text-muted mb-1">Current Address</label>
                             <textarea
                                 name="currentAddress"
                                 className="form-control border-dark"
                                 rows="1"
-                                placeholder="Enter address here..."
+                                placeholder="Enter full address..."
                                 value={formData.currentAddress}
                                 onChange={handleChange}
                             />
                         </div>
 
                         <div className="col-12 text-center mt-3">
-                            <button className="btn btn-primary px-5 py-2 fw-bold" onClick={handleSubmit} disabled={loading}>
+                            <button type="submit" className="btn btn-primary px-5 py-2 fw-bold" disabled={loading}>
                                 {loading ? 'Processing...' : 'Submit User Details'}
                             </button>
                         </div>
                     </div>
-                </div>
+                </form>
             </CommonModal>
 
             {/* Webcam Layer */}

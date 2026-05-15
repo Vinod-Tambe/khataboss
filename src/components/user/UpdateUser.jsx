@@ -149,7 +149,7 @@ const UpdateUser = () => {
                 singleDatePicker: true,
                 showDropdowns: true,
                 autoUpdateInput: true,
-                locale: { format: 'DD/MM/YYYY' }
+                locale: { format: 'DD-MM-YYYY' }
             }, (start) => {
                 setFormData(prev => ({ ...prev, dateOfBirth: start.format('YYYY-MM-DD') }));
             });
@@ -431,7 +431,7 @@ const UpdateUser = () => {
                 </div>
                 <div className="col-12 col-md-6 col-lg-3">
                     <label className="form-label">Date Of Birth</label>
-                    <input type="text" ref={dateOfBirthRef} className="form-control border-dark" defaultValue={moment(formData.dateOfBirth).format('DD/MM/YYYY')} />
+                    <input type="text" ref={dateOfBirthRef} className="form-control border-dark" defaultValue={moment(formData.dateOfBirth).format('DD-MM-YYYY')} />
                 </div>
                 <div className="col-12 col-md-6 col-lg-3">
                     <label className="form-label">GSTIN</label>
