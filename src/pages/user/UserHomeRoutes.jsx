@@ -85,7 +85,7 @@ const UserHomeRoutes = () => {
                     Active Finance
                   </Dropdown.Item>
                   <Dropdown.Item as={Link} to="/user/home/inactive-finance">
-                    Inactive Finance
+                    Completed Finance
                   </Dropdown.Item>
                   <Dropdown.Item as={Link} to="/user/home/all-finance">
                     All Finance

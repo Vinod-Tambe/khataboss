@@ -91,7 +91,7 @@ const UserHome = () => {
       key: "startDate",
       render: (row) => (
         <span
-          className="text-primary cursor-pointer text-decoration-underline"
+          className="text-brown cursor-pointer fw-bold"
           onClick={() => handleViewFinance(row.id)}
         >
           {row.startDate}
@@ -110,7 +110,7 @@ const UserHome = () => {
       key: "category",
       render: (row) => (
         <span
-          className="text-primary cursor-pointer text-decoration-underline"
+          className="text-brown cursor-pointer fw-bold"
           onClick={() => handleViewFinance(row.originalFinId)}
         >
           {row.category} (Fin-{row.originalFinId})
@@ -122,7 +122,7 @@ const UserHome = () => {
       key: "date",
       render: (row) => (
         <span
-          className="text-primary cursor-pointer text-decoration-underline"
+          className="text-brown cursor-pointer fw-bold"
           onClick={() => handleViewFinance(row.originalFinId)}
         >
           {row.date}

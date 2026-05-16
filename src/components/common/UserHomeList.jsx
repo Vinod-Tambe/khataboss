@@ -14,8 +14,8 @@
    const tableColumns = columns || defaultColumns;
 
    return (
-    <div className="container-fluid p-0 m-0 border border-1 mb-4">
-      <h5 className="fw-bolder text-center my-2">{title}</h5>
+    <div className="card p-3 pt-1 shadow-sm mb-4">
+      <h5 className="mb-2 text-center text-brown p-0 m-0 fw-semibold mt-2">{title}</h5>
 
       <style>{`
         
@@ -33,9 +33,9 @@
         }
       `}</style>
 
-      <div className="table-responsive table-responsive-custom">
-        <table className="table table-bordered table-striped text-nowrap pb-0 mb-0">
-          <thead>
+      <div className="table-wrapper position-relative table-responsive-custom" style={{ overflowX: "auto" }}>
+        <table className="table table-hover table-bordered border-secondary mb-2 dataTable dtr-inline text-capitalize dynamic-data-table">
+          <thead className="table-secondary border-bottom border-dark-subtle">
             <tr>
               {tableColumns.map((col, idx) => (
                 <th key={idx} className={idx === 0 ? "sticky-col" : ""}>{col.header}</th>

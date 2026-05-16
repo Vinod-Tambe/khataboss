@@ -4,13 +4,13 @@ import moment from 'moment';
 import '../../css/Modal.css';
 
 const EmiReceiptModal = ({ show, onHide, emiData, initialFinance }) => {
-    
+
     const handlePrint = () => {
         const content = document.getElementById('receipt-print-area').outerHTML;
         const iframe = document.createElement('iframe');
         iframe.style.display = 'none';
         document.body.appendChild(iframe);
-        
+
         iframe.contentDocument.write('<html><head><title>Print Receipt</title>');
         // Clone all stylesheets and style blocks from the parent window
         const styles = document.querySelectorAll('style, link[rel="stylesheet"]');
@@ -21,7 +21,7 @@ const EmiReceiptModal = ({ show, onHide, emiData, initialFinance }) => {
         iframe.contentDocument.write(content);
         iframe.contentDocument.write('</body></html>');
         iframe.contentDocument.close();
-        
+
         // Wait for styles to load then print
         setTimeout(() => {
             iframe.contentWindow.focus();
@@ -34,10 +34,10 @@ const EmiReceiptModal = ({ show, onHide, emiData, initialFinance }) => {
 
     if (!emiData) return null;
 
-    const customerName = initialFinance?.user?.user_first_name 
+    const customerName = initialFinance?.user?.user_first_name
         ? `${initialFinance.user.user_first_name} ${initialFinance.user.user_last_name || ''}`
         : 'N/A';
-    
+
     // Fallbacks if data missing
     const regNo = initialFinance?.fin_id || 'N/A';
     const firmName = initialFinance?.firm?.firm_name || 'TAHLKA FINANCE & COMPANY';
@@ -48,10 +48,10 @@ const EmiReceiptModal = ({ show, onHide, emiData, initialFinance }) => {
     const remAmt = emiData.ft_pending_amt || 0;
 
     return (
-        <CommonModal 
-            show={show} 
-            onHide={onHide} 
-            title="Finance Payment Receipt" 
+        <CommonModal
+            show={show}
+            onHide={onHide}
+            title="Finance Payment Receipt"
             size="md"
         >
             <div className="p-3 bg-light">
@@ -59,7 +59,7 @@ const EmiReceiptModal = ({ show, onHide, emiData, initialFinance }) => {
                     <div className="text-center mt-4 mb-2">
                         <h5 className="fw-bold text-uppercase mb-0">{firmName}</h5>
                     </div>
-                    
+
                     <div style={{ padding: '0 20px' }}>
                         <hr style={{ borderTop: '2px solid #000', opacity: 1, margin: '10px 0 20px 0' }} />
                     </div>
