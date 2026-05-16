@@ -31,15 +31,14 @@ const UpdateAccount = () => {
     acc_state: 'Rajasthan',
     acc_city: '',
     acc_desc: '',
-    acc_other_info: ''
+    acc_other_info: '',
+    acc_is_system: false
   });
 
   const [firms, setFirms] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
-
-
 
   const openingDateRef = useRef(null);
 
@@ -93,7 +92,8 @@ const UpdateAccount = () => {
             acc_state: accountData.acc_state || 'Rajasthan',
             acc_city: accountData.acc_city || '',
             acc_desc: accountData.acc_desc || '',
-            acc_other_info: accountData.acc_other_info || ''
+            acc_other_info: accountData.acc_other_info || '',
+            acc_is_system: accountData.acc_is_system || false
           });
 
           // Also update the date picker display
@@ -131,7 +131,17 @@ const UpdateAccount = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+
+    if (name === 'acc_cash_balance') {
+      // Allow only numbers and a single decimal point
+      const cleanedValue = value.replace(/[^0-9.]/g, '');
+      // Ensure only one decimal point
+      const parts = cleanedValue.split('.');
+      const finalValue = parts.length > 2 ? `${parts[0]}.${parts[1]}` : cleanedValue;
+      setFormData(prev => ({ ...prev, [name]: finalValue }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const validateForm = () => {
@@ -206,6 +216,7 @@ const UpdateAccount = () => {
               className="form-control border-dark"
               value={formData.acc_name}
               onChange={handleChange}
+              disabled={formData.acc_is_system}
               required
             />
           </div>
@@ -218,6 +229,7 @@ const UpdateAccount = () => {
               ref={openingDateRef}
               className="form-control border-dark"
               defaultValue={moment(formData.acc_opening_date).format('DD-MM-YYYY')}
+              disabled={formData.acc_is_system}
               required
             />
           </div>
@@ -225,12 +237,10 @@ const UpdateAccount = () => {
           <div className="col-12 col-md-6 col-lg-3">
             <label className="form-label fw-medium">Account Balance <span className="text-danger">*</span></label>
             <input
-              type="number"
+              type="text"
               name="acc_cash_balance"
               placeholder="0.00"
-              className="form-control border-dark text-end"
-              step="0.01"
-              min="0"
+              className="form-control border-dark text-start"
               value={formData.acc_cash_balance}
               onChange={handleChange}
               required
@@ -239,7 +249,7 @@ const UpdateAccount = () => {
 
           <div className="col-12 col-md-6 col-lg-3">
             <label className="form-label fw-medium">Balance Type <span className="text-danger">*</span></label>
-            <select name="acc_balance_type" className="form-select border-dark" value={formData.acc_balance_type} onChange={handleChange} required>
+            <select name="acc_balance_type" className="form-select border-dark" value={formData.acc_balance_type} onChange={handleChange} disabled={formData.acc_is_system} required>
               <option value="" disabled>Select type</option>
               <option value="CR">CR - Credit</option>
               <option value="DR">DR – Debit</option>
@@ -248,7 +258,7 @@ const UpdateAccount = () => {
 
           <div className="col-12 col-md-6 col-lg-3">
             <label className="form-label fw-medium">Firm Name <span className="text-danger">*</span></label>
-            <select name="acc_firm_id" className="form-select border-dark" value={formData.acc_firm_id} onChange={handleChange} required>
+            <select name="acc_firm_id" className="form-select border-dark" value={formData.acc_firm_id} onChange={handleChange} disabled={formData.acc_is_system} required>
               <option value="">Select Firm</option>
               {firms.map(firm => (
                 <option key={firm.firm_id} value={firm.firm_id}>
@@ -260,7 +270,7 @@ const UpdateAccount = () => {
 
           <div className="col-12 col-md-6 col-lg-3">
             <label className="form-label fw-medium">Primary Account <span className="text-danger">*</span></label>
-            <select name="acc_pre_acc" className="form-select border-dark" value={formData.acc_pre_acc} onChange={handleChange} required>
+            <select name="acc_pre_acc" className="form-select border-dark" value={formData.acc_pre_acc} onChange={handleChange} disabled={formData.acc_is_system} required>
               <option value="" disabled>Select Account</option>
               {accounts.map(acc => (
                 <option key={acc.acc_id} value={acc.acc_name}>
