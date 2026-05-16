@@ -1,4 +1,5 @@
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect, useState, useMemo } from 'react'
+import { useSelector } from 'react-redux';
 import TrialBalanceReport from './TrialBalanceReport'
 import $ from "jquery";
 import moment from "moment";
@@ -8,15 +9,30 @@ import { getFirmsDropdown } from '../../api/firmApi';
 import { getTrialBalanceEntries } from '../../api/trialBalanceApi';
 
 const TrialBalance = () => {
+  const { selectedFirmId } = useSelector((state) => state.firm);
   const dateRef = useRef(null);
   const [firms, setFirms] = useState([]);
-  const [selectedFirm, setSelectedFirm] = useState("");
+  const [selectedFirm, setSelectedFirm] = useState(selectedFirmId === 'all' ? "" : selectedFirmId);
   const [trialBalanceData, setTrialBalanceData] = useState([]);
   const [loading, setLoading] = useState(false);
+  // Calculate current financial year (April to March)
+  const { fyStart, fyEnd } = useMemo(() => {
+    const currentYear = moment().year();
+    const isAfterMarch = moment().month() >= 3;
+    const start = isAfterMarch ? moment(`${currentYear}-04-01`) : moment(`${currentYear - 1}-04-01`);
+    const end = isAfterMarch ? moment(`${currentYear + 1}-03-31`) : moment(`${currentYear}-03-31`);
+    return { fyStart: start, fyEnd: end };
+  }, []);
+
   const [dateRange, setDateRange] = useState({
-    startDate: moment().startOf("year").format("YYYY-MM-DD"),
-    endDate: moment().endOf("year").format("YYYY-MM-DD")
+    startDate: fyStart.format("YYYY-MM-DD"),
+    endDate: fyEnd.format("YYYY-MM-DD")
   });
+
+  // Sync with global firm selection
+  useEffect(() => {
+    setSelectedFirm(selectedFirmId === 'all' ? "" : selectedFirmId);
+  }, [selectedFirmId]);
 
   const fetchFirms = async () => {
     try {
@@ -49,23 +65,6 @@ const TrialBalance = () => {
 
   useEffect(() => {
     if (!dateRef.current) return;
-
-    const currentYear = moment().year();
-    const isAfterMarch = moment().month() >= 3;
-
-    const fyStart = isAfterMarch
-      ? moment(`${currentYear}-04-01`)
-      : moment(`${currentYear - 1}-04-01`);
-
-    const fyEnd = isAfterMarch
-      ? moment(`${currentYear + 1}-03-31`)
-      : moment(`${currentYear}-03-31`);
-
-    // Set initial date range state
-    setDateRange({
-      startDate: fyStart.format("YYYY-MM-DD"),
-      endDate: fyEnd.format("YYYY-MM-DD")
-    });
 
     $(dateRef.current).daterangepicker(
       {
@@ -110,7 +109,7 @@ const TrialBalance = () => {
     return () => {
       $(dateInput).data("daterangepicker")?.remove();
     };
-  }, []);
+  }, [fyStart, fyEnd]);
 
   useEffect(() => {
     const filters = {
@@ -147,7 +146,7 @@ const TrialBalance = () => {
           />
         </div>
         <div className="col-md-3 mt-2">
-          <select 
+          <select
             className="form-select border-dark text-center"
             value={selectedFirm}
             onChange={(e) => setSelectedFirm(e.target.value)}

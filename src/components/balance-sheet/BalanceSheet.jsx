@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
+import { useSelector } from 'react-redux';
 import BalanceSheetReport from './BalanceSheetReport'
 import moment from "moment";
 
@@ -6,24 +7,39 @@ import { getFirmsDropdown } from '../../api/firmApi';
 import { getBalanceSheetEntries } from '../../api/balanceSheetApi';
 
 const BalanceSheet = () => {
-    const currentFY = `${moment().month() >= 3 ? moment().year() : moment().year() - 1}-${moment().month() >= 3 ? moment().year() + 1 : moment().year()}`;
+    const { selectedFirmId } = useSelector((state) => state.firm);
+    
+    // Calculate current financial year (April to March)
+    const { fyStart, fyEnd, currentFY } = useMemo(() => {
+        const now = moment();
+        const currentYear = now.year();
+        const isAfterMarch = now.month() >= 3;
+        const start = isAfterMarch ? moment(`${currentYear}-04-01`) : moment(`${currentYear - 1}-04-01`);
+        const end = isAfterMarch ? moment(`${currentYear + 1}-03-31`) : moment(`${currentYear}-03-31`);
+        const fyString = `${start.year()}-${end.year()}`;
+        return { fyStart: start, fyEnd: end, currentFY: fyString };
+    }, []);
+
     const [selectedYear, setSelectedYear] = useState(currentFY);
     const [firms, setFirms] = useState([]);
-    const [selectedFirm, setSelectedFirm] = useState("");
+    const [selectedFirm, setSelectedFirm] = useState(selectedFirmId === 'all' ? "" : selectedFirmId);
     const [balanceSheetData, setBalanceSheetData] = useState({ assets: [], liabilities: [] });
     const [loading, setLoading] = useState(false);
     const [dateRange, setDateRange] = useState({
-        startDate: `${currentFY.split("-")[0]}-04-01`,
-        endDate: `${currentFY.split("-")[1]}-03-31`
+        startDate: fyStart.format("YYYY-MM-DD"),
+        endDate: fyEnd.format("YYYY-MM-DD")
     });
+
+    // Sync with global firm selection
+    useEffect(() => {
+        setSelectedFirm(selectedFirmId === 'all' ? "" : selectedFirmId);
+    }, [selectedFirmId]);
 
     const fetchFirms = async () => {
         try {
             const response = await getFirmsDropdown();
             if (response.success && response.data.length > 0) {
                 setFirms(response.data);
-                // Default to the first firm
-                setSelectedFirm(response.data[0].firm_id.toString());
             }
         } catch (error) {
             console.error("Error fetching firms:", error);
@@ -46,14 +62,7 @@ const BalanceSheet = () => {
 
     useEffect(() => {
         fetchFirms();
-        
-        // Initialize date range based on default selectedYear
-        const [startYear, endYear] = currentFY.split("-");
-        setDateRange({
-            startDate: `${startYear}-04-01`,
-            endDate: `${endYear}-03-31`
-        });
-    }, [currentFY]);
+    }, []);
 
     useEffect(() => {
         const filters = {

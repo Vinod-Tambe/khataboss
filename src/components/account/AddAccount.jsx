@@ -109,7 +109,17 @@ const AddAccount = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+
+    if (name === 'acc_cash_balance') {
+      // Allow only numbers and a single decimal point
+      const cleanedValue = value.replace(/[^0-9.]/g, '');
+      // Ensure only one decimal point
+      const parts = cleanedValue.split('.');
+      const finalValue = parts.length > 2 ? `${parts[0]}.${parts[1]}` : cleanedValue;
+      setFormData(prev => ({ ...prev, [name]: finalValue }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const validateForm = () => {
@@ -218,12 +228,10 @@ const AddAccount = () => {
           <div className="col-12 col-md-6 col-lg-3">
             <label className="form-label fw-medium">Account Balance <span className="text-danger">*</span></label>
             <input
-              type="number"
+              type="text"
               name="acc_cash_balance"
               placeholder="0.00"
-              className="form-control border-dark text-end"
-              step="0.01"
-              min="0"
+              className="form-control border-dark text-start"
               value={formData.acc_cash_balance}
               onChange={handleChange}
               required
