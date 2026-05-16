@@ -20,7 +20,7 @@ const MainRoutes = () => {
       <div className="main-content">
         <Sidebar />
         <main className="content-area mt-0 mt-md-3 d-flex flex-column" style={{ minHeight: 'calc(100vh - 50px)' }}>
-          <div className="container-fluid flex-grow-1">
+          <div className="container-fluid flex-grow-1 pb-4">
             <Routes>
               <Route path="/firm/*" element={< FirmRoutes/>} />
               <Route path="/user/*" element={< UserRoutes/>} />
@@ -34,7 +34,9 @@ const MainRoutes = () => {
               <Route path="/*" element={< HomeRoutes/>} />
             </Routes>
           </div >
-          <Footer/>
+          <div className="mt-auto">
+            <Footer/>
+          </div>
         </main>
       </div>
     </div>

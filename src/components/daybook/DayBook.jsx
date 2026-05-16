@@ -143,7 +143,7 @@ const Daybook = () => {
   }, {});
 
   return (
-    <div className="card p-3 pt-1 shadow-sm">
+    <div className="card p-3 pt-1 shadow-sm mb-4">
       <div className="row align-items-center mt-2">
         <div className="col-md-3 mt-2">
           <h3 className="text-brown fw-bold mb-0 responsive-text">

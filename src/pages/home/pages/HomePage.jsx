@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import InfoCards from '../../../components/home/InfoCards'
 import ActionCards from '../../../components/home/ActionCards'
+import DashboardCharts from '../../../components/home/DashboardCharts'
 import '../../../css/Home.css'
 
 import { getFirmsDropdown } from '../../../api/firmApi'
@@ -37,6 +38,7 @@ const HomePage = () => {
         selectedFirmId={selectedFirmId}
       />
       
+      <DashboardCharts />
     </div>
   )
 }

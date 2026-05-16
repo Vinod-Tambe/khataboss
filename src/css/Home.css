@@ -1,5 +1,7 @@
 body {
-    background: linear-gradient(135deg, #f5f7fa 0%, #e6f0ef 100%);
+    /* background: linear-gradient(135deg, #f5f7fa 0%, #e6f0ef 100%); */
+    background-attachment: fixed;
+    background-repeat: no-repeat;
     min-height: 100vh;
     font-family: 'Segoe UI', system-ui, sans-serif;
 }
@@ -69,5 +71,39 @@ body {
 }
 
 .action-card:hover .card-icon {
-transform: scale(1.15) rotate(5deg);
+    transform: scale(1.15) rotate(5deg);
+}
+
+/* Dashboard Graphs Layout */
+.dashboard-graphs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 24px;
+    align-items: stretch;
+    width: 100%;
+}
+
+.graph-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 280px;
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    /* Match existing shadow */
+    padding: 24px;
+}
+
+.graph-content {
+    flex: 1;
+    width: 100%;
+    min-height: 200px;
+}
+
+.apexcharts-canvas,
+.apexcharts-canvas svg {
+    width: 100% !important;
+    height: 100% !important;
 }

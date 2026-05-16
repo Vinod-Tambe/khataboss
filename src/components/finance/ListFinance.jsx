@@ -110,7 +110,7 @@ const ListFinance = ({ status = "ALL" }) => {
       key: "fin_start_date",
       title: "Start Date",
       dateFilter: true,
-      render: (data) => moment(data).format("DD-MM-YYYY")
+      render: (data) => `<span class="text-brown fw-bold cursor-pointer view-btn">${moment(data).format("DD-MM-YYYY")}</span>`
     },
     {
       key: "fin_status",
@@ -133,7 +133,7 @@ const ListFinance = ({ status = "ALL" }) => {
     <div className="card shadow-sm border-0">
       <div className="card-header bg-white d-flex justify-content-between align-items-center py-3">
         <h5 className="mb-0 fw-bold">
-          {status === "ALL" ? "All" : status.charAt(0) + status.slice(1).toLowerCase()} Finance List
+          {status === "ALL" ? "All Finance List" : status === "INACTIVE" ? "Completed Inactive Finance" : `${status.charAt(0) + status.slice(1).toLowerCase()} Finance List`}
         </h5>
         <button
           onClick={() => navigate("/user/home/add-finance")}
@@ -147,7 +147,7 @@ const ListFinance = ({ status = "ALL" }) => {
         <List
           data={finances}
           columns={columns}
-          title={`${status === "ALL" ? "All" : status.charAt(0) + status.slice(1).toLowerCase()} Finance List`}
+          title={status === "ALL" ? "All Finance List" : status === "INACTIVE" ? "Completed Inactive Finance" : `${status.charAt(0) + status.slice(1).toLowerCase()} Finance List`}
           onView={handleView}
           onDelete={handleDelete}
           onEdit={handleEdit}
