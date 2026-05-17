@@ -244,8 +244,8 @@ const DashboardCharts = () => {
   const profitChartSeries = [profitPercentage, lossPercentage];
 
   // Custom Infographic Chart Colors & Max Calculation
-  // Custom Infographic Chart Colors & Max Calculation
-  const arrowColors = ['#9c27b0', '#e91e63', '#03a9f4', '#1976d2', '#00aba9', '#ff9800', '#4caf50'];
+  // Using very light, airy pastel colors for a softer look
+  const arrowColors = ['#a5b4fc', '#f9a8d4', '#7dd3fc', '#93c5fd', '#5eead4', '#fcd34d', '#6ee7b7'];
   const maxTransactionTotal = Math.max(...last7DaysData.map(d => d.loan + d.finance));
 
   return (
