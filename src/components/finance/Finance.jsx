@@ -91,6 +91,8 @@ const Finance = () => {
                         <FinanceHistory
                             data={financeData?.finance_money_trans || []}
                             isLoading={loading}
+                            financeData={financeData}
+                            initialFinance={initialFinance}
                         />
                     </div>
                 )}

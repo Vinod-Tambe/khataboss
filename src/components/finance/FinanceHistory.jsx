@@ -1,8 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import List from '../common/List';
 import moment from 'moment';
+import HistoryReceiptModal from './HistoryReceiptModal';
 
-const FinanceHistory = ({ data = [], isLoading }) => {
+const FinanceHistory = ({ data = [], isLoading, financeData, initialFinance }) => {
+    const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
+    const [selectedHistoryData, setSelectedHistoryData] = useState(null);
+
+    const handlePrintPreview = (row) => {
+        setSelectedHistoryData(row);
+        setIsPrintPreviewOpen(true);
+    };
+
     const columns = [
         { 
             key: "fm_trans_date", 
@@ -19,6 +28,16 @@ const FinanceHistory = ({ data = [], isLoading }) => {
         { key: "fm_card_amt", title: "Card", orderable: true, searchable: true, sum: true },
         { key: "fm_trans_type", title: "Trans Type", orderable: true, searchable: true },
         { key: "fm_other_info", title: "Other", orderable: true, searchable: true },
+        {
+            key: "action",
+            title: "Actions",
+            orderable: false,
+            searchable: false,
+            className: "text-center",
+            render: (val, type, row) => {
+                return `<button class="btn btn-sm btn-link text-warning p-0 print-btn" data-id="${row.id || ''}" title="Print Receipt"><i class="bi bi-printer-fill fs-6"></i></button>`;
+            }
+        }
     ];
 
     return (
@@ -33,7 +52,18 @@ const FinanceHistory = ({ data = [], isLoading }) => {
                 hasView={false}
                 isLoading={isLoading}
                 showFooter={true}
-            />  </div>
+                onPrint={handlePrintPreview}
+            />
+            <HistoryReceiptModal
+                show={isPrintPreviewOpen}
+                onHide={() => {
+                    setIsPrintPreviewOpen(false);
+                    setSelectedHistoryData(null);
+                }}
+                historyData={selectedHistoryData}
+                initialFinance={initialFinance}
+            />
+        </div>
     );
 };
 
