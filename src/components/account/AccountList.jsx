@@ -2,12 +2,13 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import List from "../common/List";
-import { getAccounts, deleteAccount } from "../../api/accountApi";
+import { getAccounts, deleteAccount, getAccountTotals } from "../../api/accountApi";
 import { toast } from "react-hot-toast";
 import moment from "moment";
 
 const AccountList = () => {
   const [accounts, setAccounts] = useState([]);
+  const [totals, setTotals] = useState({ debitTotal: 0, creditTotal: 0, difference: 0 });
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { selectedFirmId } = useSelector((state) => state.firm);
@@ -16,8 +17,12 @@ const AccountList = () => {
     try {
       setLoading(true);
       const firmFilter = selectedFirmId === 'all' ? null : selectedFirmId;
-      const response = await getAccounts(firmFilter);
-      setAccounts(response.data || []);
+      const [accountsResponse, totalsResponse] = await Promise.all([
+        getAccounts(firmFilter),
+        getAccountTotals(firmFilter)
+      ]);
+      setAccounts(accountsResponse.data || []);
+      setTotals(totalsResponse.data || { debitTotal: 0, creditTotal: 0, difference: 0 });
     } catch (error) {
       console.error("Error fetching accounts:", error);
       toast.error("Failed to load accounts");
@@ -59,6 +64,7 @@ const AccountList = () => {
         return `<span class="text-brown cursor-pointer fw-bold account-link" data-uuid="${row.acc_uuid}">${val}</span>`;
       }
     },
+    { key: "acc_pre_acc", title: "Primary Account", orderable: true, searchable: true },
     {
       key: "acc_opening_date",
       title: "Opening Balance Date",
@@ -69,14 +75,13 @@ const AccountList = () => {
     },
     { key: "acc_cash_balance", title: "Account Balance", orderable: true, searchable: true, sum: true },
     { key: "acc_balance_type", title: "Balance Type", orderable: true, searchable: true },
-    { key: "acc_pre_acc", title: "Primary Account", orderable: true, searchable: true },
     { key: "acc_bank_no", title: "Bank Account Number", orderable: false, searchable: true },
     { key: "acc_ifsc_code", title: "IFSC Code", orderable: true, searchable: true },
     { key: "acc_branch_name", title: "Branch Name", orderable: true, searchable: true },
-    { key: "acc_pan_no", title: "PAN Number", orderable: true, searchable: true },
-    { key: "acc_bsr_no", title: "BSR Code", orderable: true, searchable: true },
-    { key: "acc_address", title: "Bank Address", orderable: false, searchable: true },
-    { key: "acc_pincode", title: "Pincode", orderable: true, searchable: true },
+    // { key: "acc_pan_no", title: "PAN Number", orderable: true, searchable: true },
+    // { key: "acc_bsr_no", title: "BSR Code", orderable: true, searchable: true },
+    // { key: "acc_address", title: "Bank Address", orderable: false, searchable: true },
+    // { key: "acc_pincode", title: "Pincode", orderable: true, searchable: true },
   ], []);
 
   const handleEdit = (rowData) => {
@@ -115,10 +120,27 @@ const AccountList = () => {
           onPrint={handlePrint}
           hasEdit={true}
           hasDelete={true}
-          hasPrint={true}
+          hasPrint={false}
           deleteConfirmMessage={(row) => `Are you sure you want to delete account: ${row?.acc_name}?`}
         />
       )}
+      <div className="row p-3 m-1">
+        <div className="col-6"></div>
+        <div className="col-3 bg-white border border-secondary text-end fw-bold p-1 text-dark bg-light text-uppercase">Debit Amount :</div>
+        <div className="col-3 bg-white border border-secondary text-end fw-bold p-1 text-dark bg-light">
+          {Number(totals.debitTotal || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DR
+        </div>
+        <div className="col-6"></div>
+        <div className="col-3 bg-white border border-secondary text-end fw-bold p-1 text-dark bg-light text-uppercase">Credit Amount :</div>
+        <div className="col-3 bg-white border border-secondary text-end fw-bold p-1 text-dark bg-light">
+          {Number(totals.creditTotal || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CR
+        </div>
+        <div className="col-6"></div>
+        <div className="col-3 bg-white border border-secondary text-end fw-bold p-1 text-dark bg-light text-uppercase">Difference Amount :</div>
+        <div className={`col-3 bg-white border border-secondary text-end fw-bold p-1 bg-light ${totals.difference > 0 ? "text-danger" : "text-dark"}`}>
+          {Number(totals.difference || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </div>
+      </div>
     </div>
   );
 };
