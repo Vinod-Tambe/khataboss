@@ -107,3 +107,19 @@ export const getAccountLedger = async (params) => {
     throw new Error(message);
   }
 };
+
+/**
+ * Get account totals (debit, credit and difference)
+ * @param {number|string} firmId - Optional firm ID to filter by
+ * @returns {Promise} - Response object with totals data
+ */
+export const getAccountTotals = async (firmId = null) => {
+  try {
+    const url = firmId ? `/account/totals?firmId=${firmId}` : '/account/totals';
+    const response = await axiosInstance.get(url);
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.error || error.response?.data?.message || error.message;
+    throw new Error(message);
+  }
+};

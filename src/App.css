@@ -21,6 +21,10 @@
     background-color: rgb(253, 240, 247) !important;
 }
 
+.bg-white {
+    background-color: white !important;
+}
+
 .bg-cust-info {
     background-color: #eaf4f3 !important;
 }
@@ -43,7 +47,7 @@
 }
 
 .text-brown {
-    color: #aa6600 !important;
+    color: brown !important;
 }
 
 .btn-success {
@@ -103,18 +107,22 @@
 
 /* ========== Print Styles ========== */
 @media print {
-    .no-print, 
-    .sidebar, 
-    .header, 
-    .navbar, 
-    .btn, 
+
+    .no-print,
+    .sidebar,
+    .header,
+    .navbar,
+    .btn,
     .daterangepicker,
     select,
     input {
         display: none !important;
     }
 
-    body, .main-content, .card, .content-wrapper {
+    body,
+    .main-content,
+    .card,
+    .content-wrapper {
         margin: 0 !important;
         padding: 0 !important;
         border: none !important;
