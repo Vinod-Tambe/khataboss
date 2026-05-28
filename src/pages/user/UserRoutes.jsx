@@ -1,6 +1,7 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom';
 import AddUser from '../../components/user/AddUser';
+import UpdateUser from '../../components/user/UpdateUser';
 import UserList from '../../components/user/UserList';
 import UserGrid from '../../components/user/UserGrid';
 import AddLoan from '../../components/loan/AddLoan';
@@ -11,6 +12,7 @@ const UserRoutes = () => {
     <div>
       <Routes>
         <Route path="/add" element={< AddUser />} />
+        <Route path="/edit/:uuid" element={< UpdateUser />} />
         <Route path="/list" element={< UserList />} />
         <Route path="/home/*" element={< UserHomeRoutes />} />
         <Route path="/add-loan" element={< AddLoan />} />

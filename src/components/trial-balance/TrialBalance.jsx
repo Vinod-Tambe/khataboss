@@ -1,29 +1,70 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useRef, useEffect, useState, useMemo } from 'react'
+import { useSelector } from 'react-redux';
 import TrialBalanceReport from './TrialBalanceReport'
 import $ from "jquery";
 import moment from "moment";
 import "daterangepicker";
 import "daterangepicker/daterangepicker.css";
+import { getFirmsDropdown } from '../../api/firmApi';
+import { getTrialBalanceEntries } from '../../api/trialBalanceApi';
 
 const TrialBalance = () => {
+  const { selectedFirmId } = useSelector((state) => state.firm);
   const dateRef = useRef(null);
-  const [dateRange, setDateRange] = useState({
-    startDate: "",
-    endDate: "",
-  });
-  useEffect(() => {
-    if (!dateRef.current) return;
-
+  const [firms, setFirms] = useState([]);
+  const [selectedFirm, setSelectedFirm] = useState(selectedFirmId === 'all' ? "" : selectedFirmId);
+  const [trialBalanceData, setTrialBalanceData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  // Calculate current financial year (April to March)
+  const { fyStart, fyEnd } = useMemo(() => {
     const currentYear = moment().year();
     const isAfterMarch = moment().month() >= 3;
+    const start = isAfterMarch ? moment(`${currentYear}-04-01`) : moment(`${currentYear - 1}-04-01`);
+    const end = isAfterMarch ? moment(`${currentYear + 1}-03-31`) : moment(`${currentYear}-03-31`);
+    return { fyStart: start, fyEnd: end };
+  }, []);
 
-    const fyStart = isAfterMarch
-      ? moment(`${currentYear}-04-01`)
-      : moment(`${currentYear - 1}-04-01`);
+  const [dateRange, setDateRange] = useState({
+    startDate: fyStart.format("YYYY-MM-DD"),
+    endDate: fyEnd.format("YYYY-MM-DD")
+  });
 
-    const fyEnd = isAfterMarch
-      ? moment(`${currentYear + 1}-03-31`)
-      : moment(`${currentYear}-03-31`);
+  // Sync with global firm selection
+  useEffect(() => {
+    setSelectedFirm(selectedFirmId === 'all' ? "" : selectedFirmId);
+  }, [selectedFirmId]);
+
+  const fetchFirms = async () => {
+    try {
+      const response = await getFirmsDropdown();
+      if (response.success) {
+        setFirms(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching firms:", error);
+    }
+  };
+
+  const fetchTrialBalance = async (filters) => {
+    setLoading(true);
+    try {
+      const response = await getTrialBalanceEntries(filters);
+      if (response.success) {
+        setTrialBalanceData(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching trial balance:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchFirms();
+  }, []);
+
+  useEffect(() => {
+    if (!dateRef.current) return;
 
     $(dateRef.current).daterangepicker(
       {
@@ -52,28 +93,33 @@ const TrialBalance = () => {
         $(dateRef.current).val(
           `${start.format("DD-MM-YYYY")} - ${end.format("DD-MM-YYYY")}`
         );
-
         setDateRange({
           startDate: start.format("YYYY-MM-DD"),
-          endDate: end.format("YYYY-MM-DD"),
+          endDate: end.format("YYYY-MM-DD")
         });
       }
     );
 
-    // Set default value
+    // Set default value in input
     $(dateRef.current).val(
       `${fyStart.format("DD-MM-YYYY")} - ${fyEnd.format("DD-MM-YYYY")}`
     );
 
-    setDateRange({
-      startDate: fyStart.format("YYYY-MM-DD"),
-      endDate: fyEnd.format("YYYY-MM-DD"),
-    });
-
+    const dateInput = dateRef.current;
     return () => {
-      $(dateRef.current).data("daterangepicker")?.remove();
+      $(dateInput).data("daterangepicker")?.remove();
     };
-  }, []);
+  }, [fyStart, fyEnd]);
+
+  useEffect(() => {
+    const filters = {
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate,
+      firmId: selectedFirm
+    };
+    fetchTrialBalance(filters);
+  }, [dateRange, selectedFirm]);
+
   return (
     <div className="card p-3 pt-1 shadow-sm">
       <div className="row align-items-center mt-2">
@@ -100,34 +146,40 @@ const TrialBalance = () => {
           />
         </div>
         <div className="col-md-3 mt-2">
-          <select className="form-select border-dark text-center">
-            <option disabled>Select Firm</option>
-            <option value="CR">Ram</option>
-            <option value="DR">Sham</option>
+          <select
+            className="form-select border-dark text-center"
+            value={selectedFirm}
+            onChange={(e) => setSelectedFirm(e.target.value)}
+          >
+            <option value="">All Firms</option>
+            {firms.map(firm => (
+              <option key={firm.firm_id} value={firm.firm_id}>
+                {firm.firm_name}
+              </option>
+            ))}
           </select>
         </div>
         <div className="col-12 text-center">
           <p className="pb-0 mb-0">
-            <strong className="text-info-emphasis fw-bold">FINANCIAL YEAR:</strong>{' '}
-            12-12-2025 To 23-04-2025
-          </p>
-          <p className="pb-0 mb-0">
-            <strong className="text-success-emphasis fw-bold">ASSESSMENT YEAR:</strong>{' '}
-            2025 - 2026
-          </p>
-          <p>
-            <strong className="text-primary-emphasis fw-bold">
-              TAHLKA FINANCE & COMPANY, MAHESH SHARMA WARD NO 18, RAJGARH CHURU
-            </strong>
+            <strong className="text-info-emphasis fw-bold">PERIOD:</strong>{' '}
+            {moment(dateRange.startDate).format("DD-MM-YYYY")} To {moment(dateRange.endDate).format("DD-MM-YYYY")}
           </p>
         </div>
         <div className="col-md-12">
-          <TrialBalanceReport />
+          {loading ? (
+            <div className="text-center p-5">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          ) : (
+            <TrialBalanceReport data={trialBalanceData} />
+          )}
         </div>
       </div>
-      <div class="text-center mt-3 mb-2">
-        <button class="btn btn-outline-success">
-          Print <i class="bi bi-printer-fill"></i>
+      <div className="text-center mt-3 mb-2">
+        <button className="btn btn-outline-success">
+          Print <i className="bi bi-printer-fill"></i>
         </button>
       </div>
     </div>

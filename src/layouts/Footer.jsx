@@ -4,11 +4,11 @@ import { NavLink } from "react-router-dom";
 const Footer = () => {
   return (
     <>
-      <footer className="bg-dark text-light mt-5 border-top border-secondary mb-5 mb-md-0">
-        
+      <footer className="bg-dark text-light  border-top border-secondary mb-5 mb-md-0">
+
         {/* Desktop Footer */}
-        <div className="container-xxl py-4 d-none d-md-flex justify-content-between align-items-center">
-          
+        <div className="container-xxl py-1 d-none d-md-flex justify-content-between align-items-center">
+
           <div className="d-flex align-items-center">
             <i className="bi bi-c-circle me-2"></i>
             <span>
@@ -36,8 +36,7 @@ const Footer = () => {
               to="/"
               end
               className={({ isActive }) =>
-                `text-decoration-none flex-fill ${
-                  isActive ? "text-primary-emphasis fw-bold" : "text-dark"
+                `text-decoration-none flex-fill ${isActive ? "text-primary-emphasis fw-bold" : "text-dark"
                 }`
               }
             >
@@ -48,8 +47,7 @@ const Footer = () => {
             <NavLink
               to="/user/grid"
               className={({ isActive }) =>
-                `text-decoration-none flex-fill ${
-                  isActive ? "text-primary-emphasis fw-bold" : "text-dark"
+                `text-decoration-none flex-fill ${isActive ? "text-primary-emphasis fw-bold" : "text-dark"
                 }`
               }
             >
@@ -60,8 +58,7 @@ const Footer = () => {
             <NavLink
               to="/loan"
               className={({ isActive }) =>
-                `text-decoration-none flex-fill ${
-                  isActive ? "text-primary-emphasis fw-bold" : "text-dark"
+                `text-decoration-none flex-fill ${isActive ? "text-primary-emphasis fw-bold" : "text-dark"
                 }`
               }
             >
@@ -72,8 +69,7 @@ const Footer = () => {
             <NavLink
               to="/finance"
               className={({ isActive }) =>
-                `text-decoration-none flex-fill ${
-                  isActive ? "text-primary-emphasis fw-bold" : "text-dark"
+                `text-decoration-none flex-fill ${isActive ? "text-primary-emphasis fw-bold" : "text-dark"
                 }`
               }
             >
@@ -84,8 +80,7 @@ const Footer = () => {
             <NavLink
               to="/profile"
               className={({ isActive }) =>
-                `text-decoration-none flex-fill ${
-                  isActive ? "text-primary-emphasis fw-bold" : "text-dark"
+                `text-decoration-none flex-fill ${isActive ? "text-primary-emphasis fw-bold" : "text-dark"
                 }`
               }
             >

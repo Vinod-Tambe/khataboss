@@ -2,26 +2,43 @@ import React, { useEffect, useRef, useState } from "react";
 import $ from "jquery";
 import "datatables.net-bs5";
 import "datatables.net-bs5/css/dataTables.bootstrap5.min.css";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { getUser } from "../../api/userApi";
+import { setSelectedUser } from "../../store/slices/userSlice";
+import { showToast } from "../../components/common/ToastAlert";
 
-const DayBookTable = () => {
+const DayBookTable = ({ title, colorClass, amtColor, data = [] }) => {
   const tableRef = useRef(null);
   const dataTable = useRef(null);
   const [search, setSearch] = useState("");
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const data = [
-    { id: 1, date: "30-10-2025", firm: "SHAM", name: "Mr. Vinod Tambe", cash: 5000, bank: 0 },
-    { id: 2, date: "05-11-2025", firm: "SHAM", name: "Mr. Vinod Tambe", cash: 5000, bank: 0 },
-    { id: 3, date: "14-11-2025", firm: "SHAM", name: "Mr. Vinod Tambe", cash: 5000, bank: 0 },
-    { id: 4, date: "07-02-2026", firm: "SHAM", name: "Mr. Deepmind Infotech", cash: 5000, bank: 0 },
-    { id: 5, date: "07-02-2026", firm: "SHAM", name: "Mr. Deepmind Infotech", cash: 5000, bank: 0 },
-    { id: 6, date: "07-02-2026", firm: "SHAM", name: "Mr. Deepmind Infotech", cash: 5000, bank: 0 },
-    { id: 7, date: "07-02-2026", firm: "SHAM", name: "Mr. Deepmind Infotech", cash: 5000, bank: 0 },
-  ];
+  const handleCustomerClick = async (uuid) => {
+    if (!uuid) return;
+    try {
+      const res = await getUser(uuid);
+      if (res.data) {
+        dispatch(setSelectedUser(res.data));
+        navigate("/user/home");
+      }
+    } catch (err) {
+      showToast("Error fetching user details", "error");
+    }
+  };
 
-  const totalCash = data.reduce((sum, item) => sum + item.cash, 0);
-  const totalBank = data.reduce((sum, item) => sum + item.bank, 0);
+  const totalCash = data.reduce((sum, item) => sum + (parseFloat(item.db_cash_amt) || 0), 0);
+  const totalBank = data.reduce((sum, item) => sum + (parseFloat(item.db_bank_amt) || 0), 0);
+  const totalOnline = data.reduce((sum, item) => sum + (parseFloat(item.db_online_amt) || 0), 0);
+  const totalCard = data.reduce((sum, item) => sum + (parseFloat(item.db_card_amt) || 0), 0);
+  const totalDisc = data.reduce((sum, item) => sum + (parseFloat(item.db_disc_amt) || 0), 0);
 
   useEffect(() => {
+    if (dataTable.current) {
+      dataTable.current.destroy();
+    }
+
     dataTable.current = $(tableRef.current).DataTable({
       responsive: false,
       ordering: false,
@@ -39,7 +56,7 @@ const DayBookTable = () => {
         dataTable.current.destroy();
       }
     };
-  }, []);
+  }, [data]);
 
   useEffect(() => {
     if (dataTable.current) {
@@ -48,16 +65,15 @@ const DayBookTable = () => {
   }, [search]);
 
   return (
-    <div className="border border-secondary border-dashed">
-
+    <div className={`border border-secondary border-dashed mb-3`}>
       {/* Header */}
-      <div className="d-flex justify-content-between align-items-center">
-        <h6 className="fw-bold mb-0 ms-2">FINANCE ADDED</h6>
+      <div className={`d-flex justify-content-between align-items-center`}>
+        <h6 className="fw-bold mb-0 ms-2">{title || "DATA"}</h6>
 
         <input
           type="search"
-          className="form-control form-control-sm border border-secondary w-auto mt-2 me-2"
-          placeholder="Search In Finance Added"
+          className="form-control form-control-sm border border-dark w-auto mt-2 mb-2 me-2"
+          placeholder={`${title || "Table"}`}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -67,40 +83,47 @@ const DayBookTable = () => {
       <div className="table-responsive">
         <table
           ref={tableRef}
-          className="table table-striped table-hover table-bordered text-capitalize mb-1"
+          className="table table-hover table-bordered text-capitalize mb-1"
         >
-          <thead className="table-light">
+          <thead className="table-light ">
             <tr>
-              <th>DATE</th>
-              <th>FIRM</th>
-              <th>CUSTOMER NAME</th>
-              <th>CASH</th>
-              <th>BANK</th>
-              <th>ONLINE</th>
-              <th>CARD</th>
-              <th>DISC</th>
-              <th>TOTAL</th>
+              <th className="bg-pink border border-dark">DATE</th>
+              <th className="bg-pink border border-dark">FIRM</th>
+              <th className="bg-pink border border-dark">CUSTOMER NAME</th>
+              <th className="bg-pink border border-dark">CASH</th>
+              <th className="bg-pink border border-dark">BANK</th>
+              <th className="bg-pink border border-dark">ONLINE</th>
+              <th className="bg-pink border border-dark">CARD</th>
+              <th className="bg-pink border border-dark">DISC</th>
+              <th className="bg-pink border border-dark">TOTAL</th>
             </tr>
           </thead>
 
           <tbody>
             {data.map((item, index) => {
-              const online = 0;
-              const card = 0;
-              const disc = 0;
-              const total = item.cash + item.bank;
+              const cash = parseFloat(item.db_cash_amt) || 0;
+              const bank = parseFloat(item.db_bank_amt) || 0;
+              const online = parseFloat(item.db_online_amt) || 0;
+              const card = parseFloat(item.db_card_amt) || 0;
+              const disc = parseFloat(item.db_disc_amt) || 0;
+              const total = cash + bank + online + card;
 
               return (
-                <tr key={item.id}>
-                  <td>{item.date}</td>
-                  <td>{item.firm}</td>
-                  <td>{item.name}</td>
-                  <td className="text-end">{item.cash.toFixed(2)}</td>
-                  <td className="text-end">{item.bank.toFixed(2)}</td>
-                  <td className="text-end">{online.toFixed(2)}</td>
-                  <td className="text-end">{card.toFixed(2)}</td>
-                  <td className="text-end text-danger">{disc.toFixed(2)}</td>
-                  <td className="text-end fw-bold text-success">
+                <tr key={index}>
+                  <td className="border border-dark">{item.db_date}</td>
+                  <td className="border border-dark">{item.db_firm}</td>
+                  <td
+                    className="border border-dark text-brown cursor-pointer fw-bold"
+                    onClick={() => handleCustomerClick(item.db_user_uuid)}
+                  >
+                    {item.db_customer_name}
+                  </td>
+                  <td className="text-end border border-dark">{cash.toFixed(2)}</td>
+                  <td className="text-end border border-dark">{bank.toFixed(2)}</td>
+                  <td className="text-end border border-dark">{online.toFixed(2)}</td>
+                  <td className="text-end border border-dark">{card.toFixed(2)}</td>
+                  <td className={`text-end border border-dark ${amtColor || ""}`}>{disc.toFixed(2)}</td>
+                  <td className={`text-end fw-bold border border-dark ${amtColor === 'text-success' ? 'text-success' : 'text-danger'}`}>
                     {total.toFixed(2)}
                   </td>
                 </tr>
@@ -110,23 +133,19 @@ const DayBookTable = () => {
 
           <tfoot>
             <tr>
-              <th className="text-end">
-                TOTAL AMOUNT :
+              <th className="text-end bg-cust-info border border-dark" colSpan={3}>
+                TOTAL AMT :
               </th>
-              <th colSpan={2} className="text-end">
-                
-              </th>
-              <th className="text-end">{totalCash.toFixed(2)}</th>
-              <th className="text-end">{totalBank.toFixed(2)}</th>
-              <th className="text-end">{totalBank.toFixed(2)}</th>
-              <th className="text-end">{totalBank.toFixed(2)}</th>
-              <th ></th>
-              <th className="text-end fw-bold">
-                {(totalCash + totalBank).toFixed(2)}
+              <th className="text-end bg-cust-info border border-dark">{totalCash.toFixed(2)}</th>
+              <th className="text-end bg-cust-info border border-dark">{totalBank.toFixed(2)}</th>
+              <th className="text-end bg-cust-info border border-dark">{totalOnline.toFixed(2)}</th>
+              <th className="text-end bg-cust-info border border-dark">{totalCard.toFixed(2)}</th>
+              <th className="text-end bg-cust-info border border-dark">{totalDisc.toFixed(2)}</th>
+              <th className="text-end fw-bold bg-cust-info border border-dark">
+                {(totalCash + totalBank + totalOnline + totalCard).toFixed(2)}
               </th>
             </tr>
           </tfoot>
-
         </table>
       </div>
     </div>

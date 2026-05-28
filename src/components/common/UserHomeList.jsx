@@ -1,8 +1,21 @@
  import React from "react";
  
- const UserHomeList = ({ title, data }) =>{ return (
-    <div className="container-fluid p-0 m-0 border border-1 mb-4">
-      <h5 className="fw-bolder text-center my-2">{title}</h5>
+ const UserHomeList = ({ title, data, columns }) =>{ 
+   
+   const defaultColumns = [
+     { header: "Name", key: "name" },
+     { header: "Email", key: "email" },
+     { header: "Phone", key: "phone" },
+     { header: "City", key: "city" },
+     { header: "Company", key: "company" },
+     { header: "Status", key: "status" },
+   ];
+
+   const tableColumns = columns || defaultColumns;
+
+   return (
+    <div className="card p-3 pt-1 shadow-sm mb-4">
+      <h5 className="mb-2 text-center text-brown p-0 m-0 fw-semibold mt-2">{title}</h5>
 
       <style>{`
         
@@ -20,39 +33,45 @@
         }
       `}</style>
 
-      <div className="table-responsive table-responsive-custom">
-        <table className="table table-bordered table-striped text-nowrap pb-0 mb-0">
-          <thead>
+      <div className="table-wrapper position-relative table-responsive-custom" style={{ overflowX: "auto" }}>
+        <table className="table table-hover table-bordered border-secondary mb-2 dataTable dtr-inline text-capitalize dynamic-data-table">
+          <thead className="table-secondary border-bottom border-dark-subtle">
             <tr>
-              <th className="sticky-col">Name</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>City</th>
-              <th>Company</th>
-              <th>Status</th>
+              {tableColumns.map((col, idx) => (
+                <th key={idx} className={idx === 0 ? "sticky-col" : ""}>{col.header}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {data.map((row) => (
-              <tr key={row.id}>
-                <td className="sticky-col">{row.name}</td>
-                <td>{row.email}</td>
-                <td>{row.phone}</td>
-                <td>{row.city}</td>
-                <td>{row.company}</td>
-                <td>
-                  <span
-                    className={`badge ${
-                      row.status === "Active"
-                        ? "bg-success"
-                        : "bg-secondary"
-                    }`}
-                  >
-                    {row.status}
-                  </span>
-                </td>
+            {data.length > 0 ? (
+              data.map((row, rowIdx) => (
+                <tr key={row.id || rowIdx}>
+                  {tableColumns.map((col, colIdx) => (
+                    <td key={colIdx} className={colIdx === 0 ? "sticky-col" : ""}>
+                      {col.render ? (
+                        col.render(row)
+                      ) : col.key === "status" ? (
+                        <span
+                          className={`badge ${
+                            row[col.key] === "Active" || row[col.key] === "ACTIVE" || row[col.key] === "PAID"
+                              ? "bg-success"
+                              : "bg-secondary"
+                          }`}
+                        >
+                          {row[col.key]}
+                        </span>
+                      ) : (
+                        row[col.key]
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={tableColumns.length} className="text-center py-3">No records found</td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

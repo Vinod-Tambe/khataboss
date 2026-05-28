@@ -14,15 +14,38 @@ table {
   border-collapse: separate;
   border-spacing: 0;
   width: 100%;
+  scrollbar-width: thin;
   min-width: 900px;
   /* forces horizontal scroll when needed */
 }
 
-th {
+.table-wrapper {
+  scrollbar-width: thin;
+  /* max-height: 400px;    */
+  scrollbar-color: #999 transparent;
+}
+
+::-webkit-scrollbar {
+  width: 2px !important;
+  height: 2px !important;
+}
+
+html {
+  scrollbar-width: thin;
+}
+
+.dynamic-data-table thead th {
   border: 1px solid grey !important;
   white-space: nowrap;
   color: maroon !important;
-  background-color: white !important;
+  background-color: rgb(231, 238, 255) !important;
+}
+
+.dynamic-data-table tfoot th {
+  border: 1px solid grey !important;
+  white-space: nowrap;
+  color: maroon !important;
+  background-color: #f4eaea !important;
 }
 
 td {
@@ -89,7 +112,7 @@ h5 {
 }
 
 .bg-blue {
-  background-color: #eaeaf4 !important;
+  background-color: rgb(239, 243, 255) !important;
 }
 
 .text-maroon {

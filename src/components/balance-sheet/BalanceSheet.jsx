@@ -1,157 +1,165 @@
-import React,{useState,useRef,useEffect} from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
+import { useSelector } from 'react-redux';
 import BalanceSheetReport from './BalanceSheetReport'
-import $ from "jquery";
 import moment from "moment";
-import "daterangepicker";
-import "daterangepicker/daterangepicker.css";
+
+import { getFirmsDropdown } from '../../api/firmApi';
+import { getBalanceSheetEntries } from '../../api/balanceSheetApi';
 
 const BalanceSheet = () => {
-  const dateRef = useRef(null);
+    const { selectedFirmId } = useSelector((state) => state.firm);
+    
+    // Calculate current financial year (April to March)
+    const { fyStart, fyEnd, currentFY } = useMemo(() => {
+        const now = moment();
+        const currentYear = now.year();
+        const isAfterMarch = now.month() >= 3;
+        const start = isAfterMarch ? moment(`${currentYear}-04-01`) : moment(`${currentYear - 1}-04-01`);
+        const end = isAfterMarch ? moment(`${currentYear + 1}-03-31`) : moment(`${currentYear}-03-31`);
+        const fyString = `${start.year()}-${end.year()}`;
+        return { fyStart: start, fyEnd: end, currentFY: fyString };
+    }, []);
+
+    const [selectedYear, setSelectedYear] = useState(currentFY);
+    const [firms, setFirms] = useState([]);
+    const [selectedFirm, setSelectedFirm] = useState(selectedFirmId === 'all' ? "" : selectedFirmId);
+    const [balanceSheetData, setBalanceSheetData] = useState({ assets: [], liabilities: [] });
+    const [loading, setLoading] = useState(false);
     const [dateRange, setDateRange] = useState({
-      startDate: "",
-      endDate: "",
-    });
-    const dummyBalanceSheetData = {
-  assets: [
-    { "Cash in Hand": 45000 },
-    { "Cash at Bank": 185000 },
-    { "Debtors": 92000 },
-    { "Secured Loan": 348000 },
-    { "Unsecured Loan": 120000 },
-    { "Stock Account": 450000 },
-    { "Building": 1200000 },
-    { "Land": 800000 },
-  ],
-  liabilities: [
-    { "Capital Account": 1800000 },
-    { "Bank Loan": 650000 },
-    { "Creditors": 145000 },
-    { "Bills Payable": 60000 },
-    { "Expenses": 35000 },
-    { "Net Profit": 125000 },     // ← you can include or remove this
-  ],
-};
-     useEffect(() => {
-    if (!dateRef.current) return;
-  
-    const currentYear = moment().year();
-    const isAfterMarch = moment().month() >= 3;
-
-    const fyStart = isAfterMarch
-      ? moment(`${currentYear}-04-01`)
-      : moment(`${currentYear - 1}-04-01`);
-
-    const fyEnd = isAfterMarch
-      ? moment(`${currentYear + 1}-03-31`)
-      : moment(`${currentYear}-03-31`);
-
-    $(dateRef.current).daterangepicker(
-      {
-        startDate: fyStart,
-        endDate: fyEnd,
-        autoUpdateInput: false,
-        locale: { format: "DD-MM-YYYY", cancelLabel: "Clear" },
-        ranges: {
-          Today: [moment(), moment()],
-          "This Month": [
-            moment().startOf("month"),
-            moment().endOf("month"),
-          ],
-          "Last Month": [
-            moment().subtract(1, "month").startOf("month"),
-            moment().subtract(1, "month").endOf("month"),
-          ],
-          "Current Financial Year": [fyStart, fyEnd],
-          "Last Financial Year": [
-            moment(fyStart).subtract(1, "year"),
-            moment(fyEnd).subtract(1, "year"),
-          ],
-        },
-      },
-      (start, end) => {
-        $(dateRef.current).val(
-          `${start.format("DD-MM-YYYY")} - ${end.format("DD-MM-YYYY")}`
-        );
-
-        setDateRange({
-          startDate: start.format("YYYY-MM-DD"),
-          endDate: end.format("YYYY-MM-DD"),
-        });
-      }
-    );
-
-    // Set default value
-    $(dateRef.current).val(
-      `${fyStart.format("DD-MM-YYYY")} - ${fyEnd.format("DD-MM-YYYY")}`
-    );
-
-    setDateRange({
-      startDate: fyStart.format("YYYY-MM-DD"),
-      endDate: fyEnd.format("YYYY-MM-DD"),
+        startDate: fyStart.format("YYYY-MM-DD"),
+        endDate: fyEnd.format("YYYY-MM-DD")
     });
 
-    return () => {
-      $(dateRef.current).data("daterangepicker")?.remove();
+    // Sync with global firm selection
+    useEffect(() => {
+        setSelectedFirm(selectedFirmId === 'all' ? "" : selectedFirmId);
+    }, [selectedFirmId]);
+
+    const fetchFirms = async () => {
+        try {
+            const response = await getFirmsDropdown();
+            if (response.success && response.data.length > 0) {
+                setFirms(response.data);
+            }
+        } catch (error) {
+            console.error("Error fetching firms:", error);
+        }
     };
-  }, []);
-  return (
-     <div className="card p-3 pt-1 shadow-sm">
-      <div className="row align-items-center mt-2">
-        <div className="col-md-3 d-none d-md-flex mt-2">
-          <input
-            type="text"
-            className="form-control border-dark text-center"
-            placeholder="Select Date Range"
-            ref={dateRef}
-          />
+
+    const fetchBalanceSheet = async (filters) => {
+        setLoading(true);
+        try {
+            const response = await getBalanceSheetEntries(filters);
+            if (response.success) {
+                setBalanceSheetData(response.data);
+            }
+        } catch (error) {
+            console.error("Error fetching balance sheet:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchFirms();
+    }, []);
+
+    useEffect(() => {
+        const filters = {
+            startDate: dateRange.startDate,
+            endDate: dateRange.endDate,
+            firmId: selectedFirm
+        };
+        fetchBalanceSheet(filters);
+    }, [dateRange, selectedFirm]);
+
+    const selectedFirmData = firms.find(f => f.firm_id === parseInt(selectedFirm));
+
+    const handlePrint = () => {
+        window.print();
+    };
+
+    return (
+        <div className="card p-3 pt-1 shadow-sm">
+            <div className="row align-items-center mt-2 d-print-none">
+                <div className="col-md-3 mt-2">
+                    <select 
+                        className="form-select border-dark text-center"
+                        value={selectedYear}
+                        onChange={(e) => {
+                            const yearVal = e.target.value;
+                            setSelectedYear(yearVal);
+                            const [startYear, endYear] = yearVal.split("-");
+                            setDateRange({
+                                startDate: `${startYear}-04-01`,
+                                endDate: `${endYear}-03-31`
+                            });
+                        }}
+                    >
+                        <option value="2023-2024">2023-2024</option>
+                        <option value="2024-2025">2024-2025</option>
+                        <option value="2025-2026">2025-2026</option>
+                        <option value="2026-2027">2026-2027</option>
+                    </select>
+                </div>
+                <div className="col-md-6 mt-2 text-center">
+                    <h3 className="text-brown fw-bold mb-0 responsive-text">
+                        <i className="bi bi-clipboard-data me-2 responsive-text"></i>
+                        Balance Sheet
+                    </h3>
+                </div>
+                <div className="col-md-3 mt-2">
+                    <select 
+                        className="form-select border-dark text-center"
+                        value={selectedFirm}
+                        onChange={(e) => setSelectedFirm(e.target.value)}
+                    >
+                        <option value="">All Firms</option>
+                        {firms.map(firm => (
+                            <option key={firm.firm_id} value={firm.firm_id}>
+                                {firm.firm_name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+
+            <div className="row mt-3">
+                <div className="col-12 text-center">
+                    {selectedFirmData && (
+                        <>
+                            <h4 className="text-primary-emphasis fw-bold mb-1">
+                                {selectedFirmData.firm_name.toUpperCase()}
+                            </h4>
+                            <p className="mb-1 fw-bold text-secondary">
+                                {selectedFirmData.firm_address || ""}
+                            </p>
+                        </>
+                    )}
+                    <p className="pb-0 mb-0">
+                        <strong className="text-info-emphasis fw-bold">PERIOD:</strong>{' '}
+                        {moment(dateRange.startDate).format("DD-MM-YYYY")} To {moment(dateRange.endDate).format("DD-MM-YYYY")}
+                    </p>
+                </div>
+                <div className="col-md-12 mt-3">
+                    {loading ? (
+                        <div className="text-center p-5">
+                            <div className="spinner-border text-primary" role="status">
+                                <span className="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    ) : (
+                        <BalanceSheetReport balanceSheetData={balanceSheetData} />
+                    )}
+                </div>
+            </div>
+            <div className="text-center mt-3 mb-2 d-print-none">
+                <button className="btn btn-outline-success" onClick={handlePrint}>
+                    Print <i className="bi bi-printer-fill"></i>
+                </button>
+            </div>
         </div>
-             <div className="col-md-6 mt-2 text-center">
-          <h3 className="text-brown fw-bold mb-0 responsive-text">
-            <i className="bi bi-clipboard-data me-2 responsive-text"></i>
-            Balance Sheet
-          </h3>
-        </div>
-         <div className="col-md-3 d-md-none mt-2">
-          <input
-            type="text"
-            className="form-control border-dark text-center"
-            placeholder="Select Date Range"
-            readOnly
-          />
-        </div>
-        <div className="col-md-3 mt-2">
-          <select className="form-select border-dark text-center">
-            <option disabled>Select Firm</option>
-            <option value="CR">Ram</option>
-            <option value="DR">Sham</option>
-          </select>
-        </div>
-        <div className="col-12 text-center">
-             <p className="pb-0 mb-0">
-            <strong className="text-info-emphasis fw-bold">FINANCIAL YEAR:</strong>{' '}
-            12-12-2025 To 23-04-2025
-          </p>
-           <p className="pb-0 mb-0">
-            <strong className="text-success-emphasis fw-bold">ASSESSMENT YEAR:</strong>{' '}
-            2025 - 2026
-          </p>
-          <p>
-            <strong className="text-primary-emphasis fw-bold">
-              TAHLKA FINANCE & COMPANY, MAHESH SHARMA WARD NO 18, RAJGARH CHURU
-            </strong>
-          </p>
-        </div>
-        <div className="col-md-12">
-          <BalanceSheetReport balanceSheetData={dummyBalanceSheetData}/>
-        </div>
-      </div>
-          <div class="text-center mt-3 mb-2">
-                        <button class="btn btn-outline-success">
-                            Print <i class="bi bi-printer-fill"></i>
-                        </button>
-                    </div>
-    </div>
-  )
+    )
 }
 
 export default BalanceSheet

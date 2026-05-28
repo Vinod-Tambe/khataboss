@@ -1,0 +1,283 @@
+/* --- Common Modal Styles --- */
+.custom-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050;
+  animation: fadeIn 0.2s ease-in-out;
+  padding: 1rem;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.custom-modal-container {
+  background-color: #f6faf6;
+  /* Light green/gray background */
+  border-radius: 10px;
+  width: 100%;
+  max-width: 1200px;
+  max-height: 95vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  border: 1px solid #d4e0d4;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.custom-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.custom-modal-header h5 {
+  margin: 0;
+  color: #1a4f8b;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 1rem;
+}
+
+.custom-modal-close {
+  background: none;
+  border: 1px solid #dc3545;
+  color: #dc3545;
+  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.custom-modal-close:hover {
+  background-color: #dc3545;
+  color: white;
+}
+
+.custom-modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.custom-modal-body .section-title {
+  color: #1a4f8b;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #d4e0d4;
+  padding-bottom: 5px;
+}
+
+.custom-modal-body .form-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #a33b43;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+}
+
+.custom-modal-body .form-control,
+.custom-modal-body .form-select {
+  font-size: 0.85rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  padding: 0.35rem 0.75rem;
+}
+
+.custom-modal-footer {
+  padding: 15px 20px;
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid #e0e0e0;
+  background-color: #fdfdfd;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+.custom-modal-footer .btn-action {
+  background-color: #e6f0ff;
+  color: #0d6efd;
+  border: 1px solid #0d6efd;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.5rem 2rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.custom-modal-footer .btn-action:hover {
+  background-color: #0d6efd;
+  color: white;
+}
+
+.textarea-custom {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* --- EMI Receipt Modal Styles --- */
+.emi-receipt-wrapper {
+  background-color: #f8f9fa;
+  padding: 1.5rem;
+}
+
+.emi-receipt-container {
+  border: 1px solid #ccc;
+  padding: 20px;
+  border-radius: 5px;
+  max-width: 600px;
+  margin: 0 auto;
+  background-color: #fff;
+}
+
+.emi-receipt-header {
+  border-bottom: 2px solid #000;
+  padding-bottom: 10px;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.emi-receipt-title {
+  font-weight: bold;
+  font-size: 1.25rem;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.emi-receipt-address {
+  font-size: 0.875rem;
+  margin-bottom: 0;
+}
+
+.emi-receipt-table {
+  font-size: 14px;
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0;
+}
+
+.emi-receipt-table th {
+  width: 40%;
+  background-color: #f8f9fa;
+  font-weight: bold;
+  text-align: left;
+}
+
+.emi-receipt-table td {
+  text-align: left;
+}
+
+@media print {
+  body {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+
+  .emi-receipt-container {
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* Ensure background colors and text colors print correctly */
+  .bg-primary {
+    background-color: #1a4f8b !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .bg-light {
+    background-color: #f8f9fa !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .text-primary {
+    color: #1a4f8b !important;
+  }
+
+  .text-success {
+    color: #198754 !important;
+  }
+
+  .text-danger {
+    color: #dc3545 !important;
+  }
+
+  .badge.bg-success {
+    background-color: #198754 !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: #000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Clean up borders for printing */
+  .border,
+  .border-bottom,
+  .border-light-subtle {
+    border-color: #dee2e6 !important;
+  }
+
+  /* Hide buttons and unnecessary elements during print if they somehow leak, though iframe handles this */
+  button {
+    display: none !important;
+  }
+
+  /* Force solid black borders for the table during print */
+  .table-bordered,
+  .table-bordered th,
+  .table-bordered td {
+    border: 1px solid #000 !important;
+  }
+
+  /* Make sure the outer box has a solid border */
+  .emi-receipt-print-box {
+    border: 1px solid #000 !important;
+  }
+}

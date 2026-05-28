@@ -1,4 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import moment from 'moment';
+import $ from 'jquery';
+import 'daterangepicker';
+import 'daterangepicker/daterangepicker.css';
+import useFormNavigation from '../../hooks/useFormNavigation';
 
 const AddLoan = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -6,8 +11,8 @@ const AddLoan = () => {
 
   const [formData, setFormData] = useState({
     principalAmount: '',
-    loanStartDate: '',
-    interestOption: '',
+    loanStartDate: moment().format('YYYY-MM-DD'),
+    interestOption: 'monthly',
     loanPacketNo: '',
     loanLockerNo: '',
     processingAmount: '',
@@ -44,9 +49,28 @@ const AddLoan = () => {
     bankInfo: '',
   });
 
+  const loanStartDateRef = useRef(null);
+
+  // Form Navigation
+  const formRef = useRef(null);
+  useFormNavigation(formRef);
+
 
 
   useEffect(() => {
+    if (loanStartDateRef.current) {
+      $(loanStartDateRef.current).daterangepicker({
+        singleDatePicker: true,
+        showDropdowns: true,
+        autoUpdateInput: true,
+        locale: {
+          format: 'DD-MM-YYYY'
+        }
+      }, (start) => {
+        setFormData(prev => ({ ...prev, loanStartDate: start.format('YYYY-MM-DD') }));
+      });
+    }
+
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -140,26 +164,7 @@ const AddLoan = () => {
     setNewPayment((prev) => ({ ...prev, [name]: value }));
   };
 
-  const addPayment = (type) => {
-    setNewPayment((prev) => ({ ...prev, accountType: type }));
 
-    if (!newPayment.bankAccountId || !newPayment.bankAmount.trim()) {
-      alert('Please select account and enter amount');
-      return;
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      payments: [...prev.payments, { ...newPayment, accountType: type }],
-    }));
-
-    setNewPayment({
-      accountType: type,
-      bankAccountId: '',
-      bankAmount: '',
-      bankInfo: '',
-    });
-  };
 
   const handleNext = () => {
     if (currentStep === 1) {
@@ -199,11 +204,27 @@ const AddLoan = () => {
       <div className="row g-3">
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Principal Amount <span className="text-danger">*</span></label>
-          <input type="text" name="principalAmount" placeholder="0.00" className="form-control border-dark" value={formData.principalAmount} onChange={handleChange} required />
+          <input
+            type="number"
+            name="principalAmount"
+            placeholder="0.00"
+            className="form-control border-dark"
+            value={formData.principalAmount}
+            onChange={handleChange}
+            onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
+            step="0.01"
+            required
+          />
         </div>
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Loan Start Date <span className="text-danger">*</span></label>
-          <input type="date" name="loanStartDate" className="form-control border-dark" value={formData.loanStartDate} onChange={handleChange} required />
+          <input
+            type="text"
+            name="loanStartDate"
+            ref={loanStartDateRef}
+            className="form-control border-dark"
+            defaultValue={formData.loanStartDate ? moment(formData.loanStartDate).format('DD-MM-YYYY') : ''}
+          />
         </div>
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Interest Option <span className="text-danger">*</span></label>
@@ -224,19 +245,56 @@ const AddLoan = () => {
         </div>
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Processing Amount</label>
-          <input type="text" name="processingAmount" placeholder="0.00" className="form-control border-dark" value={formData.processingAmount} onChange={handleChange} />
+          <input
+            type="number"
+            name="processingAmount"
+            placeholder="0.00"
+            className="form-control border-dark"
+            value={formData.processingAmount}
+            onChange={handleChange}
+            onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
+            step="0.01"
+          />
         </div>
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Charge Amount</label>
-          <input type="text" name="chargeAmount" placeholder="0.00" className="form-control border-dark" value={formData.chargeAmount} onChange={handleChange} />
+          <input
+            type="number"
+            name="chargeAmount"
+            placeholder="0.00"
+            className="form-control border-dark"
+            value={formData.chargeAmount}
+            onChange={handleChange}
+            onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
+            step="0.01"
+          />
         </div>
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Rate of Interest <span className="text-danger">*</span></label>
-          <input type="text" name="interestRate" placeholder="e.g. 12.5" className="form-control border-dark" value={formData.interestRate} onChange={handleChange} required />
+          <input
+            type="number"
+            name="interestRate"
+            placeholder="e.g. 12.5"
+            className="form-control border-dark"
+            value={formData.interestRate}
+            onChange={handleChange}
+            onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
+            step="0.01"
+            required
+          />
         </div>
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Payable Amount</label>
-          <input type="text" name="payableAmount" placeholder="0.00 (total incl. interest)" className="form-control border-dark" value={formData.payableAmount} onChange={handleChange} />
+          <input
+            type="number"
+            name="payableAmount"
+            placeholder="0.00 (total incl. interest)"
+            className="form-control border-dark"
+            value={formData.payableAmount}
+            onChange={handleChange}
+            onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
+            step="0.01"
+          />
         </div>
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">CR Account</label>
@@ -256,22 +314,22 @@ const AddLoan = () => {
   const itemInformation = (
     <>
       <h5 className="text-muted mt-3">Item Information</h5>
-      <div className="table-responsive table-sticky-first">
-        <table className="table table-bordered table-hover">
+      <div className="table-responsive mb-3">
+        <table className="table table-bordered table-hover mb-0">
           <thead>
-            <tr>
-              <th className="text-center fw-bold">METAL TYPE</th>
-              <th className="text-center fw-bold">ITEM NAME</th>
-              <th className="text-center fw-bold">QTY</th>
-              <th className="text-center fw-bold">GS WT</th>
-              <th className="text-center fw-bold">GS TYPE</th>
-              <th className="text-center fw-bold">NT WT</th>
-              <th className="text-center fw-bold">NT TYPE</th>
-              <th className="text-center fw-bold">TUNCH</th>
-              <th className="text-center fw-bold">FN WT</th>
-              <th className="text-center fw-bold">VALUATION</th>
-              <th className="text-center fw-bold">IMAGE</th>
-              <th className="text-center fw-bold">ACTION</th>
+            <tr className="table-light">
+              <th className="text-center fw-bold" style={{ width: '50px' }}>METAL</th>
+              <th className="text-center fw-bold" style={{ width: '150px' }}>ITEM NAME</th>
+              <th className="text-center fw-bold" style={{ width: '60px' }}>QTY</th>
+              <th className="text-center fw-bold" style={{ width: '70px' }}>GS WT</th>
+              <th className="text-center fw-bold" style={{ width: '65px' }}>G TYPE</th>
+              <th className="text-center fw-bold" style={{ width: '70px' }}>NT WT</th>
+              <th className="text-center fw-bold" style={{ width: '65px' }}>N TYPE</th>
+              <th className="text-center fw-bold" style={{ width: '70px' }}>TUNCH</th>
+              <th className="text-center fw-bold" style={{ width: '70px' }}>FN WT</th>
+              <th className="text-center fw-bold" style={{ width: '110px' }}>VALUATION</th>
+              <th className="text-center fw-bold" style={{ width: '60px' }}>IMAGE</th>
+              <th className="text-center fw-bold" style={{ width: '50px' }}>ACTION</th>
             </tr>
           </thead>
           <tbody>
@@ -487,7 +545,7 @@ const AddLoan = () => {
                 )}
                 {newItem.imageName && (
                   <div className="small text-muted mt-1 text-truncate" title={newItem.imageName}>
-                   
+
                   </div>
                 )}
               </td>
@@ -548,7 +606,7 @@ const AddLoan = () => {
           <input type="text" name="bankInfo" placeholder="Information" className="form-control border-dark" value={newPayment.bankInfo} onChange={handlePaymentChange} />
         </div>
       </div>
-        <div className="row g-3">
+      <div className="row g-3">
         <div className="col-12 col-md-6 col-lg-4">
           <label className="form-label fw-medium">Select Cash Account <span className="text-danger">*</span></label>
           <select name="bankAccountId" className="form-select border-dark" value={newPayment.bankAccountId} onChange={handlePaymentChange} required>
@@ -569,7 +627,7 @@ const AddLoan = () => {
           <input type="text" name="bankInfo" placeholder="Information" className="form-control border-dark" value={newPayment.bankInfo} onChange={handlePaymentChange} />
         </div>
       </div>
-        <div className="row g-3">
+      <div className="row g-3">
         <div className="col-12 col-md-6 col-lg-4">
           <label className="form-label fw-medium">Select Cash Account <span className="text-danger">*</span></label>
           <select name="bankAccountId" className="form-select border-dark" value={newPayment.bankAccountId} onChange={handlePaymentChange} required>
@@ -624,7 +682,7 @@ const AddLoan = () => {
     <div className="card p-0 border-0 border-md-1 border-secondary">
       <h4 className="card-title text-center fw-bold pb-md-0">Add New Loan</h4>
 
-      <form noValidate onSubmit={handleSubmit}>
+      <form ref={formRef} noValidate onSubmit={handleSubmit}>
         {isMobile ? (
           <>
             {progressBar}

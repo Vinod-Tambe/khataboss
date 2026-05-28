@@ -1,9 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import DocumentUploadCard from '../common/DocumentUploadCard';
+import moment from 'moment';
+import $ from 'jquery';
+import 'daterangepicker';
+import 'daterangepicker/daterangepicker.css';
+import useFormNavigation from '../../hooks/useFormNavigation';
 
 const AddStaff = () => {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [currentStep, setCurrentStep] = useState(1);
+
+    // Form Navigation
+    const formRef = useRef(null);
+    useFormNavigation(formRef);
 
     // Previews
     const [photoPreview, setPhotoPreview] = useState(null);
@@ -27,6 +36,7 @@ const AddStaff = () => {
 
     // Signature
     const signatureRef = useRef(null);
+    const dateOfBirthRef = useRef(null);
     const [isDrawing, setIsDrawing] = useState(false);
 
     useEffect(() => {
@@ -141,6 +151,19 @@ const AddStaff = () => {
 
     // ─── Signature Pad (unchanged) ────────────────────────────────────────
     useEffect(() => {
+        if (dateOfBirthRef.current) {
+            $(dateOfBirthRef.current).daterangepicker({
+                singleDatePicker: true,
+                showDropdowns: true,
+                autoUpdateInput: true,
+                locale: {
+                    format: 'DD-MM-YYYY'
+                }
+            }, (start) => {
+                setFormData(prev => ({ ...prev, dateOfBirth: start.format('YYYY-MM-DD') }));
+            });
+        }
+
         const canvas = signatureRef.current;
         if (!canvas) return;
 
@@ -266,7 +289,13 @@ const AddStaff = () => {
                 </div>
                 <div className="col-12 col-md-6 col-lg-4">
                     <label className="form-label">Date Of Birth</label>
-                    <input type="date" name="dateOfBirth" className="form-control border-dark" value={formData.dateOfBirth} onChange={handleChange} />
+                    <input 
+                        type="text" 
+                        name="dateOfBirth" 
+                        ref={dateOfBirthRef}
+                        className="form-control border-dark" 
+                        defaultValue={moment(formData.dateOfBirth).format('DD-MM-YYYY')} 
+                    />
                 </div>
 
                 {/* Identification */}
@@ -479,7 +508,7 @@ const AddStaff = () => {
         if (!isMobile) {
             return (
                 <div className="card p-4 shadow-sm">
-                    <h4 className="mb-1 text-center">Add New Staff</h4>
+                    <h4 className="mb-1 card-title text-center fw-bold pb-md-0">Add New Staff</h4>
                     {renderStep1()}
                     <hr className="my-3" />
                     {renderStep2()}
@@ -532,7 +561,7 @@ const AddStaff = () => {
 
     return (
         <div className="container-fluid py-3 pt-md-0 mb-4">
-            <form onSubmit={handleSubmit}>
+            <form ref={formRef} onSubmit={handleSubmit}>
                 {renderContent()}
             </form>
 

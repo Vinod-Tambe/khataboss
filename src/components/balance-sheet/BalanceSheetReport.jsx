@@ -20,7 +20,7 @@ const BalanceSheetReport = ({ balanceSheetData }) => {
     // Totals
     const totalAssets = assetList.reduce((sum, a) => sum + a.value, 0);
     const totalLiabilities = liabilityList.reduce((sum, l) => sum + l.value, 0);
-    const diffBalance = totalLiabilities - totalAssets;
+    const diffBalance = totalAssets - totalLiabilities;
 
     // To make table balanced (equal rows), pad shorter side with empty rows
     const maxRows = Math.max(assetList.length, liabilityList.length);
@@ -35,10 +35,10 @@ const BalanceSheetReport = ({ balanceSheetData }) => {
                     </colgroup>
                     <thead>
                         <tr>
-                            <th className="bg-red text-center fs-6 sticky-col">
+                            <th className="bg-cust-primary text-center text-brown fs-6 sticky-col">
                                 Liabilities
                             </th>
-                            <th className="bg-cust-primary text-center fs-6 sticky-col">
+                            <th className="bg-cust-primary text-brown text-center fs-6 sticky-col">
                                 Assets
                             </th>
                         </tr>
@@ -74,25 +74,32 @@ const BalanceSheetReport = ({ balanceSheetData }) => {
                         </tr>
 
                         {/* Show Profit or Loss */}
+                        {(diffBalance !== 0) && (
                             <tr>
-                                <td className="text-start fw-bold text-success ">  
-                                    <div className="row">
-                                    <div className="col-6">Net Profit</div>
-                                    <div className="col-6 text-end">{diffBalance.toLocaleString()}</div>
-                                </div>
+                                <td className="text-start fw-bold text-success">
+                                    {diffBalance > 0 && (
+                                        <div className="row">
+                                            <div className="col-6">NET PROFIT</div>
+                                            <div className="col-6 text-end">{diffBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                                        </div>
+                                    )}
                                 </td>
-                                <td className='text-start fw-bold text-danger '> 
-                                    <div className="row">
-                                    <div className="col-6">Net Loss</div>
-                                    <div className="col-6 text-end">{Math.abs(diffBalance).toLocaleString()}</div>
-                                </div></td>
+                                <td className="text-start fw-bold text-danger">
+                                    {diffBalance < 0 && (
+                                        <div className="row">
+                                            <div className="col-6">NET LOSS</div>
+                                            <div className="col-6 text-end">{Math.abs(diffBalance).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                                        </div>
+                                    )}
+                                </td>
                             </tr>
+                        )}
                     </tbody>
 
                     {/* Totals row */}
                     <tfoot>
-                        <tr className="fw-bold bg-blue">
-                            <td className='bg-blue'>
+                        <tr className="fw-bold bg-red">
+                            <td className='bg-red'>
                                 <div className="row">
                                     <div className="col-6 text-start">Total</div>
                                     <div className="col-6 text-end">
@@ -100,7 +107,7 @@ const BalanceSheetReport = ({ balanceSheetData }) => {
                                     </div>
                                 </div>
                             </td>
-                            <td className='bg-blue'>
+                            <td className='bg-red'>
                                 <div className="row">
                                     <div className="col-6 text-start">Total</div>
                                     <div className="col-6 text-end">
