@@ -197,50 +197,23 @@ const Daybook = () => {
             OPENING BALANCE :
           </h6>
           <h6 className="fw-semibold text-brown mb-0">
-            {daybookResponse.summary?.total_open_amt || "0.00"}
+            0.00
           </h6>
         </div>
       </div>
 
-      {loading ? (
-        <div className="text-center my-5">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-        </div>
-      ) : (
-        <>
-          <DayBookTable 
-            title="FINANCE ADDED"
-            colorClass="bg-green"
-            amtColor="text-danger"
-            data={getSectionData("FINANCE ADDED").data}
-          />
-          <DayBookTable 
-            title="FINANCE EMI DEPOSIT"
-            colorClass="bg-red"
-            amtColor="text-success"
-            data={getSectionData("FINANCE EMI DEPOSIT").data}
-          />
-          <DayBookTable 
-            title="FINANCE EMI ROLLBACK"
-            colorClass="bg-cust-info"
-            amtColor="text-danger"
-            data={getSectionData("FINANCE EMI ROLLBACK").data}
-          />
-          
-          <DayBookSummary
-            DayBookData={keyedDaybookData}
-            opening_data={daybookResponse.summary || {}}
-          />
-        </>
-      )}
-
-      <div className="text-center mt-3 mb-2">
-        <button className="btn btn-outline-success">
-          Print <i className="bi bi-printer-fill"></i>
-        </button>
-      </div>
+      <DayBookTable />
+      <DayBookTable />
+      <DayBookTable />
+      <DayBookSummary
+        DayBookData={dayBookData}
+        opening_data={openingData}
+      />
+           <div className="text-center mt-3 mb-2">
+                        <button className="btn btn-outline-success">
+                            Print <i className="bi bi-printer-fill"></i>
+                        </button>
+                    </div>
     </div>
   );
 };
