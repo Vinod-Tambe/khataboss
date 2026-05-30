@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 const users = [
   {
     id: 1,
@@ -165,7 +165,6 @@ const users = [
 ];
 
 const StaffGrid = () => {
-  const navigate = useNavigate();
   return (
     <div className="card p-3 pt-2 shadow-sm">
       <div className="row pt-2 pb-3">
@@ -178,12 +177,7 @@ const StaffGrid = () => {
       </div>
       <div className="row g-3">
         {users.map((user) => (
-          <div 
-            key={user.id} 
-            className="col-12 col-md-6 col-lg-6 text-decoration-none"
-            onClick={() => navigate(`/staff/user-details/${user.id}`)}
-            style={{ cursor: "pointer" }}
-          >
+          <Link to={`/user/home`} key={user.id} className="col-12 col-md-6 col-lg-6 text-decoration-none">
             <div className="card bg-blue shadow border-dark h-100">
               <div className="card-body text-dark p-2">
                 <div className="row align-items-center">
@@ -212,19 +206,19 @@ const StaffGrid = () => {
               </div>
 
               <div className="card-footer bg-transparent border-dark d-flex align-items-center p-2 m-0">
-                <button style={{ width: "15%" }} className="btn me-2 p-1 m-0 bg-secondary-subtle border-secondary" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                <button style={{ width: "15%" }} className="btn me-2 p-1 m-0 bg-secondary-subtle border-secondary">
                   {user.id}
                 </button>
-                <button className="btn me-2 bg-success-subtle border-secondary rounded-circle" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                <button className="btn me-2 bg-success-subtle border-secondary rounded-circle">
                   <i className="bi bi-whatsapp"></i>
                 </button>
-                <button className="btn me-2 bg-primary-subtle border-secondary rounded-circle" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                <button className="btn me-2 bg-primary-subtle border-secondary rounded-circle">
                   <i className="bi bi-telephone-outbound"></i>
                 </button>
-                <button className="btn me-2 bg-info-subtle border-secondary rounded-circle" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                <button className="btn me-2 bg-info-subtle border-secondary rounded-circle">
                   <i className="bi bi-pencil-square"></i>
                 </button>
-                <button className="btn me-2 bg-danger-subtle border-secondary rounded-circle" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                <button className="btn me-2 bg-danger-subtle border-secondary rounded-circle">
                   <i className="bi bi-trash"></i>
                 </button>
 
@@ -233,7 +227,7 @@ const StaffGrid = () => {
                 </p>
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>
