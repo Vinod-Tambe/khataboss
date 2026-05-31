@@ -28,17 +28,19 @@ const BalanceSheetReport = ({ balanceSheetData }) => {
     return (
         <div className='border border-danger-subtle bg-green'>
             <div className="table-responsive">
-                <table className="table table-hover table-bordered border-secondary mb-0">
+                <table className="table table-hover table-bordered border-secondary mb-0" style={{ tableLayout: 'fixed', borderCollapse: 'collapse' }}>
                     <colgroup>
-                        <col style={{ width: '50%' }} />
-                        <col style={{ width: '50%' }} />
+                        <col style={{ width: '35%' }} />
+                        <col style={{ width: '15%' }} />
+                        <col style={{ width: '35%' }} />
+                        <col style={{ width: '15%' }} />
                     </colgroup>
                     <thead>
                         <tr>
-                            <th className="bg-cust-primary text-center text-brown fs-6 sticky-col">
+                            <th colSpan="2" className="bg-cust-primary text-center text-brown fs-6 sticky-col">
                                 Liabilities
                             </th>
-                            <th className="bg-cust-primary text-brown text-center fs-6 sticky-col">
+                            <th colSpan="2" className="bg-cust-primary text-brown text-center fs-6 sticky-col">
                                 Assets
                             </th>
                         </tr>
@@ -49,20 +51,18 @@ const BalanceSheetReport = ({ balanceSheetData }) => {
                             const asset = assetList[idx];
                             return (
                                 <tr key={idx}>
-                                    <td className="text-start">
-                                        <div className="row">
-                                            <div className="col-6 border-end">  {liability ? liability.name.toUpperCase() : ''}</div>
-                                            <div className="col-6 text-end"> {liability ? liability.value.toLocaleString() : ''}</div>
-                                        </div>
+                                    {/* Using separate table cells instead of nested divs to prevent line overlapping during PDF print */}
+                                    <td className="text-start text-break pe-2" style={{ verticalAlign: 'middle' }}>
+                                        {liability ? liability.name.toUpperCase() : ''}
                                     </td>
-                                    <td className="text-start">
-                                        <div className="row">
-                                            <div className="col-6 border-end">
-                                                {asset ? asset.name.toUpperCase() : ''}
-                                            </div>
-                                            <div className="col-6 text-end"> {asset ? asset.value.toLocaleString() : ''}
-                                            </div>
-                                        </div>
+                                    <td className="text-end pe-2" style={{ verticalAlign: 'middle' }}>
+                                        {liability ? liability.value.toLocaleString() : ''}
+                                    </td>
+                                    <td className="text-start text-break pe-2" style={{ verticalAlign: 'middle' }}>
+                                        {asset ? asset.name.toUpperCase() : ''}
+                                    </td>
+                                    <td className="text-end pe-2" style={{ verticalAlign: 'middle' }}>
+                                        {asset ? asset.value.toLocaleString() : ''}
                                     </td>
                                 </tr>
                             );
@@ -71,27 +71,28 @@ const BalanceSheetReport = ({ balanceSheetData }) => {
                         <tr>
                             <td style={{ height: '20vh' }}></td>
                             <td style={{ height: '20vh' }}></td>
+                            <td style={{ height: '20vh' }}></td>
+                            <td style={{ height: '20vh' }}></td>
                         </tr>
 
                         {/* Show Profit or Loss */}
                         {(diffBalance !== 0) && (
                             <tr>
-                                <td className="text-start fw-bold text-success">
-                                    {diffBalance > 0 && (
-                                        <div className="row">
-                                            <div className="col-6">NET PROFIT</div>
-                                            <div className="col-6 text-end">{diffBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-                                        </div>
-                                    )}
-                                </td>
-                                <td className="text-start fw-bold text-danger">
-                                    {diffBalance < 0 && (
-                                        <div className="row">
-                                            <div className="col-6">NET LOSS</div>
-                                            <div className="col-6 text-end">{Math.abs(diffBalance).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-                                        </div>
-                                    )}
-                                </td>
+                                {diffBalance > 0 ? (
+                                    <>
+                                        <td className="text-start fw-bold text-success pe-2" style={{ verticalAlign: 'middle' }}>NET PROFIT</td>
+                                        <td className="text-end fw-bold text-success pe-2" style={{ verticalAlign: 'middle' }}>{diffBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                        <td></td>
+                                        <td></td>
+                                    </>
+                                ) : (
+                                    <>
+                                        <td></td>
+                                        <td></td>
+                                        <td className="text-start fw-bold text-danger pe-2" style={{ verticalAlign: 'middle' }}>NET LOSS</td>
+                                        <td className="text-end fw-bold text-danger pe-2" style={{ verticalAlign: 'middle' }}>{Math.abs(diffBalance).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                    </>
+                                )}
                             </tr>
                         )}
                     </tbody>
@@ -99,21 +100,13 @@ const BalanceSheetReport = ({ balanceSheetData }) => {
                     {/* Totals row */}
                     <tfoot>
                         <tr className="fw-bold bg-red">
-                            <td className='bg-red'>
-                                <div className="row">
-                                    <div className="col-6 text-start">Total</div>
-                                    <div className="col-6 text-end">
-                                        {Math.max(totalLiabilities, totalAssets).toLocaleString()}
-                                    </div>
-                                </div>
+                            <td className="bg-red text-start pe-2">Total</td>
+                            <td className="bg-red text-end pe-2">
+                                {Math.max(totalLiabilities, totalAssets).toLocaleString()}
                             </td>
-                            <td className='bg-red'>
-                                <div className="row">
-                                    <div className="col-6 text-start">Total</div>
-                                    <div className="col-6 text-end">
-                                        {Math.max(totalLiabilities, totalAssets).toLocaleString()}
-                                    </div>
-                                </div>
+                            <td className="bg-red text-start pe-2">Total</td>
+                            <td className="bg-red text-end pe-2">
+                                {Math.max(totalLiabilities, totalAssets).toLocaleString()}
                             </td>
                         </tr>
                     </tfoot>
