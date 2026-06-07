@@ -7,7 +7,7 @@ import AddFinance from "../../components/finance/AddFinance";
 import ListFinance from "../../components/finance/ListFinance";
 import Dropdown from "react-bootstrap/Dropdown";
 import Finance from "../../components/finance/Finance";
-import ActiveLoanPanel from "../../components/loan/ActiveLoanPanel";
+import LoanInfo from "../../components/loan/LoanInfo";
 
 const UserHomeRoutes = () => {
   const { selectedUser } = useSelector((state) => state.user);
@@ -35,9 +35,9 @@ const UserHomeRoutes = () => {
 
   return (
     <div>
-         {/* ================= HEADER ================= */}
-         <div className="card px-2 py-1 shadow-sm mb-2">
-           <div className="d-flex align-items-center justify-content-between flex-wrap mb-1">
+      {/* ================= HEADER ================= */}
+      <div className="card px-2 py-1 shadow-sm mb-2">
+        <div className="d-flex align-items-center justify-content-between flex-wrap mb-1">
 
           {/* USER INFO */}
           <Link className="text-decoration-none" to="/user/home">
@@ -183,12 +183,12 @@ const UserHomeRoutes = () => {
           </div>
 
         </div>
-         </div>
+      </div>
       <div className="card p-3 pt-2 shadow-sm">
         {/* ================= ROUTES ================= */}
         <Routes>
           <Route path="/*" element={<UserHome />} />
-          <Route path="/active-loan" element={<ActiveLoanPanel />} />
+          <Route path="/loan-info" element={<LoanInfo />} />
           <Route path="/add-loan" element={<AddLoan />} />
           <Route path="/add-finance" element={<AddFinance />} />
           <Route path="/active-finance" element={<ListFinance status="ACTIVE" />} />

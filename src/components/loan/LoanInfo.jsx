@@ -4,7 +4,7 @@ import DynamicActionModal from './DynamicActionModal';
 import { modalConfigs } from '../../utils/modalConfigs';
 
 // Reusable Components
-const LoanInfo = () => (
+const LoanInformation = () => (
   <div className="panel-section">
     <div className="section-header">Loan Information</div>
     <div className="row g-3">
@@ -26,7 +26,7 @@ const LoanInfo = () => (
           <option>ADMIN</option>
         </select>
       </div>
-      
+
       <div className="col-md-3">
         <label className="form-label">Packet No.</label>
         <input type="text" className="form-control" defaultValue="-" />
@@ -35,23 +35,23 @@ const LoanInfo = () => (
         <label className="form-label">Locker No.</label>
         <input type="text" className="form-control" defaultValue="-" />
       </div>
-      
+
       <div className="col-md-6 d-flex gap-3 align-items-end">
         <div className="flex-grow-1">
-            <label className="form-label">Processing Amount</label>
-            <div className="input-group">
-              <input type="text" className="form-control" />
-              <span className="input-group-text">%</span>
-              <input type="text" className="form-control" defaultValue="-" />
-            </div>
+          <label className="form-label">Processing Amount</label>
+          <div className="input-group">
+            <input type="text" className="form-control" />
+            <span className="input-group-text">%</span>
+            <input type="text" className="form-control" defaultValue="-" />
+          </div>
         </div>
         <div className="flex-grow-1">
-            <label className="form-label">Charge Amount</label>
-            <div className="input-group">
-              <input type="text" className="form-control" defaultValue="2" />
-              <span className="input-group-text">%</span>
-              <input type="text" className="form-control" defaultValue="100" />
-            </div>
+          <label className="form-label">Charge Amount</label>
+          <div className="input-group">
+            <input type="text" className="form-control" defaultValue="2" />
+            <span className="input-group-text">%</span>
+            <input type="text" className="form-control" defaultValue="100" />
+          </div>
         </div>
       </div>
 
@@ -72,7 +72,7 @@ const LoanInfo = () => (
       <div className="col-md-3 d-flex align-items-center mt-4 pt-2">
         <div className="form-check">
           <input className="form-check-input" type="checkbox" id="firstMonthInt" defaultChecked />
-          <label className="form-check-label fw-bold text-primary" style={{fontSize: '0.8rem'}} htmlFor="firstMonthInt">
+          <label className="form-check-label fw-bold text-primary" style={{ fontSize: '0.8rem' }} htmlFor="firstMonthInt">
             FIRST MONTH INT
           </label>
         </div>
@@ -186,7 +186,7 @@ const ActionFooter = ({ onDepositClick, onReleaseClick, onAddPrincipalClick, onT
   </div>
 );
 
-const ActiveLoanPanel = () => {
+const LoanInfo = () => {
   const [activeModal, setActiveModal] = useState(null);
 
   // Dummy Data for tables
@@ -217,10 +217,10 @@ const ActiveLoanPanel = () => {
         </div>
       </div>
 
-      <LoanInfo />
-      
+      <LoanInformation />
+
       <ItemTable data={itemData} />
-      
+
       <OtherInfoTable data={otherData} />
 
       {/* Final Valuation Section */}
@@ -250,21 +250,21 @@ const ActiveLoanPanel = () => {
         </div>
       </div>
 
-      <ActionFooter 
-        onDepositClick={() => setActiveModal('deposit')} 
+      <ActionFooter
+        onDepositClick={() => setActiveModal('deposit')}
         onReleaseClick={() => setActiveModal('release')}
         onAddPrincipalClick={() => setActiveModal('addPrincipal')}
         onTransferClick={() => setActiveModal('transfer')}
         onAuctionClick={() => setActiveModal('auction')}
       />
-      
-      <DynamicActionModal 
-        isOpen={!!activeModal} 
-        onClose={() => setActiveModal(null)} 
+
+      <DynamicActionModal
+        isOpen={!!activeModal}
+        onClose={() => setActiveModal(null)}
         config={activeModal ? modalConfigs[activeModal] : null}
       />
     </div>
   );
 };
 
-export default ActiveLoanPanel;
+export default LoanInfo;
