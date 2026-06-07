@@ -1,8 +1,10 @@
 import { createSlice } from '@reduxjs/toolkit';
 
+const savedFirmId = typeof window !== 'undefined' ? (localStorage.getItem('selectedFirmId') || 'all') : 'all';
+
 const initialState = {
   firms: [],
-  selectedFirmId: 'all',
+  selectedFirmId: savedFirmId,
   loading: false,
   error: null,
 };
@@ -16,6 +18,9 @@ const firmSlice = createSlice({
     },
     setSelectedFirmId: (state, action) => {
       state.selectedFirmId = action.payload;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('selectedFirmId', action.payload);
+      }
     },
     setLoading: (state, action) => {
       state.loading = action.payload;

@@ -7,6 +7,7 @@ import "daterangepicker/daterangepicker.css";
 import { useParams } from 'react-router-dom';
 import { getAccountLedger } from '../../api/accountApi';
 import { getFirmsDropdown } from '../../api/firmApi';
+import { useSelector } from 'react-redux';
 
 const AccountDetails = () => {
     const { uuid } = useParams();
@@ -15,8 +16,14 @@ const AccountDetails = () => {
     const [ledgerData, setLedgerData] = useState([]);
     const [openingBalance, setOpeningBalance] = useState(0);
     const [ledgerLoading, setLedgerLoading] = useState(false);
+    const { selectedFirmId } = useSelector((state) => state.firm);
     const [firms, setFirms] = useState([]);
-    const [selectedFirm, setSelectedFirm] = useState("N");
+    const [selectedFirm, setSelectedFirm] = useState(selectedFirmId === 'all' ? "N" : selectedFirmId);
+
+    // Sync with global firm selection
+    useEffect(() => {
+        setSelectedFirm(selectedFirmId === 'all' ? "N" : selectedFirmId);
+    }, [selectedFirmId]);
 
     // Default FY dates
     const currentYear = moment().year();

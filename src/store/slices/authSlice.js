@@ -64,6 +64,7 @@ const authSlice = createSlice({
       sessionStorage.removeItem('token');
       // For thoroughness, also clean up any legacy token in localStorage
       localStorage.removeItem('token'); 
+      localStorage.removeItem('selectedFirmId');
     },
     clearError: (state) => {
       state.error = null;

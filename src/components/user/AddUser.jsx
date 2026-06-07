@@ -7,13 +7,17 @@ import 'daterangepicker/daterangepicker.css';
 import { toast } from 'react-hot-toast';
 import { validatePincode, validatePan, validateAadhaar, validateGstin, validateIfsc, validateMobile, validatePhone } from '../../utils/validation';
 import useFormNavigation from '../../hooks/useFormNavigation';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { setSelectedUser } from '../../store/slices/userSlice';
 import { getFirmsDropdown } from '../../api/firmApi';
 import { createUser } from '../../api/userApi';
 
 const AddUser = () => {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [currentStep, setCurrentStep] = useState(1);
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
 
     // Form Navigation
     const formRef = useRef(null);
@@ -381,7 +385,13 @@ const AddUser = () => {
             const result = await createUser(data);
             toast.success(result.message || 'User information submitted successfully!');
 
-            // Reset form
+            if (result.data) {
+                dispatch(setSelectedUser(result.data));
+                navigate('/user/home');
+                return;
+            }
+
+            // Reset form (fallback if no data returned)
             setFormData({
                 firstName: '', lastName: '', fatherName: '', motherName: '',
                 mobileNo: '', phoneNo: '', emailId: '', gender: 'Male', cast: '', maritalStatus: '',
