@@ -577,7 +577,7 @@ const AddFirm = () => {
   };
 
   return (
-    <div className={`container-fluid ${isMobile ? 'p-0 m-0' : 'py-3'}  pt-md-0 mb-4`} style={{ maxWidth: '1200px' }}>
+    <div className={`container-fluid ${isMobile ? 'p-0 m-0' : 'py-3'}  pt-md-0 mb-4`}>
       <form ref={formRef} onSubmit={handleSubmit}>{renderContent()}</form>
     </div>
   );

@@ -52,13 +52,14 @@ const DayBookSummary = ({ DayBookData,opening_data }) => {
     // CALCULATE OUT AMOUNT
     const Finance_added_data = DayBookData?.['FINANCE ADDED'] || {};
     const Finance_emi_rollback_data = DayBookData?.['FINANCE EMI ROLLBACK'] || {};
+    const Loan_added_data = DayBookData?.['LOAN ADDED'] || {};
     // Only calculate if both Finance_added_data and Finance_emi_rollback_data are defined
-    total_today_cash_out_amt = parseFloat(Finance_added_data.total_cash_amt || 0) + parseFloat(Finance_emi_rollback_data.total_cash_amt || 0);
-    total_today_bank_out_amt = parseFloat(Finance_added_data.total_bank_amt || 0) + parseFloat(Finance_emi_rollback_data.total_bank_amt || 0);
-    total_today_online_out_amt = parseFloat(Finance_added_data.total_online_amt || 0) + parseFloat(Finance_emi_rollback_data.total_online_amt || 0);
-    total_today_card_out_amt = parseFloat(Finance_added_data.total_card_amt || 0) + parseFloat(Finance_emi_rollback_data.total_card_amt || 0);
-    total_today_disc_out_amt = parseFloat(Finance_added_data.total_disc_amt || 0) + parseFloat(Finance_emi_rollback_data.total_disc_amt || 0);
-    total_today_out_amt = parseFloat(Finance_added_data.total_amt || 0) + parseFloat(Finance_emi_rollback_data.total_amt || 0);
+    total_today_cash_out_amt = parseFloat(Finance_added_data.total_cash_amt || 0) + parseFloat(Finance_emi_rollback_data.total_cash_amt || 0) + parseFloat(Loan_added_data.total_cash_amt || 0);
+    total_today_bank_out_amt = parseFloat(Finance_added_data.total_bank_amt || 0) + parseFloat(Finance_emi_rollback_data.total_bank_amt || 0) + parseFloat(Loan_added_data.total_bank_amt || 0);
+    total_today_online_out_amt = parseFloat(Finance_added_data.total_online_amt || 0) + parseFloat(Finance_emi_rollback_data.total_online_amt || 0) + parseFloat(Loan_added_data.total_online_amt || 0);
+    total_today_card_out_amt = parseFloat(Finance_added_data.total_card_amt || 0) + parseFloat(Finance_emi_rollback_data.total_card_amt || 0) + parseFloat(Loan_added_data.total_card_amt || 0);
+    total_today_disc_out_amt = parseFloat(Finance_added_data.total_disc_amt || 0) + parseFloat(Finance_emi_rollback_data.total_disc_amt || 0) + parseFloat(Loan_added_data.total_disc_amt || 0);
+    total_today_out_amt = parseFloat(Finance_added_data.total_amt || 0) + parseFloat(Finance_emi_rollback_data.total_amt || 0) + parseFloat(Loan_added_data.total_amt || 0);
 
     // Calculate TODAY TOTAL (in - out)
     total_today_cash_amt = total_today_cash_in_amt - total_today_cash_out_amt;
