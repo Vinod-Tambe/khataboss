@@ -1,55 +1,77 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import moment from 'moment';
 import $ from 'jquery';
 import 'daterangepicker';
 import 'daterangepicker/daterangepicker.css';
 import useFormNavigation from '../../hooks/useFormNavigation';
+import { getFirmsDropdown } from '../../api/firmApi';
+import { getAccountsDropdown } from '../../api/accountApi';
+import { addGirvi } from '../../api/girviApi';
+import { toast } from 'react-hot-toast';
 
 const AddLoan = () => {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [firms, setFirms] = useState([]);
+  const [accounts, setAccounts] = useState([]);
+  const { selectedFirmId, firms: reduxFirms } = useSelector((state) => state.firm);
+  const { selectedUser } = useSelector((state) => state.user);
 
-  const [formData, setFormData] = useState({
-    principalAmount: '',
-    loanStartDate: moment().format('YYYY-MM-DD'),
-    interestOption: 'monthly',
-    loanPacketNo: '',
-    loanLockerNo: '',
-    processingAmount: '',
-    chargeAmount: '',
-    interestRate: '',
-    payableAmount: '',
-    loanOtherInfo: '',
-    firstMonthInterest: false,
-    crAccount: '',
-    items: [],
-    payments: [],
-    paymentOtherInfo: '',
-  });
-
-  const [newItem, setNewItem] = useState({
-    metalType: 'GOLD',
-    itemName: '',
-    qty: '',
-    grossWeight: '',
-    gsType: 'GM',
-    netWeight: '',
-    ntType: 'GM',
-    purity: '100%',
-    fineWeight: '',
-    valuation: '',
+  const getEmptyItem = () => ({
+    st_metal_type: 'GOLD',
+    st_item_name: '',
+    st_quantity: '',
+    st_gs_weight: '',
+    st_gs_type: 'GM',
+    st_nt_weight: '',
+    st_nt_type: 'GM',
+    st_purity: '100%',
+    st_fine_weight: '',
+    st_valuation: '',
     itemImage: null,
     imageName: '',
   });
 
-  const [newPayment, setNewPayment] = useState({
-    accountType: 'cash',
-    bankAccountId: '',
-    bankAmount: '',
-    bankInfo: '',
+  const [formData, setFormData] = useState({
+    girv_type: 'secured',
+    girv_prin_amt: '',
+    girv_start_date: moment().format('YYYY-MM-DD'),
+    girv_roi_type: 'monthly',
+    girv_packet_no: '',
+    girv_locker_no: '',
+    girv_process_amt: '',
+    girv_charge_amt: '',
+    girv_roi: '',
+
+    girv_other_info: '',
+    girv_first_int: false,
+    girv_first_int_cr_acc_id: '',
+    girv_first_int_dr_acc_id: '',
+    items: [getEmptyItem()],
+
+    girv_cash_acc_id: '',
+    girv_cash_amt: '',
+    girv_cash_info: '',
+
+    girv_bank_acc_id: '',
+    girv_bank_amt: '',
+    girv_bank_info: '',
+
+    girv_online_acc_id: '',
+    girv_online_amt: '',
+    girv_online_info: '',
+
+    girv_card_acc_id: '',
+    girv_card_amt: '',
+    girv_card_info: '',
+
+    girv_pay_info: '',
   });
 
-  const loanStartDateRef = useRef(null);
+  const girv_start_dateRef = useRef(null);
 
   // Form Navigation
   const formRef = useRef(null);
@@ -58,8 +80,8 @@ const AddLoan = () => {
 
 
   useEffect(() => {
-    if (loanStartDateRef.current) {
-      $(loanStartDateRef.current).daterangepicker({
+    if (girv_start_dateRef.current) {
+      $(girv_start_dateRef.current).daterangepicker({
         singleDatePicker: true,
         showDropdowns: true,
         autoUpdateInput: true,
@@ -67,72 +89,104 @@ const AddLoan = () => {
           format: 'DD-MM-YYYY'
         }
       }, (start) => {
-        setFormData(prev => ({ ...prev, loanStartDate: start.format('YYYY-MM-DD') }));
+        setFormData(prev => ({ ...prev, girv_start_date: start.format('YYYY-MM-DD') }));
       });
     }
+
+    const fetchFirms = async () => {
+      try {
+        const firmRes = await getFirmsDropdown();
+        const firmData = firmRes.data || firmRes || [];
+        setFirms(Array.isArray(firmData) ? firmData : []);
+      } catch (error) {
+        console.error("Error fetching firms:", error);
+      }
+    };
+
+    fetchFirms();
 
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const totalSteps = 3;
+  // Sync firm ID with Header selection
+  useEffect(() => {
+    if (selectedFirmId === 'all') {
+      if (reduxFirms.length > 0 && !formData.girv_firm_id) {
+        setFormData(prev => ({ ...prev, girv_firm_id: reduxFirms[0].firm_id }));
+      }
+    } else if (selectedFirmId && selectedFirmId !== formData.girv_firm_id) {
+      setFormData(prev => ({ ...prev, girv_firm_id: selectedFirmId }));
+    }
+  }, [selectedFirmId, reduxFirms, formData.girv_firm_id]);
+
+  // Fetch accounts when firm changes
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      if (!formData.girv_firm_id) return;
+      try {
+        const accRes = await getAccountsDropdown(formData.girv_firm_id);
+        const accData = accRes.data || accRes || [];
+        setAccounts(Array.isArray(accData) ? accData : []);
+      } catch (error) {
+        console.error("Error fetching accounts:", error);
+      }
+    };
+
+    fetchAccounts();
+  }, [formData.girv_firm_id]);
+
+  // Auto-select default accounts when accounts list is loaded
+  useEffect(() => {
+    if (accounts.length > 0) {
+      setFormData(prev => {
+        const updates = {};
+        if (!prev.girv_cash_acc_id) {
+          const cashAcc = accounts.find(a => a.acc_name === "Cash In Hand");
+          if (cashAcc) updates.girv_cash_acc_id = cashAcc.acc_id;
+        }
+        if (!prev.girv_bank_acc_id) {
+          const bankAcc = accounts.find(a => a.acc_name === "Bank Account");
+          if (bankAcc) updates.girv_bank_acc_id = bankAcc.acc_id;
+        }
+        if (!prev.girv_online_acc_id) {
+          const onlineAcc = accounts.find(a => a.acc_name === "Online Account");
+          if (onlineAcc) updates.girv_online_acc_id = onlineAcc.acc_id;
+        }
+        if (!prev.girv_card_acc_id) {
+          const cardAcc = accounts.find(a => a.acc_name === "Card Account");
+          if (cardAcc) updates.girv_card_acc_id = cardAcc.acc_id;
+        }
+        if (!prev.girv_first_int_dr_acc_id) {
+          const cashAcc = accounts.find(a => a.acc_name === "Cash In Hand");
+          if (cashAcc) updates.girv_first_int_dr_acc_id = cashAcc.acc_id;
+        }
+        return Object.keys(updates).length > 0 ? { ...prev, ...updates } : prev;
+      });
+    }
+  }, [accounts]);
+
+  const totalSteps = formData.girv_type === 'secured' ? 3 : 2;
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-  };
-
-  const handleNewItemChange = (e) => {
-    const { name, value, files } = e.target;
-    if (files && files[0]) {
-      setNewItem((prev) => ({
-        ...prev,
-        itemImage: files[0],
-        imageName: files[0].name,
-      }));
-    } else {
-      setNewItem((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
-  };
-
-  const addItem = () => {
-    if (
-      !newItem.itemName.trim() ||
-      !newItem.qty.trim() ||
-      !newItem.grossWeight.trim() ||
-      !newItem.netWeight.trim() ||
-      !newItem.valuation.trim()
-    ) {
-      alert('Please fill required fields: Item Name, Qty, GS WT, NT WT, Valuation');
-      return;
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      items: [...prev.items, { ...newItem }],
-    }));
-
-    setNewItem({
-      metalType: 'GOLD',
-      itemName: '',
-      qty: '',
-      grossWeight: '',
-      gsType: 'GM',
-      netWeight: '',
-      ntType: 'GM',
-      purity: '100%',
-      fineWeight: '',
-      valuation: '',
-      itemImage: null,
-      imageName: '',
+    setFormData((prev) => {
+      const updates = { [name]: type === 'checkbox' ? checked : value };
+      
+      if (name === 'girv_prin_amt') {
+        updates.girv_cash_amt = value;
+      }
+      
+      return { ...prev, ...updates };
     });
+  };
+
+  const addNewRow = () => {
+    setFormData((prev) => ({
+      ...prev,
+      items: [...prev.items, getEmptyItem()],
+    }));
   };
 
   const updateItem = (index, field, value) => {
@@ -159,29 +213,23 @@ const AddLoan = () => {
     }));
   };
 
-  const handlePaymentChange = (e) => {
-    const { name, value } = e.target;
-    setNewPayment((prev) => ({ ...prev, [name]: value }));
-  };
-
-
-
   const handleNext = () => {
     if (currentStep === 1) {
-      if (!formData.principalAmount || !formData.loanStartDate || !formData.interestOption || !formData.interestRate) {
-        alert('Please fill all required fields in Loan Information');
+      if (!formData.girv_prin_amt || !formData.girv_start_date || !formData.girv_roi_type || !formData.girv_roi) {
+        toast.error('Please fill all required fields in Loan Information');
         return;
       }
     }
-    if (currentStep === 2) {
-      if (formData.items.length === 0) {
-        alert('Please add at least one item');
-        return;
-      }
-    }
-    if (currentStep === 3) {
-      if (formData.payments.length === 0) {
-        alert('Please add at least one payment');
+    if (formData.girv_type === 'secured' && currentStep === 2) {
+      const invalidItem = formData.items.find(item => 
+        !item.st_item_name.trim() || 
+        !item.st_quantity.trim() || 
+        !item.st_gs_weight.trim() || 
+        !item.st_nt_weight.trim() || 
+        !item.st_valuation.trim()
+      );
+      if (invalidItem) {
+        toast.error('Please fill required fields for all items (Item Name, Qty, Gross Wt, Net Wt, Valuation)');
         return;
       }
     }
@@ -192,10 +240,58 @@ const AddLoan = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form Data:', formData);
-    alert('Loan saved successfully! (check console)');
+
+    if (!selectedUser?.user_id) {
+      toast.error('Please select a user before adding a loan.');
+      return;
+    }
+
+    // Validation for Secured Loans
+    if (formData.girv_type === 'secured') {
+      const invalidItem = formData.items.find(item => 
+        !item.st_item_name.trim() || 
+        !item.st_quantity.trim() || 
+        !item.st_gs_weight.trim() || 
+        !item.st_nt_weight.trim() || 
+        !item.st_valuation.trim()
+      );
+      if (invalidItem) {
+        toast.error('Please fill required fields for all items (Item Name, Qty, Gross Wt, Net Wt, Valuation)');
+        return;
+      }
+    }
+
+    // Validation for Principal Amount matching Payment Accounts
+    const prinAmt = parseFloat(formData.girv_prin_amt) || 0;
+    const cashAmt = parseFloat(formData.girv_cash_amt) || 0;
+    const bankAmt = parseFloat(formData.girv_bank_amt) || 0;
+    const onlineAmt = parseFloat(formData.girv_online_amt) || 0;
+    const cardAmt = parseFloat(formData.girv_card_amt) || 0;
+    const totalPayment = cashAmt + bankAmt + onlineAmt + cardAmt;
+
+    if (prinAmt !== totalPayment) {
+      toast.error(`Payment sum (${totalPayment}) must equal Principal Amount (${prinAmt}). Please adjust the payment panel.`);
+      return;
+    }
+
+    try {
+      const payload = {
+        ...formData,
+        girv_user_id: selectedUser.user_id,
+        girv_first_int: formData.girv_first_int ? 'Y' : 'N'
+      };
+
+      const res = await addGirvi(payload);
+      toast.success('Loan saved successfully!');
+      console.log('API Response:', res);
+
+      navigate('/user/home/loan-info');
+    } catch (error) {
+      console.error('Error saving loan:', error);
+      toast.error(error?.error || 'Failed to save loan.');
+    }
   };
 
   const loanInformation = (
@@ -205,14 +301,16 @@ const AddLoan = () => {
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Principal Amount <span className="text-danger">*</span></label>
           <input
-            type="number"
-            name="principalAmount"
-            placeholder="0.00"
+            type="text"
+            name="girv_prin_amt"
+            placeholder="Enter principal amount"
             className="form-control border-dark"
-            value={formData.principalAmount}
-            onChange={handleChange}
-            onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
-            step="0.01"
+            value={formData.girv_prin_amt}
+            onChange={(e) => {
+              const val = e.target.value.replace(/[^0-9.]/g, '');
+              e.target.value = val;
+              handleChange(e);
+            }}
             required
           />
         </div>
@@ -220,90 +318,106 @@ const AddLoan = () => {
           <label className="form-label fw-medium">Loan Start Date <span className="text-danger">*</span></label>
           <input
             type="text"
-            name="loanStartDate"
-            ref={loanStartDateRef}
+            name="girv_start_date"
+            ref={girv_start_dateRef}
             className="form-control border-dark"
-            defaultValue={formData.loanStartDate ? moment(formData.loanStartDate).format('DD-MM-YYYY') : ''}
+            defaultValue={formData.girv_start_date ? moment(formData.girv_start_date).format('DD-MM-YYYY') : ''}
           />
         </div>
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Interest Option <span className="text-danger">*</span></label>
-          <select name="interestOption" className="form-select border-dark" value={formData.interestOption} onChange={handleChange} required>
+          <select name="girv_roi_type" className="form-select border-dark" value={formData.girv_roi_type} onChange={handleChange} required>
             <option value="" disabled>Select option</option>
             <option value="monthly">Monthly</option>
-            <option value="yearly">Yearly</option>
-            <option value="bullet">Bullet (at end)</option>
+            <option value="annual">Annual</option>
+          </select>
+        </div>
+        <div className="col-12 col-md-6 col-lg-3">
+          <label className="form-label fw-medium">Firm Name <span className="text-danger">*</span></label>
+          <select name="girv_firm_id" className="form-select border-dark" value={formData.girv_firm_id || ''} onChange={handleChange} required>
+            <option value="" disabled>Select firm</option>
+            {firms.map(firm => (
+              <option key={firm.firm_id} value={firm.firm_id}>
+                {firm.firm_name}
+              </option>
+            ))}
           </select>
         </div>
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Loan / Packet No</label>
-          <input type="text" name="loanPacketNo" placeholder="Loan or packet number" className="form-control border-dark" value={formData.loanPacketNo} onChange={handleChange} />
+          <input type="text" name="girv_packet_no" placeholder="Enter loan or packet no" className="form-control border-dark" value={formData.girv_packet_no} onChange={handleChange} />
         </div>
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Loan Locker No</label>
-          <input type="text" name="loanLockerNo" placeholder="Locker or reference number" className="form-control border-dark" value={formData.loanLockerNo} onChange={handleChange} />
+          <input type="text" name="girv_locker_no" placeholder="Enter locker no" className="form-control border-dark" value={formData.girv_locker_no} onChange={handleChange} />
         </div>
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Processing Amount</label>
           <input
-            type="number"
-            name="processingAmount"
-            placeholder="0.00"
+            type="text"
+            name="girv_process_amt"
+            placeholder="Enter processing amount"
             className="form-control border-dark"
-            value={formData.processingAmount}
-            onChange={handleChange}
-            onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
-            step="0.01"
+            value={formData.girv_process_amt}
+            onChange={(e) => {
+              const val = e.target.value.replace(/[^0-9.]/g, '');
+              e.target.value = val;
+              handleChange(e);
+            }}
           />
         </div>
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Charge Amount</label>
           <input
-            type="number"
-            name="chargeAmount"
-            placeholder="0.00"
+            type="text"
+            name="girv_charge_amt"
+            placeholder="Enter charge amount"
             className="form-control border-dark"
-            value={formData.chargeAmount}
-            onChange={handleChange}
-            onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
-            step="0.01"
+            value={formData.girv_charge_amt}
+            onChange={(e) => {
+              const val = e.target.value.replace(/[^0-9.]/g, '');
+              e.target.value = val;
+              handleChange(e);
+            }}
           />
         </div>
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Rate of Interest <span className="text-danger">*</span></label>
           <input
-            type="number"
-            name="interestRate"
-            placeholder="e.g. 12.5"
+            type="text"
+            name="girv_roi"
+            placeholder="Enter rate of interest"
             className="form-control border-dark"
-            value={formData.interestRate}
-            onChange={handleChange}
-            onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
-            step="0.01"
+            value={formData.girv_roi}
+            onChange={(e) => {
+              const val = e.target.value.replace(/[^0-9.]/g, '');
+              e.target.value = val;
+              handleChange(e);
+            }}
             required
           />
         </div>
         <div className="col-12 col-md-6 col-lg-3">
-          <label className="form-label fw-medium">Payable Amount</label>
-          <input
-            type="number"
-            name="payableAmount"
-            placeholder="0.00 (total incl. interest)"
-            className="form-control border-dark"
-            value={formData.payableAmount}
-            onChange={handleChange}
-            onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
-            step="0.01"
-          />
+
         </div>
+
         <div className="col-12 col-md-6 col-lg-3">
-          <label className="form-label fw-medium">CR Account</label>
-          <input type="text" name="crAccount" placeholder="Credit account name / number" className="form-control border-dark" value={formData.crAccount} onChange={handleChange} />
+          {formData.girv_first_int && (
+            <>
+              <label className="form-label fw-medium">Interest Payment Account (DR)</label>
+              <select name="girv_first_int_dr_acc_id" className="form-select border-dark" value={formData.girv_first_int_dr_acc_id || ''} onChange={handleChange} required>
+                <option value="" disabled>Select account</option>
+                {accounts.map(acc => (
+                  <option key={acc.acc_id} value={acc.acc_id}>{acc.acc_name}</option>
+                ))}
+              </select>
+            </>
+          )}
         </div>
-        <div className="col-12 col-md-6 col-lg-3 d-none d-md-block"></div>
+
         <div className="col-12 col-md-6 col-lg-3 d-flex align-items-center">
-          <div className="form-check">
-            <input type="checkbox" name="firstMonthInterest" className="form-check-input" id="firstMonthInt" checked={formData.firstMonthInterest} onChange={handleChange} />
+          <div className="form-check mt-4">
+            <input type="checkbox" name="girv_first_int" className="form-check-input" id="firstMonthInt" checked={formData.girv_first_int} onChange={handleChange} />
             <label className="form-check-label fw-medium" htmlFor="firstMonthInt">First Month Interest</label>
           </div>
         </div>
@@ -317,115 +431,128 @@ const AddLoan = () => {
       <div className="table-responsive mb-3">
         <table className="table table-bordered table-hover mb-0">
           <thead>
-            <tr className="table-light">
-              <th className="text-center fw-bold" style={{ width: '50px' }}>METAL</th>
-              <th className="text-center fw-bold" style={{ width: '150px' }}>ITEM NAME</th>
-              <th className="text-center fw-bold" style={{ width: '60px' }}>QTY</th>
-              <th className="text-center fw-bold" style={{ width: '70px' }}>GS WT</th>
-              <th className="text-center fw-bold" style={{ width: '65px' }}>G TYPE</th>
-              <th className="text-center fw-bold" style={{ width: '70px' }}>NT WT</th>
-              <th className="text-center fw-bold" style={{ width: '65px' }}>N TYPE</th>
-              <th className="text-center fw-bold" style={{ width: '70px' }}>TUNCH</th>
-              <th className="text-center fw-bold" style={{ width: '70px' }}>FN WT</th>
-              <th className="text-center fw-bold" style={{ width: '110px' }}>VALUATION</th>
-              <th className="text-center fw-bold" style={{ width: '60px' }}>IMAGE</th>
-              <th className="text-center fw-bold" style={{ width: '50px' }}>ACTION</th>
+            <tr className="table-light align-middle" style={{ fontSize: '0.85rem' }}>
+              <th className="text-center fw-bold px-1" style={{ width: '7%', minWidth: '50px' }}>METAL</th>
+              <th className="text-center fw-bold px-1" style={{ width: '20%', minWidth: '120px' }}>ITEM NAME</th>
+              <th className="text-center fw-bold px-1" style={{ width: '5%', minWidth: '65px' }}>QTY</th>
+              <th className="text-center fw-bold px-1" style={{ width: '13%', minWidth: '100px' }}>GROSS WT</th>
+              <th className="text-center fw-bold px-1" style={{ width: '13%', minWidth: '100px' }}>NET WT</th>
+              <th className="text-center fw-bold px-1" style={{ width: '7%', minWidth: '60px' }}>PURITY</th>
+              <th className="text-center fw-bold px-1" style={{ width: '8%', minWidth: '50px' }}>FINE WT</th>
+              <th className="text-center fw-bold px-1" style={{ width: '15%', minWidth: '100px' }}>VALUATION</th>
+              <th className="text-center fw-bold px-1" style={{ width: '6%', minWidth: '45px' }}>IMAGE</th>
+              <th className="text-center fw-bold px-1" style={{ width: '6%', minWidth: '45px' }}>ACTION</th>
             </tr>
           </thead>
           <tbody>
             {formData.items.map((item, index) => (
               <tr key={index}>
-                <td>
+                <td className="px-1 py-1">
                   <select
-                    className="form-control form-control-sm border border-secondary no-arrow"
-                    value={item.metalType}
-                    onChange={(e) => updateItem(index, 'metalType', e.target.value)}
+                    className="form-select form-select-sm px-1 border-secondary"
+                    value={item.st_metal_type}
+                    onChange={(e) => updateItem(index, 'st_metal_type', e.target.value)}
+                    style={{ fontSize: '0.85rem' }}
                   >
                     <option value="GOLD">GOLD</option>
                     <option value="SILVER">SILVER</option>
                   </select>
                 </td>
-                <td>
+                <td className="px-1 py-1">
                   <input
                     type="text"
-                    className="form-control form-control-sm border border-secondary"
-                    value={item.itemName}
-                    onChange={(e) => updateItem(index, 'itemName', e.target.value)}
+                    className="form-control form-control-sm px-1 border-secondary"
+                    value={item.st_item_name}
+                    onChange={(e) => updateItem(index, 'st_item_name', e.target.value)}
+                    placeholder="Item Name"
+                    style={{ fontSize: '0.85rem' }}
                   />
                 </td>
-                <td>
+                <td className="px-1 py-1">
                   <input
                     type="text"
-                    className="form-control form-control-sm border border-secondary"
-                    value={item.qty}
-                    onChange={(e) => updateItem(index, 'qty', e.target.value)}
+                    className="form-control form-control-sm px-1 text-center border-secondary"
+                    value={item.st_quantity}
+                    onChange={(e) => updateItem(index, 'st_quantity', e.target.value)}
+                    placeholder="Qty"
+                    style={{ fontSize: '0.85rem' }}
                   />
                 </td>
-                <td>
-                  <input
-                    type="text"
-                    className="form-control form-control-sm border border-secondary"
-                    value={item.grossWeight}
-                    onChange={(e) => updateItem(index, 'grossWeight', e.target.value)}
-                  />
+                <td className="px-1 py-1">
+                  <div className="input-group input-group-sm">
+                    <input
+                      type="text"
+                      className="form-control px-1 text-end border-secondary"
+                      value={item.st_gs_weight}
+                      onChange={(e) => updateItem(index, 'st_gs_weight', e.target.value)}
+                      placeholder="Gross Wt"
+                      style={{ fontSize: '0.85rem' }}
+                    />
+                    <select
+                      className="form-control px-0 text-center border-secondary no-arrow"
+                      style={{ maxWidth: '45px', fontSize: '0.85rem', appearance: 'none', WebkitAppearance: 'none', paddingRight: 0 }}
+                      value={item.st_gs_type}
+                      onChange={(e) => updateItem(index, 'st_gs_type', e.target.value)}
+                    >
+                      <option value="GM">GM</option>
+                      <option value="KG">KG</option>
+                    </select>
+                  </div>
                 </td>
-                <td>
+                <td className="px-1 py-1">
+                  <div className="input-group input-group-sm">
+                    <input
+                      type="text"
+                      className="form-control px-1 text-end border-secondary"
+                      value={item.st_nt_weight}
+                      onChange={(e) => updateItem(index, 'st_nt_weight', e.target.value)}
+                      placeholder="Net Wt"
+                      style={{ fontSize: '0.85rem' }}
+                    />
+                    <select
+                      className="form-control px-0 text-center border-secondary no-arrow"
+                      style={{ maxWidth: '45px', fontSize: '0.85rem', appearance: 'none', WebkitAppearance: 'none', paddingRight: 0 }}
+                      value={item.st_nt_type}
+                      onChange={(e) => updateItem(index, 'st_nt_type', e.target.value)}
+                    >
+                      <option value="GM">GM</option>
+                      <option value="KG">KG</option>
+                    </select>
+                  </div>
+                </td>
+                <td className="px-1 py-1">
                   <select
-                    className="form-control form-control-sm border border-secondary no-arrow"
-                    value={item.gsType}
-                    onChange={(e) => updateItem(index, 'gsType', e.target.value)}
-                  >
-                    <option value="GM">GM</option>
-                    <option value="KG">KG</option>
-                  </select>
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    className="form-control form-control-sm border border-secondary"
-                    value={item.netWeight}
-                    onChange={(e) => updateItem(index, 'netWeight', e.target.value)}
-                  />
-                </td>
-                <td>
-                  <select
-                    className="form-control form-control-sm border border-secondary no-arrow"
-                    value={item.ntType}
-                    onChange={(e) => updateItem(index, 'ntType', e.target.value)}
-                  >
-                    <option value="GM">GM</option>
-                    <option value="KG">KG</option>
-                  </select>
-                </td>
-                <td>
-                  <select
-                    className="form-control form-control-sm border border-secondary no-arrow"
-                    value={item.purity}
-                    onChange={(e) => updateItem(index, 'purity', e.target.value)}
+                    className="form-control form-control-sm px-1 text-center border-secondary no-arrow"
+                    value={item.st_purity}
+                    onChange={(e) => updateItem(index, 'st_purity', e.target.value)}
+                    style={{ fontSize: '0.85rem', appearance: 'none', WebkitAppearance: 'none', paddingRight: 0 }}
                   >
                     <option value="100%">100%</option>
                     <option value="92%">92%</option>
                     <option value="80%">80%</option>
                   </select>
                 </td>
-                <td>
+                <td className="px-1 py-1">
                   <input
                     type="text"
-                    className="form-control form-control-sm border border-secondary"
-                    value={item.fineWeight}
-                    onChange={(e) => updateItem(index, 'fineWeight', e.target.value)}
+                    className="form-control form-control-sm px-1 text-end border-secondary"
+                    value={item.st_fine_weight}
+                    onChange={(e) => updateItem(index, 'st_fine_weight', e.target.value)}
                     placeholder="FN WT"
+                    style={{ fontSize: '0.85rem' }}
                   />
                 </td>
-                <td>
+                <td className="px-1 py-1">
                   <input
                     type="text"
-                    className="form-control form-control-sm border border-secondary"
-                    value={item.valuation}
-                    onChange={(e) => updateItem(index, 'valuation', e.target.value)}
+                    className="form-control form-control-sm px-1 text-end border-secondary"
+                    value={item.st_valuation}
+                    onChange={(e) => updateItem(index, 'st_valuation', e.target.value)}
+                    placeholder="Valuation"
+                    style={{ fontSize: '0.85rem' }}
                   />
                 </td>
-                <td className="text-center position-relative">
+                <td className="text-center px-1 py-1 position-relative">
                   <input
                     type="file"
                     accept="image/*"
@@ -459,102 +586,38 @@ const AddLoan = () => {
                     <label
                       htmlFor={`itemImageInput-${index}`}
                       className="btn btn-sm btn-outline-info p-1 mb-0"
-                      style={{ cursor: 'pointer', minWidth: '60px' }}
+                      style={{ cursor: 'pointer', minWidth: '40px' }}
                     >
                       <i className="bi bi-upload"></i>
                     </label>
                   )}
                 </td>
-                <td className="text-center">
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-danger p-1"
-                    onClick={() => deleteItem(index)}
-                  >
-                    <i className="bi bi-trash"></i>
-                  </button>
+                <td className="text-center px-1 py-1">
+                  <div className="d-flex justify-content-center gap-1">
+                    {formData.items.length > 1 && (
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-danger p-1"
+                        onClick={() => deleteItem(index)}
+                        style={{ minWidth: '30px' }}
+                      >
+                        <i className="bi bi-trash"></i>
+                      </button>
+                    )}
+                    {index === formData.items.length - 1 && (
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-primary p-1"
+                        onClick={addNewRow}
+                        style={{ minWidth: '30px' }}
+                      >
+                        <i className="bi bi-plus"></i>
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
-
-            {/* New item row */}
-            <tr className="table-light">
-              <td>
-                <select name="metalType" className="form-control form-control-sm border border-secondary no-arrow" value={newItem.metalType} onChange={handleNewItemChange}>
-                  <option value="GOLD">GOLD</option>
-                  <option value="SILVER">SILVER</option>
-                </select>
-              </td>
-              <td>
-                <input type="text" name="itemName" className="form-control form-control-sm border border-secondary" placeholder="ITEM NAME" value={newItem.itemName} onChange={handleNewItemChange} />
-              </td>
-              <td>
-                <input type="text" name="qty" className="form-control form-control-sm border border-secondary" placeholder="QTY" value={newItem.qty} onChange={handleNewItemChange} />
-              </td>
-              <td>
-                <input type="text" name="grossWeight" className="form-control form-control-sm border border-secondary" placeholder="GS WT" value={newItem.grossWeight} onChange={handleNewItemChange} />
-              </td>
-              <td>
-                <select name="gsType" className="form-control form-control-sm border border-secondary no-arrow" value={newItem.gsType} onChange={handleNewItemChange}>
-                  <option value="GM">GM</option>
-                  <option value="KG">KG</option>
-                </select>
-              </td>
-              <td>
-                <input type="text" name="netWeight" className="form-control form-control-sm border border-secondary" placeholder="NT WT" value={newItem.netWeight} onChange={handleNewItemChange} />
-              </td>
-              <td>
-                <select name="ntType" className="form-control form-control-sm border border-secondary no-arrow" value={newItem.ntType} onChange={handleNewItemChange}>
-                  <option value="GM">GM</option>
-                  <option value="KG">KG</option>
-                </select>
-              </td>
-              <td>
-                <select name="purity" className="form-control form-control-sm border border-secondary no-arrow" value={newItem.purity} onChange={handleNewItemChange}>
-                  <option value="100%">100%</option>
-                  <option value="92%">92%</option>
-                  <option value="80%">80%</option>
-                </select>
-              </td>
-              <td>
-                <input type="text" name="fineWeight" className="form-control form-control-sm border border-secondary" placeholder="FN WT" value={newItem.fineWeight} onChange={handleNewItemChange} />
-              </td>
-              <td>
-                <input type="text" name="valuation" className="form-control form-control-sm border border-secondary" placeholder="VALUATION" value={newItem.valuation} onChange={handleNewItemChange} />
-              </td>
-              <td className="text-center">
-                <input
-                  id="newItemFileInput"
-                  type="file"
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                  onChange={handleNewItemChange}
-                />
-                {newItem.itemImage ? (
-                  <label htmlFor="newItemFileInput" style={{ cursor: 'pointer' }}>
-                    <img
-                      src={URL.createObjectURL(newItem.itemImage)}
-                      alt="Preview"
-                      style={{ maxWidth: '26px', maxHeight: '26px', objectFit: 'cover', cursor: 'pointer', border: '1px solid #ccc', borderRadius: '4px' }}
-                    />
-                  </label>
-                ) : (
-                  <label htmlFor="newItemFileInput" className="btn btn-sm btn-outline-info p-1 mb-0" style={{ cursor: 'pointer', minWidth: '60px' }}>
-                    <i className="bi bi-upload"></i>
-                  </label>
-                )}
-                {newItem.imageName && (
-                  <div className="small text-muted mt-1 text-truncate" title={newItem.imageName}>
-
-                  </div>
-                )}
-              </td>
-              <td className="text-center">
-                <button type="button" className="btn btn-sm btn-outline-success p-1" onClick={addItem}>
-                  <i className="bi bi-plus-square"></i>
-                </button>
-              </td>
-            </tr>
           </tbody>
         </table>
       </div>
@@ -563,97 +626,168 @@ const AddLoan = () => {
 
   const paymentDetails = (
     <>
-      <h5 className="text-muted">Payment Information</h5>
+      <h5 className="text-muted mt-3">Payment Information</h5>
+
+      {/* Cash Payment Row */}
       <div className="row g-3">
-        <div className="col-12 col-md-6 col-lg-4">
-          <label className="form-label fw-medium">Select Cash Account <span className="text-danger">*</span></label>
-          <select name="bankAccountId" className="form-select border-dark" value={newPayment.bankAccountId} onChange={handlePaymentChange} required>
-            <option value="" disabled>Select account</option>
-            <option value="acc1">HDFC - XXXX1234 (Vinod Patil - Savings)</option>
-            <option value="acc2">SBI - XXXX5678 (Main Account)</option>
-            <option value="acc3">ICICI - XXXX9012 (Business A/c)</option>
-            <option value="acc4">Axis - XXXX3456 (Joint A/c)</option>
-            <option value="new">+ Add New Account</option>
+        <div className="col-12 col-md-4 col-lg-4 mb-3">
+          <select
+            name="girv_cash_acc_id"
+            className="form-select border-dark"
+            value={formData.girv_cash_acc_id}
+            onChange={handleChange}
+          >
+            <option value="">Select Account</option>
+            {accounts.map(acc => (
+              <option key={acc.acc_id} value={acc.acc_id}>{acc.acc_name}</option>
+            ))}
           </select>
         </div>
-        <div className="col-12 col-md-6 col-lg-4">
-          <label className="form-label fw-medium">Amount</label>
-          <input type="text" name="bankAmount" placeholder="0.00" className="form-control border-dark" value={newPayment.bankAmount} onChange={handlePaymentChange} />
+        <div className="col-12 col-md-4 col-lg-4  mb-3">
+          <input
+            type="text"
+            name="girv_cash_info"
+            placeholder="Cash Information"
+            className="form-control border-dark"
+            value={formData.girv_cash_info}
+            onChange={handleChange}
+          />
         </div>
-        <div className="col-12 col-md-6 col-lg-4">
-          <label className="form-label fw-medium">Info / Transaction Details</label>
-          <input type="text" name="bankInfo" placeholder="Information" className="form-control border-dark" value={newPayment.bankInfo} onChange={handlePaymentChange} />
+        <div className="col-12 col-md-4 col-lg-4  mb-3">
+          <input
+            type="text"
+            inputMode="decimal"
+            name="girv_cash_amt"
+            placeholder="Cash Amount"
+            className="form-control border-dark"
+            value={formData.girv_cash_amt}
+            onChange={handleChange}
+          />
         </div>
       </div>
+
+      {/* Bank Payment Row */}
       <div className="row g-3">
-        <div className="col-12 col-md-6 col-lg-4">
-          <label className="form-label fw-medium">Select Bank Account <span className="text-danger">*</span></label>
-          <select name="bankAccountId" className="form-select border-dark" value={newPayment.bankAccountId} onChange={handlePaymentChange} required>
-            <option value="" disabled>Select account</option>
-            <option value="acc1">HDFC - XXXX1234 (Vinod Patil - Savings)</option>
-            <option value="acc2">SBI - XXXX5678 (Main Account)</option>
-            <option value="acc3">ICICI - XXXX9012 (Business A/c)</option>
-            <option value="acc4">Axis - XXXX3456 (Joint A/c)</option>
-            <option value="new">+ Add New Account</option>
+        <div className="col-12 col-md-4 col-lg-4  mb-3">
+          <select
+            name="girv_bank_acc_id"
+            className="form-select border-dark"
+            value={formData.girv_bank_acc_id}
+            onChange={handleChange}
+          >
+            <option value="">Select Account</option>
+            {accounts.map(acc => (
+              <option key={acc.acc_id} value={acc.acc_id}>{acc.acc_name}</option>
+            ))}
           </select>
         </div>
-        <div className="col-12 col-md-6 col-lg-4">
-          <label className="form-label fw-medium">Amount</label>
-          <input type="text" name="bankAmount" placeholder="0.00" className="form-control border-dark" value={newPayment.bankAmount} onChange={handlePaymentChange} />
+        <div className="col-12 col-md-4 col-lg-4  mb-3">
+          <input
+            type="text"
+            name="girv_bank_info"
+            placeholder="Bank Information"
+            className="form-control border-dark"
+            value={formData.girv_bank_info}
+            onChange={handleChange}
+          />
         </div>
-        <div className="col-12 col-md-6 col-lg-4">
-          <label className="form-label fw-medium">Info / Transaction Details</label>
-          <input type="text" name="bankInfo" placeholder="Information" className="form-control border-dark" value={newPayment.bankInfo} onChange={handlePaymentChange} />
+        <div className="col-12 col-md-4 col-lg-4  mb-3">
+          <input
+            type="text"
+            inputMode="decimal"
+            name="girv_bank_amt"
+            placeholder="Bank Amount"
+            className="form-control border-dark"
+            value={formData.girv_bank_amt}
+            onChange={handleChange}
+          />
         </div>
       </div>
+
+      {/* Online Payment Row */}
       <div className="row g-3">
-        <div className="col-12 col-md-6 col-lg-4">
-          <label className="form-label fw-medium">Select Cash Account <span className="text-danger">*</span></label>
-          <select name="bankAccountId" className="form-select border-dark" value={newPayment.bankAccountId} onChange={handlePaymentChange} required>
-            <option value="" disabled>Select account</option>
-            <option value="acc1">HDFC - XXXX1234 (Vinod Patil - Savings)</option>
-            <option value="acc2">SBI - XXXX5678 (Main Account)</option>
-            <option value="acc3">ICICI - XXXX9012 (Business A/c)</option>
-            <option value="acc4">Axis - XXXX3456 (Joint A/c)</option>
-            <option value="new">+ Add New Account</option>
+        <div className="col-12 col-md-4 col-lg-4  mb-3">
+          <select
+            name="girv_online_acc_id"
+            className="form-select border-dark"
+            value={formData.girv_online_acc_id}
+            onChange={handleChange}
+          >
+            <option value="">Select Account</option>
+            {accounts.map(acc => (
+              <option key={acc.acc_id} value={acc.acc_id}>{acc.acc_name}</option>
+            ))}
           </select>
         </div>
-        <div className="col-12 col-md-6 col-lg-4">
-          <label className="form-label fw-medium">Amount</label>
-          <input type="text" name="bankAmount" placeholder="0.00" className="form-control border-dark" value={newPayment.bankAmount} onChange={handlePaymentChange} />
+        <div className="col-12 col-md-4 col-lg-4  mb-3">
+          <input
+            type="text"
+            name="girv_online_info"
+            placeholder="Online Information"
+            className="form-control border-dark"
+            value={formData.girv_online_info}
+            onChange={handleChange}
+          />
         </div>
-        <div className="col-12 col-md-6 col-lg-4">
-          <label className="form-label fw-medium">Info / Transaction Details</label>
-          <input type="text" name="bankInfo" placeholder="Information" className="form-control border-dark" value={newPayment.bankInfo} onChange={handlePaymentChange} />
+        <div className="col-12 col-md-4 col-lg-4 mb-3">
+          <input
+            type="text"
+            inputMode="decimal"
+            name="girv_online_amt"
+            placeholder="Online Amount"
+            className="form-control border-dark"
+            value={formData.girv_online_amt}
+            onChange={handleChange}
+          />
         </div>
       </div>
+
+      {/* Card Payment Row */}
       <div className="row g-3">
-        <div className="col-12 col-md-6 col-lg-4">
-          <label className="form-label fw-medium">Select Cash Account <span className="text-danger">*</span></label>
-          <select name="bankAccountId" className="form-select border-dark" value={newPayment.bankAccountId} onChange={handlePaymentChange} required>
-            <option value="" disabled>Select account</option>
-            <option value="acc1">HDFC - XXXX1234 (Vinod Patil - Savings)</option>
-            <option value="acc2">SBI - XXXX5678 (Main Account)</option>
-            <option value="acc3">ICICI - XXXX9012 (Business A/c)</option>
-            <option value="acc4">Axis - XXXX3456 (Joint A/c)</option>
-            <option value="new">+ Add New Account</option>
+        <div className="col-12 col-md-4 col-lg-4  mb-3">
+          <select
+            name="girv_card_acc_id"
+            className="form-select border-dark"
+            value={formData.girv_card_acc_id}
+            onChange={handleChange}
+          >
+            <option value="">Select Account</option>
+            {accounts.map(acc => (
+              <option key={acc.acc_id} value={acc.acc_id}>{acc.acc_name}</option>
+            ))}
           </select>
         </div>
-        <div className="col-12 col-md-6 col-lg-4">
-          <label className="form-label fw-medium">Amount</label>
-          <input type="text" name="bankAmount" placeholder="0.00" className="form-control border-dark" value={newPayment.bankAmount} onChange={handlePaymentChange} />
+        <div className="col-12 col-md-4 col-lg-4  mb-3">
+          <input
+            type="text"
+            name="girv_card_info"
+            placeholder="Card Information"
+            className="form-control border-dark"
+            value={formData.girv_card_info}
+            onChange={handleChange}
+          />
         </div>
-        <div className="col-12 col-md-6 col-lg-4">
-          <label className="form-label fw-medium">Info / Transaction Details</label>
-          <input type="text" name="bankInfo" placeholder="Information" className="form-control border-dark" value={newPayment.bankInfo} onChange={handlePaymentChange} />
+        <div className="col-12 col-md-4 col-lg-4  mb-3">
+          <input
+            type="text"
+            inputMode="decimal"
+            name="girv_card_amt"
+            placeholder="Card Amount"
+            className="form-control border-dark"
+            value={formData.girv_card_amt}
+            onChange={handleChange}
+          />
         </div>
+      </div>
+
+      <div className="row g-3">
         <div className="col-12 col-md-6 col-lg-6 mt-3">
           <label className="form-label fw-medium">Payment Other Info / Remarks</label>
-          <textarea name="paymentOtherInfo" rows={1} placeholder="Combined mode notes, reference numbers, special instructions, cheque no if any..." className="form-control border-dark" value={formData.paymentOtherInfo} onChange={handleChange} />
+          <textarea name="girv_pay_info" rows={2} placeholder="Enter remarks, reference numbers, etc." className="form-control border-dark" value={formData.girv_pay_info} onChange={handleChange} />
         </div>
-        <div className="col-12 col-md-6 col-lg-6">
+        <div className="col-12 col-md-6 col-lg-6 mt-3">
           <label className="form-label fw-medium">Other Information</label>
-          <textarea name="loanOtherInfo" rows={1} placeholder="Extra notes, remarks, conditions..." className="form-control border-dark" value={formData.loanOtherInfo} onChange={handleChange} />
+          <textarea name="girv_other_info" rows={2} placeholder="Enter any extra notes or conditions..." className="form-control border-dark" value={formData.girv_other_info} onChange={handleChange} />
         </div>
       </div>
     </>
@@ -680,24 +814,44 @@ const AddLoan = () => {
 
   return (
     <div className="card p-0 border-0 border-md-1 border-secondary">
-      <h4 className="card-title text-center fw-bold pb-md-0">Add New Loan</h4>
+      <div className="position-relative mb-3 pb-md-0 mt-2">
+        <div className="position-absolute top-0 end-0 d-flex align-items-center h-100 z-1">
+          <div className="btn-group" role="group">
+            <button
+              type="button"
+              className={`btn btn-sm ${formData.girv_type === 'secured' ? 'btn-primary' : 'btn-outline-primary'}`}
+              onClick={() => setFormData(prev => ({ ...prev, girv_type: 'secured' }))}
+            >
+              Secured
+            </button>
+            <button
+              type="button"
+              className={`btn btn-sm ${formData.girv_type === 'unsecured' ? 'btn-primary' : 'btn-outline-primary'}`}
+              onClick={() => setFormData(prev => ({ ...prev, girv_type: 'unsecured' }))}
+            >
+              Unsecured
+            </button>
+          </div>
+        </div>
+        <h4 className="card-title text-center fw-bold m-0 py-1">Add New Loan</h4>
+      </div>
 
       <form ref={formRef} noValidate onSubmit={handleSubmit}>
         {isMobile ? (
           <>
             {progressBar}
             {currentStep === 1 && loanInformation}
-            {currentStep === 2 && itemInformation}
-            {currentStep === 3 && paymentDetails}
+            {currentStep === 2 && (formData.girv_type === 'secured' ? itemInformation : paymentDetails)}
+            {currentStep === 3 && formData.girv_type === 'secured' && paymentDetails}
             {navigationButtons}
           </>
         ) : (
           <>
             {loanInformation}
-            {itemInformation}
+            {formData.girv_type === 'secured' && itemInformation}
             {paymentDetails}
             <div className="d-grid d-md-block text-center mt-5">
-              <button type="submit" className="btn btn-primary btn-lg px-5">Save Loan</button>
+              <button type="submit" className="btn btn-primary btn-lg px-5">Add New Loan</button>
             </div>
           </>
         )}
