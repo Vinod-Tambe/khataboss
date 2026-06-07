@@ -6,13 +6,20 @@ import "daterangepicker/daterangepicker.css";
 import DayBookTable from "./DayBookTable";
 import DayBookSummary from "./DayBookSummary";
 import { getDaybookEntries } from "../../api/daybookApi";
+import { useSelector } from "react-redux";
 import { getFirmsDropdown } from "../../api/firmApi";
 import { showToast } from "../../components/common/ToastAlert";
 
 const Daybook = () => {
   const dateRef = useRef(null);
+  const { selectedFirmId } = useSelector((state) => state.firm);
   const [firms, setFirms] = useState([]);
-  const [selectedFirm, setSelectedFirm] = useState("");
+  const [selectedFirm, setSelectedFirm] = useState(selectedFirmId === 'all' ? "" : selectedFirmId);
+
+  // Sync with global firm selection
+  useEffect(() => {
+    setSelectedFirm(selectedFirmId === 'all' ? "" : selectedFirmId);
+  }, [selectedFirmId]);
 
   // Calculate FY dates for initialization
   const { fyStart, fyEnd } = useMemo(() => {
@@ -210,24 +217,38 @@ const Daybook = () => {
         </div>
       ) : (
         <>
-          <DayBookTable
-            title="FINANCE ADDED"
-            colorClass="bg-green"
-            amtColor="text-danger"
-            data={getSectionData("FINANCE ADDED").data}
-          />
-          <DayBookTable
-            title="FINANCE EMI DEPOSIT"
-            colorClass="bg-red"
-            amtColor="text-success"
-            data={getSectionData("FINANCE EMI DEPOSIT").data}
-          />
-          <DayBookTable
-            title="FINANCE EMI ROLLBACK"
-            colorClass="bg-cust-info"
-            amtColor="text-danger"
-            data={getSectionData("FINANCE EMI ROLLBACK").data}
-          />
+          {getSectionData("FINANCE ADDED").data.length > 0 && (
+            <DayBookTable
+              title="FINANCE ADDED"
+              colorClass="bg-green"
+              amtColor="text-danger"
+              data={getSectionData("FINANCE ADDED").data}
+            />
+          )}
+          {getSectionData("LOAN ADDED").data.length > 0 && (
+            <DayBookTable
+              title="LOAN ADDED"
+              colorClass="bg-purple"
+              amtColor="text-danger"
+              data={getSectionData("LOAN ADDED").data}
+            />
+          )}
+          {getSectionData("FINANCE EMI DEPOSIT").data.length > 0 && (
+            <DayBookTable
+              title="FINANCE EMI DEPOSIT"
+              colorClass="bg-red"
+              amtColor="text-success"
+              data={getSectionData("FINANCE EMI DEPOSIT").data}
+            />
+          )}
+          {getSectionData("FINANCE EMI ROLLBACK").data.length > 0 && (
+            <DayBookTable
+              title="FINANCE EMI ROLLBACK"
+              colorClass="bg-cust-info"
+              amtColor="text-danger"
+              data={getSectionData("FINANCE EMI ROLLBACK").data}
+            />
+          )}
 
           <DayBookSummary
             DayBookData={keyedDaybookData}
