@@ -217,6 +217,12 @@ const Daybook = () => {
             data={getSectionData("FINANCE ADDED").data}
           />
           <DayBookTable
+            title="LOAN ADDED"
+            colorClass="bg-purple"
+            amtColor="text-danger"
+            data={getSectionData("LOAN ADDED").data}
+          />
+          <DayBookTable
             title="FINANCE EMI DEPOSIT"
             colorClass="bg-red"
             amtColor="text-success"
