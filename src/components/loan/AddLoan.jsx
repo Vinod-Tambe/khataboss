@@ -42,7 +42,9 @@ const AddLoan = () => {
     girv_roi_type: 'monthly',
     girv_packet_no: '',
     girv_locker_no: '',
+    girv_process_per: '',
     girv_process_amt: '',
+    girv_charge_per: '',
     girv_charge_amt: '',
     girv_roi: '',
 
@@ -173,11 +175,28 @@ const AddLoan = () => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => {
       const updates = { [name]: type === 'checkbox' ? checked : value };
-      
+
+      const newForm = { ...prev, ...updates };
+      const prinAmt = parseFloat(newForm.girv_prin_amt) || 0;
+
       if (name === 'girv_prin_amt') {
-        updates.girv_cash_amt = value;
+        if (newForm.girv_process_per) updates.girv_process_amt = (prinAmt * parseFloat(newForm.girv_process_per) / 100).toFixed(2);
+        if (newForm.girv_charge_per) updates.girv_charge_amt = (prinAmt * parseFloat(newForm.girv_charge_per) / 100).toFixed(2);
+        updates.girv_cash_amt = (prinAmt - (parseFloat(updates.girv_process_amt || newForm.girv_process_amt) || 0) - (parseFloat(updates.girv_charge_amt || newForm.girv_charge_amt) || 0)).toString();
+      } else if (name === 'girv_process_per') {
+        updates.girv_process_amt = (prinAmt * parseFloat(value || 0) / 100).toFixed(2);
+        updates.girv_cash_amt = (prinAmt - parseFloat(updates.girv_process_amt) - (parseFloat(newForm.girv_charge_amt) || 0)).toString();
+      } else if (name === 'girv_process_amt') {
+        if (prinAmt > 0) updates.girv_process_per = ((parseFloat(value || 0) / prinAmt) * 100).toFixed(2);
+        updates.girv_cash_amt = (prinAmt - parseFloat(value || 0) - (parseFloat(newForm.girv_charge_amt) || 0)).toString();
+      } else if (name === 'girv_charge_per') {
+        updates.girv_charge_amt = (prinAmt * parseFloat(value || 0) / 100).toFixed(2);
+        updates.girv_cash_amt = (prinAmt - (parseFloat(newForm.girv_process_amt) || 0) - parseFloat(updates.girv_charge_amt)).toString();
+      } else if (name === 'girv_charge_amt') {
+        if (prinAmt > 0) updates.girv_charge_per = ((parseFloat(value || 0) / prinAmt) * 100).toFixed(2);
+        updates.girv_cash_amt = (prinAmt - (parseFloat(newForm.girv_process_amt) || 0) - parseFloat(value || 0)).toString();
       }
-      
+
       return { ...prev, ...updates };
     });
   };
@@ -221,11 +240,11 @@ const AddLoan = () => {
       }
     }
     if (formData.girv_type === 'secured' && currentStep === 2) {
-      const invalidItem = formData.items.find(item => 
-        !item.st_item_name.trim() || 
-        !item.st_quantity.trim() || 
-        !item.st_gs_weight.trim() || 
-        !item.st_nt_weight.trim() || 
+      const invalidItem = formData.items.find(item =>
+        !item.st_item_name.trim() ||
+        !item.st_quantity.trim() ||
+        !item.st_gs_weight.trim() ||
+        !item.st_nt_weight.trim() ||
         !item.st_valuation.trim()
       );
       if (invalidItem) {
@@ -250,11 +269,11 @@ const AddLoan = () => {
 
     // Validation for Secured Loans
     if (formData.girv_type === 'secured') {
-      const invalidItem = formData.items.find(item => 
-        !item.st_item_name.trim() || 
-        !item.st_quantity.trim() || 
-        !item.st_gs_weight.trim() || 
-        !item.st_nt_weight.trim() || 
+      const invalidItem = formData.items.find(item =>
+        !item.st_item_name.trim() ||
+        !item.st_quantity.trim() ||
+        !item.st_gs_weight.trim() ||
+        !item.st_nt_weight.trim() ||
         !item.st_valuation.trim()
       );
       if (invalidItem) {
@@ -265,14 +284,16 @@ const AddLoan = () => {
 
     // Validation for Principal Amount matching Payment Accounts
     const prinAmt = parseFloat(formData.girv_prin_amt) || 0;
+    const processAmt = parseFloat(formData.girv_process_amt) || 0;
+    const chargeAmt = parseFloat(formData.girv_charge_amt) || 0;
     const cashAmt = parseFloat(formData.girv_cash_amt) || 0;
     const bankAmt = parseFloat(formData.girv_bank_amt) || 0;
     const onlineAmt = parseFloat(formData.girv_online_amt) || 0;
     const cardAmt = parseFloat(formData.girv_card_amt) || 0;
     const totalPayment = cashAmt + bankAmt + onlineAmt + cardAmt;
 
-    if (prinAmt !== totalPayment) {
-      toast.error(`Payment sum (${totalPayment}) must equal Principal Amount (${prinAmt}). Please adjust the payment panel.`);
+    if (Math.abs(prinAmt - (totalPayment + processAmt + chargeAmt)) > 0.01) {
+      toast.error(`Payment sum (${totalPayment}) + Processing (${processAmt}) + Charge (${chargeAmt}) must equal Principal Amount (${prinAmt}). Please adjust the payment panel.`);
       return;
     }
 
@@ -333,55 +354,6 @@ const AddLoan = () => {
           </select>
         </div>
         <div className="col-12 col-md-6 col-lg-3">
-          <label className="form-label fw-medium">Firm Name <span className="text-danger">*</span></label>
-          <select name="girv_firm_id" className="form-select border-dark" value={formData.girv_firm_id || ''} onChange={handleChange} required>
-            <option value="" disabled>Select firm</option>
-            {firms.map(firm => (
-              <option key={firm.firm_id} value={firm.firm_id}>
-                {firm.firm_name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="col-12 col-md-6 col-lg-3">
-          <label className="form-label fw-medium">Loan / Packet No</label>
-          <input type="text" name="girv_packet_no" placeholder="Enter loan or packet no" className="form-control border-dark" value={formData.girv_packet_no} onChange={handleChange} />
-        </div>
-        <div className="col-12 col-md-6 col-lg-3">
-          <label className="form-label fw-medium">Loan Locker No</label>
-          <input type="text" name="girv_locker_no" placeholder="Enter locker no" className="form-control border-dark" value={formData.girv_locker_no} onChange={handleChange} />
-        </div>
-        <div className="col-12 col-md-6 col-lg-3">
-          <label className="form-label fw-medium">Processing Amount</label>
-          <input
-            type="text"
-            name="girv_process_amt"
-            placeholder="Enter processing amount"
-            className="form-control border-dark"
-            value={formData.girv_process_amt}
-            onChange={(e) => {
-              const val = e.target.value.replace(/[^0-9.]/g, '');
-              e.target.value = val;
-              handleChange(e);
-            }}
-          />
-        </div>
-        <div className="col-12 col-md-6 col-lg-3">
-          <label className="form-label fw-medium">Charge Amount</label>
-          <input
-            type="text"
-            name="girv_charge_amt"
-            placeholder="Enter charge amount"
-            className="form-control border-dark"
-            value={formData.girv_charge_amt}
-            onChange={(e) => {
-              const val = e.target.value.replace(/[^0-9.]/g, '');
-              e.target.value = val;
-              handleChange(e);
-            }}
-          />
-        </div>
-        <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Rate of Interest <span className="text-danger">*</span></label>
           <input
             type="text"
@@ -396,6 +368,89 @@ const AddLoan = () => {
             }}
             required
           />
+        </div>
+        <div className="col-12 col-md-6 col-lg-3">
+          <label className="form-label fw-medium">Loan / Packet No</label>
+          <input type="text" name="girv_packet_no" placeholder="Enter loan or packet no" className="form-control border-dark" value={formData.girv_packet_no} onChange={handleChange} />
+        </div>
+        <div className="col-12 col-md-6 col-lg-3">
+          <label className="form-label fw-medium">Loan Locker No</label>
+          <input type="text" name="girv_locker_no" placeholder="Enter locker no" className="form-control border-dark" value={formData.girv_locker_no} onChange={handleChange} />
+        </div>
+        <div className="col-12 col-md-6 col-lg-6 d-flex gap-3 align-items-end">
+          <div className="flex-grow-1">
+            <label className="form-label fw-medium">Processing Amount</label>
+            <div className="input-group border-dark">
+              <input
+                type="text"
+                name="girv_process_per"
+                placeholder='Percentage'
+                className="form-control border-dark"
+                value={formData.girv_process_per}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9.]/g, '');
+                  e.target.value = val;
+                  handleChange(e);
+                }}
+              />
+              <span className="input-group-text border-dark">%</span>
+              <input
+                type="text"
+                name="girv_process_amt"
+                placeholder='Amount'
+                className="form-control border-dark"
+                value={formData.girv_process_amt}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9.]/g, '');
+                  e.target.value = val;
+                  handleChange(e);
+                }}
+              />
+            </div>
+          </div>
+          <div className="flex-grow-1">
+            <label className="form-label fw-medium">Charge Amount</label>
+            <div className="input-group border-dark">
+              <input
+                type="text"
+                name="girv_charge_per"
+                placeholder='Percentage'
+                className="form-control border-dark"
+                value={formData.girv_charge_per}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9.]/g, '');
+                  e.target.value = val;
+                  handleChange(e);
+                }}
+              />
+              <span className="input-group-text border-dark">%</span>
+              <input
+                type="text"
+                name="girv_charge_amt"
+                placeholder='Amount'
+                className="form-control border-dark"
+                value={formData.girv_charge_amt}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9.]/g, '');
+                  e.target.value = val;
+                  handleChange(e);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+
+        <div className="col-12 col-md-6 col-lg-3">
+          <label className="form-label fw-medium">Firm Name <span className="text-danger">*</span></label>
+          <select name="girv_firm_id" className="form-select border-dark" value={formData.girv_firm_id || ''} onChange={handleChange} required>
+            <option value="" disabled>Select firm</option>
+            {firms.map(firm => (
+              <option key={firm.firm_id} value={firm.firm_id}>
+                {firm.firm_name}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="col-12 col-md-6 col-lg-3">
 
