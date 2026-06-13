@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import { useSelector } from 'react-redux';
 import BalanceSheetReport from './BalanceSheetReport'
+import BalanceSheetPrintPreview from './BalanceSheetPrintPreview'
 import moment from "moment";
 
 import { getFirmsDropdown } from '../../api/firmApi';
@@ -25,6 +26,7 @@ const BalanceSheet = () => {
     const [selectedFirm, setSelectedFirm] = useState(selectedFirmId === 'all' ? "" : selectedFirmId);
     const [balanceSheetData, setBalanceSheetData] = useState({ assets: [], liabilities: [] });
     const [loading, setLoading] = useState(false);
+    const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
     const [dateRange, setDateRange] = useState({
         startDate: fyStart.format("YYYY-MM-DD"),
         endDate: fyEnd.format("YYYY-MM-DD")
@@ -73,11 +75,10 @@ const BalanceSheet = () => {
         fetchBalanceSheet(filters);
     }, [dateRange, selectedFirm]);
 
-    const selectedFirmData = firms.find(f => f.firm_id === parseInt(selectedFirm));
-
-    const handlePrint = () => {
-        window.print();
-    };
+    const selectedFirmData = firms.find((f) => String(f.firm_id) === String(selectedFirm));
+    const firmDisplayName = selectedFirm
+        ? (selectedFirmData?.firm_name || 'Selected Firm')
+        : 'All Firms';
 
     return (
         <div className="card p-3 pt-1 shadow-sm">
@@ -153,11 +154,26 @@ const BalanceSheet = () => {
                     )}
                 </div>
             </div>
-            <div className="text-center mt-3 mb-2 d-print-none">
-                <button className="btn btn-outline-success" onClick={handlePrint}>
+            <div className="text-center mt-3 mb-2">
+                <button
+                    className="btn btn-outline-success"
+                    onClick={() => setIsPrintPreviewOpen(true)}
+                    disabled={loading}
+                >
                     Print <i className="bi bi-printer-fill"></i>
                 </button>
             </div>
+
+            <BalanceSheetPrintPreview
+                show={isPrintPreviewOpen}
+                onHide={() => setIsPrintPreviewOpen(false)}
+                balanceSheetData={balanceSheetData}
+                firmName={firmDisplayName}
+                firmAddress={selectedFirmData?.firm_address || ''}
+                periodStart={dateRange.startDate}
+                periodEnd={dateRange.endDate}
+                financialYear={selectedYear}
+            />
         </div>
     )
 }

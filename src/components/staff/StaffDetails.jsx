@@ -150,8 +150,8 @@ const StaffDetails = () => {
             border-color: #13a89e !important;
           }
           .form-switch .custom-switch {
-            width: 3em;
-            height: 1.5em;
+            width: 2.25em;
+            height: 1.15em;
             cursor: pointer;
           }
           .form-switch .custom-switch:checked {
@@ -205,34 +205,34 @@ const StaffDetails = () => {
                         </div>
 
                         <div className="col px-3">
-                            <div className="row mb-4">
-                                <div className="col-md-3">
-                                    <p className="text-muted mb-1 small fw-bold d-flex align-items-center">
+                            <div className="row mb-4 align-items-end">
+                                <div className="col-md-3 d-flex flex-column justify-content-end">
+                                    <p className="text-muted mb-2 small fw-bold d-flex align-items-center">
                                         <i className="bi bi-person-fill me-2 fs-6 text-secondary"></i>Full Name
                                     </p>
-                                    <h5 className="fw-bold mb-0" style={{ color: '#1f2937' }}>{userData.name}</h5>
+                                    <h5 className="fw-bold mb-0" style={{ color: '#1f2937', minHeight: '24px' }}>{userData.name}</h5>
                                 </div>
-                                <div className="col-md-3">
-                                    <p className="text-muted mb-1 small fw-bold d-flex align-items-center">
+                                <div className="col-md-3 d-flex flex-column justify-content-end">
+                                    <p className="text-muted mb-2 small fw-bold d-flex align-items-center">
                                         <i className="bi bi-telephone-fill me-2 fs-6 text-secondary"></i>Contact Number
                                     </p>
-                                    <h5 className="mb-0 fw-medium" style={{ color: '#1f2937' }}>{userData.phone.split(',')[0]}</h5>
+                                    <h5 className="mb-0 fw-medium" style={{ color: '#1f2937', minHeight: '24px' }}>{userData.phone.split(',')[0]}</h5>
                                 </div>
-                                <div className="col-md-4">
-                                    <p className="text-muted mb-1 small fw-bold d-flex align-items-center">
+                                <div className="col-md-4 d-flex flex-column justify-content-end">
+                                    <p className="text-muted mb-2 small fw-bold d-flex align-items-center">
                                         <i className="bi bi-envelope-fill me-2 fs-6 text-secondary"></i>Email Address
                                     </p>
-                                    <h5 className="mb-0 fw-medium" style={{ color: '#1f2937' }}>{userData.email}</h5>
+                                    <h5 className="mb-0 fw-medium text-break" style={{ color: '#1f2937', minHeight: '24px' }}>{userData.email}</h5>
                                 </div>
-                                <div className="col-md-2 d-flex flex-column align-items-end pe-4">
-                                    <p className="text-muted mb-1 small fw-bold text-center w-100">Status</p>
-                                    <div className="form-check form-switch w-100 d-flex justify-content-center m-0">
+                                <div className="col-md-2 d-flex flex-column justify-content-end align-items-end pe-4">
+                                    <p className="text-muted mb-2 small fw-bold text-center w-100 d-flex align-items-center justify-content-center" style={{ minHeight: '24px' }}>Status</p>
+                                    <div className="form-check form-switch w-100 d-flex justify-content-center m-0 p-0" style={{ minHeight: '24px' }}>
                                         <input
                                             className="form-check-input custom-switch m-0"
                                             type="checkbox"
                                             role="switch"
                                             checked={userData.status}
-                                            readOnly
+                                            onChange={(e) => setUserData({...userData, status: e.target.checked})}
                                         />
                                     </div>
                                 </div>
@@ -253,10 +253,9 @@ const StaffDetails = () => {
                     <div className="mt-5 pt-3">
                         <div className="d-flex align-items-center mb-4">
                             <h5 className="fw-bold mb-0 me-4 pb-1" style={{ color: '#374151', borderBottom: '3px solid #6b7280' }}>Permission</h5>
-                            <div className="form-check d-flex align-items-center gap-2 ms-2 mb-0">
+                            <div className="form-check form-switch d-flex align-items-center gap-2 ms-2 mb-0 p-0">
                                 <input
-                                    className="form-check-input custom-checkbox"
-                                    type="checkbox"
+                                    className="form-check-input custom-switch ms-0" type="checkbox" role="switch"
                                     id="fullPermission"
                                     checked={isFullPermissionSelected()}
                                     onChange={(e) => handleFullPermissionToggle(e.target.checked)}
@@ -272,36 +271,36 @@ const StaffDetails = () => {
                             <div className="col-md-3">
                                 <h6 className="fw-bold mb-3 small" style={{ color: '#374151' }}>Client access :</h6>
                                 <div className="d-flex flex-column gap-3 text-muted small fw-medium">
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="client-all" className="form-check-input custom-checkbox m-0" type="checkbox" checked={isSectionFullySelected('client')} onChange={(e) => handleSectionSelectAll('client', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="client-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('client')} onChange={(e) => handleSectionSelectAll('client', e.target.checked)} />
                                         <label htmlFor="client-all" className="permission-label m-0">Select all</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="client-view" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.client.view} onChange={(e) => handlePermissionChange('client', 'view', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="client-view" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.client.view} onChange={(e) => handlePermissionChange('client', 'view', e.target.checked)} />
                                         <label htmlFor="client-view" className="permission-label m-0">View Clients</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="client-create" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.client.create} onChange={(e) => handlePermissionChange('client', 'create', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="client-create" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.client.create} onChange={(e) => handlePermissionChange('client', 'create', e.target.checked)} />
                                         <label htmlFor="client-create" className="permission-label m-0">Create Clients</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="client-edit" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.client.edit} onChange={(e) => handlePermissionChange('client', 'edit', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="client-edit" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.client.edit} onChange={(e) => handlePermissionChange('client', 'edit', e.target.checked)} />
                                         <label htmlFor="client-edit" className="permission-label m-0">Edit/Update Clients</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="client-viewonly" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.client.viewOnly} onChange={(e) => handlePermissionChange('client', 'viewOnly', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="client-viewonly" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.client.viewOnly} onChange={(e) => handlePermissionChange('client', 'viewOnly', e.target.checked)} />
                                         <label htmlFor="client-viewonly" className="permission-label m-0">View Only Created Clients</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="client-delete" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.client.delete} onChange={(e) => handlePermissionChange('client', 'delete', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="client-delete" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.client.delete} onChange={(e) => handlePermissionChange('client', 'delete', e.target.checked)} />
                                         <label htmlFor="client-delete" className="permission-label m-0">Delete Client</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="client-viewcreds" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.client.viewCreds} onChange={(e) => handlePermissionChange('client', 'viewCreds', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="client-viewcreds" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.client.viewCreds} onChange={(e) => handlePermissionChange('client', 'viewCreds', e.target.checked)} />
                                         <label htmlFor="client-viewcreds" className="permission-label m-0">Can view credentials sections</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="client-viewagree" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.client.viewAgreements} onChange={(e) => handlePermissionChange('client', 'viewAgreements', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="client-viewagree" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.client.viewAgreements} onChange={(e) => handlePermissionChange('client', 'viewAgreements', e.target.checked)} />
                                         <label htmlFor="client-viewagree" className="permission-label m-0">Can view agreements, upfront fees, and monthly fees</label>
                                     </div>
                                 </div>
@@ -311,32 +310,32 @@ const StaffDetails = () => {
                             <div className="col-md-3">
                                 <h6 className="fw-bold mb-3 small" style={{ color: '#374151' }}>Lead access :</h6>
                                 <div className="d-flex flex-column gap-3 text-muted small fw-medium">
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="lead-all" className="form-check-input custom-checkbox m-0" type="checkbox" checked={isSectionFullySelected('lead')} onChange={(e) => handleSectionSelectAll('lead', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="lead-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('lead')} onChange={(e) => handleSectionSelectAll('lead', e.target.checked)} />
                                         <label htmlFor="lead-all" className="permission-label m-0">Select all</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="lead-view" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.lead.view} onChange={(e) => handlePermissionChange('lead', 'view', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="lead-view" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.lead.view} onChange={(e) => handlePermissionChange('lead', 'view', e.target.checked)} />
                                         <label htmlFor="lead-view" className="permission-label m-0">View Leads</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="lead-create" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.lead.create} onChange={(e) => handlePermissionChange('lead', 'create', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="lead-create" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.lead.create} onChange={(e) => handlePermissionChange('lead', 'create', e.target.checked)} />
                                         <label htmlFor="lead-create" className="permission-label m-0">Create Leads</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="lead-edit" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.lead.edit} onChange={(e) => handlePermissionChange('lead', 'edit', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="lead-edit" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.lead.edit} onChange={(e) => handlePermissionChange('lead', 'edit', e.target.checked)} />
                                         <label htmlFor="lead-edit" className="permission-label m-0">Edit/Update Leads</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="lead-delete" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.lead.delete} onChange={(e) => handlePermissionChange('lead', 'delete', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="lead-delete" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.lead.delete} onChange={(e) => handlePermissionChange('lead', 'delete', e.target.checked)} />
                                         <label htmlFor="lead-delete" className="permission-label m-0">Delete Leads</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="lead-allow" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.lead.allowTurn} onChange={(e) => handlePermissionChange('lead', 'allowTurn', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="lead-allow" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.lead.allowTurn} onChange={(e) => handlePermissionChange('lead', 'allowTurn', e.target.checked)} />
                                         <label htmlFor="lead-allow" className="permission-label m-0">Allow to turns Lead into Client</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="lead-viewonly" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.lead.viewOnly} onChange={(e) => handlePermissionChange('lead', 'viewOnly', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="lead-viewonly" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.lead.viewOnly} onChange={(e) => handlePermissionChange('lead', 'viewOnly', e.target.checked)} />
                                         <label htmlFor="lead-viewonly" className="permission-label m-0">View Only Created Leads</label>
                                     </div>
                                 </div>
@@ -346,28 +345,28 @@ const StaffDetails = () => {
                             <div className="col-md-3">
                                 <h6 className="fw-bold mb-3 small" style={{ color: '#374151' }}>Global Task access :</h6>
                                 <div className="d-flex flex-column gap-3 text-muted small fw-medium">
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="task-all" className="form-check-input custom-checkbox m-0" type="checkbox" checked={isSectionFullySelected('task')} onChange={(e) => handleSectionSelectAll('task', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="task-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('task')} onChange={(e) => handleSectionSelectAll('task', e.target.checked)} />
                                         <label htmlFor="task-all" className="permission-label m-0">Select all</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="task-view" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.task.view} onChange={(e) => handlePermissionChange('task', 'view', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="task-view" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.task.view} onChange={(e) => handlePermissionChange('task', 'view', e.target.checked)} />
                                         <label htmlFor="task-view" className="permission-label m-0">View Task</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="task-create" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.task.create} onChange={(e) => handlePermissionChange('task', 'create', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="task-create" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.task.create} onChange={(e) => handlePermissionChange('task', 'create', e.target.checked)} />
                                         <label htmlFor="task-create" className="permission-label m-0">Create Task</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="task-edit" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.task.edit} onChange={(e) => handlePermissionChange('task', 'edit', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="task-edit" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.task.edit} onChange={(e) => handlePermissionChange('task', 'edit', e.target.checked)} />
                                         <label htmlFor="task-edit" className="permission-label m-0">Edit/Update Task</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="task-delete" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.task.delete} onChange={(e) => handlePermissionChange('task', 'delete', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="task-delete" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.task.delete} onChange={(e) => handlePermissionChange('task', 'delete', e.target.checked)} />
                                         <label htmlFor="task-delete" className="permission-label m-0">Delete Task</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="task-viewonly" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.task.viewOnly} onChange={(e) => handlePermissionChange('task', 'viewOnly', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="task-viewonly" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.task.viewOnly} onChange={(e) => handlePermissionChange('task', 'viewOnly', e.target.checked)} />
                                         <label htmlFor="task-viewonly" className="permission-label m-0">View Only Created Task</label>
                                     </div>
                                 </div>
@@ -377,32 +376,32 @@ const StaffDetails = () => {
                             <div className="col-md-3">
                                 <h6 className="fw-bold mb-3 small" style={{ color: '#374151' }}>User access :</h6>
                                 <div className="d-flex flex-column gap-3 text-muted small fw-medium">
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="user-all" className="form-check-input custom-checkbox m-0" type="checkbox" checked={isSectionFullySelected('user')} onChange={(e) => handleSectionSelectAll('user', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="user-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('user')} onChange={(e) => handleSectionSelectAll('user', e.target.checked)} />
                                         <label htmlFor="user-all" className="permission-label m-0">Select all</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="user-view" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.user.view} onChange={(e) => handlePermissionChange('user', 'view', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="user-view" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.user.view} onChange={(e) => handlePermissionChange('user', 'view', e.target.checked)} />
                                         <label htmlFor="user-view" className="permission-label m-0">View Users</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="user-create" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.user.create} onChange={(e) => handlePermissionChange('user', 'create', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="user-create" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.user.create} onChange={(e) => handlePermissionChange('user', 'create', e.target.checked)} />
                                         <label htmlFor="user-create" className="permission-label m-0">Create User</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="user-edit" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.user.edit} onChange={(e) => handlePermissionChange('user', 'edit', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="user-edit" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.user.edit} onChange={(e) => handlePermissionChange('user', 'edit', e.target.checked)} />
                                         <label htmlFor="user-edit" className="permission-label m-0">Edit/Update User</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="user-delete" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.user.delete} onChange={(e) => handlePermissionChange('user', 'delete', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="user-delete" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.user.delete} onChange={(e) => handlePermissionChange('user', 'delete', e.target.checked)} />
                                         <label htmlFor="user-delete" className="permission-label m-0">Delete Users</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="user-allow" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.user.allowSet} onChange={(e) => handlePermissionChange('user', 'allowSet', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="user-allow" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.user.allowSet} onChange={(e) => handlePermissionChange('user', 'allowSet', e.target.checked)} />
                                         <label htmlFor="user-allow" className="permission-label m-0">Allow to Set Permissions</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="user-viewonly" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.user.viewOnly} onChange={(e) => handlePermissionChange('user', 'viewOnly', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="user-viewonly" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.user.viewOnly} onChange={(e) => handlePermissionChange('user', 'viewOnly', e.target.checked)} />
                                         <label htmlFor="user-viewonly" className="permission-label m-0">View only created users</label>
                                     </div>
                                 </div>
@@ -412,28 +411,28 @@ const StaffDetails = () => {
                             <div className="col-md-3">
                                 <h6 className="fw-bold mb-3 small" style={{ color: '#374151' }}>Calendar access :</h6>
                                 <div className="d-flex flex-column gap-3 text-muted small fw-medium">
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="cal-all" className="form-check-input custom-checkbox m-0" type="checkbox" checked={isSectionFullySelected('calendar')} onChange={(e) => handleSectionSelectAll('calendar', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="cal-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('calendar')} onChange={(e) => handleSectionSelectAll('calendar', e.target.checked)} />
                                         <label htmlFor="cal-all" className="permission-label m-0">Select all</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="cal-view" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.calendar.view} onChange={(e) => handlePermissionChange('calendar', 'view', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="cal-view" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.calendar.view} onChange={(e) => handlePermissionChange('calendar', 'view', e.target.checked)} />
                                         <label htmlFor="cal-view" className="permission-label m-0">View Events</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="cal-create" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.calendar.create} onChange={(e) => handlePermissionChange('calendar', 'create', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="cal-create" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.calendar.create} onChange={(e) => handlePermissionChange('calendar', 'create', e.target.checked)} />
                                         <label htmlFor="cal-create" className="permission-label m-0">Create Events</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="cal-edit" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.calendar.edit} onChange={(e) => handlePermissionChange('calendar', 'edit', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="cal-edit" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.calendar.edit} onChange={(e) => handlePermissionChange('calendar', 'edit', e.target.checked)} />
                                         <label htmlFor="cal-edit" className="permission-label m-0">Edit/Update Events</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="cal-delete" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.calendar.delete} onChange={(e) => handlePermissionChange('calendar', 'delete', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="cal-delete" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.calendar.delete} onChange={(e) => handlePermissionChange('calendar', 'delete', e.target.checked)} />
                                         <label htmlFor="cal-delete" className="permission-label m-0">Delete Events</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="cal-viewonly" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.calendar.viewOnly} onChange={(e) => handlePermissionChange('calendar', 'viewOnly', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="cal-viewonly" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.calendar.viewOnly} onChange={(e) => handlePermissionChange('calendar', 'viewOnly', e.target.checked)} />
                                         <label htmlFor="cal-viewonly" className="permission-label m-0">View Only Created Events</label>
                                     </div>
                                 </div>
@@ -443,24 +442,24 @@ const StaffDetails = () => {
                             <div className="col-md-3">
                                 <h6 className="fw-bold mb-3 small" style={{ color: '#374151' }}>Service access :</h6>
                                 <div className="d-flex flex-column gap-3 text-muted small fw-medium">
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="srv-all" className="form-check-input custom-checkbox m-0" type="checkbox" checked={isSectionFullySelected('service')} onChange={(e) => handleSectionSelectAll('service', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="srv-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('service')} onChange={(e) => handleSectionSelectAll('service', e.target.checked)} />
                                         <label htmlFor="srv-all" className="permission-label m-0">Select all</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="srv-view" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.service.view} onChange={(e) => handlePermissionChange('service', 'view', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="srv-view" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.service.view} onChange={(e) => handlePermissionChange('service', 'view', e.target.checked)} />
                                         <label htmlFor="srv-view" className="permission-label m-0">View Services</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="srv-create" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.service.create} onChange={(e) => handlePermissionChange('service', 'create', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="srv-create" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.service.create} onChange={(e) => handlePermissionChange('service', 'create', e.target.checked)} />
                                         <label htmlFor="srv-create" className="permission-label m-0">Create Services</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="srv-edit" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.service.edit} onChange={(e) => handlePermissionChange('service', 'edit', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="srv-edit" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.service.edit} onChange={(e) => handlePermissionChange('service', 'edit', e.target.checked)} />
                                         <label htmlFor="srv-edit" className="permission-label m-0">Edit/Update Services</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="srv-delete" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.service.delete} onChange={(e) => handlePermissionChange('service', 'delete', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="srv-delete" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.service.delete} onChange={(e) => handlePermissionChange('service', 'delete', e.target.checked)} />
                                         <label htmlFor="srv-delete" className="permission-label m-0">Delete Services</label>
                                     </div>
                                 </div>
@@ -470,24 +469,24 @@ const StaffDetails = () => {
                             <div className="col-md-3">
                                 <h6 className="fw-bold mb-3 small" style={{ color: '#374151' }}>Support Center access :</h6>
                                 <div className="d-flex flex-column gap-3 text-muted small fw-medium">
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="sc-all" className="form-check-input custom-checkbox m-0" type="checkbox" checked={isSectionFullySelected('supportCenter')} onChange={(e) => handleSectionSelectAll('supportCenter', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="sc-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('supportCenter')} onChange={(e) => handleSectionSelectAll('supportCenter', e.target.checked)} />
                                         <label htmlFor="sc-all" className="permission-label m-0">Select all</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="sc-view" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.supportCenter.view} onChange={(e) => handlePermissionChange('supportCenter', 'view', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="sc-view" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.supportCenter.view} onChange={(e) => handlePermissionChange('supportCenter', 'view', e.target.checked)} />
                                         <label htmlFor="sc-view" className="permission-label m-0">View Tickets</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="sc-create" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.supportCenter.create} onChange={(e) => handlePermissionChange('supportCenter', 'create', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="sc-create" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.supportCenter.create} onChange={(e) => handlePermissionChange('supportCenter', 'create', e.target.checked)} />
                                         <label htmlFor="sc-create" className="permission-label m-0">Create Tickets</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="sc-edit" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.supportCenter.edit} onChange={(e) => handlePermissionChange('supportCenter', 'edit', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="sc-edit" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.supportCenter.edit} onChange={(e) => handlePermissionChange('supportCenter', 'edit', e.target.checked)} />
                                         <label htmlFor="sc-edit" className="permission-label m-0">Edit/Update Tickets</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="sc-delete" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.supportCenter.delete} onChange={(e) => handlePermissionChange('supportCenter', 'delete', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="sc-delete" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.supportCenter.delete} onChange={(e) => handlePermissionChange('supportCenter', 'delete', e.target.checked)} />
                                         <label htmlFor="sc-delete" className="permission-label m-0">Delete Tickets</label>
                                     </div>
                                 </div>
@@ -497,24 +496,24 @@ const StaffDetails = () => {
                             <div className="col-md-3">
                                 <h6 className="fw-bold mb-3 small" style={{ color: '#374151' }}>Support Type access :</h6>
                                 <div className="d-flex flex-column gap-3 text-muted small fw-medium">
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="st-all" className="form-check-input custom-checkbox m-0" type="checkbox" checked={isSectionFullySelected('supportType')} onChange={(e) => handleSectionSelectAll('supportType', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="st-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('supportType')} onChange={(e) => handleSectionSelectAll('supportType', e.target.checked)} />
                                         <label htmlFor="st-all" className="permission-label m-0">Select all</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="st-view" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.supportType.view} onChange={(e) => handlePermissionChange('supportType', 'view', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="st-view" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.supportType.view} onChange={(e) => handlePermissionChange('supportType', 'view', e.target.checked)} />
                                         <label htmlFor="st-view" className="permission-label m-0">View Support Type</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="st-create" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.supportType.create} onChange={(e) => handlePermissionChange('supportType', 'create', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="st-create" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.supportType.create} onChange={(e) => handlePermissionChange('supportType', 'create', e.target.checked)} />
                                         <label htmlFor="st-create" className="permission-label m-0">Create Support Type</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="st-edit" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.supportType.edit} onChange={(e) => handlePermissionChange('supportType', 'edit', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="st-edit" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.supportType.edit} onChange={(e) => handlePermissionChange('supportType', 'edit', e.target.checked)} />
                                         <label htmlFor="st-edit" className="permission-label m-0">Edit/Update Support Type</label>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <input id="st-delete" className="form-check-input custom-checkbox m-0" type="checkbox" checked={permissions.supportType.delete} onChange={(e) => handlePermissionChange('supportType', 'delete', e.target.checked)} />
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="st-delete" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.supportType.delete} onChange={(e) => handlePermissionChange('supportType', 'delete', e.target.checked)} />
                                         <label htmlFor="st-delete" className="permission-label m-0">Delete Support Type</label>
                                     </div>
                                 </div>

@@ -107,6 +107,11 @@
 
 /* ========== Print Styles ========== */
 @media print {
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        box-sizing: border-box !important;
+    }
 
     .no-print,
     .sidebar,

@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react'
 import { useSelector } from 'react-redux';
 import TrialBalanceReport from './TrialBalanceReport'
+import TrialBalancePrintPreview from './TrialBalancePrintPreview'
 import $ from "jquery";
 import moment from "moment";
 import "daterangepicker";
@@ -15,6 +16,7 @@ const TrialBalance = () => {
   const [selectedFirm, setSelectedFirm] = useState(selectedFirmId === 'all' ? "" : selectedFirmId);
   const [trialBalanceData, setTrialBalanceData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
   // Calculate current financial year (April to March)
   const { fyStart, fyEnd } = useMemo(() => {
     const currentYear = moment().year();
@@ -120,6 +122,11 @@ const TrialBalance = () => {
     fetchTrialBalance(filters);
   }, [dateRange, selectedFirm]);
 
+  const selectedFirmData = firms.find((f) => String(f.firm_id) === String(selectedFirm));
+  const firmDisplayName = selectedFirm
+    ? (selectedFirmData?.firm_name || 'Selected Firm')
+    : 'All Firms';
+
   return (
     <div className="card p-3 pt-1 shadow-sm">
       <div className="row align-items-center mt-2">
@@ -178,10 +185,23 @@ const TrialBalance = () => {
         </div>
       </div>
       <div className="text-center mt-3 mb-2">
-        <button className="btn btn-outline-success">
+        <button
+          className="btn btn-outline-success"
+          onClick={() => setIsPrintPreviewOpen(true)}
+          disabled={loading}
+        >
           Print <i className="bi bi-printer-fill"></i>
         </button>
       </div>
+
+      <TrialBalancePrintPreview
+        show={isPrintPreviewOpen}
+        onHide={() => setIsPrintPreviewOpen(false)}
+        data={trialBalanceData}
+        firmName={firmDisplayName}
+        periodStart={dateRange.startDate}
+        periodEnd={dateRange.endDate}
+      />
     </div>
   )
 }
