@@ -1,0 +1,241 @@
+.db-preview-wrapper {
+  background: #f0f2f5;
+}
+
+.db-print-document {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 24px 28px;
+  max-width: 100%;
+  margin: 0 auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.db-print-header {
+  margin-bottom: 20px;
+  border-bottom: 2px solid #8b4513;
+  padding-bottom: 14px;
+}
+
+.db-print-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  font-size: 0.85rem;
+}
+
+.db-print-date-range,
+.db-print-firm {
+  border: 1px solid #9ca3af;
+  border-radius: 6px;
+  padding: 6px 14px;
+  background: #f9fafb;
+  font-weight: 600;
+  color: #374151;
+}
+
+.db-print-firm {
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.db-print-title-block {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.db-print-title {
+  color: #8b4513;
+  font-weight: 800;
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+
+.db-print-period {
+  color: #065658;
+  font-weight: 700;
+  font-size: 0.88rem;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+}
+
+.db-print-generated {
+  color: #6b7280;
+  font-size: 0.75rem;
+  margin-bottom: 0;
+}
+
+.db-print-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #d1d5db;
+}
+
+.db-print-legend {
+  display: flex;
+  gap: 20px;
+  font-size: 0.82rem;
+}
+
+.db-print-opening {
+  font-size: 0.88rem;
+  color: #1f2937;
+}
+
+.db-print-section {
+  margin-bottom: 18px;
+  border: 1px dashed #9ca3af;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.db-print-section-title {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  color: #1f2937;
+  font-weight: 800;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  margin: 0;
+  border-bottom: 1px solid #d1d5db;
+  letter-spacing: 0.4px;
+}
+
+.db-print-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.db-print-table thead tr {
+  background: rgb(253, 240, 247);
+}
+
+.db-print-table th {
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  color: #374151;
+}
+
+.db-print-table td {
+  padding: 6px 10px;
+  border: 1px solid #e5e7eb;
+  color: #374151;
+}
+
+.db-print-table .db-customer-name {
+  color: #8b4513;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.db-row-even {
+  background: #fff;
+}
+
+.db-row-odd {
+  background: #fafafa;
+}
+
+.db-section-total-row {
+  background: #eaf4f3 !important;
+}
+
+.db-section-total-row th {
+  padding: 8px 10px;
+  border: 1px solid #b8d4d0;
+  font-weight: 800;
+  font-size: 0.78rem;
+  color: #1e3a5f;
+}
+
+.db-print-summary {
+  margin-top: 20px;
+}
+
+.db-print-summary .table-wrapper {
+  border: 1px solid #9ca3af !important;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.db-print-summary table {
+  margin-bottom: 0 !important;
+  font-size: 0.78rem;
+}
+
+.db-print-summary thead th {
+  background: #f4edea !important;
+  font-size: 0.72rem;
+  padding: 8px 10px;
+}
+
+.db-print-summary tbody td,
+.db-print-summary tbody th {
+  padding: 7px 10px;
+}
+
+.db-print-summary .bg-final td,
+.db-print-summary .bg-final th {
+  background: #dbeafe !important;
+}
+
+@media print {
+  .db-print-body {
+    padding: 12px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+  }
+
+  .db-print-document {
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+  }
+
+  .db-print-table thead tr {
+    background: rgb(253, 240, 247) !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .db-row-odd {
+    background: #f5f5f5 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .db-section-total-row {
+    background: #eaf4f3 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .db-print-summary .bg-final td,
+  .db-print-summary .bg-final th {
+    background: #dbeafe !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .db-print-table th,
+  .db-print-table td,
+  .db-print-summary th,
+  .db-print-summary td {
+    border: 1px solid #000 !important;
+  }
+
+  .db-preview-actions {
+    display: none !important;
+  }
+}

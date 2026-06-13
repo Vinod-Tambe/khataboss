@@ -5,6 +5,7 @@ import "daterangepicker";
 import "daterangepicker/daterangepicker.css";
 import DayBookTable from "./DayBookTable";
 import DayBookSummary from "./DayBookSummary";
+import DayBookPrintPreview from "./DayBookPrintPreview";
 import { getDaybookEntries } from "../../api/daybookApi";
 import { useSelector } from "react-redux";
 import { getFirmsDropdown } from "../../api/firmApi";
@@ -40,6 +41,7 @@ const Daybook = () => {
   });
   const [daybookResponse, setDaybookResponse] = useState({ daybook_data: [], summary: {} });
   const [loading, setLoading] = useState(false);
+  const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
 
   // Fetch Firms for dropdown
   useEffect(() => {
@@ -148,6 +150,11 @@ const Daybook = () => {
     acc[item.title] = totals;
     return acc;
   }, {});
+
+  const selectedFirmData = firms.find((f) => String(f.firm_id) === String(selectedFirm));
+  const firmDisplayName = selectedFirm
+    ? (selectedFirmData?.firm_name || 'Selected Firm')
+    : 'All Firms';
 
   return (
     <div className="card p-3 pt-1 shadow-sm mb-4">
@@ -258,10 +265,25 @@ const Daybook = () => {
       )}
 
       <div className="text-center mt-3 mb-2">
-        <button className="btn btn-outline-success">
+        <button
+          className="btn btn-outline-success"
+          onClick={() => setIsPrintPreviewOpen(true)}
+          disabled={loading}
+        >
           Print <i className="bi bi-printer-fill"></i>
         </button>
       </div>
+
+      <DayBookPrintPreview
+        show={isPrintPreviewOpen}
+        onHide={() => setIsPrintPreviewOpen(false)}
+        daybookData={daybookResponse.daybook_data || []}
+        keyedDaybookData={keyedDaybookData}
+        summary={daybookResponse.summary || {}}
+        firmName={firmDisplayName}
+        periodStart={dateRange.startDate}
+        periodEnd={dateRange.endDate}
+      />
     </div>
   );
 };
