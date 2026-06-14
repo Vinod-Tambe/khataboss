@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom';
 
-const TrialBalanceReport = ({ data = [] }) => {
+const TrialBalanceReport = ({ data = [], isPrint = false }) => {
   const formatBalance = (val) => {
     if (val === 0) return "0.00";
     const absVal = Math.abs(val).toFixed(2);
@@ -34,9 +34,13 @@ const TrialBalanceReport = ({ data = [] }) => {
             data.map((item) => (
               <tr key={item.acc_id}>
                 <td className="sticky-col text-brown">
-                  <Link to={`/account/details/${item.acc_uuid}`} className="text-decoration-none text-brown fw-bold">
-                    {item.acc_name}
-                  </Link>
+                  {isPrint ? (
+                    <span className="text-brown fw-bold">{item.acc_name}</span>
+                  ) : (
+                    <Link to={`/account/details/${item.acc_uuid}`} className="text-decoration-none text-brown fw-bold">
+                      {item.acc_name}
+                    </Link>
+                  )}
                 </td>
                 <td className="text-end">{formatBalance(item.acc_open_balance)}</td>
                 <td className="text-end">{(item.total_dr_amt || 0).toFixed(2)}</td>
