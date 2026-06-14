@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { getUser } from "../../api/userApi";
+import React, { useState } from "react";
+import { useParams } from "react-router-dom";
+import { showToast } from "../common/ToastAlert";
 
 // Using the same mock data as StaffGrid for fallback support
 const mockUsers = [
@@ -18,55 +18,131 @@ const mockUsers = [
 
 const StaffDetails = () => {
     const { id } = useParams();
-    const navigate = useNavigate();
-    const [userData, setUserData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    // Resolve static staff details on load
+    const selectedMockUser = mockUsers.find((u) => u.id === parseInt(id)) || mockUsers[0];
+    const first = selectedMockUser ? selectedMockUser.name.split(" ")[0] : "Vinod";
+    const last = selectedMockUser ? (selectedMockUser.name.split(" ").slice(1).join(" ") || "") : "Tambe";
+    const email = selectedMockUser ? (selectedMockUser.email || first.toLowerCase() + "@example.com") : "vinod@example.com";
 
-    // Initializing permissions state based exactly on the image options
+    const [userData, setUserData] = useState({
+        firstName: first,
+        lastName: last,
+        fatherName: "Gokul Tambe",
+        motherName: "Lata Tambe",
+        mobileNo: selectedMockUser ? selectedMockUser.phone.split(',')[0].trim() : "9579082528",
+        phoneNo: selectedMockUser ? (selectedMockUser.phone.split(',')[1]?.trim() || "") : "",
+        emailId: email,
+        gender: "Male",
+        cast: "Maratha",
+        maritalStatus: "Married",
+        occupation: "Software Engineer",
+        dateOfBirth: "1990-01-01",
+        gstin: "27AAAAA1111A1Z1",
+        taxNo: first.toLowerCase() + "123",
+        panNo: "Admin@123",
+        adhaarNo: "Admin@123",
+        permanentAddress: selectedMockUser ? selectedMockUser.address : "Hadapsar, Pune, 411039",
+        currentAddress: selectedMockUser ? selectedMockUser.address : "Hadapsar, Pune, 411039",
+        village: "Hadapsar",
+        wardNumber: "12",
+        tehsil: "Haveli",
+        city: "Pune",
+        state: "Maharashtra",
+        country: "India",
+        pincode: "411039",
+        bankName: "State Bank of India",
+        bankAccNo: "30012345678",
+        ifscCode: "SBIN0001234",
+        otherInformation: "No extra info.",
+        aadhaarFront: "https://cdn-icons-png.flaticon.com/512/281/281764.png",
+        aadhaarBack: "https://cdn-icons-png.flaticon.com/512/281/281764.png",
+        panCard: "https://cdn-icons-png.flaticon.com/512/281/281764.png",
+        signature: "https://cdn-icons-png.flaticon.com/512/2921/2921226.png",
+        image: selectedMockUser ? selectedMockUser.image : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+        status: true
+    });
+
+    // Password and Login ID states
+    const [loginId, setLoginId] = useState(first.toLowerCase() + "123");
+    const [password, setPassword] = useState("Admin@123");
+    const [confirmPassword, setConfirmPassword] = useState("Admin@123");
+
+    // Scoped Details tab state
+    const [activeDetailTab, setActiveDetailTab] = useState("personal");
+
+    // Initializing permissions state based exactly on the user options
     const initialPermissions = {
-        client: { view: true, create: false, edit: true, viewOnly: true, delete: true, viewCreds: true, viewAgreements: true },
-        lead: { view: true, create: false, edit: true, delete: true, allowTurn: true, viewOnly: true },
-        task: { view: true, create: false, edit: true, delete: true, viewOnly: true },
-        user: { view: true, create: false, edit: true, delete: true, allowSet: true, viewOnly: true },
-        calendar: { view: true, create: false, edit: true, delete: true, viewOnly: true },
-        service: { view: true, create: false, edit: true, delete: true },
-        supportCenter: { view: true, create: false, edit: true, delete: true },
-        supportType: { view: true, create: false, edit: true, delete: true }
+        firm: { view: true, create: false, edit: true, delete: true },
+        account: { view: true, create: false, edit: true, delete: true },
+        staff: { view: true, create: false, edit: true, delete: true },
+        loan: {
+            view: true,
+            create: false,
+            edit: true,
+            delete: true,
+            form8: true,
+            deposit: true,
+            addPrincipal: false,
+            transfer: false,
+            release: true,
+            auction: false,
+            notice: true,
+            customize: true,
+            print: true,
+            loanLogs: true
+        },
+        finance: {
+            view: true,
+            create: false,
+            edit: true,
+            delete: true,
+            payment: true,
+            rollback: false,
+            history: true,
+            printReceipt: true
+        },
+        reports: { daybook: true, balanceSheet: true, logs: true, profitLoss: true }
     };
     const [permissions, setPermissions] = useState(initialPermissions);
 
-    useEffect(() => {
-        const fetchUserDetails = async () => {
-            setLoading(true);
-            setError(null);
-            if (id && id.includes("-")) {
-                try {
-                    const response = await getUser(id);
-                    setUserData({
-                        name: `${response.data.user_first_name} ${response.data.user_last_name}`,
-                        phone: response.data.user_mobile_no,
-                        email: response.data.user_email || "Not provided",
-                        address: `${response.data.user_city}, ${response.data.user_state}`,
-                        image: response.data.user_profile_img?.path ? `http://localhost:9000/${response.data.user_profile_img.path}` : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
-                        status: response.data.user_status === 'active'
-                    });
-                } catch (err) {
-                    setError(err.message || "Failed to fetch user details from API.");
-                }
-            } else {
-                const user = mockUsers.find((u) => u.id === parseInt(id)) || mockUsers[0];
-                if (user) {
-                    const email = user.email || user.name.split(" ")[0].toLowerCase() + "@example.com";
-                    setUserData({ ...user, name: user.name, email: email, phone: user.phone, address: user.address, status: true });
-                } else {
-                    setError("User not found.");
-                }
-            }
-            setLoading(false);
-        };
-        fetchUserDetails();
-    }, [id]);
+    const triggerAlert = (message, type = "success") => {
+        const toastType = type === "danger" ? "error" : type;
+        showToast(message, toastType);
+    };
+
+    const handleFieldChange = (e) => {
+        const { name, value } = e.target;
+        setUserData(prev => prev ? { ...prev, [name]: value } : null);
+    };
+
+    const handleSaveProfileDetails = () => {
+        if (!userData.firstName || !userData.lastName) {
+            triggerAlert("First Name and Last Name are required!", "danger");
+            return;
+        }
+        if (!userData.mobileNo) {
+            triggerAlert("Mobile Number is required!", "danger");
+            return;
+        }
+
+        // Simulating save details locally
+        triggerAlert("Staff profile details saved successfully ...");
+    };
+
+    const handlePasswordUpdateOnly = () => {
+        if (!password) {
+            triggerAlert("Password cannot be empty!", "danger");
+            return;
+        }
+        if (password !== confirmPassword) {
+            triggerAlert("Password and Confirm Password do not match!", "danger");
+            return;
+        }
+
+        // Simulating password save locally
+        setUserData(prev => prev ? { ...prev, panNo: password, adhaarNo: confirmPassword, taxNo: loginId } : null);
+        triggerAlert("Login ID and password updated successfully ...");
+    };
 
     const handleSectionSelectAll = (section, isChecked) => {
         setPermissions(prev => {
@@ -88,48 +164,35 @@ const StaffDetails = () => {
         }));
     };
 
-    const handleFullPermissionToggle = (isChecked) => {
-        const updated = {};
-        for (const section in permissions) {
-            updated[section] = {};
-            for (const key in permissions[section]) {
-                updated[section][key] = isChecked;
-            }
-        }
-        setPermissions(updated);
+    const checkFullPermissionSelected = (permsState) => {
+        return Object.values(permsState).every(section =>
+            Object.values(section).every(val => val === true)
+        );
     };
 
+    const isFullPermissionSelected = () => {
+        return checkFullPermissionSelected(permissions);
+    };
+
+    const handleFullPermissionToggle = () => {
+        setPermissions(prev => {
+            const nextValue = !checkFullPermissionSelected(prev);
+            const updated = {};
+            for (const section in prev) {
+                updated[section] = {};
+                for (const key in prev[section]) {
+                    updated[section][key] = nextValue;
+                }
+            }
+            return updated;
+        });
+    };
     const isSectionFullySelected = (section) => {
         return Object.values(permissions[section]).every(val => val === true);
     };
 
-    const isFullPermissionSelected = () => {
-        return Object.values(permissions).every(section => Object.values(section).every(val => val === true));
-    };
-
-    if (loading) {
-        return (
-            <div className="d-flex justify-content-center align-items-center vh-100 bg-white">
-                <div className="spinner-border" style={{ color: '#13a89e' }} role="status">
-                    <span className="visually-hidden">Loading...</span>
-                </div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="container mt-5">
-                <div className="alert alert-danger" role="alert">{error}</div>
-                <button className="btn btn-outline-secondary" onClick={() => navigate(-1)}>
-                    <i className="bi bi-chevron-left me-2"></i>Back
-                </button>
-            </div>
-        );
-    }
-
     return (
-        <div className="container-fluid p-4" style={{ backgroundColor: '#f4f7f6', minHeight: '100vh' }}>
+        <div className="" style={{ minHeight: '100vh' }}>
             <style>
                 {`
           .custom-checkbox {
@@ -140,23 +203,24 @@ const StaffDetails = () => {
             border-radius: 4px;
             margin-right: 8px;
           }
-          /* This makes the checkbox green when checked, matching the image */
           .custom-checkbox:checked {
-            background-color: #13a89e !important;
-            border-color: #13a89e !important;
+            background-color: var(--success) !important;
+            border-color: var(--success) !important;
           }
           .custom-checkbox:focus {
-            box-shadow: 0 0 0 0.25rem rgba(19, 168, 158, 0.25) !important;
-            border-color: #13a89e !important;
+            box-shadow: 0 0 0 0.25rem rgba(79, 144, 129, 0.25) !important;
+            border-color: var(--success) !important;
           }
           .form-switch .custom-switch {
             width: 2.25em;
             height: 1.15em;
             cursor: pointer;
+            background-color: #e5e7eb;
+            border-color: #d1d5db;
           }
           .form-switch .custom-switch:checked {
-            background-color: #13a89e !important;
-            border-color: #13a89e !important;
+            background-color: var(--success) !important;
+            border-color: var(--success) !important;
           }
           .permission-label {
             font-size: 0.85rem;
@@ -166,360 +230,762 @@ const StaffDetails = () => {
           }
           .card-header-line {
             border-bottom: 2px solid #e5e7eb;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
           }
           .user-details-card {
             background-color: #ffffff !important;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03) !important;
             border: 1px solid #eef0f2 !important;
           }
+          .user-details-card .gap-3 {
+            gap: 0.5rem !important;
+          }
+          .user-details-card h6.text-secondary {
+            margin-bottom: 0.75rem !important;
+          }
         `}
             </style>
 
-            {/* Header matching the layout design */}
-            <div className="d-flex justify-content-between align-items-center mb-4 mx-auto" style={{ maxWidth: '1400px' }}>
-                <h3 className="fw-bold mb-0" style={{ color: '#0d253f' }}>User Details</h3>
-                <div>
-                    <button className="btn text-white me-3 px-4 py-2" style={{ backgroundColor: '#13a89e' }}>
-                        <i className="bi bi-pencil-square me-2"></i>Edit/Update
-                    </button>
-                    <button className="btn bg-white px-4 py-2" style={{ color: '#13a89e', border: '1px solid #13a89e' }} onClick={() => navigate(-1)}>
-                        <i className="bi bi-chevron-left me-1"></i> Back
-                    </button>
-                </div>
-            </div>
 
-            <div className="card border-0 mb-4 bg-white mx-auto user-details-card" style={{ borderRadius: '12px', maxWidth: '1400px', backgroundColor: '#FFFFFF' }}>
-                <div className="card-body p-4 p-md-5">
-                    {/* User Info Section */}
-                    <div className="row mb-4 align-items-center">
-                        <div className="col-auto me-3">
-                            <div className="bg-light rounded p-2 d-inline-block" style={{ width: '150px', height: '150px', backgroundColor: '#f3f4f6' }}>
-                                <img
-                                    src={userData.image}
-                                    alt={userData.name}
-                                    className="rounded object-fit-cover w-100 h-100"
-                                />
-                            </div>
-                        </div>
 
-                        <div className="col px-3">
-                            <div className="row mb-4 align-items-end">
-                                <div className="col-md-3 d-flex flex-column justify-content-end">
-                                    <p className="text-muted mb-2 small fw-bold d-flex align-items-center">
-                                        <i className="bi bi-person-fill me-2 fs-6 text-secondary"></i>Full Name
-                                    </p>
-                                    <h5 className="fw-bold mb-0" style={{ color: '#1f2937', minHeight: '24px' }}>{userData.name}</h5>
-                                </div>
-                                <div className="col-md-3 d-flex flex-column justify-content-end">
-                                    <p className="text-muted mb-2 small fw-bold d-flex align-items-center">
-                                        <i className="bi bi-telephone-fill me-2 fs-6 text-secondary"></i>Contact Number
-                                    </p>
-                                    <h5 className="mb-0 fw-medium" style={{ color: '#1f2937', minHeight: '24px' }}>{userData.phone.split(',')[0]}</h5>
-                                </div>
-                                <div className="col-md-4 d-flex flex-column justify-content-end">
-                                    <p className="text-muted mb-2 small fw-bold d-flex align-items-center">
-                                        <i className="bi bi-envelope-fill me-2 fs-6 text-secondary"></i>Email Address
-                                    </p>
-                                    <h5 className="mb-0 fw-medium text-break" style={{ color: '#1f2937', minHeight: '24px' }}>{userData.email}</h5>
-                                </div>
-                                <div className="col-md-2 d-flex flex-column justify-content-end align-items-end pe-4">
-                                    <p className="text-muted mb-2 small fw-bold text-center w-100 d-flex align-items-center justify-content-center" style={{ minHeight: '24px' }}>Status</p>
-                                    <div className="form-check form-switch w-100 d-flex justify-content-center m-0 p-0" style={{ minHeight: '24px' }}>
-                                        <input
-                                            className="form-check-input custom-switch m-0"
-                                            type="checkbox"
-                                            role="switch"
-                                            checked={userData.status}
-                                            onChange={(e) => setUserData({...userData, status: e.target.checked})}
+
+            {/* Details and Password split row */}
+            <div className="row g-3 mb-3 mx-auto">
+                {/* Left Card: Staff Details */}
+                <div className="col-12 col-lg-9">
+                    <div className="card border-0 h-100 bg-white user-details-card" style={{ borderRadius: '12px' }}>
+                        <div className="card-body p-3 p-md-4">
+                            <h5 className="fw-bold text-brown mb-3 d-flex align-items-center">
+                                <i className="bi bi-person-badge-fill me-2"></i> Staff Profile Details
+                            </h5>
+
+                            <div className="row g-4">
+                                {/* Left Side: Profile Image */}
+                                <div className="col-12 col-md-auto text-center text-md-start mb-3 mb-md-0 d-flex flex-column align-items-center" style={{ width: '150px' }}>
+                                    <div className="bg-light rounded p-2 d-inline-block position-relative" style={{ width: '130px', height: '130px' }}>
+                                        <img
+                                            src={userData.image}
+                                            alt={userData.firstName}
+                                            className="rounded object-fit-cover w-100 h-100"
                                         />
+                                    </div>
+                                    <div className="mt-2 w-100">
+                                        <label className="btn btn-sm btn-outline-secondary w-100 fw-bold">
+                                            Change Photo
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                className="d-none"
+                                                onChange={(e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) {
+                                                        setUserData(prev => ({
+                                                            ...prev,
+                                                            photoFile: file,
+                                                            image: URL.createObjectURL(file)
+                                                        }));
+                                                    }
+                                                }}
+                                            />
+                                        </label>
+                                    </div>
+                                    <div className="mt-3 w-100 text-center">
+                                        <label className="form-label text-muted small fw-bold mb-1 d-block">Status</label>
+                                        <div className="form-check form-switch d-flex justify-content-center m-0 p-0">
+                                            <input
+                                                className="form-check-input custom-switch m-0"
+                                                type="checkbox"
+                                                role="switch"
+                                                checked={userData.status}
+                                                onChange={(e) => setUserData(prev => ({ ...prev, status: e.target.checked }))}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Right Side: Tabbed Forms */}
+                                <div className="col">
+                                    <ul className="nav nav-pills mb-3 gap-1 bg-light p-1 rounded" style={{ width: 'fit-content' }}>
+                                        <li className="nav-item">
+                                            <button
+                                                type="button"
+                                                className={`nav-link py-1 px-2 px-xl-3 fw-bold btn-sm rounded ${activeDetailTab === 'personal' ? 'active bg-success text-white' : 'text-secondary bg-transparent border-0'}`}
+                                                onClick={() => setActiveDetailTab('personal')}
+                                            >
+                                                Personal
+                                            </button>
+                                        </li>
+                                        <li className="nav-item">
+                                            <button
+                                                type="button"
+                                                className={`nav-link py-1 px-2 px-xl-3 fw-bold btn-sm rounded ${activeDetailTab === 'address' ? 'active bg-success text-white' : 'text-secondary bg-transparent border-0'}`}
+                                                onClick={() => setActiveDetailTab('address')}
+                                            >
+                                                Address
+                                            </button>
+                                        </li>
+                                        <li className="nav-item">
+                                            <button
+                                                type="button"
+                                                className={`nav-link py-1 px-2 px-xl-3 fw-bold btn-sm rounded ${activeDetailTab === 'details' ? 'active bg-success text-white' : 'text-secondary bg-transparent border-0'}`}
+                                                onClick={() => setActiveDetailTab('details')}
+                                            >
+                                                Details
+                                            </button>
+                                        </li>
+                                        <li className="nav-item">
+                                            <button
+                                                type="button"
+                                                className={`nav-link py-1 px-2 px-xl-3 fw-bold btn-sm rounded ${activeDetailTab === 'finance' ? 'active bg-success text-white' : 'text-secondary bg-transparent border-0'}`}
+                                                onClick={() => setActiveDetailTab('finance')}
+                                            >
+                                                ID & Bank
+                                            </button>
+                                        </li>
+                                        <li className="nav-item">
+                                            <button
+                                                type="button"
+                                                className={`nav-link py-1 px-2 px-xl-3 fw-bold btn-sm rounded ${activeDetailTab === 'documents' ? 'active bg-success text-white' : 'text-secondary bg-transparent border-0'}`}
+                                                onClick={() => setActiveDetailTab('documents')}
+                                            >
+                                                Document
+                                            </button>
+                                        </li>
+                                        <li className="nav-item">
+                                            <button
+                                                type="button"
+                                                className={`nav-link py-1 px-2 px-xl-3 fw-bold btn-sm rounded ${activeDetailTab === 'other' ? 'active bg-success text-white' : 'text-secondary bg-transparent border-0'}`}
+                                                onClick={() => setActiveDetailTab('other')}
+                                            >
+                                                Other
+                                            </button>
+                                        </li>
+                                    </ul>
+
+                                    <div className="tab-content pt-2" style={{ minHeight: '230px' }}>
+                                        {activeDetailTab === 'personal' && (
+                                            <div className="row g-3">
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">First Name <span className="text-danger">*</span></label>
+                                                    <input type="text" name="firstName" className="form-control" required value={userData.firstName || ""} onChange={handleFieldChange} />
+                                                </div>
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">Last Name <span className="text-danger">*</span></label>
+                                                    <input type="text" name="lastName" className="form-control" required value={userData.lastName || ""} onChange={handleFieldChange} />
+                                                </div>
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">Father Name</label>
+                                                    <input type="text" name="fatherName" className="form-control" value={userData.fatherName || ""} onChange={handleFieldChange} />
+                                                </div>
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">Mother Name</label>
+                                                    <input type="text" name="motherName" className="form-control" value={userData.motherName || ""} onChange={handleFieldChange} />
+                                                </div>
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">Mobile No <span className="text-danger">*</span></label>
+                                                    <input type="tel" name="mobileNo" className="form-control" required value={userData.mobileNo || ""} onChange={handleFieldChange} />
+                                                </div>
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">Phone No</label>
+                                                    <input type="tel" name="phoneNo" className="form-control" value={userData.phoneNo || ""} onChange={handleFieldChange} />
+                                                </div>
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">Email Id <span className="text-danger">*</span></label>
+                                                    <input type="email" name="emailId" className="form-control" required value={userData.emailId || ""} onChange={handleFieldChange} />
+                                                </div>
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">Gender <span className="text-danger">*</span></label>
+                                                    <select name="gender" className="form-select" required value={userData.gender || ""} onChange={handleFieldChange}>
+                                                        <option value="" disabled>Select</option>
+                                                        <option value="Male">Male</option>
+                                                        <option value="Female">Female</option>
+                                                        <option value="Other">Other</option>
+                                                    </select>
+                                                </div>
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">Date Of Birth</label>
+                                                    <input type="date" name="dateOfBirth" className="form-control" value={userData.dateOfBirth || ""} onChange={handleFieldChange} />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {activeDetailTab === 'address' && (
+                                            <div className="row g-3">
+                                                <div className="col-12 col-md-6">
+                                                    <label className="form-label text-muted small fw-bold mb-1">Current Address</label>
+                                                    <textarea name="currentAddress" className="form-control" rows="2" value={userData.currentAddress || ""} onChange={handleFieldChange} />
+                                                </div>
+                                                <div className="col-12 col-md-6">
+                                                    <label className="form-label text-muted small fw-bold mb-1">Permanent Address</label>
+                                                    <textarea name="permanentAddress" className="form-control" rows="2" value={userData.permanentAddress || ""} onChange={handleFieldChange} />
+                                                </div>
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">Village</label>
+                                                    <input type="text" name="village" className="form-control" value={userData.village || ""} onChange={handleFieldChange} />
+                                                </div>
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">Ward No</label>
+                                                    <input type="text" name="wardNumber" className="form-control" value={userData.wardNumber || ""} onChange={handleFieldChange} />
+                                                </div>
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">Tehsil</label>
+                                                    <input type="text" name="tehsil" className="form-control" value={userData.tehsil || ""} onChange={handleFieldChange} />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {activeDetailTab === 'details' && (
+                                            <div className="row g-3">
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">Cast</label>
+                                                    <input type="text" name="cast" className="form-control" value={userData.cast || ""} onChange={handleFieldChange} />
+                                                </div>
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">Marital Status</label>
+                                                    <select name="maritalStatus" className="form-select" value={userData.maritalStatus || ""} onChange={handleFieldChange}>
+                                                        <option value="" disabled>Select</option>
+                                                        <option value="Single">Single</option>
+                                                        <option value="Married">Married</option>
+                                                        <option value="Divorced">Divorced</option>
+                                                        <option value="Widowed">Widowed</option>
+                                                    </select>
+                                                </div>
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">Occupation</label>
+                                                    <input type="text" name="occupation" className="form-control" value={userData.occupation || ""} onChange={handleFieldChange} />
+                                                </div>
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">City</label>
+                                                    <input type="text" name="city" className="form-control" value={userData.city || ""} onChange={handleFieldChange} />
+                                                </div>
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">State</label>
+                                                    <input type="text" name="state" className="form-control" value={userData.state || ""} onChange={handleFieldChange} />
+                                                </div>
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">Country</label>
+                                                    <input type="text" name="country" className="form-control" value={userData.country || ""} onChange={handleFieldChange} />
+                                                </div>
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">Pincode</label>
+                                                    <input type="text" name="pincode" className="form-control" value={userData.pincode || ""} onChange={handleFieldChange} />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {activeDetailTab === 'finance' && (
+                                            <div className="row g-3">
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">GSTIN</label>
+                                                    <input type="text" name="gstin" className="form-control" value={userData.gstin || ""} onChange={handleFieldChange} />
+                                                </div>
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">PAN No</label>
+                                                    <input type="text" name="panNo" className="form-control" value={userData.panNo || ""} onChange={handleFieldChange} />
+                                                </div>
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">Aadhaar No</label>
+                                                    <input type="text" name="adhaarNo" className="form-control" value={userData.adhaarNo || ""} onChange={handleFieldChange} />
+                                                </div>
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">Bank Name</label>
+                                                    <input type="text" name="bankName" className="form-control" value={userData.bankName || ""} onChange={handleFieldChange} />
+                                                </div>
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">Bank A/c No</label>
+                                                    <input type="text" name="bankAccNo" className="form-control" value={userData.bankAccNo || ""} onChange={handleFieldChange} />
+                                                </div>
+                                                <div className="col-12 col-md-6 col-lg-4">
+                                                    <label className="form-label text-muted small fw-bold mb-1">IFSC Code</label>
+                                                    <input type="text" name="ifscCode" className="form-control" value={userData.ifscCode || ""} onChange={handleFieldChange} />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {activeDetailTab === 'documents' && (
+                                            <div className="row g-3">
+                                                <div className="col-12 col-md-4">
+                                                    <div className="card bg-light border-0 p-2 text-center" style={{ borderRadius: '8px' }}>
+                                                        <span className="small fw-bold text-muted mb-2">Aadhaar Front</span>
+                                                        <div className="bg-white rounded p-1 mb-2 mx-auto d-flex align-items-center justify-content-center" style={{ width: '100%', height: '120px' }}>
+                                                            <img src={userData.aadhaarFront} alt="Aadhaar Front" className="object-fit-contain w-100 h-100 rounded" />
+                                                        </div>
+                                                        <label className="btn btn-sm btn-outline-success fw-bold w-100">
+                                                            Upload Aadhaar Front
+                                                            <input type="file" accept="image/*" className="d-none" onChange={(e) => {
+                                                                const file = e.target.files?.[0];
+                                                                if (file) setUserData(prev => ({ ...prev, aadhaarFront: URL.createObjectURL(file) }));
+                                                            }} />
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div className="col-12 col-md-4">
+                                                    <div className="card bg-light border-0 p-2 text-center" style={{ borderRadius: '8px' }}>
+                                                        <span className="small fw-bold text-muted mb-2">Aadhaar Back</span>
+                                                        <div className="bg-white rounded p-1 mb-2 mx-auto d-flex align-items-center justify-content-center" style={{ width: '100%', height: '120px' }}>
+                                                            <img src={userData.aadhaarBack} alt="Aadhaar Back" className="object-fit-contain w-100 h-100 rounded" />
+                                                        </div>
+                                                        <label className="btn btn-sm btn-outline-success fw-bold w-100">
+                                                            Upload Aadhaar Back
+                                                            <input type="file" accept="image/*" className="d-none" onChange={(e) => {
+                                                                const file = e.target.files?.[0];
+                                                                if (file) setUserData(prev => ({ ...prev, aadhaarBack: URL.createObjectURL(file) }));
+                                                            }} />
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div className="col-12 col-md-4">
+                                                    <div className="card bg-light border-0 p-2 text-center" style={{ borderRadius: '8px' }}>
+                                                        <span className="small fw-bold text-muted mb-2">PAN Card</span>
+                                                        <div className="bg-white rounded p-1 mb-2 mx-auto d-flex align-items-center justify-content-center" style={{ width: '100%', height: '120px' }}>
+                                                            <img src={userData.panCard} alt="PAN Card" className="object-fit-contain w-100 h-100 rounded" />
+                                                        </div>
+                                                        <label className="btn btn-sm btn-outline-success fw-bold w-100">
+                                                            Upload PAN Card
+                                                            <input type="file" accept="image/*" className="d-none" onChange={(e) => {
+                                                                const file = e.target.files?.[0];
+                                                                if (file) setUserData(prev => ({ ...prev, panCard: URL.createObjectURL(file) }));
+                                                            }} />
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {activeDetailTab === 'other' && (
+                                            <div className="row g-3">
+                                                <div className="col-12 col-md-4">
+                                                    <div className="card bg-light border-0 p-2 text-center" style={{ borderRadius: '8px' }}>
+                                                        <span className="small fw-bold text-muted mb-2">Signature</span>
+                                                        <div className="bg-white rounded p-1 mb-2 mx-auto d-flex align-items-center justify-content-center" style={{ width: '100%', height: '120px' }}>
+                                                            <img src={userData.signature} alt="Signature" className="object-fit-contain w-100 h-100 rounded" />
+                                                        </div>
+                                                        <label className="btn btn-sm btn-outline-success fw-bold w-100">
+                                                            Upload Signature
+                                                            <input type="file" accept="image/*" className="d-none" onChange={(e) => {
+                                                                const file = e.target.files?.[0];
+                                                                if (file) setUserData(prev => ({ ...prev, signature: URL.createObjectURL(file) }));
+                                                            }} />
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div className="col-12 col-md-8">
+                                                    <div className="h-100 d-flex flex-column">
+                                                        <label className="form-label text-muted small fw-bold mb-1">Other Information</label>
+                                                        <textarea name="otherInformation" className="form-control flex-grow-1" rows="5" style={{ minHeight: '120px' }} value={userData.otherInformation || ""} onChange={handleFieldChange} />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="row">
-                                <div className="col-12 border-top pt-3" style={{ borderColor: 'rgba(19, 168, 158, 0.4)' }}>
-                                    <p className="text-muted mb-1 small fw-bold d-flex align-items-center">
-                                        <i className="bi bi-geo-alt-fill me-2 fs-6 text-secondary"></i>Admin's Address
-                                    </p>
-                                    <h6 className="mb-0 fw-bold" style={{ color: '#374151' }}>{userData.address}</h6>
-                                </div>
+                            <div className="d-flex justify-content-end mt-4 border-top pt-3">
+                                <button type="button" className="btn btn-success px-4 fw-bold" onClick={handleSaveProfileDetails}>
+                                    <i className="bi bi-save me-2"></i>Save Details
+                                </button>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    {/* Permissions Section */}
-                    <div className="mt-5 pt-3">
-                        <div className="d-flex align-items-center mb-4">
-                            <h5 className="fw-bold mb-0 me-4 pb-1" style={{ color: '#374151', borderBottom: '3px solid #6b7280' }}>Permission</h5>
-                            <div className="form-check form-switch d-flex align-items-center gap-2 ms-2 mb-0 p-0">
-                                <input
-                                    className="form-check-input custom-switch ms-0" type="checkbox" role="switch"
-                                    id="fullPermission"
-                                    checked={isFullPermissionSelected()}
-                                    onChange={(e) => handleFullPermissionToggle(e.target.checked)}
-                                />
-                                <label className="form-check-label text-muted small fw-medium" htmlFor="fullPermission" style={{ cursor: 'pointer' }}>
-                                    Full Permission
-                                </label>
+                {/* Right Card: Update Password */}
+                <div className="col-12 col-lg-3">
+                    <div className="card border-0 h-100 bg-white user-details-card" style={{ borderRadius: '12px' }}>
+                        <div className="card-body p-3 p-md-4 d-flex flex-column justify-content-between">
+                            <div>
+                                <h5 className="fw-bold text-brown mb-3 d-flex align-items-center">
+                                    <i className="bi bi-shield-lock-fill me-2"></i> Update Password
+                                </h5>
+                                <div className="mb-2">
+                                    <label className="form-label text-muted small fw-bold mb-1">Login ID</label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        value={loginId}
+                                        onChange={(e) => {
+                                            setLoginId(e.target.value);
+                                            setUserData(prev => prev ? { ...prev, taxNo: e.target.value } : null);
+                                        }}
+                                    />
+                                </div>
+                                <div className="mb-2">
+                                    <label className="form-label text-muted small fw-bold mb-1">New Password</label>
+                                    <input
+                                        type="password"
+                                        className="form-control"
+                                        placeholder="Enter new password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        maxLength={10}
+                                    />
+                                    <div className="form-text text-muted small mt-1">Max 10 characters.</div>
+                                </div>
+                                <div className="mb-3">
+                                    <label className="form-label text-muted small fw-bold mb-1">Confirm Password</label>
+                                    <input
+                                        type="password"
+                                        className="form-control"
+                                        placeholder="Confirm new password"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        maxLength={10}
+                                    />
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                className="btn btn-outline-danger w-100 fw-bold mt-1"
+                                onClick={handlePasswordUpdateOnly}
+                            >
+                                <i className="bi bi-key-fill me-2"></i> Update Password
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Permissions Section */}
+            <div className="card border-0 mb-3 bg-white mx-auto user-details-card" style={{ borderRadius: '12px' }}>
+                <div className="card-body p-3 p-md-4">
+                    <div className="d-flex align-items-center justify-content-between mb-3 pb-2 card-header-line">
+                        <h5 className="fw-bold mb-0 text-brown d-flex align-items-center">
+                            <i className="bi bi-shield-check-fill me-2"></i> Permissions & Roles
+                        </h5>
+                        <div className="form-check form-switch d-flex align-items-center gap-2 m-0 p-0">
+                            <input
+                                className="form-check-input custom-switch ms-0" type="checkbox" role="switch"
+                                id="fullPermission"
+                                checked={isFullPermissionSelected()}
+                                onChange={handleFullPermissionToggle}
+                            />
+                            <label className="form-check-label text-muted small fw-bold" htmlFor="fullPermission" style={{ cursor: 'pointer' }}>
+                                Full Permission
+                            </label>
+                        </div>
+                    </div>
+
+                    <div className="d-flex flex-column gap-3 mt-3">
+                        {/* Firm access */}
+                        <div className="border rounded p-3 bg-light bg-opacity-25">
+                            <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-light-subtle">
+                                <h6 className="fw-bold mb-0 small text-secondary d-flex align-items-center">
+                                    <i className="bi bi-building-fill me-2"></i> Firm access :
+                                </h6>
+                                <div className="form-check form-switch d-flex align-items-center gap-2 m-0 p-0">
+                                    <input id="firm-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('firm')} onChange={(e) => handleSectionSelectAll('firm', e.target.checked)} />
+                                    <label htmlFor="firm-all" className="permission-label m-0">Select all</label>
+                                </div>
+                            </div>
+                            <div className="row g-3">
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="firm-view" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.firm.view} onChange={(e) => handlePermissionChange('firm', 'view', e.target.checked)} />
+                                        <label htmlFor="firm-view" className="permission-label m-0">List Firm</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="firm-create" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.firm.create} onChange={(e) => handlePermissionChange('firm', 'create', e.target.checked)} />
+                                        <label htmlFor="firm-create" className="permission-label m-0">Create Firm</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="firm-edit" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.firm.edit} onChange={(e) => handlePermissionChange('firm', 'edit', e.target.checked)} />
+                                        <label htmlFor="firm-edit" className="permission-label m-0">Update Firm</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="firm-delete" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.firm.delete} onChange={(e) => handlePermissionChange('firm', 'delete', e.target.checked)} />
+                                        <label htmlFor="firm-delete" className="permission-label m-0">Delete Firm</label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="row g-5 mt-1">
-                            {/* Client access */}
-                            <div className="col-md-3">
-                                <h6 className="fw-bold mb-3 small" style={{ color: '#374151' }}>Client access :</h6>
-                                <div className="d-flex flex-column gap-3 text-muted small fw-medium">
+                        {/* Account access */}
+                        <div className="border rounded p-3 bg-light bg-opacity-25">
+                            <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-light-subtle">
+                                <h6 className="fw-bold mb-0 small text-secondary d-flex align-items-center">
+                                    <i className="bi bi-wallet2 me-2"></i> Account access :
+                                </h6>
+                                <div className="form-check form-switch d-flex align-items-center gap-2 m-0 p-0">
+                                    <input id="account-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('account')} onChange={(e) => handleSectionSelectAll('account', e.target.checked)} />
+                                    <label htmlFor="account-all" className="permission-label m-0">Select all</label>
+                                </div>
+                            </div>
+                            <div className="row g-3">
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
                                     <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="client-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('client')} onChange={(e) => handleSectionSelectAll('client', e.target.checked)} />
-                                        <label htmlFor="client-all" className="permission-label m-0">Select all</label>
+                                        <input id="account-view" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.account.view} onChange={(e) => handlePermissionChange('account', 'view', e.target.checked)} />
+                                        <label htmlFor="account-view" className="permission-label m-0">List Accounts</label>
                                     </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
                                     <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="client-view" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.client.view} onChange={(e) => handlePermissionChange('client', 'view', e.target.checked)} />
-                                        <label htmlFor="client-view" className="permission-label m-0">View Clients</label>
+                                        <input id="account-create" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.account.create} onChange={(e) => handlePermissionChange('account', 'create', e.target.checked)} />
+                                        <label htmlFor="account-create" className="permission-label m-0">Create Account</label>
                                     </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
                                     <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="client-create" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.client.create} onChange={(e) => handlePermissionChange('client', 'create', e.target.checked)} />
-                                        <label htmlFor="client-create" className="permission-label m-0">Create Clients</label>
+                                        <input id="account-edit" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.account.edit} onChange={(e) => handlePermissionChange('account', 'edit', e.target.checked)} />
+                                        <label htmlFor="account-edit" className="permission-label m-0">Update Account</label>
                                     </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
                                     <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="client-edit" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.client.edit} onChange={(e) => handlePermissionChange('client', 'edit', e.target.checked)} />
-                                        <label htmlFor="client-edit" className="permission-label m-0">Edit/Update Clients</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="client-viewonly" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.client.viewOnly} onChange={(e) => handlePermissionChange('client', 'viewOnly', e.target.checked)} />
-                                        <label htmlFor="client-viewonly" className="permission-label m-0">View Only Created Clients</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="client-delete" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.client.delete} onChange={(e) => handlePermissionChange('client', 'delete', e.target.checked)} />
-                                        <label htmlFor="client-delete" className="permission-label m-0">Delete Client</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="client-viewcreds" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.client.viewCreds} onChange={(e) => handlePermissionChange('client', 'viewCreds', e.target.checked)} />
-                                        <label htmlFor="client-viewcreds" className="permission-label m-0">Can view credentials sections</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="client-viewagree" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.client.viewAgreements} onChange={(e) => handlePermissionChange('client', 'viewAgreements', e.target.checked)} />
-                                        <label htmlFor="client-viewagree" className="permission-label m-0">Can view agreements, upfront fees, and monthly fees</label>
+                                        <input id="account-delete" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.account.delete} onChange={(e) => handlePermissionChange('account', 'delete', e.target.checked)} />
+                                        <label htmlFor="account-delete" className="permission-label m-0">Delete Account</label>
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Lead access */}
-                            <div className="col-md-3">
-                                <h6 className="fw-bold mb-3 small" style={{ color: '#374151' }}>Lead access :</h6>
-                                <div className="d-flex flex-column gap-3 text-muted small fw-medium">
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="lead-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('lead')} onChange={(e) => handleSectionSelectAll('lead', e.target.checked)} />
-                                        <label htmlFor="lead-all" className="permission-label m-0">Select all</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="lead-view" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.lead.view} onChange={(e) => handlePermissionChange('lead', 'view', e.target.checked)} />
-                                        <label htmlFor="lead-view" className="permission-label m-0">View Leads</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="lead-create" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.lead.create} onChange={(e) => handlePermissionChange('lead', 'create', e.target.checked)} />
-                                        <label htmlFor="lead-create" className="permission-label m-0">Create Leads</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="lead-edit" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.lead.edit} onChange={(e) => handlePermissionChange('lead', 'edit', e.target.checked)} />
-                                        <label htmlFor="lead-edit" className="permission-label m-0">Edit/Update Leads</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="lead-delete" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.lead.delete} onChange={(e) => handlePermissionChange('lead', 'delete', e.target.checked)} />
-                                        <label htmlFor="lead-delete" className="permission-label m-0">Delete Leads</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="lead-allow" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.lead.allowTurn} onChange={(e) => handlePermissionChange('lead', 'allowTurn', e.target.checked)} />
-                                        <label htmlFor="lead-allow" className="permission-label m-0">Allow to turns Lead into Client</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="lead-viewonly" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.lead.viewOnly} onChange={(e) => handlePermissionChange('lead', 'viewOnly', e.target.checked)} />
-                                        <label htmlFor="lead-viewonly" className="permission-label m-0">View Only Created Leads</label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Global Task access */}
-                            <div className="col-md-3">
-                                <h6 className="fw-bold mb-3 small" style={{ color: '#374151' }}>Global Task access :</h6>
-                                <div className="d-flex flex-column gap-3 text-muted small fw-medium">
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="task-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('task')} onChange={(e) => handleSectionSelectAll('task', e.target.checked)} />
-                                        <label htmlFor="task-all" className="permission-label m-0">Select all</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="task-view" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.task.view} onChange={(e) => handlePermissionChange('task', 'view', e.target.checked)} />
-                                        <label htmlFor="task-view" className="permission-label m-0">View Task</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="task-create" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.task.create} onChange={(e) => handlePermissionChange('task', 'create', e.target.checked)} />
-                                        <label htmlFor="task-create" className="permission-label m-0">Create Task</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="task-edit" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.task.edit} onChange={(e) => handlePermissionChange('task', 'edit', e.target.checked)} />
-                                        <label htmlFor="task-edit" className="permission-label m-0">Edit/Update Task</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="task-delete" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.task.delete} onChange={(e) => handlePermissionChange('task', 'delete', e.target.checked)} />
-                                        <label htmlFor="task-delete" className="permission-label m-0">Delete Task</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="task-viewonly" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.task.viewOnly} onChange={(e) => handlePermissionChange('task', 'viewOnly', e.target.checked)} />
-                                        <label htmlFor="task-viewonly" className="permission-label m-0">View Only Created Task</label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* User access */}
-                            <div className="col-md-3">
-                                <h6 className="fw-bold mb-3 small" style={{ color: '#374151' }}>User access :</h6>
-                                <div className="d-flex flex-column gap-3 text-muted small fw-medium">
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="user-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('user')} onChange={(e) => handleSectionSelectAll('user', e.target.checked)} />
-                                        <label htmlFor="user-all" className="permission-label m-0">Select all</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="user-view" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.user.view} onChange={(e) => handlePermissionChange('user', 'view', e.target.checked)} />
-                                        <label htmlFor="user-view" className="permission-label m-0">View Users</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="user-create" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.user.create} onChange={(e) => handlePermissionChange('user', 'create', e.target.checked)} />
-                                        <label htmlFor="user-create" className="permission-label m-0">Create User</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="user-edit" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.user.edit} onChange={(e) => handlePermissionChange('user', 'edit', e.target.checked)} />
-                                        <label htmlFor="user-edit" className="permission-label m-0">Edit/Update User</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="user-delete" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.user.delete} onChange={(e) => handlePermissionChange('user', 'delete', e.target.checked)} />
-                                        <label htmlFor="user-delete" className="permission-label m-0">Delete Users</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="user-allow" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.user.allowSet} onChange={(e) => handlePermissionChange('user', 'allowSet', e.target.checked)} />
-                                        <label htmlFor="user-allow" className="permission-label m-0">Allow to Set Permissions</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="user-viewonly" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.user.viewOnly} onChange={(e) => handlePermissionChange('user', 'viewOnly', e.target.checked)} />
-                                        <label htmlFor="user-viewonly" className="permission-label m-0">View only created users</label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Calendar access */}
-                            <div className="col-md-3">
-                                <h6 className="fw-bold mb-3 small" style={{ color: '#374151' }}>Calendar access :</h6>
-                                <div className="d-flex flex-column gap-3 text-muted small fw-medium">
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="cal-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('calendar')} onChange={(e) => handleSectionSelectAll('calendar', e.target.checked)} />
-                                        <label htmlFor="cal-all" className="permission-label m-0">Select all</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="cal-view" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.calendar.view} onChange={(e) => handlePermissionChange('calendar', 'view', e.target.checked)} />
-                                        <label htmlFor="cal-view" className="permission-label m-0">View Events</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="cal-create" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.calendar.create} onChange={(e) => handlePermissionChange('calendar', 'create', e.target.checked)} />
-                                        <label htmlFor="cal-create" className="permission-label m-0">Create Events</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="cal-edit" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.calendar.edit} onChange={(e) => handlePermissionChange('calendar', 'edit', e.target.checked)} />
-                                        <label htmlFor="cal-edit" className="permission-label m-0">Edit/Update Events</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="cal-delete" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.calendar.delete} onChange={(e) => handlePermissionChange('calendar', 'delete', e.target.checked)} />
-                                        <label htmlFor="cal-delete" className="permission-label m-0">Delete Events</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="cal-viewonly" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.calendar.viewOnly} onChange={(e) => handlePermissionChange('calendar', 'viewOnly', e.target.checked)} />
-                                        <label htmlFor="cal-viewonly" className="permission-label m-0">View Only Created Events</label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Service access */}
-                            <div className="col-md-3">
-                                <h6 className="fw-bold mb-3 small" style={{ color: '#374151' }}>Service access :</h6>
-                                <div className="d-flex flex-column gap-3 text-muted small fw-medium">
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="srv-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('service')} onChange={(e) => handleSectionSelectAll('service', e.target.checked)} />
-                                        <label htmlFor="srv-all" className="permission-label m-0">Select all</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="srv-view" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.service.view} onChange={(e) => handlePermissionChange('service', 'view', e.target.checked)} />
-                                        <label htmlFor="srv-view" className="permission-label m-0">View Services</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="srv-create" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.service.create} onChange={(e) => handlePermissionChange('service', 'create', e.target.checked)} />
-                                        <label htmlFor="srv-create" className="permission-label m-0">Create Services</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="srv-edit" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.service.edit} onChange={(e) => handlePermissionChange('service', 'edit', e.target.checked)} />
-                                        <label htmlFor="srv-edit" className="permission-label m-0">Edit/Update Services</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="srv-delete" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.service.delete} onChange={(e) => handlePermissionChange('service', 'delete', e.target.checked)} />
-                                        <label htmlFor="srv-delete" className="permission-label m-0">Delete Services</label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Support Center access */}
-                            <div className="col-md-3">
-                                <h6 className="fw-bold mb-3 small" style={{ color: '#374151' }}>Support Center access :</h6>
-                                <div className="d-flex flex-column gap-3 text-muted small fw-medium">
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="sc-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('supportCenter')} onChange={(e) => handleSectionSelectAll('supportCenter', e.target.checked)} />
-                                        <label htmlFor="sc-all" className="permission-label m-0">Select all</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="sc-view" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.supportCenter.view} onChange={(e) => handlePermissionChange('supportCenter', 'view', e.target.checked)} />
-                                        <label htmlFor="sc-view" className="permission-label m-0">View Tickets</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="sc-create" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.supportCenter.create} onChange={(e) => handlePermissionChange('supportCenter', 'create', e.target.checked)} />
-                                        <label htmlFor="sc-create" className="permission-label m-0">Create Tickets</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="sc-edit" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.supportCenter.edit} onChange={(e) => handlePermissionChange('supportCenter', 'edit', e.target.checked)} />
-                                        <label htmlFor="sc-edit" className="permission-label m-0">Edit/Update Tickets</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="sc-delete" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.supportCenter.delete} onChange={(e) => handlePermissionChange('supportCenter', 'delete', e.target.checked)} />
-                                        <label htmlFor="sc-delete" className="permission-label m-0">Delete Tickets</label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Support Type access */}
-                            <div className="col-md-3">
-                                <h6 className="fw-bold mb-3 small" style={{ color: '#374151' }}>Support Type access :</h6>
-                                <div className="d-flex flex-column gap-3 text-muted small fw-medium">
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="st-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('supportType')} onChange={(e) => handleSectionSelectAll('supportType', e.target.checked)} />
-                                        <label htmlFor="st-all" className="permission-label m-0">Select all</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="st-view" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.supportType.view} onChange={(e) => handlePermissionChange('supportType', 'view', e.target.checked)} />
-                                        <label htmlFor="st-view" className="permission-label m-0">View Support Type</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="st-create" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.supportType.create} onChange={(e) => handlePermissionChange('supportType', 'create', e.target.checked)} />
-                                        <label htmlFor="st-create" className="permission-label m-0">Create Support Type</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="st-edit" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.supportType.edit} onChange={(e) => handlePermissionChange('supportType', 'edit', e.target.checked)} />
-                                        <label htmlFor="st-edit" className="permission-label m-0">Edit/Update Support Type</label>
-                                    </div>
-                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
-                                        <input id="st-delete" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.supportType.delete} onChange={(e) => handlePermissionChange('supportType', 'delete', e.target.checked)} />
-                                        <label htmlFor="st-delete" className="permission-label m-0">Delete Support Type</label>
-                                    </div>
-                                </div>
-                            </div>
-
                         </div>
+
+                        {/* Staff access */}
+                        <div className="border rounded p-3 bg-light bg-opacity-25">
+                            <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-light-subtle">
+                                <h6 className="fw-bold mb-0 small text-secondary d-flex align-items-center">
+                                    <i className="bi bi-briefcase-fill me-2"></i> Staff access :
+                                </h6>
+                                <div className="form-check form-switch d-flex align-items-center gap-2 m-0 p-0">
+                                    <input id="staff-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('staff')} onChange={(e) => handleSectionSelectAll('staff', e.target.checked)} />
+                                    <label htmlFor="staff-all" className="permission-label m-0">Select all</label>
+                                </div>
+                            </div>
+                            <div className="row g-3">
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="staff-view" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.staff.view} onChange={(e) => handlePermissionChange('staff', 'view', e.target.checked)} />
+                                        <label htmlFor="staff-view" className="permission-label m-0">List Staff</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="staff-create" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.staff.create} onChange={(e) => handlePermissionChange('staff', 'create', e.target.checked)} />
+                                        <label htmlFor="staff-create" className="permission-label m-0">Create Staff</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="staff-edit" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.staff.edit} onChange={(e) => handlePermissionChange('staff', 'edit', e.target.checked)} />
+                                        <label htmlFor="staff-edit" className="permission-label m-0">Update Staff</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="staff-delete" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.staff.delete} onChange={(e) => handlePermissionChange('staff', 'delete', e.target.checked)} />
+                                        <label htmlFor="staff-delete" className="permission-label m-0">Delete Staff</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Loan access */}
+                        <div className="border rounded p-3 bg-light bg-opacity-25">
+                            <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-light-subtle">
+                                <h6 className="fw-bold mb-0 small text-secondary d-flex align-items-center">
+                                    <i className="bi bi-journal-text me-2"></i> Loan access :
+                                </h6>
+                                <div className="form-check form-switch d-flex align-items-center gap-2 m-0 p-0">
+                                    <input id="loan-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('loan')} onChange={(e) => handleSectionSelectAll('loan', e.target.checked)} />
+                                    <label htmlFor="loan-all" className="permission-label m-0">Select all</label>
+                                </div>
+                            </div>
+                            <div className="row g-3">
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="loan-view" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.loan.view} onChange={(e) => handlePermissionChange('loan', 'view', e.target.checked)} />
+                                        <label htmlFor="loan-view" className="permission-label m-0">List Loans</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="loan-create" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.loan.create} onChange={(e) => handlePermissionChange('loan', 'create', e.target.checked)} />
+                                        <label htmlFor="loan-create" className="permission-label m-0">Create Loan</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="loan-edit" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.loan.edit} onChange={(e) => handlePermissionChange('loan', 'edit', e.target.checked)} />
+                                        <label htmlFor="loan-edit" className="permission-label m-0">Update Loan</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="loan-delete" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.loan.delete} onChange={(e) => handlePermissionChange('loan', 'delete', e.target.checked)} />
+                                        <label htmlFor="loan-delete" className="permission-label m-0">Delete Loan</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="loan-form8" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.loan.form8} onChange={(e) => handlePermissionChange('loan', 'form8', e.target.checked)} />
+                                        <label htmlFor="loan-form8" className="permission-label m-0">FORM 8</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="loan-deposit" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.loan.deposit} onChange={(e) => handlePermissionChange('loan', 'deposit', e.target.checked)} />
+                                        <label htmlFor="loan-deposit" className="permission-label m-0">Deposit</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="loan-addPrincipal" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.loan.addPrincipal} onChange={(e) => handlePermissionChange('loan', 'addPrincipal', e.target.checked)} />
+                                        <label htmlFor="loan-addPrincipal" className="permission-label m-0">Additional Principal</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="loan-transfer" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.loan.transfer} onChange={(e) => handlePermissionChange('loan', 'transfer', e.target.checked)} />
+                                        <label htmlFor="loan-transfer" className="permission-label m-0">Transfer Loan</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="loan-release" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.loan.release} onChange={(e) => handlePermissionChange('loan', 'release', e.target.checked)} />
+                                        <label htmlFor="loan-release" className="permission-label m-0">Release Loan</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="loan-auction" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.loan.auction} onChange={(e) => handlePermissionChange('loan', 'auction', e.target.checked)} />
+                                        <label htmlFor="loan-auction" className="permission-label m-0">Auction Loan</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="loan-notice" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.loan.notice} onChange={(e) => handlePermissionChange('loan', 'notice', e.target.checked)} />
+                                        <label htmlFor="loan-notice" className="permission-label m-0">Send Notice</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="loan-customize" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.loan.customize} onChange={(e) => handlePermissionChange('loan', 'customize', e.target.checked)} />
+                                        <label htmlFor="loan-customize" className="permission-label m-0">Customize Loan</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="loan-print" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.loan.print} onChange={(e) => handlePermissionChange('loan', 'print', e.target.checked)} />
+                                        <label htmlFor="loan-print" className="permission-label m-0">Print Loan</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="loan-loanLogs" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.loan.loanLogs} onChange={(e) => handlePermissionChange('loan', 'loanLogs', e.target.checked)} />
+                                        <label htmlFor="loan-loanLogs" className="permission-label m-0">Loan Logs</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Finance access */}
+                        <div className="border rounded p-3 bg-light bg-opacity-25">
+                            <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-light-subtle">
+                                <h6 className="fw-bold mb-0 small text-secondary d-flex align-items-center">
+                                    <i className="bi bi-cash-coin me-2"></i> Finance access :
+                                </h6>
+                                <div className="form-check form-switch d-flex align-items-center gap-2 m-0 p-0">
+                                    <input id="finance-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('finance')} onChange={(e) => handleSectionSelectAll('finance', e.target.checked)} />
+                                    <label htmlFor="finance-all" className="permission-label m-0">Select all</label>
+                                </div>
+                            </div>
+                            <div className="row g-3">
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="finance-view" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.finance.view} onChange={(e) => handlePermissionChange('finance', 'view', e.target.checked)} />
+                                        <label htmlFor="finance-view" className="permission-label m-0">List Finance</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="finance-create" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.finance.create} onChange={(e) => handlePermissionChange('finance', 'create', e.target.checked)} />
+                                        <label htmlFor="finance-create" className="permission-label m-0">Create Finance</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="finance-edit" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.finance.edit} onChange={(e) => handlePermissionChange('finance', 'edit', e.target.checked)} />
+                                        <label htmlFor="finance-edit" className="permission-label m-0">Update Finance</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="finance-delete" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.finance.delete} onChange={(e) => handlePermissionChange('finance', 'delete', e.target.checked)} />
+                                        <label htmlFor="finance-delete" className="permission-label m-0">Delete Finance</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="finance-payment" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.finance.payment} onChange={(e) => handlePermissionChange('finance', 'payment', e.target.checked)} />
+                                        <label htmlFor="finance-payment" className="permission-label m-0">Finance Collection</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="finance-rollback" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.finance.rollback} onChange={(e) => handlePermissionChange('finance', 'rollback', e.target.checked)} />
+                                        <label htmlFor="finance-rollback" className="permission-label m-0">Finance Collection Rollback</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="finance-history" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.finance.history} onChange={(e) => handlePermissionChange('finance', 'history', e.target.checked)} />
+                                        <label htmlFor="finance-history" className="permission-label m-0">Finance History</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="finance-printReceipt" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.finance.printReceipt} onChange={(e) => handlePermissionChange('finance', 'printReceipt', e.target.checked)} />
+                                        <label htmlFor="finance-printReceipt" className="permission-label m-0">Print EMI Receipt</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Reports & Logs */}
+                        <div className="border rounded p-3 bg-light bg-opacity-25">
+                            <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-light-subtle">
+                                <h6 className="fw-bold mb-0 small text-secondary d-flex align-items-center">
+                                    <i className="bi bi-eye-fill me-2"></i> Reports & Logs (List Only) :
+                                </h6>
+                                <div className="form-check form-switch d-flex align-items-center gap-2 m-0 p-0">
+                                    <input id="reports-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('reports')} onChange={(e) => handleSectionSelectAll('reports', e.target.checked)} />
+                                    <label htmlFor="reports-all" className="permission-label m-0">Select all</label>
+                                </div>
+                            </div>
+                            <div className="row g-3">
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="reports-daybook" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.reports.daybook} onChange={(e) => handlePermissionChange('reports', 'daybook', e.target.checked)} />
+                                        <label htmlFor="reports-daybook" className="permission-label m-0">List Daybook</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="reports-balanceSheet" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.reports.balanceSheet} onChange={(e) => handlePermissionChange('reports', 'balanceSheet', e.target.checked)} />
+                                        <label htmlFor="reports-balanceSheet" className="permission-label m-0">List Balance Sheet</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="reports-logs" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.reports.logs} onChange={(e) => handlePermissionChange('reports', 'logs', e.target.checked)} />
+                                        <label htmlFor="reports-logs" className="permission-label m-0">List Logs</label>
+                                    </div>
+                                </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="reports-profitLoss" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.reports.profitLoss} onChange={(e) => handlePermissionChange('reports', 'profitLoss', e.target.checked)} />
+                                        <label htmlFor="reports-profitLoss" className="permission-label m-0">List Profit & Loss</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
