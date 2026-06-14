@@ -212,7 +212,7 @@ const StaffGrid = () => {
               </div>
 
               <div className="card-footer bg-transparent border-dark d-flex align-items-center p-2 m-0">
-                <button style={{ width: "15%" }} className="btn me-2 p-1 m-0 bg-secondary-subtle border-secondary" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                <button style={{ width: "15%" }} className="btn me-2 p-1 m-0 bg-secondary-subtle border-secondary" onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(`/staff/staff-details/${user.id}`, "_blank"); }}>
                   {user.id}
                 </button>
                 <button className="btn me-2 bg-success-subtle border-secondary rounded-circle" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
