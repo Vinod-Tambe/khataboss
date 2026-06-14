@@ -12,6 +12,7 @@ import BookRoutes from '../pages/book/BookRoutes';
 import TrialBalanceRoutes from '../pages/trial-balance/TrialBalanceRoutes';
 import BalanceSheetRoutes from '../pages/balance-sheet/BalanceSheetRoutes';
 import ProfitLossRoutes from '../pages/profit-loss/ProfitLossRoutes';
+import LogsRoutes from '../pages/logs/LogsRoutes';
 const MainRoutes = () => {
   
   return (
@@ -31,6 +32,7 @@ const MainRoutes = () => {
               <Route path="/trial-balance" element={< TrialBalanceRoutes/>} />
               <Route path="/balance-sheet" element={< BalanceSheetRoutes/>} />
               <Route path="/profit-loss" element={< ProfitLossRoutes/>} />
+              <Route path="/logs" element={< LogsRoutes/>} />
               <Route path="/*" element={< HomeRoutes/>} />
             </Routes>
           </div >

@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react'
 import AccountDetailsReport from './AccountDetailsReport'
+import AccountDetailsPrintPreview from './AccountDetailsPrintPreview'
 import $ from "jquery";
 import moment from "moment";
 import "daterangepicker";
@@ -16,6 +17,7 @@ const AccountDetails = () => {
     const [ledgerData, setLedgerData] = useState([]);
     const [openingBalance, setOpeningBalance] = useState(0);
     const [ledgerLoading, setLedgerLoading] = useState(false);
+    const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
     const { selectedFirmId } = useSelector((state) => state.firm);
     const [firms, setFirms] = useState([]);
     const [selectedFirm, setSelectedFirm] = useState(selectedFirmId === 'all' ? "N" : selectedFirmId);
@@ -142,6 +144,16 @@ const AccountDetails = () => {
             $(dateInput).data("daterangepicker")?.remove();
         };
     }, []);
+
+    const selectedFirmData = firms.find((f) => String(f.firm_id) === String(selectedFirm));
+    const firmDisplayName = selectedFirm === 'N'
+        ? 'All Firms'
+        : (selectedFirmData?.firm_name || 'Selected Firm');
+
+    const assessmentYear = moment(endDate).month() >= 3
+        ? `${moment(endDate).year()} - ${moment(endDate).year() + 1}`
+        : `${moment(endDate).year() - 1} - ${moment(endDate).year()}`;
+
     return (
         <div className="card p-3 pt-1 shadow-sm">
             <div className="row align-items-center mt-2">
@@ -203,11 +215,28 @@ const AccountDetails = () => {
                     <AccountDetailsReport ledgerData={ledgerData} loading={ledgerLoading} openingBalanceProp={openingBalance} />
                 </div>
             </div>
-            <div className="text-center mt-3 mb-2 no-print">
-                <button className="btn btn-outline-success" onClick={() => window.print()}>
+            <div className="text-center mt-3 mb-2">
+                <button
+                    className="btn btn-outline-success"
+                    onClick={() => setIsPrintPreviewOpen(true)}
+                    disabled={ledgerLoading}
+                >
                     Print <i className="bi bi-printer-fill"></i>
                 </button>
             </div>
+
+            <AccountDetailsPrintPreview
+                show={isPrintPreviewOpen}
+                onHide={() => setIsPrintPreviewOpen(false)}
+                ledgerData={ledgerData}
+                openingBalance={openingBalance}
+                firmName={firmDisplayName}
+                accountName={account?.acc_name}
+                primaryAccount={account?.acc_pre_acc}
+                periodStart={startDate}
+                periodEnd={endDate}
+                assessmentYear={assessmentYear}
+            />
         </div>
     )
 }
