@@ -8,7 +8,7 @@ import { getUser } from "../../api/userApi";
 import { setSelectedUser } from "../../store/slices/userSlice";
 import { showToast } from "../../components/common/ToastAlert";
 
-const DayBookTable = ({ title, colorClass, amtColor, data = [] }) => {
+const DayBookTable = ({ title, colorClass, amtColor, data = [], isPrint = false }) => {
   const tableRef = useRef(null);
   const dataTable = useRef(null);
   const [search, setSearch] = useState("");
@@ -35,6 +35,8 @@ const DayBookTable = ({ title, colorClass, amtColor, data = [] }) => {
   const totalDisc = data.reduce((sum, item) => sum + (parseFloat(item.db_disc_amt) || 0), 0);
 
   useEffect(() => {
+    if (isPrint || !tableRef.current) return;
+
     if (dataTable.current) {
       dataTable.current.destroy();
     }
@@ -56,13 +58,12 @@ const DayBookTable = ({ title, colorClass, amtColor, data = [] }) => {
         dataTable.current.destroy();
       }
     };
-  }, [data]);
+  }, [data, isPrint]);
 
   useEffect(() => {
-    if (dataTable.current) {
-      dataTable.current.search(search).draw();
-    }
-  }, [search]);
+    if (isPrint || !dataTable.current) return;
+    dataTable.current.search(search).draw();
+  }, [search, isPrint]);
 
   return (
     <div className={`border border-secondary border-dashed mb-3`}>
@@ -70,13 +71,15 @@ const DayBookTable = ({ title, colorClass, amtColor, data = [] }) => {
       <div className={`d-flex justify-content-between align-items-center`}>
         <h6 className="fw-bold mb-0 ms-2">{title || "DATA"}</h6>
 
-        <input
-          type="search"
-          className="form-control form-control-sm border border-dark w-auto mt-2 mb-2 me-2"
-          placeholder={`${title || "Table"}`}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        {!isPrint && (
+          <input
+            type="search"
+            className="form-control form-control-sm border border-dark w-auto mt-2 mb-2 me-2"
+            placeholder={`${title || "Table"}`}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        )}
       </div>
 
       {/* Bootstrap responsive wrapper */}
@@ -113,8 +116,8 @@ const DayBookTable = ({ title, colorClass, amtColor, data = [] }) => {
                   <td className="border border-dark">{item.db_date}</td>
                   <td className="border border-dark">{item.db_firm}</td>
                   <td
-                    className="border border-dark text-brown cursor-pointer fw-bold"
-                    onClick={() => handleCustomerClick(item.db_user_uuid)}
+                    className={`border border-dark text-brown fw-bold ${isPrint ? '' : 'cursor-pointer'}`}
+                    onClick={isPrint ? undefined : () => handleCustomerClick(item.db_user_uuid)}
                   >
                     {item.db_customer_name}
                   </td>

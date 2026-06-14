@@ -1,0 +1,249 @@
+.print-preview-wrapper {
+  background: #f0f2f5;
+}
+
+.print-preview-document {
+  background: #fff;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.print-preview-field {
+  border: 1px solid #212529;
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  text-align: center;
+  background: #fff;
+  font-size: 0.95rem;
+  color: #212529;
+  width: 100%;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+.print-preview-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.print-preview-header-side {
+  flex: 0 0 30%;
+  max-width: 30%;
+  min-width: 220px;
+}
+
+.print-preview-header-center {
+  flex: 1;
+  text-align: center;
+  min-width: 0;
+}
+
+.print-preview-title {
+  font-size: 1.5rem !important;
+  line-height: 1.3;
+}
+
+.print-preview-period {
+  font-size: 0.95rem;
+  margin-top: 4px;
+}
+
+.print-preview-subheader {
+  margin-bottom: 12px;
+}
+
+.print-preview-subheader p {
+  margin-bottom: 4px;
+}
+
+.print-preview-meta-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+  width: 100%;
+}
+
+.print-preview-meta-left {
+  display: flex;
+  gap: 24px;
+}
+
+.print-preview-meta-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Ensure print output matches on-screen UI colors */
+.print-preview-body,
+.print-preview-document {
+  font-family: "Calibri", sans-serif !important;
+}
+
+.print-preview-body .text-brown {
+  color: brown !important;
+}
+
+.print-preview-body .text-info-emphasis {
+  color: #055160 !important;
+}
+
+.print-preview-body .text-success-emphasis {
+  color: #0a3622 !important;
+}
+
+.print-preview-body .text-primary-emphasis {
+  color: #052c65 !important;
+}
+
+.print-preview-body .bg-blue {
+  background-color: rgb(239, 243, 255) !important;
+}
+
+.print-preview-body .bg-red {
+  background-color: #f4edea !important;
+}
+
+.print-preview-body .bg-pink {
+  background-color: rgb(253, 240, 247) !important;
+}
+
+.print-preview-body .bg-green {
+  background-color: #edf4ea !important;
+}
+
+.print-preview-body .bg-cust-info {
+  background-color: #eaf4f3 !important;
+}
+
+.print-preview-body .bg-cust-primary {
+  background-color: #e9eff9 !important;
+}
+
+.print-preview-body .border-dashed {
+  border-style: dashed !important;
+}
+
+.print-preview-body .dynamic-data-table thead th {
+  border: 1px solid grey !important;
+  white-space: nowrap;
+  color: maroon !important;
+  background-color: rgb(231, 238, 255) !important;
+}
+
+.print-preview-body .dynamic-data-table tfoot th {
+  border: 1px solid grey !important;
+  white-space: nowrap;
+  color: maroon !important;
+  background-color: #f4eaea !important;
+}
+
+.print-preview-body .dynamic-data-table td,
+.print-preview-body .dynamic-data-table th {
+  border: 1px solid grey !important;
+}
+
+.print-preview-body .table-bordered th,
+.print-preview-body .table-bordered td {
+  border: 1px solid grey !important;
+}
+
+.print-preview-body table {
+  font-size: 14px !important;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.print-preview-body .responsive-text {
+  font-size: 1.5rem !important;
+}
+
+@media print {
+  @page {
+    margin: 12mm;
+  }
+
+  .print-preview-body {
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #fff !important;
+    font-family: "Calibri", sans-serif !important;
+  }
+
+  .print-preview-body * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .print-preview-document {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #fff !important;
+  }
+
+  .print-preview-body .card {
+    display: block !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #fff !important;
+  }
+
+  .print-preview-body .table-responsive {
+    overflow: visible !important;
+  }
+
+  .print-preview-body th:first-child,
+  .print-preview-body td:first-child {
+    position: static !important;
+    left: auto !important;
+    z-index: auto !important;
+  }
+
+  .print-preview-actions {
+    display: none !important;
+  }
+
+  .print-preview-hide {
+    display: none !important;
+  }
+
+  .print-preview-header {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 16px !important;
+    width: 100% !important;
+  }
+
+  .print-preview-header-side {
+    flex: 0 0 30% !important;
+    max-width: 30% !important;
+    min-width: 220px !important;
+    display: block !important;
+  }
+
+  .print-preview-header-center {
+    flex: 1 !important;
+    text-align: center !important;
+    display: block !important;
+  }
+
+  .print-preview-meta-row {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+  }
+}
