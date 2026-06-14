@@ -2,15 +2,16 @@ import React from 'react';
 import moment from 'moment';
 import PrintPreviewModal from '../common/PrintPreviewModal';
 import PrintPreviewHeader from '../common/PrintPreviewHeader';
-import TradingAccount from './TradingAccount';
-import ProfitLossAccount from './ProfitLossAccount';
-import CapitalAccount from './CapitalAccount';
+import AccountDetailsReport from './AccountDetailsReport';
 
-const ProfitLossPrintPreview = ({
+const AccountDetailsPrintPreview = ({
   show,
   onHide,
+  ledgerData,
+  openingBalance,
   firmName,
-  companyName,
+  accountName,
+  primaryAccount,
   periodStart,
   periodEnd,
   assessmentYear,
@@ -22,14 +23,14 @@ const ProfitLossPrintPreview = ({
     <PrintPreviewModal
       show={show}
       onHide={onHide}
-      title="Profit & Loss — Print Preview"
-      printAreaId="profit-loss-print-area"
+      title="Account Ledger — Print Preview"
+      printAreaId="account-ledger-print-area"
     >
       <PrintPreviewHeader
         leftValue={`${formattedStart} - ${formattedEnd}`}
-        title="Profit & Loss"
+        title="Account Ledger"
         icon="bi-bar-chart-line-fill"
-        firmName={firmName || 'Select Firm'}
+        firmName={firmName || 'All Firms'}
         periodLabel="FINANCIAL YEAR"
         periodStart={formattedStart}
         periodEnd={formattedEnd}
@@ -39,21 +40,19 @@ const ProfitLossPrintPreview = ({
           {assessmentYear}
         </p>
         <p className="mb-0">
-          <strong className="text-primary-emphasis fw-bold">{companyName}</strong>
+          <strong className="text-primary-emphasis fw-bold">
+            ACCOUNT NAME : {accountName || '-'} | PRIMARY ACCOUNT : {primaryAccount || '-'}
+          </strong>
         </p>
       </PrintPreviewHeader>
 
-      <div className="mb-2">
-        <TradingAccount />
-      </div>
-      <div className="mb-2">
-        <ProfitLossAccount />
-      </div>
-      <div className="mb-2">
-        <CapitalAccount />
-      </div>
+      <AccountDetailsReport
+        ledgerData={ledgerData}
+        openingBalanceProp={openingBalance}
+        isPrint
+      />
     </PrintPreviewModal>
   );
 };
 
-export default ProfitLossPrintPreview;
+export default AccountDetailsPrintPreview;

@@ -1,0 +1,33 @@
+/* Match All Account List table layout — only column-specific tweaks for logs */
+
+.logs-list-wrapper .dynamic-data-table td.logs-description-col,
+.logs-list-wrapper .dynamic-data-table th:nth-child(5) {
+  white-space: normal !important;
+  min-width: 420px;
+  width: 45%;
+  vertical-align: top;
+}
+
+.logs-list-wrapper .dynamic-data-table td:nth-child(1) {
+  width: 8%;
+  min-width: 70px;
+}
+
+.logs-list-wrapper .dynamic-data-table td:nth-child(2) {
+  width: 16%;
+  min-width: 160px;
+}
+
+.logs-list-wrapper .dynamic-data-table td:nth-child(3) {
+  width: 12%;
+  min-width: 100px;
+}
+
+.logs-list-wrapper .dynamic-data-table td:nth-child(4) {
+  width: 14%;
+  min-width: 120px;
+}
+
+.logs-list-wrapper .table-wrapper table {
+  min-width: 100%;
+}

@@ -1,7 +1,7 @@
 import React from 'react'
 import moment from 'moment'
 
-const AccountDetailsReport = ({ ledgerData = [], loading = false, openingBalanceProp = 0 }) => {
+const AccountDetailsReport = ({ ledgerData = [], loading = false, openingBalanceProp = 0, isPrint = false }) => {
     // Process data to calculate running balances and map fields
     const processedData = [];
     let currentBalance = parseFloat(openingBalanceProp || 0);
@@ -76,7 +76,7 @@ const AccountDetailsReport = ({ ledgerData = [], loading = false, openingBalance
                 </thead>
 
                 <tbody>
-                    {loading ? (
+                    {!isPrint && loading ? (
                         <tr>
                             <td colSpan="8" className="text-center py-4">
                                 <div className="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
