@@ -209,3 +209,20 @@ body {
 .apexcharts-canvas svg title {
     display: none !important;
 }
+
+/* Custom dashboard color palettes */
+.text-purple {
+    color: #8b5cf6 !important;
+}
+.bg-purple-subtle {
+    background-color: #f3e8ff !important;
+}
+.text-orange {
+    color: #f97316 !important;
+}
+.bg-orange-subtle {
+    background-color: #ffedd5 !important;
+}
+.bg-brown-subtle {
+    background-color: #fef3c7 !important;
+}

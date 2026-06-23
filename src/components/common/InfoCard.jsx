@@ -1,8 +1,8 @@
 import React from 'react';
 
-const InfoCard = ({ title, value, icon, colorClass, iconBgClass }) => {
+const InfoCard = ({ title, value, icon, colorClass, iconBgClass, wrapperClass = "col-6 col-md-6 col-lg-3" }) => {
   return (
-    <div className="col-6 col-md-6 col-lg-3">
+    <div className={wrapperClass}>
       <div className="info-card h-100 shadow-sm border">
         <div className="card-body p-3 p-md-4">
           <div className="d-flex justify-content-between align-items-start">
