@@ -85,6 +85,10 @@
     background-color: #20202e !important;
 }
 
+.bg-secondary {
+    background-color: #f0eded !important;
+}
+
 .cursor-pointer {
     cursor: pointer !important;
 }

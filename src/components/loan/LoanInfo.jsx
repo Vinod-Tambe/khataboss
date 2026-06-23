@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import '../../css/ActiveLoanPanel.css';
-import DynamicActionModal from './DynamicActionModal';
-import { modalConfigs } from '../../utils/modalConfigs';
+import DepositModal from './modal/DepositModal';
+import ReleaseModal from './modal/ReleaseModal';
+import AddPrincipalModal from './modal/AddPrincipalModal';
+import TransferModal from './modal/TransferModal';
+import AuctionModal from './modal/AuctionModal';
 import { getGirviById } from '../../api/girviApi';
 import moment from 'moment';
 import { toast } from 'react-toastify';
@@ -169,19 +172,57 @@ const OtherInfoTable = ({ data }) => (
 
 const ActionFooter = ({ onDepositClick, onReleaseClick, onAddPrincipalClick, onTransferClick, onAuctionClick }) => (
   <div className="action-footer mt-4">
-    <div className="d-flex flex-nowrap overflow-auto gap-2 pb-2">
-      <button className="btn btn-outline-primary btn-sm text-nowrap" onClick={onDepositClick}><i className="bi bi-file-text"></i> FORM 8</button>
-      <button className="btn btn-outline-info btn-sm text-nowrap" onClick={onDepositClick}><i className="bi bi-pencil"></i> Edit</button>
-      <button className="btn btn-outline-secondary btn-sm text-nowrap" onClick={onDepositClick}><i className="bi bi-envelope"></i> Notice</button>
-      <button className="btn btn-outline-success btn-sm text-nowrap" onClick={onDepositClick}><i className="bi bi-box-arrow-in-down"></i> Deposit</button>
-      <button className="btn btn-outline-info btn-sm text-nowrap" onClick={onAddPrincipalClick}><i className="bi bi-plus-circle"></i> A.Prin.Amt</button>
-      <button className="btn btn-outline-warning btn-sm text-nowrap" onClick={onTransferClick}><i className="bi bi-arrow-left-right"></i> Transfer</button>
-      <button className="btn btn-outline-success btn-sm text-nowrap" onClick={onReleaseClick}><i className="bi bi-box-arrow-up-right"></i> Release</button>
-      <button className="btn btn-outline-dark btn-sm text-nowrap" onClick={onAuctionClick}><i className="bi bi-gear"></i> Auction</button>
-      <button className="btn btn-outline-danger btn-sm text-nowrap"><i className="bi bi-bell"></i> Notice</button>
-      <button className="btn btn-outline-secondary btn-sm text-nowrap"><i className="bi bi-sliders"></i> Customize</button>
-      <button className="btn btn-outline-primary btn-sm text-nowrap"><i className="bi bi-printer"></i> Print</button>
-      <button className="btn btn-outline-danger btn-sm text-nowrap"><i className="bi bi-trash"></i> Delete</button>
+    <div className="row g-2 justify-content-center justify-content-md-start">
+      <div className="col-6 col-md-1">
+        <button className="btn btn-outline-primary btn-sm text-nowrap blue-btn w-100" onClick={onDepositClick}>
+          <i className="bi bi-file-text text-primary me-1"></i> FORM 8
+        </button>
+      </div>
+      <div className="col-6 col-md-1">
+        <button className="btn btn-outline-info btn-sm text-nowrap blue-btn w-100" onClick={onDepositClick}>
+          <i className="bi bi-pencil text-info me-1"></i> Update
+        </button>
+      </div>
+      <div className="col-6 col-md-1">
+        <button className="btn btn-outline-success btn-sm text-nowrap blue-btn w-100" onClick={onDepositClick}>
+          <i className="bi bi-box-arrow-in-down text-success me-1"></i> Deposit
+        </button>
+      </div>
+      <div className="col-12 col-md-2">
+        <button className="btn btn-outline-info btn-sm text-nowrap blue-btn w-100" onClick={onAddPrincipalClick}>
+          <i className="bi bi-plus-circle text-primary me-1"></i> Add. Principal
+        </button>
+      </div>
+      <div className="col-6 col-md-2">
+        <button className="btn btn-outline-warning btn-sm text-nowrap blue-btn w-100" onClick={onTransferClick}>
+          <i className="bi bi-arrow-left-right text-warning me-1"></i> Transfer
+        </button>
+      </div>
+      <div className="col-6 col-md-1">
+        <button className="btn btn-outline-success btn-sm text-nowrap blue-btn w-100" onClick={onReleaseClick}>
+          <i className="bi bi-box-arrow-up-right text-success me-1"></i> Release
+        </button>
+      </div>
+      <div className="col-6 col-md-1">
+        <button className="btn btn-outline-dark btn-sm text-nowrap blue-btn w-100" onClick={onAuctionClick}>
+          <i className="bi bi-gear text-secondary me-1"></i> Auction
+        </button>
+      </div>
+      <div className="col-6 col-md-1">
+        <button className="btn btn-outline-primary btn-sm text-nowrap blue-btn w-100">
+          <i className="bi bi-printer text-dark me-1"></i> Print
+        </button>
+      </div>
+      <div className="col-6 col-md-1">
+        <button className="btn btn-outline-danger btn-sm text-nowrap blue-btn w-100">
+          <i className="bi bi-envelope text-warning me-1"></i> Alert
+        </button>
+      </div>
+      <div className="col-6 col-md-1">
+        <button className="btn btn-outline-danger btn-sm text-nowrap blue-btn w-100">
+          <i className="bi bi-trash text-danger me-1"></i> Delete
+        </button>
+      </div>
     </div>
   </div>
 );
@@ -190,30 +231,31 @@ const LoanInfo = () => {
   const [activeModal, setActiveModal] = useState(null);
   const [loanDetails, setLoanDetails] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+
   const location = useLocation();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchLoan = async () => {
-      try {
-        const loanId = location.state?.loan?.girv_id;
-        if (!loanId) {
-          toast.error("No loan selected");
-          navigate('/user/home/active-loan');
-          return;
-        }
-        const response = await getGirviById(loanId);
-        setLoanDetails(response.data || response);
-      } catch (err) {
-        toast.error("Failed to load loan details");
-        console.error(err);
-      } finally {
-        setLoading(false);
+  const fetchLoan = useCallback(async () => {
+    try {
+      const loanId = location.state?.loan?.girv_id;
+      if (!loanId) {
+        toast.error("No loan selected");
+        navigate('/user/home/active-loan');
+        return;
       }
-    };
-    fetchLoan();
+      const response = await getGirviById(loanId);
+      setLoanDetails(response.data || response);
+    } catch (err) {
+      toast.error("Failed to load loan details");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }, [location.state, navigate]);
+
+  useEffect(() => {
+    fetchLoan();
+  }, [fetchLoan]);
 
   if (loading) return <div className="p-4 text-center">Loading loan details...</div>;
   if (!loanDetails) return <div className="p-4 text-center">Loan not found.</div>;
@@ -223,20 +265,20 @@ const LoanInfo = () => {
   const roi = parseFloat(loanDetails.girv_roi) || 0;
   const startDate = moment(loanDetails.girv_start_date);
   const today = moment();
-  
+
   // Time period in months
   const months = Math.max(1, today.diff(startDate, 'months', true));
-  
+
   // Calculate Interest (Simple Interest: P * R * T)
   const sInterest = parseFloat((principal * roi * months / 100).toFixed(2));
   const payableAmount = principal + sInterest;
-  
+
   // Calculate Valuation
   const totalValuation = loanDetails.items?.reduce((sum, item) => sum + (parseFloat(item.st_final_valuation) || 0), 0) || 0;
-  
+
   // Profit / Loss = Valuation - Payable Amount
   const profitLoss = parseFloat((totalValuation - payableAmount).toFixed(2));
-  
+
   const timePeriodText = `${months.toFixed(1)} Months`;
 
   // Attach computed fields for LoanInformation panel
@@ -265,13 +307,15 @@ const LoanInfo = () => {
     <div className="active-loan-panel">
       {/* Top Header */}
       <div className="row">
-        <div className="col-6">   <h6 className="mt-2 fw-bold text-brown">LOAN DETAILS PANEL</h6></div>
-        <div className="col-6">
+        <div className="col-4">   <h6 className="mt-2 fw-bold text-brown">LOAN DETAILS PANEL</h6></div>
+        <div className="col-8">
           <div className="d-flex flex-column align-items-end">
             <div className="top-actions mb-2">
-              <button className="btn btn-outline-primary btn-sm pe-3 me-3">LOAN LOGS <i className="bi bi-journal-text ms-2"></i></button>
-              <button className="btn btn-outline-danger btn-sm me-3 text-center" onClick={() => navigate(-1)}><i className="bi bi-arrow-left-circle"></i></button>
-              <button className="btn btn-outline-success btn-sm me-3"><i className="bi bi-arrow-right-circle"></i></button>
+              <button className="btn btn-outline-primary btn-sm me-3" title="Customize"><i className="bi bi-sliders text-secondary"></i></button>
+              <button className="btn btn-outline-warning btn-sm me-3" title="Notice"><i className="bi bi-envelope-open text-warning"></i></button>
+              <button className="btn btn-outline-info btn-sm me-3" title="Logs"><i className="bi bi-journal-text text-info"></i></button>
+              <button className="btn btn-outline-danger btn-sm me-3 text-center" onClick={() => navigate(-1)} title="Back"><i className="bi bi-arrow-left-circle text-danger"></i></button>
+              <button className="btn btn-outline-success btn-sm me-3" title="Next"><i className="bi bi-arrow-right-circle text-success"></i></button>
             </div>
           </div>
         </div>
@@ -322,10 +366,30 @@ const LoanInfo = () => {
         onAuctionClick={() => setActiveModal('auction')}
       />
 
-      <DynamicActionModal
-        isOpen={!!activeModal}
+      <DepositModal
+        isOpen={activeModal === 'deposit'}
         onClose={() => setActiveModal(null)}
-        config={activeModal ? modalConfigs[activeModal] : null}
+      />
+      <ReleaseModal
+        isOpen={activeModal === 'release'}
+        onClose={() => setActiveModal(null)}
+      />
+      <AddPrincipalModal
+        isOpen={activeModal === 'addPrincipal'}
+        onClose={() => setActiveModal(null)}
+        loanDetails={loanDetails}
+        onSuccess={() => {
+          setActiveModal(null);
+          fetchLoan();
+        }}
+      />
+      <TransferModal
+        isOpen={activeModal === 'transfer'}
+        onClose={() => setActiveModal(null)}
+      />
+      <AuctionModal
+        isOpen={activeModal === 'auction'}
+        onClose={() => setActiveModal(null)}
       />
     </div>
   );
