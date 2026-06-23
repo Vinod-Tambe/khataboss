@@ -48,8 +48,8 @@ const UserHome = () => {
           ...f,
           id: f.fin_id,
           finNo: `Fin-${f.fin_id}`,
-          principal: `${f.fin_prin_amt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-          emi: `${f.fin_emi_amt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          principal: `${(f.fin_prin_amt || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          emi: `${(f.fin_emi_amt || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
           startDate: moment(f.fin_start_date).format("DD-MM-YYYY"),
           status: f.fin_status
         }));
@@ -60,7 +60,7 @@ const UserHome = () => {
           ...l,
           id: l.girv_id,
           loanNo: `Loan-${l.girv_id}`,
-          principal: `${l.girv_prin_amt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          principal: `${(l.girv_prin_amt || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
           roi: `${l.girv_roi}%`,
           startDate: moment(l.girv_start_date).format("DD-MM-YYYY"),
           status: l.girv_status
@@ -74,7 +74,7 @@ const UserHome = () => {
           return {
             id: t.jrnl_id,
             transNo: `TR-${t.jrnl_id}`,
-            amount: `₹${t.jrnl_amt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            amount: `₹${(t.jrnl_amt || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
             type: t.jrnl_panel,
             category: t.jrnl_panel,
             date: moment(t.jrnl_date).format("DD-MM-YYYY"),
