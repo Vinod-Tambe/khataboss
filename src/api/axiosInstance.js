@@ -3,7 +3,7 @@ import { LogoutAlert } from '../components/common/LogoutAlert';
 
 
 const axiosInstance = axios.create({
-  baseURL: 'https://carlie-atavic-tonita.ngrok-free.dev/api/v1',
+  baseURL: 'https://khataboss.in/api/v1',
   headers: {
     'Content-Type': 'application/json',
     'ngrok-skip-browser-warning': 'true',
@@ -33,21 +33,21 @@ axiosInstance.interceptors.response.use(
     }
 
     const isTokenError = error.response && (
-      (error.response.status === 401 && 
-       error.config && 
-       error.config.url && 
-       !error.config.url.includes('/auth/login') && 
-       !error.config.url.includes('/auth/verify-otp')) ||
+      (error.response.status === 401 &&
+        error.config &&
+        error.config.url &&
+        !error.config.url.includes('/auth/login') &&
+        !error.config.url.includes('/auth/verify-otp')) ||
       (error.response.data && error.response.data.error === "Access denied. No token provided.")
     );
 
     if (isTokenError) {
       // Extract API message if available
       const apiMessage = error.response?.data?.message || error.response?.data?.error;
-      
+
       // Handle unauthorized (session expired)
       await LogoutAlert(apiMessage);
-      
+
       localStorage.removeItem('user');
       sessionStorage.removeItem('token');
 
