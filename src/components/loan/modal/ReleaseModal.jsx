@@ -18,72 +18,42 @@ const ReleaseModal = ({ isOpen, onClose }) => {
 
   return (
     <div className="custom-modal-overlay" onClick={onClose}>
-      <div className="custom-modal-container" onClick={(e) => e.stopPropagation()}>
-        
+      <form className="custom-modal-container" onClick={(e) => e.stopPropagation()}>
+
         {/* Header */}
-        <div className="custom-modal-header">
-          <h5>Release Active Loan</h5>
-          <button className="custom-modal-close" onClick={onClose}>&times;</button>
+        <div className="custom-modal-header bg-light d-flex justify-content-between p-3 pt-2 pb-2">
+          <h5 className="py-1">Release Active Loan</h5>
+          <button type="button" className="custom-modal-close" onClick={onClose}>&times;</button>
         </div>
 
         {/* Body */}
-        <div className="custom-modal-body">
-          
+        <div className="custom-modal-body bg-green">
+
           {/* Top Section */}
           <div className="row g-3 mb-4">
             <div className="col-md-2">
               <label className="form-label">Release Date</label>
-              <input type="date" className="form-control" defaultValue="2025-02-02" />
+              <input type="date" className="form-control border-dark text-center" defaultValue="2025-02-02" />
             </div>
             <div className="col-md-2">
               <label className="form-label">Principal Amount</label>
-              <input type="text" className="form-control" defaultValue="5000" />
+              <input type="text" className="form-control border-dark text-center" defaultValue="5000" />
             </div>
             <div className="col-md-2">
               <label className="form-label">Interest Amount</label>
-              <input type="text" className="form-control" defaultValue="2" />
+              <input type="text" className="form-control border-dark text-center" defaultValue="2" />
             </div>
             <div className="col-md-2">
               <label className="form-label">Discount</label>
-              <input type="text" className="form-control" defaultValue="2" />
+              <input type="text" className="form-control border-dark text-center" defaultValue="2" />
             </div>
             <div className="col-md-2">
               <label className="form-label">Extra Amount</label>
-              <input type="text" className="form-control" defaultValue="2" />
+              <input type="text" className="form-control border-dark text-center" defaultValue="2" />
             </div>
             <div className="col-md-2">
               <label className="form-label">Payable Amount</label>
-              <input type="text" className="form-control" defaultValue="2" />
-            </div>
-            <div className="col-md-2 offset-md-2">
-              <label className="form-label">Prin Amt Account</label>
-              <select className="form-select">
-                <option></option>
-              </select>
-            </div>
-            <div className="col-md-2">
-              <label className="form-label">Interest Amt Account</label>
-              <select className="form-select">
-                <option></option>
-              </select>
-            </div>
-            <div className="col-md-2">
-              <label className="form-label">Discount Amt Account</label>
-              <select className="form-select">
-                <option></option>
-              </select>
-            </div>
-            <div className="col-md-2">
-              <label className="form-label">Extra Amt Account</label>
-              <select className="form-select">
-                <option></option>
-              </select>
-            </div>
-            <div className="col-md-2">
-              <label className="form-label">Staff Name</label>
-              <select className="form-select">
-                <option></option>
-              </select>
+              <input type="text" className="form-control border-dark text-center" defaultValue="2" />
             </div>
           </div>
 
@@ -92,64 +62,64 @@ const ReleaseModal = ({ isOpen, onClose }) => {
             {/* Left Column (Payment Rows) */}
             <div className="col-md-8">
               <div className="section-title">Payment Details</div>
-              
+
               {/* Cash Row */}
               <div className="row g-2 mb-2 align-items-end">
                 <div className="col-md-4">
-                  <select className="form-select">
+                  <select className="form-select form-select-sm border-dark">
                     <option></option>
                   </select>
                 </div>
                 <div className="col-md-4">
-                  <input type="text" className="form-control" placeholder="CASH INFORMATION" />
+                  <input type="text" className="form-control form-control-sm border-dark" placeholder="CASH INFORMATION" />
                 </div>
                 <div className="col-md-4">
-                  <input type="text" className="form-control" placeholder="CASH AMOUNT" />
+                  <input type="text" className="form-control form-control-sm border-dark" placeholder="CASH AMOUNT" />
                 </div>
               </div>
 
               {/* Bank Row */}
               <div className="row g-2 mb-2 align-items-end">
                 <div className="col-md-4">
-                  <select className="form-select">
+                  <select className="form-select form-select-sm border-dark">
                     <option></option>
                   </select>
                 </div>
                 <div className="col-md-4">
-                  <input type="text" className="form-control" placeholder="BANK INFORMATION" />
+                  <input type="text" className="form-control form-control-sm border-dark" placeholder="BANK INFORMATION" />
                 </div>
                 <div className="col-md-4">
-                  <input type="text" className="form-control" placeholder="BANK AMOUNT" />
+                  <input type="text" className="form-control form-control-sm border-dark" placeholder="BANK AMOUNT" />
                 </div>
               </div>
 
               {/* Online Row */}
               <div className="row g-2 mb-2 align-items-end">
                 <div className="col-md-4">
-                  <select className="form-select">
+                  <select className="form-select form-select-sm border-dark">
                     <option></option>
                   </select>
                 </div>
                 <div className="col-md-4">
-                  <input type="text" className="form-control" placeholder="ONLINE INFORMATION" />
+                  <input type="text" className="form-control form-control-sm border-dark" placeholder="ONLINE INFORMATION" />
                 </div>
                 <div className="col-md-4">
-                  <input type="text" className="form-control" placeholder="ONLINE AMOUNT" />
+                  <input type="text" className="form-control form-control-sm border-dark" placeholder="ONLINE AMOUNT" />
                 </div>
               </div>
 
               {/* Card Row */}
               <div className="row g-2 mb-2 align-items-end">
                 <div className="col-md-4">
-                  <select className="form-select">
+                  <select className="form-select form-select-sm border-dark">
                     <option></option>
                   </select>
                 </div>
                 <div className="col-md-4">
-                  <input type="text" className="form-control" placeholder="CARD INFORMATION" />
+                  <input type="text" className="form-control form-control-sm border-dark" placeholder="CARD INFORMATION" />
                 </div>
                 <div className="col-md-4">
-                  <input type="text" className="form-control" placeholder="CARD AMOUNT" />
+                  <input type="text" className="form-control form-control-sm border-dark" placeholder="CARD AMOUNT" />
                 </div>
               </div>
             </div>
@@ -157,30 +127,39 @@ const ReleaseModal = ({ isOpen, onClose }) => {
             {/* Right Column (Other Info) */}
             <div className="col-md-4">
               <div className="section-title">Other Information</div>
-              
-              <div className="mb-3">
-                <textarea 
-                  className="form-control textarea-custom" 
+
+              <div className="mb-2">
+                <textarea
+                  className="form-control border-dark"
                   placeholder="PAYMENT OTHER INFORMATION"
+                  rows={3}
                 ></textarea>
               </div>
               <div>
-                <textarea 
-                  className="form-control textarea-custom" 
+                <textarea
+                  className="form-control border-dark"
                   placeholder="OTHER INFORMATION"
+                  rows={3}
                 ></textarea>
               </div>
             </div>
           </div>
 
+          {/* Submit Button Row */}
+          <div className="row">
+            <div className="col text-center mt-2">
+              <button
+                type="submit"
+                className="btn btn-primary px-5 py-2"
+              >
+                Release Loan
+              </button>
+            </div>
+          </div>
+
         </div>
 
-        {/* Footer */}
-        <div className="custom-modal-footer">
-          <button className="btn btn-action">Release Loan</button>
-        </div>
-
-      </div>
+      </form>
     </div>
   );
 };

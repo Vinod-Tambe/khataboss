@@ -282,7 +282,7 @@ const AddPrincipalModal = ({ isOpen, onClose, loanDetails, onSuccess }) => {
         </div>
 
         {/* Body */}
-        <div className="custom-modal-body bg-red">
+        <div className="custom-modal-body bg-blue">
 
           {/* Top Section */}
           <div className="row g-3 mb-3">
