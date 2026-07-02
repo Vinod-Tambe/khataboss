@@ -9,7 +9,7 @@ import { addAdditionalPrincipal } from '../../../api/addPrincipalApi';
 import { toast } from 'react-hot-toast';
 import '../../../css/Modal.css';
 
-const AddPrincipalModal = ({ isOpen, onClose, loanDetails, onSuccess }) => {
+const AddPrincipalModal = ({ isOpen, onClose, loanDetails, onSuccess, isTab }) => {
   const { selectedFirm } = useSelector((state) => state.firm);
   const [accounts, setAccounts] = useState([]);
   const [submitting, setSubmitting] = useState(false);
@@ -271,6 +271,258 @@ const AddPrincipalModal = ({ isOpen, onClose, loanDetails, onSuccess }) => {
     }
   };
 
+  const content = (
+    <div className="custom-modal-body bg-blue">
+      {/* Top Section */}
+      <div className="row g-3 mb-3">
+        <div className="col">
+          <label className="form-label">Transaction Date</label>
+          <input
+            type="text"
+            className="form-control border-dark text-center"
+            ref={ap_trans_dateRef}
+            id="ap_trans_date"
+            defaultValue={formData.ap_trans_date ? moment(formData.ap_trans_date).format('DD-MM-YYYY') : moment().format('DD-MM-YYYY')}
+            required
+          />
+        </div>
+        <div className="col">
+          <label className="form-label">Principal Amount</label>
+          <input
+            type="text"
+            className="form-control border-dark text-center"
+            id="ap_prin_amt"
+            value={formData.ap_prin_amt}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        <div className="col">
+          <label className="form-label">Rate of Interest</label>
+          <input
+            type="text"
+            className="form-control border-dark text-center"
+            id="ap_roi"
+            value={formData.ap_roi}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        <div className="col">
+          <label className="form-label">Payable Amount</label>
+          <input
+            type="text"
+            className="form-control border-dark text-center"
+            id="ap_payable_amt"
+            value={formData.ap_payable_amt}
+            disabled
+            required
+          />
+        </div>
+      </div>
+
+      {/* Payment Details Section */}
+      <div className="row g-4">
+        {/* Left Column (Payment Rows) */}
+        <div className="col-md-8">
+          <div className="section-title">Payment Details</div>
+
+          {/* Cash Row */}
+          <div className="row g-2 mb-2 align-items-end">
+            <div className="col-md-4">
+              <select
+                className="form-select form-select-sm border-dark"
+                id="ap_cash_acc_id"
+                value={formData.ap_cash_acc_id}
+                onChange={handleInputChange}
+              >
+                <option value="">Cash Account</option>
+                {accounts.map(acc => (
+                  <option key={acc.acc_id} value={acc.acc_id}>{acc.acc_name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="col-md-4">
+              <input
+                type="text"
+                className="form-control form-control-sm border-dark"
+                placeholder="Cash Information"
+                id="ap_cash_info"
+                value={formData.ap_cash_info}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="col-md-4">
+              <input
+                type="text"
+                className="form-control form-control-sm border-dark"
+                placeholder="Cash Amount"
+                id="ap_cash_amt"
+                value={formData.ap_cash_amt}
+                onChange={handleInputChange}
+              />
+            </div>
+          </div>
+
+          {/* Bank Row */}
+          <div className="row g-2 mb-2 align-items-end">
+            <div className="col-md-4">
+              <select
+                className="form-select form-select-sm border-dark"
+                id="ap_bank_acc_id"
+                value={formData.ap_bank_acc_id}
+                onChange={handleInputChange}
+              >
+                <option value="">Bank Account</option>
+                {accounts.map(acc => (
+                  <option key={acc.acc_id} value={acc.acc_id}>{acc.acc_name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="col-md-4">
+              <input
+                type="text"
+                className="form-control form-control-sm border-dark"
+                placeholder="Bank Information"
+                id="ap_bank_info"
+                value={formData.ap_bank_info}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="col-md-4">
+              <input
+                type="text"
+                className="form-control form-control-sm border-dark"
+                placeholder="Bank Amount"
+                id="ap_bank_amt"
+                value={formData.ap_bank_amt}
+                onChange={handleInputChange}
+              />
+            </div>
+          </div>
+
+          {/* Online Row */}
+          <div className="row g-2 mb-2 align-items-end">
+            <div className="col-md-4">
+              <select
+                className="form-select form-select-sm border-dark"
+                id="ap_online_acc_id"
+                value={formData.ap_online_acc_id}
+                onChange={handleInputChange}
+              >
+                <option value="">Online Account</option>
+                {accounts.map(acc => (
+                  <option key={acc.acc_id} value={acc.acc_id}>{acc.acc_name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="col-md-4">
+              <input
+                type="text"
+                className="form-control form-control-sm border-dark"
+                placeholder="Online Information"
+                id="ap_online_info"
+                value={formData.ap_online_info}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="col-md-4">
+              <input
+                type="text"
+                className="form-control form-control-sm border-dark"
+                placeholder="Online Amount"
+                id="ap_online_amt"
+                value={formData.ap_online_amt}
+                onChange={handleInputChange}
+              />
+            </div>
+          </div>
+
+          {/* Card Row */}
+          <div className="row g-2 mb-2 align-items-end">
+            <div className="col-md-4">
+              <select
+                className="form-select form-select-sm border-dark"
+                id="ap_card_acc_id"
+                value={formData.ap_card_acc_id}
+                onChange={handleInputChange}
+              >
+                <option value="">Card Account</option>
+                {accounts.map(acc => (
+                  <option key={acc.acc_id} value={acc.acc_id}>{acc.acc_name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="col-md-4">
+              <input
+                type="text"
+                className="form-control form-control-sm border-dark"
+                placeholder="Card Information"
+                id="ap_card_info"
+                value={formData.ap_card_info}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="col-md-4">
+              <input
+                type="text"
+                className="form-control form-control-sm border-dark"
+                placeholder="Card Amount"
+                id="ap_card_amt"
+                value={formData.ap_card_amt}
+                onChange={handleInputChange}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column (Other Info) */}
+        <div className="col-md-4">
+          <div className="section-title">Other Information</div>
+          <div className="mb-2">
+            <textarea
+              className="form-control border-dark"
+              placeholder="Payment Other Information"
+              rows={3}
+              id="ap_pay_info"
+              value={formData.ap_pay_info}
+              onChange={handleInputChange}
+            ></textarea>
+          </div>
+          <div>
+            <textarea
+              className="form-control border-dark"
+              placeholder="Other Information"
+              rows={3}
+              id="ap_other_info"
+              value={formData.ap_other_info}
+              onChange={handleInputChange}
+            ></textarea>
+          </div>
+        </div>
+      </div>
+      <div className="row">
+        <div className="col text-center mt-2">
+          <button
+            type="submit"
+            className="btn btn-primary px-5 py-2"
+            disabled={submitting}
+          >
+            {submitting ? 'Processing...' : 'Add Principal'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (isTab) {
+    return (
+      <form className="w-100 h-100 d-flex flex-column m-0" onSubmit={handleSubmit} onClick={(e) => e.stopPropagation()}>
+        {content}
+      </form>
+    );
+  }
+
   return (
     <div className="custom-modal-overlay" onClick={onClose}>
       <form className="custom-modal-container" onClick={(e) => e.stopPropagation()} onSubmit={handleSubmit}>
@@ -282,248 +534,7 @@ const AddPrincipalModal = ({ isOpen, onClose, loanDetails, onSuccess }) => {
         </div>
 
         {/* Body */}
-        <div className="custom-modal-body bg-blue">
-
-          {/* Top Section */}
-          <div className="row g-3 mb-3">
-            <div className="col">
-              <label className="form-label">Transaction Date</label>
-              <input
-                type="text"
-                className="form-control border-dark text-center"
-                ref={ap_trans_dateRef}
-                id="ap_trans_date"
-                defaultValue={formData.ap_trans_date ? moment(formData.ap_trans_date).format('DD-MM-YYYY') : moment().format('DD-MM-YYYY')}
-                required
-              />
-            </div>
-            <div className="col">
-              <label className="form-label">Principal Amount</label>
-              <input
-                type="text"
-                className="form-control border-dark text-center"
-                id="ap_prin_amt"
-                value={formData.ap_prin_amt}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="col">
-              <label className="form-label">Rate of Interest</label>
-              <input
-                type="text"
-                className="form-control border-dark text-center"
-                id="ap_roi"
-                value={formData.ap_roi}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="col">
-              <label className="form-label">Payable Amount</label>
-              <input
-                type="text"
-                className="form-control border-dark text-center"
-                id="ap_payable_amt"
-                value={formData.ap_payable_amt}
-                disabled
-                required
-              />
-            </div>
-          </div>
-
-          {/* Payment Details Section */}
-          <div className="row g-4">
-            {/* Left Column (Payment Rows) */}
-            <div className="col-md-8">
-              <div className="section-title">Payment Details</div>
-
-              {/* Cash Row */}
-              <div className="row g-2 mb-2 align-items-end">
-                <div className="col-md-4">
-                  <select
-                    className="form-select form-select-sm border-dark"
-                    id="ap_cash_acc_id"
-                    value={formData.ap_cash_acc_id}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">Cash Account</option>
-                    {accounts.map(acc => (
-                      <option key={acc.acc_id} value={acc.acc_id}>{acc.acc_name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-md-4">
-                  <input
-                    type="text"
-                    className="form-control form-control-sm border-dark"
-                    placeholder="Cash Information"
-                    id="ap_cash_info"
-                    value={formData.ap_cash_info}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="col-md-4">
-                  <input
-                    type="text"
-                    className="form-control form-control-sm border-dark"
-                    placeholder="Cash Amount"
-                    id="ap_cash_amt"
-                    value={formData.ap_cash_amt}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-
-              {/* Bank Row */}
-              <div className="row g-2 mb-2 align-items-end">
-                <div className="col-md-4">
-                  <select
-                    className="form-select form-select-sm border-dark"
-                    id="ap_bank_acc_id"
-                    value={formData.ap_bank_acc_id}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">Bank Account</option>
-                    {accounts.map(acc => (
-                      <option key={acc.acc_id} value={acc.acc_id}>{acc.acc_name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-md-4">
-                  <input
-                    type="text"
-                    className="form-control form-control-sm border-dark"
-                    placeholder="Bank Information"
-                    id="ap_bank_info"
-                    value={formData.ap_bank_info}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="col-md-4">
-                  <input
-                    type="text"
-                    className="form-control form-control-sm border-dark"
-                    placeholder="Bank Amount"
-                    id="ap_bank_amt"
-                    value={formData.ap_bank_amt}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-
-              {/* Online Row */}
-              <div className="row g-2 mb-2 align-items-end">
-                <div className="col-md-4">
-                  <select
-                    className="form-select form-select-sm border-dark"
-                    id="ap_online_acc_id"
-                    value={formData.ap_online_acc_id}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">Online Account</option>
-                    {accounts.map(acc => (
-                      <option key={acc.acc_id} value={acc.acc_id}>{acc.acc_name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-md-4">
-                  <input
-                    type="text"
-                    className="form-control form-control-sm border-dark"
-                    placeholder="Online Information"
-                    id="ap_online_info"
-                    value={formData.ap_online_info}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="col-md-4">
-                  <input
-                    type="text"
-                    className="form-control form-control-sm border-dark"
-                    placeholder="Online Amount"
-                    id="ap_online_amt"
-                    value={formData.ap_online_amt}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-
-              {/* Card Row */}
-              <div className="row g-2 mb-2 align-items-end">
-                <div className="col-md-4">
-                  <select
-                    className="form-select form-select-sm border-dark"
-                    id="ap_card_acc_id"
-                    value={formData.ap_card_acc_id}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">Card Account</option>
-                    {accounts.map(acc => (
-                      <option key={acc.acc_id} value={acc.acc_id}>{acc.acc_name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-md-4">
-                  <input
-                    type="text"
-                    className="form-control form-control-sm border-dark"
-                    placeholder="Card Information"
-                    id="ap_card_info"
-                    value={formData.ap_card_info}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="col-md-4">
-                  <input
-                    type="text"
-                    className="form-control form-control-sm border-dark"
-                    placeholder="Card Amount"
-                    id="ap_card_amt"
-                    value={formData.ap_card_amt}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column (Other Info) */}
-            <div className="col-md-4">
-              <div className="section-title">Other Information</div>
-              <div className="mb-2">
-                <textarea
-                  className="form-control border-dark"
-                  placeholder="Payment Other Information"
-                  rows={3}
-                  id="ap_pay_info"
-                  value={formData.ap_pay_info}
-                  onChange={handleInputChange}
-                ></textarea>
-              </div>
-              <div>
-                <textarea
-                  className="form-control border-dark"
-                  placeholder="Other Information"
-                  rows={3}
-                  id="ap_other_info"
-                  value={formData.ap_other_info}
-                  onChange={handleInputChange}
-                ></textarea>
-              </div>
-            </div>
-          </div>
-          <div className="row">
-            <div className="col text-center mt-2">
-              <button
-                type="submit"
-                className="btn btn-primary px-5 py-2"
-                disabled={submitting}
-              >
-                {submitting ? 'Processing...' : 'Add Principal'}
-              </button>
-            </div>
-          </div>
-        </div>
+        {content}
 
       </form>
     </div>
