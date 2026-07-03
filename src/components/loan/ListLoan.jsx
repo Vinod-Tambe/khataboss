@@ -61,6 +61,20 @@ const ListLoan = ({ status = "ALL" }) => {
       render: (data) => `${data}.`
     },
     {
+      key: "girv_status",
+      title: "Status",
+      render: (data) => {
+        let text = data || "ACTIVE";
+        switch (text) {
+          case "ACTIVE": text = "Active"; break;
+          case "RELEASED": text = "Released"; break;
+          case "CLOSED": text = "Closed"; break;
+          default: break;
+        }
+        return `${text}`;
+      }
+    },
+    {
       key: "girv_start_date",
       title: "Start Date",
       dateFilter: true,
@@ -105,21 +119,6 @@ const ListLoan = ({ status = "ALL" }) => {
       title: "Card",
       sum: true,
       render: (data) => `${Number(data || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-    },
-
-    {
-      key: "girv_status",
-      title: "Status",
-      render: (data) => {
-        let text = data || "ACTIVE";
-        switch (text) {
-          case "ACTIVE": text = "Active"; break;
-          case "RELEASED": text = "Released"; break;
-          case "CLOSED": text = "Closed"; break;
-          default: break;
-        }
-        return `${text}`;
-      }
     }
   ], []);
 
