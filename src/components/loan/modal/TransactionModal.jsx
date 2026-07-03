@@ -101,7 +101,14 @@ const TransactionModal = ({ isOpen, onClose, loanDetails, totalDueAmount, onSucc
             <TransferModal isOpen={true} isTab={true} onClose={onClose} />
           )}
           {activeTab === 'release' && (
-            <ReleaseModal isOpen={true} isTab={true} onClose={onClose} />
+            <ReleaseModal 
+              isOpen={true} 
+              isTab={true} 
+              onClose={onClose} 
+              loanDetails={loanDetails}
+              totalDueAmount={totalDueAmount}
+              onSuccess={onSuccess}
+            />
           )}
           {activeTab === 'auction' && (
             <AuctionModal isOpen={true} isTab={true} onClose={onClose} />

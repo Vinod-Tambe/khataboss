@@ -126,10 +126,11 @@ const PrincipalInfoTable = ({ data, isUnsecured }) => (
       <table className="table table-bordered text-center m-0">
         <thead>
           <tr>
+            <th className='bg-blue text-brown border border-dark'>Status</th>
             <th className='bg-blue text-brown border border-dark'>Principal</th>
             <th className='bg-blue text-brown border border-dark'>ROI</th>
             <th className='bg-blue text-brown border border-dark'>S. Interest</th>
-            <th className='bg-blue text-brown border border-dark'>Discount</th>
+            <th className='bg-blue text-brown border border-dark'>Discount Amt</th>
             <th className='bg-blue text-brown border border-dark'>Extra Amt</th>
             <th className='bg-blue text-brown border border-dark'>Total</th>
             <th className='bg-blue text-brown border border-dark'>Start Date</th>
@@ -137,19 +138,19 @@ const PrincipalInfoTable = ({ data, isUnsecured }) => (
             <th className='bg-blue text-brown border border-dark'>Time Period</th>
             {!isUnsecured && <th className='bg-blue text-brown border border-dark'>Valuation</th>}
             {!isUnsecured && <th className='bg-blue text-brown border border-dark'>Profit/Loss</th>}
-            <th className='bg-blue text-brown border border-dark'>Status</th>
             <th className='bg-blue text-brown border border-dark'>User Image</th>
           </tr>
         </thead>
         <tbody>
           {data && data.length > 0 ? data.map((row, idx) => (
             <tr key={idx}>
-              <td>{row.principal}</td>
+              <td>{row.status}</td>
+              <td>{Number(row.principal || 0).toFixed(2)}</td>
               <td>{row.roi}</td>
-              <td>{row.sInterest}</td>
-              <td>{row.discount}</td>
-              <td>{row.extraAmt}</td>
-              <td>{row.total}</td>
+              <td>{Number(row.sInterest || 0).toFixed(2)}</td>
+              <td>{Number(row.discount || 0).toFixed(2)}</td>
+              <td>{Number(row.extraAmt || 0).toFixed(2)}</td>
+              <td>{Number(row.total || 0).toFixed(2)}</td>
               <td>{row.startDate}</td>
               <td>{row.endDate}</td>
               <td>{row.timePeriod}</td>
@@ -163,7 +164,6 @@ const PrincipalInfoTable = ({ data, isUnsecured }) => (
                   <td>-</td>
                 )
               )}
-              <td>{row.status}</td>
               <td>{row.userImg}</td>
             </tr>
           )) : <tr><td colSpan={isUnsecured ? "12" : "14"}>No data available</td></tr>}
@@ -174,54 +174,97 @@ const PrincipalInfoTable = ({ data, isUnsecured }) => (
 );
 
 const DepositInfoTable = ({ data }) => (
-  <div className="panel-section mt-2">
-    <div className="section-header mb-2">Deposit Information</div>
-    <div className="table-responsive">
-      <table className="table table-bordered text-center m-0">
-        <thead>
-          <tr>
-            <th className='table-success text-brown border border-dark'>Deposit Date</th>
-            <th className='table-success text-brown border border-dark'>Principal Received</th>
-            <th className='table-success text-brown border border-dark'>Interest Received</th>
-            <th className='table-success text-brown border border-dark'>Discount</th>
-            <th className='table-success text-brown border border-dark'>Extra Amount</th>
-            <th className='table-success text-brown border border-dark'>Total Received</th>
-            <th className='table-success text-brown border border-dark'>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data && data.length > 0 ? data.map((row, idx) => (
-            <tr key={idx}>
-              <td>{row.date}</td>
-              <td className="text-success fw-bold">{row.principal}</td>
-              <td className="text-success fw-bold">{row.sInterest}</td>
-              <td className="text-success fw-bold">{row.discount}</td>
-              <td className="text-success fw-bold">{row.extraAmt}</td>
-              <td className="text-success fw-bold">{row.total}</td>
-              <td>{row.status}</td>
+  data && data.length > 0 ? (
+    <div className="panel-section mt-2">
+      <div className="section-header mb-2">Deposit Information</div>
+      <div className="table-responsive">
+        <table className="table table-bordered text-center m-0">
+          <thead>
+            <tr>
+              <th className='table-success text-brown border border-dark'>Status</th>
+              <th className='table-success text-brown border border-dark'>Deposit Date</th>
+              <th className='table-success text-brown border border-dark'>Principal Received</th>
+              <th className='table-success text-brown border border-dark'>Interest Received</th>
+              <th className='table-success text-brown border border-dark'>Discount Amount</th>
+              <th className='table-success text-brown border border-dark'>Extra Amount</th>
+              <th className='table-success text-brown border border-dark'>Total Received</th>
             </tr>
-          )) : <tr><td colSpan="7">No deposit data available</td></tr>}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {data.map((row, idx) => (
+              <tr key={idx}>
+                <td>{row.status}</td>
+                <td>{row.date}</td>
+                <td className="text-success fw-bold">{Number(row.principal || 0).toFixed(2)}</td>
+                <td className="text-success fw-bold">{Number(row.sInterest || 0).toFixed(2)}</td>
+                <td className="text-success fw-bold">{Number(row.discount || 0).toFixed(2)}</td>
+                <td className="text-success fw-bold">{Number(row.extraAmt || 0).toFixed(2)}</td>
+                <td className="text-success fw-bold">{Number(row.total || 0).toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
+  ) : null
 );
 
-const ActionFooter = ({ onDepositClick, onTransactionClick }) => (
+const ReleaseInfoTable = ({ data }) => (
+  data && data.length > 0 ? (
+    <div className="panel-section mt-2">
+      <div className="section-header mb-2 text-dark">Release Information</div>
+      <div className="table-responsive">
+        <table className="table table-bordered text-center m-0">
+          <thead>
+            <tr>
+              <th className='table-danger text-brown border border-dark'>Status</th>
+              <th className='table-danger text-brown border border-dark'>Release Date</th>
+              <th className='table-danger text-brown border border-dark'>Principal Received</th>
+              <th className='table-danger text-brown border border-dark'>Interest Received</th>
+              <th className='table-danger text-brown border border-dark'>Discount Amount</th>
+              <th className='table-danger text-brown border border-dark'>Extra Amount</th>
+              <th className='table-danger text-brown border border-dark'>Total Received</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((row, idx) => (
+              <tr key={idx}>
+                <td>{row.status}</td>
+                <td>{row.date}</td>
+                <td className="text-danger fw-bold">{Number(row.principal || 0).toFixed(2)}</td>
+                <td className="text-danger fw-bold">{Number(row.sInterest || 0).toFixed(2)}</td>
+                <td className="text-danger fw-bold">{Number(row.discount || 0).toFixed(2)}</td>
+                <td className="text-danger fw-bold">{Number(row.extraAmt || 0).toFixed(2)}</td>
+                <td className="text-danger fw-bold">{Number(row.total || 0).toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  ) : null
+);
+
+
+const ActionFooter = ({ onDepositClick, onTransactionClick, isReleased }) => (
   <div className="action-footer mt-4">
     <div className="d-flex flex-wrap gap-2 justify-content-center">
       <button className="btn btn-outline-primary btn-sm text-nowrap blue-btn" onClick={onDepositClick}>
         <i className="bi bi-file-text text-primary me-1"></i> FORM 8
       </button>
-      <button className="btn btn-outline-info btn-sm text-nowrap blue-btn" onClick={onDepositClick}>
-        <i className="bi bi-pencil text-info me-1"></i> Update
-      </button>
-      <button className="btn btn-outline-success btn-sm text-nowrap blue-btn" onClick={onDepositClick}>
-        <i className="bi bi-box-arrow-in-down text-success me-1"></i> Deposit
-      </button>
-      <button className="btn btn-outline-warning btn-sm text-nowrap blue-btn fw-bold" onClick={onTransactionClick}>
-        <i className="bi bi-currency-exchange text-warning me-1"></i> Make Transaction
-      </button>
+      {!isReleased && (
+        <>
+          <button className="btn btn-outline-info btn-sm text-nowrap blue-btn" onClick={onDepositClick}>
+            <i className="bi bi-pencil text-info me-1"></i> Update
+          </button>
+          <button className="btn btn-outline-success btn-sm text-nowrap blue-btn" onClick={onDepositClick}>
+            <i className="bi bi-box-arrow-in-down text-success me-1"></i> Deposit
+          </button>
+          <button className="btn btn-outline-warning btn-sm text-nowrap blue-btn fw-bold" onClick={onTransactionClick}>
+            <i className="bi bi-currency-exchange text-warning me-1"></i> Make Transaction
+          </button>
+        </>
+      )}
       <button className="btn btn-outline-info btn-sm text-nowrap blue-btn">
         <i className="bi bi-journal-text text-info me-1"></i> Logs
       </button>
@@ -276,10 +319,12 @@ const LoanInfo = () => {
 
   // Reconstruct original principal
   const totalAdditionalPrincipal = loanDetails.additionalPrincipals?.reduce((sum, ap) => sum + (parseFloat(ap.ap_prin_amt) || 0), 0) || 0;
+  const totalReleasesPrincipal = loanDetails.releases?.reduce((sum, rel) => sum + (parseFloat(rel.rel_prin_amt) || 0), 0) || 0;
+  const totalDepositsPrincipal = loanDetails.deposits?.reduce((sum, dep) => sum + (parseFloat(dep.dep_prin_amt) || 0), 0) || 0;
 
-  // Note: girv_prin_amt in db includes all additional principals
+  // Note: girv_prin_amt in db includes all additional principals, but is reduced by deposits and releases
   const currentTotalPrincipal = parseFloat(loanDetails.girv_prin_amt) || 0;
-  const originalPrincipal = Math.max(0, currentTotalPrincipal - totalAdditionalPrincipal);
+  const originalPrincipal = Math.max(0, currentTotalPrincipal + totalReleasesPrincipal + totalDepositsPrincipal - totalAdditionalPrincipal);
 
   const roi = parseFloat(loanDetails.girv_roi) || 0;
   const startDate = moment(loanDetails.girv_start_date);
@@ -382,6 +427,29 @@ const LoanInfo = () => {
     });
   }
 
+  // Process Releases Rows
+  const releaseDataRows = [];
+  if (loanDetails.releases && loanDetails.releases.length > 0) {
+    loanDetails.releases.forEach(rel => {
+      const relPrin = parseFloat(rel.rel_prin_amt) || 0;
+      const relInt = parseFloat(rel.rel_int_amt) || 0;
+      const relDisc = parseFloat(rel.rel_disc_amt) || 0;
+      const relExtra = parseFloat(rel.rel_extra_amt) || 0;
+      const relTotal = parseFloat(rel.rel_payable_amt) || 0;
+      const relDate = moment(rel.rel_trans_date);
+
+      releaseDataRows.push({
+        principal: relPrin,
+        sInterest: relInt,
+        discount: relDisc,
+        extraAmt: relExtra,
+        total: relTotal,
+        date: relDate.format('DD-MM-YYYY'),
+        status: 'RELEASED'
+      });
+    });
+  }
+
   const profitLoss = overallProfitLoss;
 
   // Attach computed fields for LoanInformation panel
@@ -395,12 +463,23 @@ const LoanInfo = () => {
     <div className="active-loan-panel">
       {/* Top Header */}
       <div className="row">
-        <div className="col-4">   <h6 className="mt-2 fw-bold text-brown">LOAN DETAILS PANEL</h6></div>
+        <div className="col-4">
+          <h6 className="mt-2 fw-bold text-brown d-flex align-items-center">
+            LOAN DETAILS PANEL
+          </h6>
+        </div>
         <div className="col-8">
-          <div className="d-flex flex-column align-items-end">
-            <div className="top-actions mb-2">
-              <button className="btn btn-outline-danger btn-sm me-3 text-center" onClick={() => navigate(-1)} title="Back"><i className="bi bi-arrow-left-circle text-danger"></i></button>
-              <button className="btn btn-outline-success btn-sm me-3" title="Next"><i className="bi bi-arrow-right-circle text-success"></i></button>
+          <div className="d-flex justify-content-end align-items-center w-100">
+            <div className="top-actions mb-2 d-flex align-items-center gap-2">
+              <span className={`badge ${loanDetails.girv_status === 'RELEASED' ? 'bg-danger' : 'bg-success'} px-3 py-2 shadow-sm rounded-pill`}>
+                {loanDetails.girv_status}
+              </span>
+              <button className="btn btn-outline-danger btn-sm d-flex align-items-center gap-1 shadow-sm" onClick={() => navigate(-1)} title="Back">
+                <i className="bi bi-arrow-left-circle"></i>
+              </button>
+              <button className="btn btn-outline-success btn-sm d-flex align-items-center gap-1 shadow-sm" title="Next">
+                <i className="bi bi-arrow-right-circle"></i>
+              </button>
             </div>
           </div>
         </div>
@@ -416,6 +495,8 @@ const LoanInfo = () => {
 
       <DepositInfoTable data={depositDataRows} />
 
+      <ReleaseInfoTable data={releaseDataRows} />
+
       {/* Final Valuation Section */}
       <div className="panel-section mt-2">
         <div className="section-header mb-2">{loanDetails.girv_type === 'unsecured' ? 'Total Summary' : 'Final Valuation'}</div>
@@ -423,7 +504,11 @@ const LoanInfo = () => {
           <div className="col">
             <div className="border border-dark h-100">
               <div className="bg-cust-info text-brown fw-bold p-1 border-bottom border-dark">Total Principal</div>
-              <div className="p-2 fw-bold">{currentTotalPrincipal.toFixed(2)}</div>
+              <div className="p-2 fw-bold">
+                {loanDetails.girv_status === 'RELEASED'
+                  ? (originalPrincipal + totalAdditionalPrincipal).toFixed(2)
+                  : currentTotalPrincipal.toFixed(2)}
+              </div>
             </div>
           </div>
           <div className="col">
@@ -462,6 +547,7 @@ const LoanInfo = () => {
       <ActionFooter
         onDepositClick={() => setActiveModal('deposit')}
         onTransactionClick={() => setActiveModal('transaction')}
+        isReleased={loanDetails.girv_status === 'RELEASED'}
       />
 
       <DepositModal
