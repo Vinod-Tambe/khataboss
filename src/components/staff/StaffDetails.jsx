@@ -669,12 +669,12 @@ const StaffDetails = () => {
 
                     <div className="d-flex flex-column gap-3 mt-3">
                         {/* Firm access */}
-                        <div className="border rounded p-3 bg-light bg-opacity-25">
-                            <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-light-subtle">
-                                <h6 className="fw-bold mb-0 small text-secondary d-flex align-items-center">
+                        <div className="border rounded p-2 bg-light bg-opacity-25">
+                            <div className="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-light-subtle">
+                                <p className="fw-bold mb-1 small text-secondary d-flex align-items-center">
                                     <i className="bi bi-building-fill me-2"></i> Firm access :
-                                </h6>
-                                <div className="form-check form-switch d-flex align-items-center gap-2 m-0 p-0">
+                                </p>
+                                <div className="form-check form-switch mb-1 d-flex align-items-center gap-2 m-0 p-0">
                                     <input id="firm-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('firm')} onChange={(e) => handleSectionSelectAll('firm', e.target.checked)} />
                                     <label htmlFor="firm-all" className="permission-label m-0">Select all</label>
                                 </div>
@@ -708,12 +708,12 @@ const StaffDetails = () => {
                         </div>
 
                         {/* Account access */}
-                        <div className="border rounded p-3 bg-light bg-opacity-25">
-                            <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-light-subtle">
-                                <h6 className="fw-bold mb-0 small text-secondary d-flex align-items-center">
+                        <div className="border rounded p-2 bg-light bg-opacity-25">
+                            <div className="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-light-subtle">
+                                <p className="fw-bold mb-1 small text-secondary d-flex align-items-center">
                                     <i className="bi bi-wallet2 me-2"></i> Account access :
-                                </h6>
-                                <div className="form-check form-switch d-flex align-items-center gap-2 m-0 p-0">
+                                </p>
+                                <div className="form-check form-switch mb-1 d-flex align-items-center gap-2 m-0 p-0">
                                     <input id="account-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('account')} onChange={(e) => handleSectionSelectAll('account', e.target.checked)} />
                                     <label htmlFor="account-all" className="permission-label m-0">Select all</label>
                                 </div>
@@ -747,12 +747,12 @@ const StaffDetails = () => {
                         </div>
 
                         {/* Staff access */}
-                        <div className="border rounded p-3 bg-light bg-opacity-25">
-                            <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-light-subtle">
-                                <h6 className="fw-bold mb-0 small text-secondary d-flex align-items-center">
+                        <div className="border rounded p-2 bg-light bg-opacity-25">
+                            <div className="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-light-subtle">
+                                <p className="fw-bold mb-1 small text-secondary d-flex align-items-center">
                                     <i className="bi bi-briefcase-fill me-2"></i> Staff access :
-                                </h6>
-                                <div className="form-check form-switch d-flex align-items-center gap-2 m-0 p-0">
+                                </p>
+                                <div className="form-check form-switch mb-1 d-flex align-items-center gap-2 m-0 p-0">
                                     <input id="staff-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('staff')} onChange={(e) => handleSectionSelectAll('staff', e.target.checked)} />
                                     <label htmlFor="staff-all" className="permission-label m-0">Select all</label>
                                 </div>
@@ -786,12 +786,12 @@ const StaffDetails = () => {
                         </div>
 
                         {/* Loan access */}
-                        <div className="border rounded p-3 bg-light bg-opacity-25">
-                            <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-light-subtle">
-                                <h6 className="fw-bold mb-0 small text-secondary d-flex align-items-center">
+                        <div className="border rounded p-2 bg-light bg-opacity-25">
+                            <div className="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-light-subtle">
+                                <p className="fw-bold mb-1 small text-secondary d-flex align-items-center">
                                     <i className="bi bi-journal-text me-2"></i> Loan access :
-                                </h6>
-                                <div className="form-check form-switch d-flex align-items-center gap-2 m-0 p-0">
+                                </p>
+                                <div className="form-check form-switch mb-1 d-flex align-items-center gap-2 m-0 p-0">
                                     <input id="loan-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('loan')} onChange={(e) => handleSectionSelectAll('loan', e.target.checked)} />
                                     <label htmlFor="loan-all" className="permission-label m-0">Select all</label>
                                 </div>
@@ -885,12 +885,12 @@ const StaffDetails = () => {
                         </div>
 
                         {/* Finance access */}
-                        <div className="border rounded p-3 bg-light bg-opacity-25">
-                            <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-light-subtle">
-                                <h6 className="fw-bold mb-0 small text-secondary d-flex align-items-center">
+                        <div className="border rounded p-2 bg-light bg-opacity-25">
+                            <div className="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-light-subtle">
+                                <p className="fw-bold mb-1 small text-secondary d-flex align-items-center">
                                     <i className="bi bi-cash-coin me-2"></i> Finance access :
-                                </h6>
-                                <div className="form-check form-switch d-flex align-items-center gap-2 m-0 p-0">
+                                </p>
+                                <div className="form-check form-switch mb-1 d-flex align-items-center gap-2 m-0 p-0">
                                     <input id="finance-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('finance')} onChange={(e) => handleSectionSelectAll('finance', e.target.checked)} />
                                     <label htmlFor="finance-all" className="permission-label m-0">Select all</label>
                                 </div>
@@ -948,12 +948,12 @@ const StaffDetails = () => {
                         </div>
 
                         {/* Reports & Logs */}
-                        <div className="border rounded p-3 bg-light bg-opacity-25">
-                            <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-light-subtle">
-                                <h6 className="fw-bold mb-0 small text-secondary d-flex align-items-center">
+                        <div className="border rounded p-2 bg-light bg-opacity-25">
+                            <div className="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-light-subtle">
+                                <p className="fw-bold mb-1 small text-secondary d-flex align-items-center">
                                     <i className="bi bi-eye-fill me-2"></i> Reports & Logs (List Only) :
-                                </h6>
-                                <div className="form-check form-switch d-flex align-items-center gap-2 m-0 p-0">
+                                </p>
+                                <div className="form-check form-switch mb-1 d-flex align-items-center gap-2 m-0 p-0">
                                     <input id="reports-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('reports')} onChange={(e) => handleSectionSelectAll('reports', e.target.checked)} />
                                     <label htmlFor="reports-all" className="permission-label m-0">Select all</label>
                                 </div>

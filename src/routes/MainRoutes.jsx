@@ -14,7 +14,7 @@ import BalanceSheetRoutes from '../pages/balance-sheet/BalanceSheetRoutes';
 import ProfitLossRoutes from '../pages/profit-loss/ProfitLossRoutes';
 import LogsRoutes from '../pages/logs/LogsRoutes';
 const MainRoutes = () => {
-  
+
   return (
     <div className="layout-wrapper">
       <Header />
@@ -23,21 +23,21 @@ const MainRoutes = () => {
         <main className="content-area mt-0 mt-md-3 d-flex flex-column" style={{ minHeight: 'calc(100vh - 50px)' }}>
           <div className="container-fluid flex-grow-1 pb-4">
             <Routes>
-              <Route path="/firm/*" element={< FirmRoutes/>} />
-              <Route path="/user/*" element={< UserRoutes/>} />
-              <Route path="/staff/*" element={< StaffRoutes/>} />
-              <Route path="/account/*" element={< AccountRoutes/>} />
-              <Route path="/daybook" element={< DayBookRoutes/>} />
-              <Route path="/book" element={< BookRoutes/>} />
-              <Route path="/trial-balance" element={< TrialBalanceRoutes/>} />
-              <Route path="/balance-sheet" element={< BalanceSheetRoutes/>} />
-              <Route path="/profit-loss" element={< ProfitLossRoutes/>} />
-              <Route path="/logs" element={< LogsRoutes/>} />
-              <Route path="/*" element={< HomeRoutes/>} />
+              <Route path="/firm/*" element={< FirmRoutes />} />
+              <Route path="/user/*" element={< UserRoutes />} />
+              <Route path="/staff/*" element={< StaffRoutes />} />
+              <Route path="/account/*" element={< AccountRoutes />} />
+              <Route path="/daybook" element={< DayBookRoutes />} />
+              <Route path="/book" element={< BookRoutes />} />
+              <Route path="/trial-balance" element={< TrialBalanceRoutes />} />
+              <Route path="/balance-sheet" element={< BalanceSheetRoutes />} />
+              <Route path="/profit-loss" element={< ProfitLossRoutes />} />
+              <Route path="/logs" element={< LogsRoutes />} />
+              <Route path="/*" element={< HomeRoutes />} />
             </Routes>
           </div >
           <div className="mt-auto">
-            <Footer/>
+            <Footer />
           </div>
         </main>
       </div>

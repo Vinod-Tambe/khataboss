@@ -10,14 +10,15 @@ import { useEffect } from 'react';
  * @param {React.RefObject} formRef Ref to the form element
  * @param {boolean} autoFocus Whether to focus the first field automatically
  */
-const useFormNavigation = (formRef, autoFocus = true) => {
+const useFormNavigation = (formRef, autoFocus = true, active = true) => {
   useEffect(() => {
+    if (!active) return;
     const form = formRef.current;
     if (!form) return;
 
     // Helper to get focusable elements
     const getFocusableElements = () => {
-        const selector = 'input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex="0"]';
+        const selector = 'input:not([type="hidden"]):not([disabled]):not([readonly]), select:not([disabled]), textarea:not([disabled]):not([readonly]), button:not([disabled]), [tabindex="0"]';
         return Array.from(form.querySelectorAll(selector)).filter(el => {
             return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
         });
@@ -118,7 +119,7 @@ const useFormNavigation = (formRef, autoFocus = true) => {
     form.addEventListener('keydown', handleKeyDown);
     return () => form.removeEventListener('keydown', handleKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formRef, autoFocus]);
+  }, [formRef, autoFocus, active]);
 };
 
 export default useFormNavigation;

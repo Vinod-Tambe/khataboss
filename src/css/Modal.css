@@ -51,13 +51,7 @@
   }
 }
 
-.custom-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  border-bottom: 2px solid #e0e0e0;
-}
+
 
 .custom-modal-header h5 {
   margin: 0;
@@ -89,7 +83,7 @@
 }
 
 .custom-modal-body {
-  padding: 20px;
+  padding: 10px 20px 20px 20px;
   overflow-y: auto;
   flex: 1;
 }
@@ -105,11 +99,10 @@
 }
 
 .custom-modal-body .form-label {
-  font-size: 0.75rem;
+  /* font-size: 0.75rem; */
   font-weight: 700;
   color: #a33b43;
   margin-bottom: 0.25rem;
-  text-transform: uppercase;
 }
 
 .custom-modal-body .form-control,
