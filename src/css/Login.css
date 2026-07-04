@@ -1,16 +1,16 @@
 html,
 body {
   height: 100% !important;
-  background-color: #f8f9fa !important;
+  background-color: var(--login-page-bg) !important;
 }
 
 .bg-white {
-     background-color: rgb(248 249 250) !important;
+     background-color: var(--login-panel-bg) !important;
 }
 
 .login-container .nav-link.active {
-  background: linear-gradient(135deg, #70016e, #e60000) !important;
-  color: white !important;
+  background: var(--login-gradient) !important;
+  color: var(--color-white) !important;
 }
 
 .login-div {
@@ -20,8 +20,8 @@ body {
 }
 
 .left-panel {
-  background: linear-gradient(135deg, #70016e, #e60000) !important;
-  color: #fff !important;
+  background: var(--login-gradient) !important;
+  color: var(--color-white) !important;
   padding: 3rem !important;
   height: 100% !important;
   /* display: flex !important; */
@@ -34,7 +34,7 @@ body {
 }
 
 .typewrite>.wrap {
-  border-right: 0.08em solid #fff !important;
+  border-right: 0.08em solid var(--color-white) !important;
 }
 
 .left-panel p {
@@ -104,10 +104,10 @@ body {
 }
 
 .input-box {
-  background: #eee !important;
+  background: var(--login-input-bg) !important;
   border: none !important;
   border-radius: 8px !important;
-  color: #333 !important;
+  color: var(--login-input-text) !important;
   font-size: 16px !important;
   font-weight: 500 !important;
   outline: none !important;
@@ -116,13 +116,13 @@ body {
 }
 
 .login-container .btn-secondary {
-  background: linear-gradient(135deg, #e60000, #70016e) !important;
+  background: var(--login-gradient-reverse) !important;
 }
 
 .dot {
   width: 10px !important;
   height: 10px !important;
-  background-color: #fff !important;
+  background-color: var(--color-white) !important;
   border-radius: 50% !important;
   display: inline-block !important;
   margin-right: 8px !important;

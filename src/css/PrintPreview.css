@@ -1,21 +1,21 @@
 .print-preview-wrapper {
-  background: #f0f2f5;
+  background: var(--print-preview-wrapper-bg);
 }
 
 .print-preview-document {
-  background: #fff;
+  background: var(--print-field-bg);
   max-width: 100%;
   margin: 0 auto;
 }
 
 .print-preview-field {
-  border: 1px solid #212529;
+  border: 1px solid var(--print-field-border);
   border-radius: 0.375rem;
   padding: 0.375rem 0.75rem;
   text-align: center;
-  background: #fff;
+  background: var(--print-field-bg);
   font-size: 0.95rem;
-  color: #212529;
+  color: var(--print-field-text);
   width: 100%;
   box-sizing: border-box;
   white-space: nowrap;
@@ -89,43 +89,43 @@
 }
 
 .print-preview-body .text-brown {
-  color: brown !important;
+  color: var(--text-brown) !important;
 }
 
 .print-preview-body .text-info-emphasis {
-  color: #055160 !important;
+  color: var(--print-info-text) !important;
 }
 
 .print-preview-body .text-success-emphasis {
-  color: #0a3622 !important;
+  color: var(--print-success-text) !important;
 }
 
 .print-preview-body .text-primary-emphasis {
-  color: #052c65 !important;
+  color: var(--print-primary-text) !important;
 }
 
 .print-preview-body .bg-blue {
-  background-color: rgb(239, 243, 255) !important;
+  background-color: var(--datatable-row-bg-blue) !important;
 }
 
 .print-preview-body .bg-red {
-  background-color: #f4edea !important;
+  background-color: var(--bg-red-soft) !important;
 }
 
 .print-preview-body .bg-pink {
-  background-color: rgb(253, 240, 247) !important;
+  background-color: var(--bg-pink-soft) !important;
 }
 
 .print-preview-body .bg-green {
-  background-color: #edf4ea !important;
+  background-color: var(--bg-green-soft) !important;
 }
 
 .print-preview-body .bg-cust-info {
-  background-color: #eaf4f3 !important;
+  background-color: var(--bg-cust-info) !important;
 }
 
 .print-preview-body .bg-cust-primary {
-  background-color: #e9eff9 !important;
+  background-color: var(--bg-cust-primary) !important;
 }
 
 .print-preview-body .border-dashed {
@@ -135,15 +135,15 @@
 .print-preview-body .dynamic-data-table thead th {
   border: 1px solid grey !important;
   white-space: nowrap;
-  color: maroon !important;
-  background-color: rgb(231, 238, 255) !important;
+  color: var(--datatable-head-text) !important;
+  background-color: var(--datatable-head-bg) !important;
 }
 
 .print-preview-body .dynamic-data-table tfoot th {
   border: 1px solid grey !important;
   white-space: nowrap;
-  color: maroon !important;
-  background-color: #f4eaea !important;
+  color: var(--datatable-head-text) !important;
+  background-color: var(--datatable-foot-bg) !important;
 }
 
 .print-preview-body .dynamic-data-table td,
@@ -174,7 +174,7 @@
   .print-preview-body {
     padding: 0 !important;
     margin: 0 !important;
-    background: #fff !important;
+    background: var(--print-field-bg) !important;
     font-family: "Calibri", sans-serif !important;
   }
 
@@ -188,7 +188,7 @@
     box-shadow: none !important;
     padding: 0 !important;
     margin: 0 !important;
-    background: #fff !important;
+    background: var(--print-field-bg) !important;
   }
 
   .print-preview-body .card {
@@ -197,7 +197,7 @@
     box-shadow: none !important;
     padding: 0 !important;
     margin: 0 !important;
-    background: #fff !important;
+    background: var(--print-field-bg) !important;
   }
 
   .print-preview-body .table-responsive {

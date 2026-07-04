@@ -22,7 +22,7 @@ table {
 .table-wrapper {
   scrollbar-width: thin;
   /* max-height: 400px;    */
-  scrollbar-color: #999 transparent;
+  scrollbar-color: var(--datatable-scrollbar) transparent;
 }
 
 ::-webkit-scrollbar {
@@ -37,15 +37,15 @@ html {
 .dynamic-data-table thead th {
   border: 1px solid grey !important;
   white-space: nowrap;
-  color: maroon !important;
-  background-color: rgb(231, 238, 255) !important;
+  color: var(--datatable-head-text) !important;
+  background-color: var(--datatable-head-bg) !important;
 }
 
 .dynamic-data-table tfoot th {
   border: 1px solid grey !important;
   white-space: nowrap;
-  color: maroon !important;
-  background-color: #f4eaea !important;
+  color: var(--datatable-head-text) !important;
+  background-color: var(--datatable-foot-bg) !important;
 }
 
 td {
@@ -97,14 +97,14 @@ table th {
 }
 
 .page-link {
-  color: black;
+  color: var(--color-black);
 }
 
 .active>.page-link,
 .page-link.active {
-  background: #cff4fc !important;
-  border: 1px solid black !important;
-  color: black !important;
+  background: var(--datatable-page-active-bg) !important;
+  border: 1px solid var(--color-black) !important;
+  color: var(--color-black) !important;
 }
 
 h5 {
@@ -112,11 +112,11 @@ h5 {
 }
 
 .bg-blue {
-  background-color: rgb(239, 243, 255) !important;
+  background-color: var(--datatable-row-bg-blue) !important;
 }
 
 .text-maroon {
-  color: maroon !important;
+  color: var(--datatable-head-text) !important;
 }
 
 .dt-length {

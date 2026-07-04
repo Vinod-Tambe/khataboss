@@ -5,7 +5,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--modal-overlay-bg);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -25,7 +25,7 @@
 }
 
 .custom-modal-container {
-  background-color: #f6faf6;
+  background-color: var(--modal-container-bg);
   /* Light green/gray background */
   border-radius: 10px;
   width: 100%;
@@ -35,7 +35,7 @@
   flex-direction: column;
   overflow: hidden;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  border: 1px solid #d4e0d4;
+  border: 1px solid var(--modal-container-border);
   animation: slideUp 0.3s ease-out;
 }
 
@@ -55,7 +55,7 @@
 
 .custom-modal-header h5 {
   margin: 0;
-  color: #1a4f8b;
+  color: var(--modal-heading);
   font-weight: 700;
   text-transform: uppercase;
   font-size: 1rem;
@@ -63,8 +63,8 @@
 
 .custom-modal-close {
   background: none;
-  border: 1px solid #dc3545;
-  color: #dc3545;
+  border: 1px solid var(--btn-danger-text);
+  color: var(--btn-danger-text);
   border-radius: 4px;
   width: 28px;
   height: 28px;
@@ -78,8 +78,8 @@
 }
 
 .custom-modal-close:hover {
-  background-color: #dc3545;
-  color: white;
+  background-color: var(--btn-danger-text);
+  color: var(--color-white);
 }
 
 .custom-modal-body {
@@ -89,19 +89,19 @@
 }
 
 .custom-modal-body .section-title {
-  color: #1a4f8b;
+  color: var(--modal-heading);
   font-size: 0.85rem;
   font-weight: 700;
   text-transform: uppercase;
   margin-bottom: 10px;
-  border-bottom: 1px solid #d4e0d4;
+  border-bottom: 1px solid var(--modal-container-border);
   padding-bottom: 5px;
 }
 
 .custom-modal-body .form-label {
   /* font-size: 0.75rem; */
   font-weight: 700;
-  color: #a33b43;
+  color: var(--modal-label);
   margin-bottom: 0.25rem;
 }
 
@@ -109,7 +109,7 @@
 .custom-modal-body .form-select {
   font-size: 0.85rem;
   border-radius: 4px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--modal-input-border);
   padding: 0.35rem 0.75rem;
 }
 
@@ -117,16 +117,16 @@
   padding: 15px 20px;
   display: flex;
   justify-content: center;
-  border-top: 1px solid #e0e0e0;
-  background-color: #fdfdfd;
+  border-top: 1px solid var(--modal-footer-border);
+  background-color: var(--modal-footer-bg);
   border-bottom-left-radius: 10px;
   border-bottom-right-radius: 10px;
 }
 
 .custom-modal-footer .btn-action {
-  background-color: #e6f0ff;
-  color: #0d6efd;
-  border: 1px solid #0d6efd;
+  background-color: var(--modal-action-bg);
+  color: var(--modal-action-text);
+  border: 1px solid var(--modal-action-text);
   font-weight: 700;
   text-transform: uppercase;
   padding: 0.5rem 2rem;
@@ -135,8 +135,8 @@
 }
 
 .custom-modal-footer .btn-action:hover {
-  background-color: #0d6efd;
-  color: white;
+  background-color: var(--modal-action-text);
+  color: var(--color-white);
 }
 
 .textarea-custom {
@@ -146,21 +146,21 @@
 
 /* --- EMI Receipt Modal Styles --- */
 .emi-receipt-wrapper {
-  background-color: #f8f9fa;
+  background-color: var(--modal-emi-wrapper-bg);
   padding: 1.5rem;
 }
 
 .emi-receipt-container {
-  border: 1px solid #ccc;
+  border: 1px solid var(--modal-input-border);
   padding: 20px;
   border-radius: 5px;
   max-width: 600px;
   margin: 0 auto;
-  background-color: #fff;
+  background-color: var(--color-white);
 }
 
 .emi-receipt-header {
-  border-bottom: 2px solid #000;
+  border-bottom: 2px solid var(--color-black);
   padding-bottom: 10px;
   margin-bottom: 1rem;
   text-align: center;
@@ -187,7 +187,7 @@
 
 .emi-receipt-table th {
   width: 40%;
-  background-color: #f8f9fa;
+  background-color: var(--modal-emi-wrapper-bg);
   font-weight: bold;
   text-align: left;
 }
@@ -212,40 +212,40 @@
 
   /* Ensure background colors and text colors print correctly */
   .bg-primary {
-    background-color: #1a4f8b !important;
-    color: white !important;
+    background-color: var(--print-bg-primary) !important;
+    color: var(--color-white) !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
   .bg-light {
-    background-color: #f8f9fa !important;
+    background-color: var(--modal-emi-wrapper-bg) !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
   .text-primary {
-    color: #1a4f8b !important;
+    color: var(--print-bg-primary) !important;
   }
 
   .text-success {
-    color: #198754 !important;
+    color: var(--print-text-success) !important;
   }
 
   .text-danger {
-    color: #dc3545 !important;
+    color: var(--btn-danger-text) !important;
   }
 
   .badge.bg-success {
-    background-color: #198754 !important;
-    color: white !important;
+    background-color: var(--print-text-success) !important;
+    color: var(--color-white) !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
   .badge.bg-warning {
-    background-color: #ffc107 !important;
-    color: #000 !important;
+    background-color: var(--print-bg-warning) !important;
+    color: var(--color-black) !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -254,7 +254,7 @@
   .border,
   .border-bottom,
   .border-light-subtle {
-    border-color: #dee2e6 !important;
+    border-color: var(--print-border-subtle) !important;
   }
 
   /* Hide buttons and unnecessary elements during print if they somehow leak, though iframe handles this */
@@ -266,11 +266,11 @@
   .table-bordered,
   .table-bordered th,
   .table-bordered td {
-    border: 1px solid #000 !important;
+    border: 1px solid var(--color-black) !important;
   }
 
   /* Make sure the outer box has a solid border */
   .emi-receipt-print-box {
-    border: 1px solid #000 !important;
+    border: 1px solid var(--color-black) !important;
   }
 }

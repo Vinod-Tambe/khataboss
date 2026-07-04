@@ -5,88 +5,88 @@
 /* ========== Buttons ========== */
 .btn-primary {
     font-weight: bold !important;
-    color: #000080 !important;
-    background-color: #dfecff !important;
+    color: var(--btn-primary-text) !important;
+    background-color: var(--btn-primary-bg) !important;
 }
 
 .bg-cust-primary {
-    background-color: #e9eff9 !important;
+    background-color: var(--bg-cust-primary) !important;
 }
 
 .bg-red {
-    background-color: #f4edea !important;
+    background-color: var(--bg-red-soft) !important;
 }
 
 .bg-pink {
-    background-color: rgb(253, 240, 247) !important;
+    background-color: var(--bg-pink-soft) !important;
 }
 
 .bg-white {
-    background-color: white !important;
+    background-color: var(--color-white) !important;
 }
 
 .bg-cust-info {
-    background-color: #eaf4f3 !important;
+    background-color: var(--bg-cust-info) !important;
 }
 
 
 .bg-green {
-    background-color: #edf4ea !important;
+    background-color: var(--bg-green-soft) !important;
 }
 
 .text-red {
-    color: rgb(255, 240, 239) !important;
+    color: var(--text-red-soft) !important;
 }
 
 .text-green {
-    color: #86bc86 !important;
+    color: var(--text-green-soft) !important;
 }
 
 .text-orange {
-    color: #eca02b !important;
+    color: var(--text-orange) !important;
 }
 
 .text-brown {
-    color: brown !important;
+    color: var(--text-brown) !important;
 }
 
 .btn-success {
-    color: #006400 !important;
-    background-color: #d8f6d8 !important;
-    border: 1px solid #86bc86 !important;
+    color: var(--btn-success-text) !important;
+    background-color: var(--btn-success-bg) !important;
+    border: 1px solid var(--text-green-soft) !important;
 }
 
 .btn-danger {
-    color: #dc143c !important;
-    background-color: #ffdbe1 !important;
-    border: 1px solid #f999aa !important;
+    color: var(--btn-danger-text) !important;
+    background-color: var(--btn-danger-bg) !important;
+    border: 1px solid var(--btn-danger-border) !important;
 }
 
 .btn-info {
-    color: #065658 !important;
-    background-color: #dbfbff !important;
-    border: 1px solid #99f6f9 !important;
+    color: var(--btn-info-text) !important;
+    background-color: var(--btn-info-bg) !important;
+    border: 1px solid var(--btn-info-border) !important;
 }
 
 .btn-yellow {
-    color: #dc143c !important;
-    background-color: rgba(252, 227, 191, 0.726) !important;
-    border: 1px solid #f999aa !important;
+    color: var(--btn-danger-text) !important;
+    background-color: var(--btn-yellow-bg) !important;
+    border: 1px solid var(--btn-danger-border) !important;
 }
 
 .btn-warning {
-    color: #aa6600 !important;
-    background-color: #fda !important;
-    border: 1px solid #eca02b !important;
+    color: var(--btn-warning-text) !important;
+    background-color: var(--btn-warning-bg) !important;
+    border: 1px solid var(--text-orange) !important;
 }
 
 /* ========== Background ========== */
 .bg-dark {
-    background-color: #20202e !important;
+    background-color: var(--bg-dark) !important;
 }
 
 .bg-secondary {
-    background-color: #f0eded !important;
+    background-color: var(--bg-secondary) !important;
 }
 
 .cursor-pointer {
@@ -137,7 +137,7 @@
         border: none !important;
         box-shadow: none !important;
         width: 100% !important;
-        background: white !important;
+        background: var(--color-white) !important;
     }
 
     .table-responsive {
