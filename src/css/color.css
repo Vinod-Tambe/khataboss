@@ -1,0 +1,124 @@
+:root {
+  /* Base */
+  --color-white: #fff;
+  --color-black: #000;
+  --color-black-soft: #333;
+  --color-navy: navy;
+  --color-brown: brown;
+  --color-maroon: maroon;
+
+  /* Shared app utilities */
+  --btn-primary-text: #000080;
+  --btn-primary-bg: #dfecff;
+  --bg-cust-primary: #e9eff9;
+  --bg-red-soft: #f4edea;
+  --bg-pink-soft: rgb(253 240 247);
+  --bg-cust-info: #eaf4f3;
+  --bg-green-soft: #edf4ea;
+  --text-red-soft: rgb(255, 240, 239);
+  --text-green-soft: #86bc86;
+  --text-orange: #eca02b;
+  --text-brown: brown;
+  --btn-success-text: #006400;
+  --btn-success-bg: #d8f6d8;
+  --btn-danger-text: #dc143c;
+  --btn-danger-bg: #ffdbe1;
+  --btn-danger-border: #f999aa;
+  --btn-info-text: #065658;
+  --btn-info-bg: #dbfbff;
+  --btn-info-border: #99f6f9;
+  --btn-yellow-bg: rgba(252, 227, 191, 0.726);
+  --btn-warning-text: #aa6600;
+  --btn-warning-bg: #fda;
+  --bg-dark: #20202e;
+  --bg-secondary: #f0eded;
+
+  /* Common buttons */
+  --blue-btn-bg: #e9f2ff;
+  --blue-btn-border: #accfff;
+
+  /* Data tables and print preview */
+  --datatable-scrollbar: #999;
+  --datatable-head-text: maroon;
+  --datatable-head-bg: rgb(231, 238, 255);
+  --datatable-foot-bg: #f4eaea;
+  --datatable-page-active-bg: #cff4fc;
+  --datatable-row-bg-blue: rgb(239, 243, 255);
+  --print-preview-wrapper-bg: #f0f2f5;
+  --print-field-bg: #fff;
+  --print-field-border: #212529;
+  --print-field-text: #212529;
+  --print-info-text: #055160;
+  --print-success-text: #0a3622;
+  --print-primary-text: #052c65;
+
+  /* Layout */
+  --layout-header-bg: #ffffff;
+  --layout-header-border: #e6e6f0;
+  --layout-muted-text: #8b8bb0;
+  --layout-notification-header-border: #edf0f4;
+  --layout-notification-header-bg: #f8fafc;
+  --layout-notification-title: #1f2937;
+  --layout-filter-bg: #eef2f7;
+  --layout-filter-text: #4b5563;
+  --layout-filter-hover-bg: #e4ebf5;
+  --layout-filter-active-bg: #cfe2ff;
+  --layout-filter-active-text: #1d4ed8;
+  --layout-item-border: #f1f3f6;
+  --layout-unread-bg: #f0f9ff;
+  --layout-notification-dot: #0dcaf0;
+  --layout-title-text: #111827;
+  --layout-message-text: #6b7280;
+  --layout-time-text: #9ca3af;
+  --success: #4f9081;
+  --success-alt: #4f9079;
+  --light: #f2f4f8;
+  --layout-sidebar-border: #eee;
+  --layout-sidebar-active-bg: rgba(91, 79, 144, 0.1);
+  --layout-sidebar-sub-active-bg: rgba(92, 174, 157, 0.1);
+  --layout-scrollbar-thumb: rgba(0, 0, 0, 0.3);
+
+  /* Login */
+  --login-page-bg: #f8f9fa;
+  --login-panel-bg: rgb(248 249 250);
+  --login-gradient: linear-gradient(135deg, #70016e, #e60000);
+  --login-gradient-reverse: linear-gradient(135deg, #e60000, #70016e);
+  --login-input-bg: #eee;
+  --login-input-text: #333;
+
+  /* Home */
+  --home-card-glass: rgba(255, 255, 255, 0.85);
+  --home-card-border: rgba(255, 255, 255, 0.4);
+  --home-card-bg: #fff;
+  --home-muted-text: #4b5563;
+  --home-tooltip-bg: #ffffff;
+  --home-tooltip-text: #374151;
+  --home-tooltip-border: #e5e7eb;
+  --home-track-bg: #f1f5f9;
+  --home-progress-gap-bg: #ffffff;
+  --home-progress-fill-text: #ffffff;
+  --home-purple-text: #8b5cf6;
+  --home-purple-bg: #f3e8ff;
+  --home-orange-text: #f97316;
+  --home-orange-bg: #ffedd5;
+  --home-brown-bg: #fef3c7;
+
+  /* Modal */
+  --modal-overlay-bg: rgba(0, 0, 0, 0.5);
+  --modal-container-bg: #f6faf6;
+  --modal-container-border: #d4e0d4;
+  --modal-heading: #1a4f8b;
+  --modal-label: #a33b43;
+  --modal-input-border: #ccc;
+  --modal-footer-border: #e0e0e0;
+  --modal-footer-bg: #fdfdfd;
+  --modal-action-bg: #e6f0ff;
+  --modal-action-text: #0d6efd;
+  --modal-emi-wrapper-bg: #f8f9fa;
+
+  /* Print helpers */
+  --print-bg-primary: #1a4f8b;
+  --print-text-success: #198754;
+  --print-bg-warning: #ffc107;
+  --print-border-subtle: #dee2e6;
+}

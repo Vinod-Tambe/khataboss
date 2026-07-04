@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { FiSearch, FiUser, FiMenu, FiBell } from 'react-icons/fi';
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -6,10 +6,44 @@ import { logout } from "../store/slices/authSlice";
 import { getFirmsDropdown } from "../api/firmApi";
 import { setFirms, setSelectedFirmId, setLoading as setFirmLoading, setError as setFirmError } from "../store/slices/firmSlice";
 
+const dummyNotifications = [
+  {
+    id: 1,
+    title: "New finance entry added",
+    message: "A new finance record was created for today's collection.",
+    time: "2 min ago",
+    read: false,
+  },
+  {
+    id: 2,
+    title: "Loan payment received",
+    message: "Ravi Kumar's installment payment has been marked as received.",
+    time: "15 min ago",
+    read: false,
+  },
+  {
+    id: 3,
+    title: "Staff reminder",
+    message: "Monthly staff expense summary is ready for review.",
+    time: "1 hour ago",
+    read: true,
+  },
+];
+
 const Header = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { firms, selectedFirmId } = useSelector((state) => state.firm);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [notificationFilter, setNotificationFilter] = useState("all");
+  const notificationRef = useRef(null);
+  const unreadNotifications = dummyNotifications.filter((notification) => !notification.read).length;
+  const readNotifications = dummyNotifications.filter((notification) => notification.read).length;
+  const filteredNotifications = dummyNotifications.filter((notification) => {
+    if (notificationFilter === "read") return notification.read;
+    if (notificationFilter === "unread") return !notification.read;
+    return true;
+  });
 
   useEffect(() => {
     const fetchFirms = async () => {
@@ -27,6 +61,28 @@ const Header = () => {
     fetchFirms();
   }, [dispatch]);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setIsNotificationOpen(false);
+      }
+    };
+
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setIsNotificationOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
+
   const handleLogout = (e) => {
     e.preventDefault();
     dispatch(logout());
@@ -34,6 +90,10 @@ const Header = () => {
 
   const handleFirmChange = (e) => {
     dispatch(setSelectedFirmId(e.target.value));
+  };
+
+  const toggleNotifications = () => {
+    setIsNotificationOpen((prevState) => !prevState);
   };
 
   return (
@@ -85,13 +145,86 @@ const Header = () => {
               </option>
             ))}
           </select>
-          <button
-            className="btn me-2 bg-success-subtle rounded-circle d-flex align-items-center justify-content-center mb-1"
-            type="button"
-            aria-expanded="false"
-          >
-            <FiBell size={26} />
-          </button>
+          <div className="notification-dropdown-wrapper" ref={notificationRef}>
+            <button
+              className="btn me-2 bg-success-subtle rounded-circle d-flex align-items-center justify-content-center mb-1 notification-btn"
+              type="button"
+              aria-expanded={isNotificationOpen}
+              aria-label="Toggle notifications"
+              onClick={toggleNotifications}
+            >
+              <FiBell size={26} />
+              {unreadNotifications > 0 && (
+                <span className="notification-badge">{unreadNotifications}</span>
+              )}
+            </button>
+
+            {isNotificationOpen && (
+              <div className="dropdown-menu notification-dropdown-menu show">
+                <div className="notification-dropdown-header">
+                  <div className="notification-header-top">
+                    <div className="notification-title-row">
+                      <FiBell size={18} />
+                      <h6 className="mb-0">Notifications</h6>
+                    </div>
+                    <div className="notification-filter-group" role="tablist" aria-label="Notification filters">
+                      <button
+                        type="button"
+                        className={`notification-filter-btn ${notificationFilter === "all" ? "active" : ""}`}
+                        onClick={() => setNotificationFilter("all")}
+                      >
+                        All
+                      </button>
+                      <button
+                        type="button"
+                        className={`notification-filter-btn ${notificationFilter === "read" ? "active" : ""}`}
+                        onClick={() => setNotificationFilter("read")}
+                      >
+                        Read
+                      </button>
+                      <button
+                        type="button"
+                        className={`notification-filter-btn ${notificationFilter === "unread" ? "active" : ""}`}
+                        onClick={() => setNotificationFilter("unread")}
+                      >
+                        Unread
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="mt-2">
+                    <small className="text-muted">
+                      {dummyNotifications.length} total, {readNotifications} read and {unreadNotifications} unread notifications
+                    </small>
+                  </div>
+                </div>
+
+                <div className="notification-list">
+                  {filteredNotifications.length > 0 ? (
+                    filteredNotifications.map((notification) => (
+                      <button
+                        key={notification.id}
+                        type="button"
+                        className={`notification-item ${notification.read ? "" : "unread"}`}
+                        onClick={() => setIsNotificationOpen(false)}
+                      >
+                        <span className="notification-dot" />
+                        <div className="notification-content">
+                          <p className="notification-title mb-1">{notification.title}</p>
+                          <p className="notification-message mb-1">{notification.message}</p>
+                          <small className="notification-time">{notification.time}</small>
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="notification-empty-state">
+                      No {notificationFilter} notifications found.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
           <div className="dropdown">
             <button
               className="btn profile-btn dropdown-toggle btn me-3 bg-info-subtle rounded-circle d-flex align-items-center justify-content-center mb-1"
