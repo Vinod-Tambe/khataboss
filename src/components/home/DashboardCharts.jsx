@@ -1,7 +1,14 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Chart from 'react-apexcharts';
+import { useTheme } from '../../context/ThemeContext';
 
 const DashboardCharts = () => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const chartLabelColor = isDark ? '#94a3b8' : '#6c757d';
+  const chartTheme = isDark ? 'dark' : 'light';
+  const chartValueColor = isDark ? '#f1f5f9' : '#1f2937';
+  const chartTrackColor = isDark ? '#252540' : '#f1f5f9';
   const [countView, setCountView] = useState('monthly');
   const [amountView, setAmountView] = useState('monthly');
   const [profitYear, setProfitYear] = useState('2024');
@@ -67,7 +74,7 @@ const DashboardCharts = () => {
   ];
 
   // Chart 1: Counts (Bar)
-  const countChartOptions = {
+  const countChartOptions = useMemo(() => ({
     chart: {
       type: 'bar',
       toolbar: { show: false },
@@ -82,8 +89,7 @@ const DashboardCharts = () => {
           delay: 150
         },
         dynamicAnimation: {
-          enabled: true,
-          speed: 350
+          enabled: false
         }
       }
     },
@@ -97,33 +103,33 @@ const DashboardCharts = () => {
     stroke: { show: true, width: 2, colors: ['transparent'] },
     xaxis: {
       categories: getCategories(countView),
-      labels: { style: { colors: '#6c757d' } },
+      labels: { style: { colors: chartLabelColor } },
       axisBorder: { show: false },
       axisTicks: { show: false }
     },
     yaxis: {
-      labels: { style: { colors: '#6c757d' } }
+      labels: { style: { colors: chartLabelColor } }
     },
     grid: {
       show: false,
     },
-    theme: { mode: 'light' },
+    theme: { mode: chartTheme },
     colors: ['#3b82f6', '#10b981'], // Blue for loans, Green for finance
-    tooltip: { theme: 'light' },
+    tooltip: { theme: chartTheme },
     legend: {
       position: 'top',
       horizontalAlign: 'right',
       offsetY: -20,
     }
-  };
+  }), [chartLabelColor, chartTheme, countView]);
 
-  const countChartSeries = [
+  const countChartSeries = useMemo(() => ([
     { name: 'Total Loans', data: countData[countView].loans },
     { name: 'Total Finance', data: countData[countView].finance }
-  ];
+  ]), [countView]);
 
   // Chart 2: Amounts (Area)
-  const amountChartOptions = {
+  const amountChartOptions = useMemo(() => ({
     chart: {
       type: 'area',
       toolbar: { show: false },
@@ -138,8 +144,7 @@ const DashboardCharts = () => {
           delay: 150
         },
         dynamicAnimation: {
-          enabled: true,
-          speed: 350
+          enabled: false
         }
       }
     },
@@ -150,13 +155,13 @@ const DashboardCharts = () => {
     },
     xaxis: {
       categories: getCategories(amountView),
-      labels: { style: { colors: '#6c757d' } },
+      labels: { style: { colors: chartLabelColor } },
       axisBorder: { show: false },
       axisTicks: { show: false }
     },
     yaxis: {
       labels: {
-        style: { colors: '#6c757d' },
+        style: { colors: chartLabelColor },
         formatter: (value) => {
           if (value >= 100000) return `₹${(value / 100000).toFixed(1)}L`;
           if (value >= 1000) return `₹${(value / 1000).toFixed(1)}K`;
@@ -167,7 +172,7 @@ const DashboardCharts = () => {
     grid: {
       show: false,
     },
-    theme: { mode: 'light' },
+    theme: { mode: chartTheme },
     fill: {
       type: 'gradient',
       gradient: {
@@ -184,17 +189,17 @@ const DashboardCharts = () => {
       offsetY: -20,
     },
     tooltip: {
-      theme: 'light',
+      theme: chartTheme,
       y: {
         formatter: (value) => `₹${value.toLocaleString()}`
       }
     }
-  };
+  }), [amountView, chartLabelColor, chartTheme]);
 
-  const amountChartSeries = [
+  const amountChartSeries = useMemo(() => ([
     { name: 'Loan Amount', data: amountData[amountView].loans },
     { name: 'Finance Amount', data: amountData[amountView].finance }
-  ];
+  ]), [amountView]);
 
   // Chart 3: Profit/Loss (RadialBar)
   const currentProfitData = profitData.find(d => d.year === profitYear) || profitData[0];
@@ -202,20 +207,20 @@ const DashboardCharts = () => {
   const profitPercentage = totalPL > 0 ? Math.round((currentProfitData.profit / totalPL) * 100) : 0;
   const lossPercentage = totalPL > 0 ? Math.round((currentProfitData.loss / totalPL) * 100) : 0;
 
-  const profitChartOptions = {
+  const profitChartOptions = useMemo(() => ({
     chart: {
       type: 'radialBar',
       background: 'transparent',
       fontFamily: 'inherit',
-      animations: { enabled: true, easing: 'easeinout', speed: 800 }
+      animations: { enabled: false }
     },
     plotOptions: {
       radialBar: {
         hollow: { size: '45%' },
-        track: { background: '#f1f5f9', margin: 10 },
+        track: { background: chartTrackColor, margin: 10 },
         dataLabels: {
-          name: { fontSize: '14px', color: '#6c757d', offsetY: -10 },
-          value: { fontSize: '24px', fontWeight: 'bold', color: '#1f2937', formatter: function (val) { return val + "%" } },
+          name: { fontSize: '14px', color: chartLabelColor, offsetY: -10 },
+          value: { fontSize: '24px', fontWeight: 'bold', color: chartValueColor, formatter: function (val) { return val + "%" } },
           total: {
             show: true,
             label: 'Total Profit',
@@ -230,7 +235,7 @@ const DashboardCharts = () => {
     legend: { show: true, position: 'bottom' },
     tooltip: {
       enabled: true,
-      theme: 'light',
+      theme: chartTheme,
       y: {
         formatter: function (val, opts) {
           return opts.seriesIndex === 0
@@ -239,9 +244,12 @@ const DashboardCharts = () => {
         }
       }
     }
-  };
+  }), [chartLabelColor, chartTheme, chartTrackColor, chartValueColor, currentProfitData]);
 
-  const profitChartSeries = [profitPercentage, lossPercentage];
+  const profitChartSeries = useMemo(
+    () => [profitPercentage, lossPercentage],
+    [profitPercentage, lossPercentage]
+  );
 
   // Custom Infographic Chart Colors & Max Calculation
   // Using very light, airy pastel colors for a softer look
@@ -271,10 +279,11 @@ const DashboardCharts = () => {
           </div>
           <div className="graph-content">
             <Chart
+              key={`count-${theme}-${countView}`}
               options={countChartOptions}
               series={countChartSeries}
               type="bar"
-              height="100%"
+              height={280}
             />
           </div>
         </div>
@@ -299,10 +308,11 @@ const DashboardCharts = () => {
           </div>
           <div className="graph-content">
             <Chart
+              key={`amount-${theme}-${amountView}`}
               options={amountChartOptions}
               series={amountChartSeries}
               type="area"
-              height="100%"
+              height={280}
             />
           </div>
         </div>
@@ -327,10 +337,11 @@ const DashboardCharts = () => {
           </div>
           <div className="graph-content d-flex justify-content-center align-items-center">
             <Chart
+              key={`profit-${theme}-${profitYear}`}
               options={profitChartOptions}
               series={profitChartSeries}
               type="radialBar"
-              height="100%"
+              height={280}
               width="100%"
             />
           </div>

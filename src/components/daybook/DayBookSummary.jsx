@@ -1,4 +1,5 @@
 import React from 'react';
+import '../../css/DataTable.css';
 // import useConfigStore from '../../zustand/config.store';
 
 const DayBookSummary = ({ DayBookData,opening_data }) => {
@@ -86,7 +87,7 @@ const DayBookSummary = ({ DayBookData,opening_data }) => {
      //Calculate Total Final CR And DR Amount With Final Amoutn (CR-DR)
     return (
         <div className="table-responsive mt-4 table-wrapper bg-green border border-secondary">
-            <table className="table table-hover table-bordered table-dashed p-0 m-0">
+            <table className="table table-hover table-bordered table-dashed p-0 m-0 dynamic-data-table">
                 <thead className="table-light fw-bold border-bottom border-secondary">
                     <tr>
                         <th className="fw-bold border-bottom border-secondary bg-red"></th>

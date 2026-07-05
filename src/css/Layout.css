@@ -469,3 +469,68 @@
   right: 0;
   z-index: 999;
 }
+
+/* Theme toggle */
+.theme-dropdown-wrapper {
+  position: relative;
+}
+
+.theme-toggle-btn {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+}
+
+.theme-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 280px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid var(--theme-menu-border);
+  background: var(--theme-menu-bg);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.14);
+  z-index: 1100;
+}
+
+.theme-dropdown-header h6 {
+  color: var(--layout-title-text);
+  font-weight: 700;
+}
+
+.theme-dropdown-header p {
+  color: var(--layout-message-text);
+  font-size: 13px;
+}
+
+.theme-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.theme-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  border: 1px solid var(--theme-menu-border);
+  border-radius: 12px;
+  background: var(--theme-option-bg);
+  color: var(--theme-option-text);
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.theme-option:hover {
+  transform: translateY(-1px);
+}
+
+.theme-option.active {
+  background: var(--theme-option-active-bg);
+  color: var(--theme-option-active-text);
+  border-color: var(--theme-option-active-bg);
+}
