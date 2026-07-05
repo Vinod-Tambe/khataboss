@@ -1,41 +1,132 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getFirmsDropdown } from '../../../api/firmApi';
+import { getAccountsDropdown } from '../../../api/accountApi';
+import { transferLoan } from '../../../api/girviApi';
+import { toast } from 'react-hot-toast';
+import moment from 'moment';
 import '../../../css/Modal.css';
 
-const TransferModal = ({ isOpen, onClose, isTab }) => {
-  // Prevent body scroll when modal is open
+const TransferModal = ({ isOpen, onClose, isTab, loanDetails, pendingPrincipal, pendingInterest, onSuccess }) => {
+  const [firms, setFirms] = useState([]);
+  const [accounts, setAccounts] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const [formData, setFormData] = useState({
+    transfer_date: moment().format('YYYY-MM-DD'),
+    girv_prin_amt: '',
+    girv_roi: '',
+    girv_interest_method: 'simple',
+    targetFirmId: '',
+    girv_packet_no: '',
+    girv_locker_no: '',
+    girv_cash_acc_id: '',
+    girv_cash_info: '',
+    girv_cash_amt: '',
+    girv_bank_acc_id: '',
+    girv_bank_info: '',
+    girv_bank_amt: '',
+    girv_online_acc_id: '',
+    girv_online_info: '',
+    girv_online_amt: '',
+    girv_card_acc_id: '',
+    girv_card_info: '',
+    girv_card_amt: '',
+    girv_pay_info: '',
+    girv_other_info: ''
+  });
+
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
+      if (!isTab) document.body.style.overflow = 'hidden';
+      fetchFirms();
+      fetchAccounts();
+      if (loanDetails) {
+        const defaultCashAmt = (pendingPrincipal || 0) + (pendingInterest || 0);
+        setFormData(prev => ({
+          ...prev,
+          girv_prin_amt: pendingPrincipal ? pendingPrincipal.toFixed(2) : (loanDetails.girv_prin_amt || ''),
+          girv_roi: loanDetails.girv_roi || '',
+          girv_interest_method: loanDetails.girv_interest_method || 'simple',
+          girv_cash_amt: defaultCashAmt > 0 ? defaultCashAmt.toFixed(2) : '',
+        }));
+      }
+    } else if (!isTab) {
       document.body.style.overflow = 'unset';
     }
     return () => {
-      document.body.style.overflow = 'unset';
+      if (!isTab) document.body.style.overflow = 'unset';
     };
-  }, [isOpen]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, isTab, loanDetails, pendingPrincipal, pendingInterest]);
+
+  const fetchFirms = async () => {
+    try {
+      const res = await getFirmsDropdown();
+      const filtered = (res.data || res).filter(f => f.firm_id !== loanDetails?.girv_firm_id);
+      setFirms(filtered);
+    } catch (error) {
+      toast.error('Failed to load firms');
+    }
+  };
+
+  const fetchAccounts = async () => {
+    try {
+      const firmId = loanDetails?.girv_firm_id || null;
+      const res = await getAccountsDropdown(firmId);
+      setAccounts(res.data || res || []);
+    } catch (error) {
+      toast.error('Failed to load accounts');
+    }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleTransfer = async (e) => {
+    e.preventDefault();
+    if (!formData.targetFirmId) {
+      toast.error('Please select a transfer firm.');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      await transferLoan(loanDetails.girv_uuid, formData);
+      toast.success('Loan transferred successfully!');
+      if (onSuccess) onSuccess();
+    } catch (error) {
+      toast.error(error.error || 'Failed to transfer loan');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!isOpen) return null;
 
   const content = (
     <div className="custom-modal-body bg-cust-info">
-
       {/* Top Section - Row 1 */}
       <div className="row g-3 mb-3">
         <div className="col-md-3">
           <label className="form-label">Transfer Date</label>
-          <input type="date" className="form-control border-dark text-center" defaultValue="2025-02-2" />
+          <input type="date" name="transfer_date" className="form-control border-dark text-center" value={formData.transfer_date} onChange={handleChange} />
         </div>
         <div className="col-md-3">
           <label className="form-label">Principal Amount</label>
-          <input type="text" className="form-control border-dark text-center" defaultValue="5000" />
+          <input type="number" name="girv_prin_amt" className="form-control border-dark text-center" value={formData.girv_prin_amt} onChange={handleChange} />
         </div>
         <div className="col-md-3">
           <label className="form-label">Rate of Interest</label>
-          <input type="text" className="form-control border-dark text-center" defaultValue="2" />
+          <input type="number" name="girv_roi" className="form-control border-dark text-center" value={formData.girv_roi} onChange={handleChange} />
         </div>
         <div className="col-md-3">
           <label className="form-label">Interest Option</label>
-          <input type="text" className="form-control border-dark text-center" defaultValue="5000" />
+          <select name="girv_interest_method" className="form-select border-dark text-center" value={formData.girv_interest_method} onChange={handleChange}>
+            <option value="simple">Simple</option>
+            <option value="compound">Compound</option>
+          </select>
         </div>
       </div>
 
@@ -43,19 +134,24 @@ const TransferModal = ({ isOpen, onClose, isTab }) => {
       <div className="row g-3 mb-3">
         <div className="col-md-3">
           <label className="form-label">Existing Firm</label>
-          <input type="text" className="form-control border-dark text-center" defaultValue="5000" />
+          <input type="text" className="form-control border-dark text-center" value={loanDetails?.firm?.firm_name || ''} readOnly disabled />
         </div>
         <div className="col-md-3">
           <label className="form-label">Transfer Firm</label>
-          <input type="text" className="form-control border-dark text-center" defaultValue="5000" />
+          <select name="targetFirmId" className="form-select border-dark" value={formData.targetFirmId} onChange={handleChange}>
+            <option value="">-- Select Firm --</option>
+            {firms.map(f => (
+              <option key={f.firm_id} value={f.firm_id}>{f.firm_name}</option>
+            ))}
+          </select>
         </div>
         <div className="col-md-3">
           <label className="form-label">New Packet No</label>
-          <input type="text" className="form-control border-dark text-center" defaultValue="5000" />
+          <input type="text" name="girv_packet_no" className="form-control border-dark text-center" value={formData.girv_packet_no} onChange={handleChange} />
         </div>
         <div className="col-md-3">
           <label className="form-label">New Locker No</label>
-          <input type="text" className="form-control border-dark text-center" defaultValue="5000" />
+          <input type="text" name="girv_locker_no" className="form-control border-dark text-center" value={formData.girv_locker_no} onChange={handleChange} />
         </div>
       </div>
 
@@ -68,60 +164,64 @@ const TransferModal = ({ isOpen, onClose, isTab }) => {
           {/* Cash Row */}
           <div className="row g-2 mb-2 align-items-end">
             <div className="col-md-4">
-              <select className="form-select form-select-sm border-dark">
-                <option></option>
+              <select name="girv_cash_acc_id" className="form-select form-select-sm border-dark" value={formData.girv_cash_acc_id} onChange={handleChange}>
+                <option value="">-- Cash Account --</option>
+                {accounts.map(a => <option key={a.acc_id} value={a.acc_id}>{a.acc_name}</option>)}
               </select>
             </div>
             <div className="col-md-4">
-              <input type="text" className="form-control form-control-sm border-dark" placeholder="CASH INFORMATION" />
+              <input type="text" name="girv_cash_info" className="form-control form-control-sm border-dark" placeholder="CASH INFORMATION" value={formData.girv_cash_info} onChange={handleChange} />
             </div>
             <div className="col-md-4">
-              <input type="text" className="form-control form-control-sm border-dark" placeholder="CASH AMOUNT" />
+              <input type="number" name="girv_cash_amt" className="form-control form-control-sm border-dark" placeholder="CASH AMOUNT" value={formData.girv_cash_amt} onChange={handleChange} />
             </div>
           </div>
 
           {/* Bank Row */}
           <div className="row g-2 mb-2 align-items-end">
             <div className="col-md-4">
-              <select className="form-select form-select-sm border-dark">
-                <option></option>
+              <select name="girv_bank_acc_id" className="form-select form-select-sm border-dark" value={formData.girv_bank_acc_id} onChange={handleChange}>
+                <option value="">-- Bank Account --</option>
+                {accounts.map(a => <option key={a.acc_id} value={a.acc_id}>{a.acc_name}</option>)}
               </select>
             </div>
             <div className="col-md-4">
-              <input type="text" className="form-control form-control-sm border-dark" placeholder="BANK INFORMATION" />
+              <input type="text" name="girv_bank_info" className="form-control form-control-sm border-dark" placeholder="BANK INFORMATION" value={formData.girv_bank_info} onChange={handleChange} />
             </div>
             <div className="col-md-4">
-              <input type="text" className="form-control form-control-sm border-dark" placeholder="BANK AMOUNT" />
+              <input type="number" name="girv_bank_amt" className="form-control form-control-sm border-dark" placeholder="BANK AMOUNT" value={formData.girv_bank_amt} onChange={handleChange} />
             </div>
           </div>
 
           {/* Online Row */}
           <div className="row g-2 mb-2 align-items-end">
             <div className="col-md-4">
-              <select className="form-select form-select-sm border-dark">
-                <option></option>
+              <select name="girv_online_acc_id" className="form-select form-select-sm border-dark" value={formData.girv_online_acc_id} onChange={handleChange}>
+                <option value="">-- Online Account --</option>
+                {accounts.map(a => <option key={a.acc_id} value={a.acc_id}>{a.acc_name}</option>)}
               </select>
             </div>
             <div className="col-md-4">
-              <input type="text" className="form-control form-control-sm border-dark" placeholder="ONLINE INFORMATION" />
+              <input type="text" name="girv_online_info" className="form-control form-control-sm border-dark" placeholder="ONLINE INFORMATION" value={formData.girv_online_info} onChange={handleChange} />
             </div>
             <div className="col-md-4">
-              <input type="text" className="form-control form-control-sm border-dark" placeholder="ONLINE AMOUNT" />
+              <input type="number" name="girv_online_amt" className="form-control form-control-sm border-dark" placeholder="ONLINE AMOUNT" value={formData.girv_online_amt} onChange={handleChange} />
             </div>
           </div>
 
           {/* Card Row */}
           <div className="row g-2 mb-2 align-items-end">
             <div className="col-md-4">
-              <select className="form-select form-select-sm border-dark">
-                <option></option>
+              <select name="girv_card_acc_id" className="form-select form-select-sm border-dark" value={formData.girv_card_acc_id} onChange={handleChange}>
+                <option value="">-- Card Account --</option>
+                {accounts.map(a => <option key={a.acc_id} value={a.acc_id}>{a.acc_name}</option>)}
               </select>
             </div>
             <div className="col-md-4">
-              <input type="text" className="form-control form-control-sm border-dark" placeholder="CARD INFORMATION" />
+              <input type="text" name="girv_card_info" className="form-control form-control-sm border-dark" placeholder="CARD INFORMATION" value={formData.girv_card_info} onChange={handleChange} />
             </div>
             <div className="col-md-4">
-              <input type="text" className="form-control form-control-sm border-dark" placeholder="CARD AMOUNT" />
+              <input type="number" name="girv_card_amt" className="form-control form-control-sm border-dark" placeholder="CARD AMOUNT" value={formData.girv_card_amt} onChange={handleChange} />
             </div>
           </div>
         </div>
@@ -129,20 +229,11 @@ const TransferModal = ({ isOpen, onClose, isTab }) => {
         {/* Right Column (Other Info) */}
         <div className="col-md-4">
           <div className="section-title">Other Information</div>
-
           <div className="mb-2">
-            <textarea
-              className="form-control border-dark"
-              placeholder="PAYMENT OTHER INFORMATION"
-              rows={3}
-            ></textarea>
+            <textarea name="girv_pay_info" className="form-control border-dark" placeholder="PAYMENT OTHER INFORMATION" rows={3} value={formData.girv_pay_info} onChange={handleChange}></textarea>
           </div>
           <div>
-            <textarea
-              className="form-control border-dark"
-              placeholder="OTHER INFORMATION"
-              rows={3}
-            ></textarea>
+            <textarea name="girv_other_info" className="form-control border-dark" placeholder="OTHER INFORMATION" rows={3} value={formData.girv_other_info} onChange={handleChange}></textarea>
           </div>
         </div>
       </div>
@@ -150,15 +241,11 @@ const TransferModal = ({ isOpen, onClose, isTab }) => {
       {/* Submit Button Row */}
       <div className="row">
         <div className="col text-center mt-2">
-          <button
-            type="submit"
-            className="btn btn-primary px-5 py-2"
-          >
-            Transfer Loan
+          <button type="submit" className="btn btn-primary px-5 py-2" onClick={handleTransfer} disabled={loading || !formData.targetFirmId}>
+            {loading ? <><span className="spinner-border spinner-border-sm" aria-hidden="true"></span> Processing...</> : 'Transfer Loan'}
           </button>
         </div>
       </div>
-
     </div>
   );
 
@@ -173,16 +260,11 @@ const TransferModal = ({ isOpen, onClose, isTab }) => {
   return (
     <div className="custom-modal-overlay" onClick={onClose}>
       <form className="custom-modal-container" onClick={(e) => e.stopPropagation()}>
-
-        {/* Header */}
         <div className="custom-modal-header bg-light d-flex justify-content-between p-3 pt-2 pb-2">
           <h5 className="py-1">Transfer Loan</h5>
           <button type="button" className="custom-modal-close" onClick={onClose}>&times;</button>
         </div>
-
-        {/* Body */}
         {content}
-
       </form>
     </div>
   );

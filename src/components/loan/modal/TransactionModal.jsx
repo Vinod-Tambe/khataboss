@@ -6,7 +6,7 @@ import TransferModal from './TransferModal';
 import ReleaseModal from './ReleaseModal';
 import AuctionModal from './AuctionModal';
 
-const TransactionModal = ({ isOpen, onClose, loanDetails, totalDueAmount, onSuccess }) => {
+const TransactionModal = ({ isOpen, onClose, loanDetails, totalDueAmount, pendingPrincipal, pendingInterest, onSuccess }) => {
   const [activeTab, setActiveTab] = useState('addPrincipal');
 
   // Prevent body scroll when modal is open
@@ -98,7 +98,15 @@ const TransactionModal = ({ isOpen, onClose, loanDetails, totalDueAmount, onSucc
             />
           )}
           {activeTab === 'transfer' && (
-            <TransferModal isOpen={true} isTab={true} onClose={onClose} />
+            <TransferModal 
+              isOpen={true} 
+              isTab={true} 
+              onClose={onClose} 
+              loanDetails={loanDetails}
+              pendingPrincipal={pendingPrincipal}
+              pendingInterest={pendingInterest}
+              onSuccess={onSuccess}
+            />
           )}
           {activeTab === 'release' && (
             <ReleaseModal 
@@ -107,6 +115,8 @@ const TransactionModal = ({ isOpen, onClose, loanDetails, totalDueAmount, onSucc
               onClose={onClose} 
               loanDetails={loanDetails}
               totalDueAmount={totalDueAmount}
+              pendingPrincipal={pendingPrincipal}
+              pendingInterest={pendingInterest}
               onSuccess={onSuccess}
             />
           )}

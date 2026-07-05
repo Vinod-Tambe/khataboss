@@ -69,6 +69,7 @@ const ListLoan = ({ status = "ALL" }) => {
           case "ACTIVE": text = "Active"; break;
           case "RELEASED": text = "Released"; break;
           case "CLOSED": text = "Closed"; break;
+          case "TRANSFERRED": text = "Transferred"; break;
           default: break;
         }
         return `${text}`;
@@ -155,7 +156,7 @@ const ListLoan = ({ status = "ALL" }) => {
           onEdit={handleEdit}
           hasView={true}
           hasDelete={false}
-          hasEdit={false}
+          hasEdit={(row) => row.girv_status === 'ACTIVE'}
           isLoading={loading}
           showFooter={true}
         />

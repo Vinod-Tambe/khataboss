@@ -138,17 +138,23 @@ const List = ({
         className: "text-center",
         render: function (data, type, row) {
           let buttons = "";
-          if (hasView) {
-            buttons += `<button class="btn btn-sm btn-yellow pt-0 mt-0 pb-0 mb-0 view-btn me-1" data-id="${row.id || ""}"><i class="bi bi-eye text-dark"></i></button>`;
+          const rowId = row.id || row.girv_id || row.girv_uuid || row.firm_id || row.user_id || "";
+          const showView = typeof hasView === "function" ? hasView(row) : hasView;
+          const showEdit = typeof hasEdit === "function" ? hasEdit(row) : hasEdit;
+          const showDelete = typeof hasDelete === "function" ? hasDelete(row) : hasDelete;
+          const showPrint = typeof hasPrint === "function" ? hasPrint(row) : hasPrint;
+
+          if (showView) {
+            buttons += `<button class="btn btn-sm btn-yellow pt-0 mt-0 pb-0 mb-0 view-btn me-1" data-id="${rowId}"><i class="bi bi-eye text-dark"></i></button>`;
           }
-          if (hasEdit) {
-            buttons += `<button class="btn btn-sm btn-primary pt-0 mt-0 pb-0 mb-0 edit-btn me-1" data-id="${row.id || ""}"><i class="bi bi-pencil"></i></button>`;
+          if (showEdit) {
+            buttons += `<button class="btn btn-sm btn-primary pt-0 mt-0 pb-0 mb-0 edit-btn me-1" data-id="${rowId}"><i class="bi bi-pencil"></i></button>`;
           }
-          if (hasDelete) {
-            buttons += `<button class="btn btn-sm btn-danger pt-0 mt-0 pb-0 mb-0 delete-btn me-1" data-id="${row.id || ""}"><i class="bi bi-trash"></i></button>`;
+          if (showDelete) {
+            buttons += `<button class="btn btn-sm btn-danger pt-0 mt-0 pb-0 mb-0 delete-btn me-1" data-id="${rowId}"><i class="bi bi-trash"></i></button>`;
           }
-          if (hasPrint) {
-            buttons += `<button class="btn btn-sm btn-warning pt-0 mt-0 pb-0 mb-0 print-btn" data-id="${row.id || ""}"><i class="bi bi-printer"></i></button>`;
+          if (showPrint) {
+            buttons += `<button class="btn btn-sm btn-warning pt-0 mt-0 pb-0 mb-0 print-btn" data-id="${rowId}"><i class="bi bi-printer"></i></button>`;
           }
           return buttons;
         },
