@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FiSearch, FiUser, FiMenu, FiBell } from 'react-icons/fi';
+import { FiSearch, FiUser, FiMenu, FiBell, FiSun, FiMoon } from 'react-icons/fi';
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../store/slices/authSlice";
 import { getFirmsDropdown } from "../api/firmApi";
 import { setFirms, setSelectedFirmId, setLoading as setFirmLoading, setError as setFirmError } from "../store/slices/firmSlice";
+import { useTheme } from "../context/ThemeContext";
 
 const dummyNotifications = [
   {
@@ -34,6 +35,7 @@ const Header = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { firms, selectedFirmId } = useSelector((state) => state.firm);
+  const { theme, toggleTheme } = useTheme();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [notificationFilter, setNotificationFilter] = useState("all");
   const notificationRef = useRef(null);
@@ -227,7 +229,7 @@ const Header = () => {
           </div>
           <div className="dropdown">
             <button
-              className="btn profile-btn dropdown-toggle btn me-3 bg-info-subtle rounded-circle d-flex align-items-center justify-content-center mb-1"
+              className="btn profile-btn dropdown-toggle btn me-2 bg-info-subtle rounded-circle d-flex align-items-center justify-content-center mb-1"
               type="button"
               id="profileDropdown"
               data-bs-toggle="dropdown"
@@ -243,6 +245,14 @@ const Header = () => {
               <li><Link className="dropdown-item" to="#" onClick={handleLogout}>Logout</Link></li>
             </ul>
           </div>
+          <button
+            className="btn theme-toggle-btn bg-warning-subtle rounded-circle d-flex align-items-center justify-content-center mb-1"
+            type="button"
+            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+            onClick={toggleTheme}
+          >
+            {theme === 'dark' ? <FiSun size={24} /> : <FiMoon size={24} />}
+          </button>
         </div>
       </div>
       <div className={`mobile-search-bar d-block d-md-none ps-3 pe-3`}>

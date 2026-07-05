@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import $ from "jquery";
 import "datatables.net-bs5";
 import "datatables.net-bs5/css/dataTables.bootstrap5.min.css";
+import "../../css/DataTable.css";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { getUser } from "../../api/userApi";
@@ -86,7 +87,7 @@ const DayBookTable = ({ title, colorClass, amtColor, data = [], isPrint = false 
       <div className="table-responsive">
         <table
           ref={tableRef}
-          className="table table-hover table-bordered text-capitalize mb-1"
+          className="table table-hover table-bordered text-capitalize mb-1 dynamic-data-table"
         >
           <thead className="table-light ">
             <tr>

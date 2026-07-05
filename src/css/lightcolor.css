@@ -1,4 +1,5 @@
-:root {
+:root,
+[data-theme="light"] {
   /* Base */
   --color-white: #fff;
   --color-black: #000;
@@ -6,6 +7,11 @@
   --color-navy: navy;
   --color-brown: brown;
   --color-maroon: maroon;
+
+  /* App shell */
+  --app-body-bg: #f4f7f6;
+  --app-text: #333333;
+  --app-border: #dee2e6;
 
   /* Shared app utilities */
   --btn-primary-text: #000080;
@@ -44,6 +50,8 @@
   --datatable-foot-bg: #f4eaea;
   --datatable-page-active-bg: #cff4fc;
   --datatable-row-bg-blue: rgb(239, 243, 255);
+  --datatable-body-bg: #ffffff;
+  --datatable-body-text: #212529;
   --print-preview-wrapper-bg: #f0f2f5;
   --print-field-bg: #fff;
   --print-field-border: #212529;
@@ -121,4 +129,18 @@
   --print-text-success: #198754;
   --print-bg-warning: #ffc107;
   --print-border-subtle: #dee2e6;
+
+  /* Theme toggle */
+  --theme-menu-bg: #ffffff;
+  --theme-menu-border: #e5e7eb;
+  --theme-option-bg: #ffffff;
+  --theme-option-text: #111827;
+  --theme-option-active-bg: #111827;
+  --theme-option-active-text: #ffffff;
+}
+
+[data-theme="light"] body,
+:root body {
+  background-color: var(--app-body-bg);
+  color: var(--app-text);
 }

@@ -48,6 +48,11 @@ html {
   background-color: var(--datatable-foot-bg) !important;
 }
 
+.dynamic-data-table tbody td {
+  color: var(--datatable-body-text, inherit);
+  background-color: var(--datatable-body-bg, inherit);
+}
+
 td {
   /* padding: 0.2rem !important; */
   border: 1px solid grey !important;
