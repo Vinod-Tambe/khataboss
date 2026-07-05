@@ -6,12 +6,15 @@ import $ from 'jquery';
 import 'daterangepicker';
 import 'daterangepicker/daterangepicker.css';
 import useFormNavigation from '../../hooks/useFormNavigation';
+import { useParams } from 'react-router-dom';
 import { getFirmsDropdown } from '../../api/firmApi';
 import { getAccountsDropdown } from '../../api/accountApi';
-import { addGirvi } from '../../api/girviApi';
+import { getGirviById, updateGirvi } from '../../api/girviApi';
 import { toast } from 'react-hot-toast';
 
-const AddLoan = () => {
+const UpdateLoan = () => {
+  const { id } = useParams();
+  const [hasTransactions, setHasTransactions] = useState(false);
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -109,10 +112,86 @@ const AddLoan = () => {
 
     fetchFirms();
 
+    const fetchLoanData = async () => {
+      if (!id) return;
+      try {
+        const res = await getGirviById(id);
+        if (res && res.data) {
+          const d = res.data;
+          const isClosed = d.girv_status === 'CLOSED' || d.girv_status === 'RELEASED';
+          const hasTrans = (d.additionalPrincipals && d.additionalPrincipals.length > 0) ||
+                           (d.deposits && d.deposits.length > 0) ||
+                           (d.releases && d.releases.length > 0);
+          
+          setHasTransactions(isClosed || hasTrans);
+
+          setFormData(prev => ({
+            ...prev,
+            girv_uuid: d.girv_uuid || '',
+            girv_type: d.girv_type || 'secured',
+            girv_prin_amt: d.girv_prin_amt || '',
+            girv_start_date: d.girv_start_date ? moment(d.girv_start_date).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD'),
+            girv_interest_method: d.girv_interest_method || 'simple',
+            girv_compound_freq: d.girv_compound_freq || 'monthly',
+            girv_roi_type: d.girv_roi_type || 'monthly',
+            girv_packet_no: d.girv_packet_no || '',
+            girv_locker_no: d.girv_locker_no || '',
+            girv_process_per: d.girv_process_per || '',
+            girv_process_amt: d.girv_process_amt || '',
+            girv_charge_per: d.girv_charge_per || '',
+            girv_charge_amt: d.girv_charge_amt || '',
+            girv_roi: d.girv_roi || '',
+            girv_other_info: d.girv_other_info || '',
+            girv_first_int: d.girv_first_int === 'Y',
+            girv_first_int_cr_acc_id: d.girv_first_int_cr_acc_id || '',
+            girv_first_int_dr_acc_id: d.girv_first_int_dr_acc_id || '',
+            items: d.items && d.items.length > 0 ? d.items.map(item => ({
+              st_metal_type: item.st_metal_type ? item.st_metal_type.toUpperCase() : 'GOLD',
+              st_item_name: item.st_item_name || '',
+              st_quantity: item.st_quantity || '',
+              st_gs_weight: item.st_gs_weight || '',
+              st_gs_type: item.st_gs_type || 'GM',
+              st_nt_weight: item.st_nt_weight || '',
+              st_nt_type: item.st_nt_type || 'GM',
+              st_purity: item.st_purity || '100%',
+              st_fine_weight: item.st_fine_weight || '',
+              st_valuation: item.st_valuation || item.st_final_valuation || '',
+              itemImage: null,
+              imageName: '',
+            })) : [getEmptyItem()],
+            girv_cash_acc_id: d.girv_cash_acc_id || '',
+            girv_cash_amt: d.girv_cash_amt || '',
+            girv_cash_info: d.girv_cash_info || '',
+            girv_bank_acc_id: d.girv_bank_acc_id || '',
+            girv_bank_amt: d.girv_bank_amt || '',
+            girv_bank_info: d.girv_bank_info || '',
+            girv_online_acc_id: d.girv_online_acc_id || '',
+            girv_online_amt: d.girv_online_amt || '',
+            girv_online_info: d.girv_online_info || '',
+            girv_card_acc_id: d.girv_card_acc_id || '',
+            girv_card_amt: d.girv_card_amt || '',
+            girv_card_info: d.girv_card_info || '',
+            girv_pay_info: d.girv_pay_info || '',
+            girv_firm_id: d.girv_firm_id || '',
+          }));
+
+          // also update the date picker
+          if (girv_start_dateRef.current) {
+            $(girv_start_dateRef.current).data('daterangepicker').setStartDate(moment(d.girv_start_date).format('DD-MM-YYYY'));
+            $(girv_start_dateRef.current).data('daterangepicker').setEndDate(moment(d.girv_start_date).format('DD-MM-YYYY'));
+          }
+        }
+      } catch (error) {
+        toast.error('Failed to fetch loan details.');
+      }
+    };
+
+    fetchLoanData();
+
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [id]);
 
   // Sync firm ID with Header selection
   useEffect(() => {
@@ -306,14 +385,14 @@ const AddLoan = () => {
         girv_first_int: formData.girv_first_int ? 'Y' : 'N'
       };
 
-      const res = await addGirvi(payload);
-      toast.success('Loan saved successfully!');
+      const res = await updateGirvi(formData.girv_uuid, payload);
+      toast.success('Loan updated successfully!');
       console.log('API Response:', res);
 
-      navigate('/user/home/loan-info');
+      navigate('/user/home/loan-info', { state: { loanData: res.data } });
     } catch (error) {
-      console.error('Error saving loan:', error);
-      toast.error(error?.error || 'Failed to save loan.');
+      console.error('Error updating loan:', error);
+      toast.error(error?.error || 'Failed to update loan.');
     }
   };
 
@@ -329,6 +408,7 @@ const AddLoan = () => {
             placeholder="Enter principal amount"
             className="form-control border-dark"
             value={formData.girv_prin_amt}
+            disabled={hasTransactions}
             onChange={(e) => {
               const val = e.target.value.replace(/[^0-9.]/g, '');
               e.target.value = val;
@@ -344,12 +424,13 @@ const AddLoan = () => {
             name="girv_start_date"
             ref={girv_start_dateRef}
             className="form-control border-dark"
+            disabled={hasTransactions}
             defaultValue={formData.girv_start_date ? moment(formData.girv_start_date).format('DD-MM-YYYY') : ''}
           />
         </div>
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Interest Method <span className="text-danger">*</span></label>
-          <select name="girv_interest_method" className="form-select border-dark" value={formData.girv_interest_method} onChange={handleChange} required>
+          <select name="girv_interest_method" className="form-select border-dark" value={formData.girv_interest_method} disabled={hasTransactions} onChange={handleChange} required>
             <option value="simple">Simple</option>
             <option value="compound">Compound</option>
           </select>
@@ -357,7 +438,7 @@ const AddLoan = () => {
         {formData.girv_interest_method === 'compound' && (
           <div className="col-12 col-md-6 col-lg-3">
             <label className="form-label fw-medium">Compound Freq <span className="text-danger">*</span></label>
-            <select name="girv_compound_freq" className="form-select border-dark" value={formData.girv_compound_freq} onChange={handleChange} required>
+            <select name="girv_compound_freq" className="form-select border-dark" value={formData.girv_compound_freq} disabled={hasTransactions} onChange={handleChange} required>
               <option value="monthly">Monthly</option>
               <option value="quarterly">Quarterly</option>
               <option value="half_yearly">Half Yearly</option>
@@ -367,7 +448,7 @@ const AddLoan = () => {
         )}
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Interest Option <span className="text-danger">*</span></label>
-          <select name="girv_roi_type" className="form-select border-dark" value={formData.girv_roi_type} onChange={handleChange} required>
+          <select name="girv_roi_type" className="form-select border-dark" value={formData.girv_roi_type} disabled={hasTransactions} onChange={handleChange} required>
             <option value="" disabled>Select option</option>
             <option value="monthly">Monthly</option>
             <option value="annual">Annual</option>
@@ -381,6 +462,7 @@ const AddLoan = () => {
             placeholder="Enter rate of interest"
             className="form-control border-dark"
             value={formData.girv_roi}
+            disabled={hasTransactions}
             onChange={(e) => {
               const val = e.target.value.replace(/[^0-9.]/g, '');
               e.target.value = val;
@@ -503,6 +585,8 @@ const AddLoan = () => {
   const itemInformation = (
     <>
       <h5 className="text-muted mt-3">Item Information</h5>
+      {hasTransactions && <div className="alert alert-warning py-1 px-2 mb-2" style={{ fontSize: '0.85rem' }}>Item details cannot be modified because this loan has existing transactions.</div>}
+      <fieldset disabled={hasTransactions}>
       <div className="table-responsive mb-3">
         <table className="table table-bordered table-hover mb-0">
           <thead>
@@ -696,6 +780,7 @@ const AddLoan = () => {
           </tbody>
         </table>
       </div>
+      </fieldset>
     </>
   );
 
@@ -882,7 +967,7 @@ const AddLoan = () => {
       {currentStep < totalSteps ? (
         <button type="button" className="btn btn-primary ms-auto" onClick={handleNext}>Next</button>
       ) : (
-        <button type="submit" className="btn btn-primary btn-lg px-5 ms-auto">Save Loan</button>
+        <button type="submit" className="btn btn-primary btn-lg px-5 ms-auto">Update Loan</button>
       )}
     </div>
   );
@@ -894,21 +979,23 @@ const AddLoan = () => {
           <div className="btn-group" role="group">
             <button
               type="button"
-              className={`btn btn-sm ${formData.girv_type === 'secured' ? 'btn-primary' : 'btn-outline-primary'}`}
-              onClick={() => setFormData(prev => ({ ...prev, girv_type: 'secured' }))}
+              className={`btn btn-sm ${formData.girv_type === 'secured' ? 'btn-primary' : 'btn-outline-primary'} ${hasTransactions ? 'disabled' : ''}`}
+              onClick={() => !hasTransactions && setFormData(prev => ({ ...prev, girv_type: 'secured' }))}
+              disabled={hasTransactions}
             >
               Secured
             </button>
             <button
               type="button"
-              className={`btn btn-sm ${formData.girv_type === 'unsecured' ? 'btn-primary' : 'btn-outline-primary'}`}
-              onClick={() => setFormData(prev => ({ ...prev, girv_type: 'unsecured' }))}
+              className={`btn btn-sm ${formData.girv_type === 'unsecured' ? 'btn-primary' : 'btn-outline-primary'} ${hasTransactions ? 'disabled' : ''}`}
+              onClick={() => !hasTransactions && setFormData(prev => ({ ...prev, girv_type: 'unsecured' }))}
+              disabled={hasTransactions}
             >
               Unsecured
             </button>
           </div>
         </div>
-        <h4 className="card-title text-center fw-bold m-0 py-1">Add New Loan</h4>
+        <h4 className="card-title text-center fw-bold m-0 py-1">Update Loan</h4>
       </div>
 
       <form ref={formRef} noValidate onSubmit={handleSubmit}>
@@ -926,7 +1013,7 @@ const AddLoan = () => {
             {formData.girv_type === 'secured' && itemInformation}
             {paymentDetails}
             <div className="d-grid d-md-block text-center mt-5">
-              <button type="submit" className="btn btn-primary btn-lg px-5">Add New Loan</button>
+              <button type="submit" className="btn btn-primary btn-lg px-5">Update Loan</button>
             </div>
           </>
         )}
@@ -935,4 +1022,4 @@ const AddLoan = () => {
   );
 };
 
-export default AddLoan;
+export default UpdateLoan;

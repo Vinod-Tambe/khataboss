@@ -10,7 +10,7 @@ import { toast } from 'react-hot-toast';
 import '../../../css/Modal.css';
 import useFormNavigation from '../../../hooks/useFormNavigation';
 
-const ReleaseModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, onSuccess }) => {
+const ReleaseModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pendingPrincipal, pendingInterest, onSuccess }) => {
   const { selectedFirm } = useSelector((state) => state.firm);
   const [accounts, setAccounts] = useState([]);
   const [submitting, setSubmitting] = useState(false);
@@ -77,12 +77,12 @@ const ReleaseModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, onS
     if (loanDetails && isOpen) {
       setFormData(prev => ({
         ...prev,
-        rel_prin_amt: '',
-        rel_int_amt: '',
+        rel_prin_amt: pendingPrincipal ? pendingPrincipal.toFixed(2) : '',
+        rel_int_amt: pendingInterest ? pendingInterest.toFixed(2) : '',
         rel_disc_amt: '',
         rel_extra_amt: '',
-        rel_payable_amt: '0.00',
-        rel_cash_amt: '',
+        rel_payable_amt: totalDueAmount ? totalDueAmount.toFixed(2) : '0.00',
+        rel_cash_amt: totalDueAmount ? totalDueAmount.toFixed(2) : '',
         rel_bank_amt: '',
         rel_online_amt: '',
         rel_card_amt: '',
@@ -90,7 +90,7 @@ const ReleaseModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, onS
         rel_other_info: ''
       }));
     }
-  }, [loanDetails, isOpen]);
+  }, [loanDetails, isOpen, pendingPrincipal, pendingInterest, totalDueAmount]);
 
   // Fetch accounts on mount / firm change
   useEffect(() => {

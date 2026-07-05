@@ -7,6 +7,26 @@ import { getGirviById } from '../../api/girviApi';
 import moment from 'moment';
 import { toast } from 'react-toastify';
 
+// Interest Calculation Helper
+const calculateInterest = (principal, rate, months, method = 'simple', freq = 'monthly') => {
+  if (!principal || !rate || !months) return 0;
+  if (method === 'compound') {
+    let n = 1;
+    if (freq === 'monthly') n = 1;
+    else if (freq === 'quarterly') n = 1/3;
+    else if (freq === 'half_yearly') n = 1/6;
+    else if (freq === 'yearly') n = 1/12;
+    
+    let periods = months * n;
+    let rate_per_period = rate / n; 
+    
+    const amount = principal * Math.pow((1 + rate_per_period / 100), periods);
+    return parseFloat((amount - principal).toFixed(2));
+  } else {
+    return parseFloat((principal * rate * months / 100).toFixed(2));
+  }
+};
+
 // Reusable Components
 const LoanInformation = ({ data }) => (
   <div className="panel-section">
@@ -20,8 +40,15 @@ const LoanInformation = ({ data }) => (
         <input type="date" className="form-control border-dark" readOnly value={data?.girv_start_date ? moment(data.girv_start_date).format('YYYY-MM-DD') : ''} />
       </div>
       <div className="col-md-3">
-        <label className="form-label">Interest Option</label>
-        <input type="text" className="form-control border-dark" readOnly value={data?.girv_roi_type ? data.girv_roi_type.toUpperCase() : ''} />
+        <label className="form-label">Interest Method</label>
+        <input 
+          type="text" 
+          className="form-control border-dark" 
+          readOnly 
+          value={data?.girv_interest_method ? 
+            (data.girv_interest_method.toUpperCase() + (data.girv_interest_method === 'compound' && data.girv_compound_freq ? ` (${data.girv_compound_freq.toUpperCase()})` : '')) 
+            : 'SIMPLE'} 
+        />
       </div>
       <div className="col-md-3">
         <label className="form-label">Firm Name</label>
@@ -129,7 +156,7 @@ const PrincipalInfoTable = ({ data, isUnsecured }) => (
             <th className='bg-blue text-brown border border-dark'>Status</th>
             <th className='bg-blue text-brown border border-dark'>Principal</th>
             <th className='bg-blue text-brown border border-dark'>ROI</th>
-            <th className='bg-blue text-brown border border-dark'>S. Interest</th>
+            <th className='bg-blue text-brown border border-dark'>Interest</th>
             <th className='bg-blue text-brown border border-dark'>Discount Amt</th>
             <th className='bg-blue text-brown border border-dark'>Extra Amt</th>
             <th className='bg-blue text-brown border border-dark'>Total</th>
@@ -246,17 +273,19 @@ const ReleaseInfoTable = ({ data }) => (
 );
 
 
-const ActionFooter = ({ onDepositClick, onTransactionClick, isReleased }) => (
+const ActionFooter = ({ onUpdateClick, onDepositClick, onTransactionClick, isReleased, isUpdateAllowed }) => (
   <div className="action-footer mt-4">
     <div className="d-flex flex-wrap gap-2 justify-content-center">
       <button className="btn btn-outline-primary btn-sm text-nowrap blue-btn" onClick={onDepositClick}>
         <i className="bi bi-file-text text-primary me-1"></i> FORM 8
       </button>
+      {isUpdateAllowed && (
+        <button className="btn btn-outline-info btn-sm text-nowrap blue-btn" onClick={onUpdateClick}>
+          <i className="bi bi-pencil text-info me-1"></i> Update
+        </button>
+      )}
       {!isReleased && (
         <>
-          <button className="btn btn-outline-info btn-sm text-nowrap blue-btn" onClick={onDepositClick}>
-            <i className="bi bi-pencil text-info me-1"></i> Update
-          </button>
           <button className="btn btn-outline-success btn-sm text-nowrap blue-btn" onClick={onDepositClick}>
             <i className="bi bi-box-arrow-in-down text-success me-1"></i> Deposit
           </button>
@@ -317,6 +346,11 @@ const LoanInfo = () => {
   if (loading) return <div className="p-4 text-center">Loading loan details...</div>;
   if (!loanDetails) return <div className="p-4 text-center">Loan not found.</div>;
 
+  const hasTrans = (loanDetails?.additionalPrincipals && loanDetails.additionalPrincipals.length > 0) ||
+                   (loanDetails?.deposits && loanDetails.deposits.length > 0) ||
+                   (loanDetails?.releases && loanDetails.releases.length > 0);
+  const isUpdateAllowed = loanDetails?.girv_status === 'ACTIVE' && !hasTrans;
+
   // Reconstruct original principal
   const totalAdditionalPrincipal = loanDetails.additionalPrincipals?.reduce((sum, ap) => sum + (parseFloat(ap.ap_prin_amt) || 0), 0) || 0;
   const totalReleasesPrincipal = loanDetails.releases?.reduce((sum, rel) => sum + (parseFloat(rel.rel_prin_amt) || 0), 0) || 0;
@@ -333,8 +367,11 @@ const LoanInfo = () => {
   // Time period in months for original principal
   const origMonths = Math.max(1, today.diff(startDate, 'months', true));
 
+  const interestMethod = loanDetails.girv_interest_method || 'simple';
+  const compoundFreq = loanDetails.girv_compound_freq || 'monthly';
+
   // Calculate Interest for original principal
-  const origInterest = parseFloat((originalPrincipal * roi * origMonths / 100).toFixed(2));
+  const origInterest = calculateInterest(originalPrincipal, roi, origMonths, interestMethod, compoundFreq);
 
   let totalInterest = origInterest;
 
@@ -346,11 +383,17 @@ const LoanInfo = () => {
       const apRoi = parseFloat(ap.ap_roi) || 0;
       const apStartDate = moment(ap.ap_trans_date);
       const apMonths = Math.max(1, today.diff(apStartDate, 'months', true));
-      additionalInterestTotal += parseFloat((apPrin * apRoi * apMonths / 100).toFixed(2));
+      additionalInterestTotal += calculateInterest(apPrin, apRoi, apMonths, interestMethod, compoundFreq);
     });
   }
 
   const payableAmount = currentTotalPrincipal + origInterest + additionalInterestTotal;
+
+  // Calculate pending amounts
+  const totalReleasesInterest = loanDetails.releases?.reduce((sum, rel) => sum + (parseFloat(rel.rel_int_amt) || 0), 0) || 0;
+  const totalDepositsInterest = loanDetails.deposits?.reduce((sum, dep) => sum + (parseFloat(dep.dep_int_amt) || 0), 0) || 0;
+  const pendingInterest = Math.max(0, totalInterest - totalDepositsInterest - totalReleasesInterest);
+  const pendingPrincipal = currentTotalPrincipal;
 
   // Calculate Valuation
   const totalValuation = loanDetails.items?.reduce((sum, item) => sum + (parseFloat(item.st_final_valuation) || 0), 0) || 0;
@@ -382,7 +425,7 @@ const LoanInfo = () => {
       const apRoi = parseFloat(ap.ap_roi) || 0;
       const apStartDate = moment(ap.ap_trans_date);
       const apMonths = Math.max(1, today.diff(apStartDate, 'months', true));
-      const apInterest = parseFloat((apPrin * apRoi * apMonths / 100).toFixed(2));
+      const apInterest = calculateInterest(apPrin, apRoi, apMonths, interestMethod, compoundFreq);
 
       totalInterest += apInterest;
 
@@ -500,6 +543,25 @@ const LoanInfo = () => {
       {/* Final Valuation Section */}
       <div className="panel-section mt-2">
         <div className="section-header mb-2">{loanDetails.girv_type === 'unsecured' ? 'Total Summary' : 'Final Valuation'}</div>
+        
+        {loanDetails.girv_status === 'TRANSFERRED' && (
+          <div className="alert alert-secondary border-secondary border-start border-4 bg-secondary bg-opacity-10 text-dark mb-4">
+            <div className="d-flex align-items-center">
+              <i className="bi bi-info-circle-fill text-secondary fs-4 me-3"></i>
+              <div>
+                <strong className="d-block mb-1">Loan Transferred</strong>
+                {loanDetails.girv_other_info || 'This loan has been transferred to another firm.'}
+                {(loanDetails.girv_transfer_firm_id || loanDetails.girv_transfer_girv_id) && (
+                  <div className="mt-1 small">
+                    {loanDetails.girv_transfer_firm_id && <span className="me-3"><strong>Target Firm ID:</strong> {loanDetails.girv_transfer_firm_id}</span>}
+                    {loanDetails.girv_transfer_girv_id && <span><strong>New Loan ID:</strong> {loanDetails.girv_transfer_girv_id}</span>}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="row g-2 text-center mx-0">
           <div className="col">
             <div className="border border-dark h-100">
@@ -545,9 +607,11 @@ const LoanInfo = () => {
       </div>
 
       <ActionFooter
+        onUpdateClick={() => navigate("/user/home/edit-loan/" + loanDetails.girv_id)}
         onDepositClick={() => setActiveModal('deposit')}
         onTransactionClick={() => setActiveModal('transaction')}
         isReleased={loanDetails.girv_status === 'RELEASED'}
+        isUpdateAllowed={isUpdateAllowed}
       />
 
       <DepositModal
@@ -565,6 +629,8 @@ const LoanInfo = () => {
         onClose={() => setActiveModal(null)}
         loanDetails={loanDetails}
         totalDueAmount={payableAmount}
+        pendingPrincipal={pendingPrincipal}
+        pendingInterest={pendingInterest}
         onSuccess={() => {
           setActiveModal(null);
           fetchLoan();

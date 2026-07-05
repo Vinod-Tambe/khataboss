@@ -5,6 +5,7 @@ import UserHome from "../../components/user/UserHome";
 import AddLoan from "../../components/loan/AddLoan";
 import AddFinance from "../../components/finance/AddFinance";
 import ListFinance from "../../components/finance/ListFinance";
+import UpdateLoan from "../../components/loan/UpdateLoan";
 import Dropdown from "react-bootstrap/Dropdown";
 import Finance from "../../components/finance/Finance";
 import LoanInfo from "../../components/loan/LoanInfo";
@@ -191,6 +192,7 @@ const UserHomeRoutes = () => {
           <Route path="/*" element={<UserHome />} />
           <Route path="/loan-info" element={<LoanInfo />} />
           <Route path="/add-loan" element={<AddLoan />} />
+          <Route path="/edit-loan/:id" element={<UpdateLoan />} />
           <Route path="/add-finance" element={<AddFinance />} />
           <Route path="/active-finance" element={<ListFinance status="ACTIVE" />} />
           <Route path="/inactive-finance" element={<ListFinance status="INACTIVE" />} />
