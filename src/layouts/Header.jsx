@@ -30,31 +30,6 @@ const dummyNotifications = [
     read: true,
   },
 ];
-
-const dummyNotifications = [
-  {
-    id: 1,
-    title: "New finance entry added",
-    message: "A new finance record was created for today's collection.",
-    time: "2 min ago",
-    read: false,
-  },
-  {
-    id: 2,
-    title: "Loan payment received",
-    message: "Ravi Kumar's installment payment has been marked as received.",
-    time: "15 min ago",
-    read: false,
-  },
-  {
-    id: 3,
-    title: "Staff reminder",
-    message: "Monthly staff expense summary is ready for review.",
-    time: "1 hour ago",
-    read: true,
-  },
-];
-
 const Header = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
@@ -158,8 +133,8 @@ const Header = () => {
 
         {/* RIGHT: User Actions */}
         <div className="header-right">
-          <select 
-            className="form-select d-none d-md-block me-2 w-50 cursor-pointer border-dark" 
+          <select
+            className="form-select d-none d-md-block me-2 w-50 cursor-pointer border-dark"
             aria-label="Firm selection"
             value={selectedFirmId}
             onChange={handleFirmChange}

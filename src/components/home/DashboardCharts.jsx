@@ -2,6 +2,66 @@ import React, { useMemo, useState } from 'react';
 import Chart from 'react-apexcharts';
 import { useTheme } from '../../context/ThemeContext';
 
+// Mock Data Categories
+const weeklyCategories = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+const monthlyCategories = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const yearlyCategories = ['2020', '2021', '2022', '2023', '2024'];
+
+const getCategories = (view) => {
+  if (view === 'weekly') return weeklyCategories;
+  if (view === 'yearly') return yearlyCategories;
+  return monthlyCategories;
+};
+
+const countData = {
+  weekly: {
+    loans: [5, 8, 4, 10],
+    finance: [3, 6, 2, 7]
+  },
+  monthly: {
+    loans: [12, 19, 15, 22, 14, 25, 20, 28, 18, 30, 24, 35],
+    finance: [8, 15, 10, 18, 12, 20, 18, 22, 16, 25, 20, 28]
+  },
+  yearly: {
+    loans: [150, 220, 180, 260, 310],
+    finance: [100, 180, 150, 210, 250]
+  }
+};
+
+const amountData = {
+  weekly: {
+    loans: [50000, 80000, 40000, 100000],
+    finance: [30000, 60000, 20000, 70000]
+  },
+  monthly: {
+    loans: [120000, 190000, 150000, 220000, 140000, 250000, 200000, 280000, 180000, 300000, 240000, 350000],
+    finance: [80000, 150000, 100000, 180000, 120000, 200000, 180000, 220000, 160000, 250000, 200000, 280000]
+  },
+  yearly: {
+    loans: [1500000, 2200000, 1800000, 2600000, 3100000],
+    finance: [1000000, 1800000, 1500000, 2100000, 2500000]
+  }
+};
+
+// New Mock Data: Profit/Loss
+const profitData = [
+  { year: "2021", profit: 45000, loss: 12000 },
+  { year: "2022", profit: 60000, loss: 18000 },
+  { year: "2023", profit: 75000, loss: 25000 },
+  { year: "2024", profit: 90000, loss: 30000 }
+];
+
+// New Mock Data: Last 7 Days Transactions
+const last7DaysData = [
+  { day: "Mon", loan: 5000, finance: 3000 },
+  { day: "Tue", loan: 7000, finance: 4500 },
+  { day: "Wed", loan: 6000, finance: 5000 },
+  { day: "Thu", loan: 9000, finance: 6500 },
+  { day: "Fri", loan: 7500, finance: 5500 },
+  { day: "Sat", loan: 8500, finance: 7000 },
+  { day: "Sun", loan: 9500, finance: 8000 }
+];
+
 const DashboardCharts = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -12,66 +72,6 @@ const DashboardCharts = () => {
   const [countView, setCountView] = useState('monthly');
   const [amountView, setAmountView] = useState('monthly');
   const [profitYear, setProfitYear] = useState('2024');
-
-  // Mock Data Categories
-  const weeklyCategories = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-  const monthlyCategories = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const yearlyCategories = ['2020', '2021', '2022', '2023', '2024'];
-
-  const getCategories = (view) => {
-    if (view === 'weekly') return weeklyCategories;
-    if (view === 'yearly') return yearlyCategories;
-    return monthlyCategories;
-  };
-
-  const countData = {
-    weekly: {
-      loans: [5, 8, 4, 10],
-      finance: [3, 6, 2, 7]
-    },
-    monthly: {
-      loans: [12, 19, 15, 22, 14, 25, 20, 28, 18, 30, 24, 35],
-      finance: [8, 15, 10, 18, 12, 20, 18, 22, 16, 25, 20, 28]
-    },
-    yearly: {
-      loans: [150, 220, 180, 260, 310],
-      finance: [100, 180, 150, 210, 250]
-    }
-  };
-
-  const amountData = {
-    weekly: {
-      loans: [50000, 80000, 40000, 100000],
-      finance: [30000, 60000, 20000, 70000]
-    },
-    monthly: {
-      loans: [120000, 190000, 150000, 220000, 140000, 250000, 200000, 280000, 180000, 300000, 240000, 350000],
-      finance: [80000, 150000, 100000, 180000, 120000, 200000, 180000, 220000, 160000, 250000, 200000, 280000]
-    },
-    yearly: {
-      loans: [1500000, 2200000, 1800000, 2600000, 3100000],
-      finance: [1000000, 1800000, 1500000, 2100000, 2500000]
-    }
-  };
-
-  // New Mock Data: Profit/Loss
-  const profitData = [
-    { year: "2021", profit: 45000, loss: 12000 },
-    { year: "2022", profit: 60000, loss: 18000 },
-    { year: "2023", profit: 75000, loss: 25000 },
-    { year: "2024", profit: 90000, loss: 30000 }
-  ];
-
-  // New Mock Data: Last 7 Days Transactions
-  const last7DaysData = [
-    { day: "Mon", loan: 5000, finance: 3000 },
-    { day: "Tue", loan: 7000, finance: 4500 },
-    { day: "Wed", loan: 6000, finance: 5000 },
-    { day: "Thu", loan: 9000, finance: 6500 },
-    { day: "Fri", loan: 7500, finance: 5500 },
-    { day: "Sat", loan: 8500, finance: 7000 },
-    { day: "Sun", loan: 9500, finance: 8000 }
-  ];
 
   // Chart 1: Counts (Bar)
   const countChartOptions = useMemo(() => ({
