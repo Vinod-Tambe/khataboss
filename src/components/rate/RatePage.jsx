@@ -56,9 +56,10 @@ const RatePage = () => {
   }, []);
 
   useEffect(() => {
-    if (!dateRef.current) return;
+    const dateInput = dateRef.current;
+    if (!dateInput) return;
 
-    $(dateRef.current).daterangepicker(
+    $(dateInput).daterangepicker(
       {
         singleDatePicker: true,
         showDropdowns: true,
@@ -71,7 +72,7 @@ const RatePage = () => {
     );
 
     return () => {
-      const picker = $(dateRef.current).data("daterangepicker");
+      const picker = $(dateInput).data("daterangepicker");
       if (picker) picker.remove();
     };
   }, []);
