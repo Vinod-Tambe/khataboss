@@ -13,6 +13,7 @@ import TrialBalanceRoutes from '../pages/trial-balance/TrialBalanceRoutes';
 import BalanceSheetRoutes from '../pages/balance-sheet/BalanceSheetRoutes';
 import ProfitLossRoutes from '../pages/profit-loss/ProfitLossRoutes';
 import LogsRoutes from '../pages/logs/LogsRoutes';
+import RateRoutes from '../pages/rate/RateRoutes';
 const MainRoutes = () => {
 
   return (
@@ -33,6 +34,7 @@ const MainRoutes = () => {
               <Route path="/balance-sheet" element={< BalanceSheetRoutes />} />
               <Route path="/profit-loss" element={< ProfitLossRoutes />} />
               <Route path="/logs" element={< LogsRoutes />} />
+              <Route path="/rate" element={< RateRoutes />} />
               <Route path="/*" element={< HomeRoutes />} />
             </Routes>
           </div >
