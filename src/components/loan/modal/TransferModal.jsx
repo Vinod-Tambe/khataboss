@@ -39,7 +39,7 @@ const TransferModal = ({ isOpen, onClose, isTab, loanDetails, pendingPrincipal, 
     if (isOpen) {
       if (!isTab) document.body.style.overflow = 'hidden';
       fetchFirms();
-      fetchAccounts();
+      // fetchAccounts is now triggered by targetFirmId useEffect
       if (loanDetails) {
         const defaultCashAmt = (pendingPrincipal || 0) + (pendingInterest || 0);
         setFormData(prev => ({
@@ -69,28 +69,125 @@ const TransferModal = ({ isOpen, onClose, isTab, loanDetails, pendingPrincipal, 
     }
   };
 
-  const fetchAccounts = async () => {
+  const fetchAccounts = async (firmId) => {
     try {
-      const firmId = loanDetails?.girv_firm_id || null;
-      const res = await getAccountsDropdown(firmId);
+      const idToFetch = firmId || loanDetails?.girv_firm_id || null;
+      if (!idToFetch) return;
+      const res = await getAccountsDropdown(idToFetch);
       setAccounts(res.data || res || []);
     } catch (error) {
       toast.error('Failed to load accounts');
     }
   };
 
+  useEffect(() => {
+    if (isOpen) {
+      fetchAccounts(formData.targetFirmId || loanDetails?.girv_firm_id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, formData.targetFirmId, loanDetails?.girv_firm_id]);
+
+  // Auto-select accounts on fetch
+  useEffect(() => {
+    if (accounts.length > 0) {
+      setFormData(prev => {
+        const updates = {};
+        if (!prev.girv_cash_acc_id) {
+          const cashAcc = accounts.find(a => a.acc_name === "Cash In Hand");
+          if (cashAcc) updates.girv_cash_acc_id = cashAcc.acc_id;
+        }
+        if (!prev.girv_bank_acc_id) {
+          const bankAcc = accounts.find(a => a.acc_name === "Bank Account");
+          if (bankAcc) updates.girv_bank_acc_id = bankAcc.acc_id;
+        }
+        if (!prev.girv_online_acc_id) {
+          const onlineAcc = accounts.find(a => a.acc_name === "Online Account");
+          if (onlineAcc) updates.girv_online_acc_id = onlineAcc.acc_id;
+        }
+        if (!prev.girv_card_acc_id) {
+          const cardAcc = accounts.find(a =>
+            a.acc_name.toLowerCase().includes("card") ||
+            a.acc_name.toLowerCase().includes("pos")
+          );
+          if (cardAcc) updates.girv_card_acc_id = cardAcc.acc_id;
+        }
+        return Object.keys(updates).length > 0 ? { ...prev, ...updates } : prev;
+      });
+    }
+  }, [accounts]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    let finalValue = value;
+
+    if (name.includes('_amt') || name === 'girv_prin_amt' || name === 'girv_roi') {
+      finalValue = value.replace(/[^0-9.]/g, '');
+    }
+
+    setFormData(prev => {
+      const updated = { ...prev, [name]: finalValue };
+
+      if (name === 'targetFirmId') {
+        updated.girv_cash_acc_id = '';
+        updated.girv_bank_acc_id = '';
+        updated.girv_online_acc_id = '';
+        updated.girv_card_acc_id = '';
+      }
+
+      if (name === 'girv_prin_amt') {
+        const prinAmt = parseFloat(finalValue) || 0;
+        const intAmt = pendingInterest || 0;
+        const autoTotal = Math.max(0, prinAmt + intAmt);
+
+        const bankAmt = parseFloat(prev.girv_bank_amt) || 0;
+        const onlineAmt = parseFloat(prev.girv_online_amt) || 0;
+        const cardAmt = parseFloat(prev.girv_card_amt) || 0;
+        const otherPayments = bankAmt + onlineAmt + cardAmt;
+        const remainder = Math.max(0, autoTotal - otherPayments);
+
+        updated.girv_cash_amt = remainder > 0 ? remainder.toString() : '';
+      }
+
+      return updated;
+    });
   };
+
+  const totalPayment = (parseFloat(formData.girv_cash_amt) || 0) +
+    (parseFloat(formData.girv_bank_amt) || 0) +
+    (parseFloat(formData.girv_online_amt) || 0) +
+    (parseFloat(formData.girv_card_amt) || 0);
+
+  const prinAmt = parseFloat(formData.girv_prin_amt) || 0;
+  const intAmt = pendingInterest || 0;
+  const requiredTotal = prinAmt + intAmt;
+
+  let validationError = "";
+  if (requiredTotal <= 0) {
+    validationError = "Transfer Amount must be greater than 0";
+  } else if (!formData.targetFirmId) {
+    validationError = "Please select a transfer firm.";
+  } else if (Math.abs(requiredTotal - totalPayment) > 0.01) {
+    validationError = `Total Payment Modes (${totalPayment.toFixed(2)}) must equal the Transfer Amount (${requiredTotal.toFixed(2)})`;
+  } else if (parseFloat(formData.girv_cash_amt) > 0 && !formData.girv_cash_acc_id) {
+    validationError = "Please select a Cash Account.";
+  } else if (parseFloat(formData.girv_bank_amt) > 0 && !formData.girv_bank_acc_id) {
+    validationError = "Please select a Bank Account.";
+  } else if (parseFloat(formData.girv_online_amt) > 0 && !formData.girv_online_acc_id) {
+    validationError = "Please select an Online Account.";
+  } else if (parseFloat(formData.girv_card_amt) > 0 && !formData.girv_card_acc_id) {
+    validationError = "Please select a Card Account.";
+  }
+
+  const isSubmitDisabled = loading || !!validationError;
 
   const handleTransfer = async (e) => {
     e.preventDefault();
-    if (!formData.targetFirmId) {
-      toast.error('Please select a transfer firm.');
+    if (loading) return;
+    if (validationError) {
+      toast.error(validationError);
       return;
     }
-    
+
     try {
       setLoading(true);
       await transferLoan(loanDetails.girv_uuid, formData);
@@ -239,9 +336,16 @@ const TransferModal = ({ isOpen, onClose, isTab, loanDetails, pendingPrincipal, 
       </div>
 
       {/* Submit Button Row */}
+      {validationError && (
+        <div className="row mt-2">
+          <div className="col text-center">
+            <div className="alert alert-danger py-2 mb-0 fw-bold">{validationError}</div>
+          </div>
+        </div>
+      )}
       <div className="row">
-        <div className="col text-center mt-2">
-          <button type="submit" className="btn btn-primary px-5 py-2" onClick={handleTransfer} disabled={loading || !formData.targetFirmId}>
+        <div className="col text-center mt-3">
+          <button type="submit" className="btn btn-primary px-5 py-2" onClick={handleTransfer} disabled={isSubmitDisabled}>
             {loading ? <><span className="spinner-border spinner-border-sm" aria-hidden="true"></span> Processing...</> : 'Transfer Loan'}
           </button>
         </div>

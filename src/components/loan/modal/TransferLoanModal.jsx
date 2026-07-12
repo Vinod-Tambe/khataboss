@@ -27,6 +27,7 @@ const TransferLoanModal = ({ isOpen, onClose, loanDetails, onSuccess }) => {
   };
 
   const handleTransfer = async () => {
+    if (loading) return;
     if (!selectedFirmId) {
       toast.error('Please select a firm to transfer the loan to.');
       return;

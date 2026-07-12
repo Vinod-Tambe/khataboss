@@ -14,6 +14,7 @@ import BalanceSheetRoutes from '../pages/balance-sheet/BalanceSheetRoutes';
 import ProfitLossRoutes from '../pages/profit-loss/ProfitLossRoutes';
 import LogsRoutes from '../pages/logs/LogsRoutes';
 import RateRoutes from '../pages/rate/RateRoutes';
+import PurityPage from '../components/purity/PurityPage';
 const MainRoutes = () => {
 
   return (
@@ -35,6 +36,7 @@ const MainRoutes = () => {
               <Route path="/profit-loss" element={< ProfitLossRoutes />} />
               <Route path="/logs" element={< LogsRoutes />} />
               <Route path="/rate" element={< RateRoutes />} />
+              <Route path="/purity" element={< PurityPage />} />
               <Route path="/*" element={< HomeRoutes />} />
             </Routes>
           </div >

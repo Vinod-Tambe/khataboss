@@ -10,6 +10,8 @@ import { useParams } from 'react-router-dom';
 import { getFirmsDropdown } from '../../api/firmApi';
 import { getAccountsDropdown } from '../../api/accountApi';
 import { getGirviById, updateGirvi } from '../../api/girviApi';
+import { getPurities } from '../../api/purityApi';
+import { getRates } from '../../api/rateApi';
 import { toast } from 'react-hot-toast';
 
 const UpdateLoan = () => {
@@ -20,6 +22,9 @@ const UpdateLoan = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [firms, setFirms] = useState([]);
   const [accounts, setAccounts] = useState([]);
+  const [dynamicPurities, setDynamicPurities] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [firmRates, setFirmRates] = useState([]);
   const { selectedFirmId, firms: reduxFirms } = useSelector((state) => state.firm);
   const { selectedUser } = useSelector((state) => state.user);
 
@@ -31,7 +36,8 @@ const UpdateLoan = () => {
     st_gs_type: 'GM',
     st_nt_weight: '',
     st_nt_type: 'GM',
-    st_purity: '100%',
+    st_purity: '',
+    st_rate: '',
     st_fine_weight: '',
     st_valuation: '',
     itemImage: null,
@@ -110,7 +116,17 @@ const UpdateLoan = () => {
       }
     };
 
+    const fetchPuritiesAndRates = async () => {
+      try {
+        const purityRes = await getPurities();
+        setDynamicPurities(purityRes.data || []);
+      } catch (error) {
+        console.error("Error fetching purities:", error);
+      }
+    };
+
     fetchFirms();
+    fetchPuritiesAndRates();
 
     const fetchLoanData = async () => {
       if (!id) return;
@@ -128,7 +144,7 @@ const UpdateLoan = () => {
           setFormData(prev => ({
             ...prev,
             girv_uuid: d.girv_uuid || '',
-            girv_type: d.girv_type || 'secured',
+            girv_type: d.girv_type ? d.girv_type.toLowerCase() : 'secured',
             girv_prin_amt: d.girv_prin_amt || '',
             girv_start_date: d.girv_start_date ? moment(d.girv_start_date).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD'),
             girv_interest_method: d.girv_interest_method || 'simple',
@@ -153,7 +169,8 @@ const UpdateLoan = () => {
               st_gs_type: item.st_gs_type || 'GM',
               st_nt_weight: item.st_nt_weight || '',
               st_nt_type: item.st_nt_type || 'GM',
-              st_purity: item.st_purity || '100%',
+              st_purity: item.st_purity ? String(item.st_purity).replace('%', '') : '100',
+              st_rate: item.st_rate || '',
               st_fine_weight: item.st_fine_weight || '',
               st_valuation: item.st_valuation || item.st_final_valuation || '',
               itemImage: null,
@@ -217,7 +234,18 @@ const UpdateLoan = () => {
       }
     };
 
+    const fetchRatesForFirm = async () => {
+      if (!formData.girv_firm_id) return;
+      try {
+        const ratesRes = await getRates(formData.girv_firm_id);
+        setFirmRates(ratesRes.data || []);
+      } catch (error) {
+        console.error("Error fetching rates:", error);
+      }
+    };
+
     fetchAccounts();
+    fetchRatesForFirm();
   }, [formData.girv_firm_id]);
 
   // Auto-select default accounts when accounts list is loaded
@@ -249,6 +277,32 @@ const UpdateLoan = () => {
       });
     }
   }, [accounts]);
+
+  // Initial load default purity hook
+  useEffect(() => {
+    if (dynamicPurities.length > 0 && formData.items.length > 0) {
+      setFormData(prev => {
+        let updated = false;
+        const newItems = prev.items.map(item => {
+          if (!item.st_purity) {
+            const firstPurity = dynamicPurities.find(p => p.purity_metal.toUpperCase() === item.st_metal_type.toUpperCase());
+            if (firstPurity) {
+              updated = true;
+              const purityVal = firstPurity.purity_value.toString();
+              let newRate = '';
+              if (firmRates.length > 0) {
+                const matchingRate = firmRates.find(r => r.rate_metal.toUpperCase() === item.st_metal_type.toUpperCase() && r.rate_purity === firstPurity.purity_name);
+                if (matchingRate) newRate = matchingRate.rate_amount;
+              }
+              return { ...item, st_purity: purityVal, st_rate: newRate };
+            }
+          }
+          return item;
+        });
+        return updated ? { ...prev, items: newItems } : prev;
+      });
+    }
+  }, [dynamicPurities, firmRates, formData.items.length]);
 
   const totalSteps = formData.girv_type === 'secured' ? 3 : 2;
 
@@ -283,15 +337,91 @@ const UpdateLoan = () => {
   };
 
   const addNewRow = () => {
-    setFormData((prev) => ({
-      ...prev,
-      items: [...prev.items, getEmptyItem()],
-    }));
+    setFormData((prev) => {
+      const newItem = getEmptyItem();
+      const firstPurity = dynamicPurities.find(p => p.purity_metal.toUpperCase() === 'GOLD');
+      if (firstPurity) {
+        newItem.st_purity = firstPurity.purity_value.toString();
+        const matchingRate = firmRates.find(r => r.rate_metal.toUpperCase() === 'GOLD' && r.rate_purity === firstPurity.purity_name);
+        if (matchingRate) newItem.st_rate = matchingRate.rate_amount;
+      }
+      return {
+        ...prev,
+        items: [...prev.items, newItem],
+      };
+    });
   };
 
   const updateItem = (index, field, value) => {
     const updatedItems = [...formData.items];
-    updatedItems[index] = { ...updatedItems[index], [field]: value };
+    const item = { ...updatedItems[index], [field]: value };
+
+    // GS == NET sync
+    if (field === 'st_gs_weight') {
+      item.st_nt_weight = value;
+    }
+    
+    if (field === 'st_gs_type') {
+      item.st_nt_type = value;
+    }
+
+    // Dynamic rate fetching
+    if (field === 'st_metal_type' || field === 'st_purity') {
+      const metalType = field === 'st_metal_type' ? value : item.st_metal_type;
+      let purityVal = field === 'st_purity' ? value : item.st_purity;
+
+      // Auto-select first purity if metal changes
+      if (field === 'st_metal_type' || !purityVal) {
+        const firstPurity = dynamicPurities.find(p => p.purity_metal.toUpperCase() === metalType.toUpperCase());
+        if (firstPurity) {
+          purityVal = firstPurity.purity_value.toString();
+          item.st_purity = purityVal;
+        } else {
+          purityVal = '';
+          item.st_purity = '';
+        }
+      }
+
+      const matchingPurity = dynamicPurities.find(
+        p => p.purity_value.toString() === purityVal.toString() && 
+             p.purity_metal.toUpperCase() === metalType.toUpperCase()
+      );
+      const purityName = matchingPurity ? matchingPurity.purity_name : purityVal;
+      
+      const matchingRate = firmRates.find(
+        r => r.rate_metal.toUpperCase() === metalType.toUpperCase() && 
+             r.rate_purity === purityName
+      );
+      
+      if (matchingRate) {
+        item.st_rate = matchingRate.rate_amount;
+      } else {
+        item.st_rate = '';
+      }
+    }
+
+    // Valuation calculation
+    if (['st_gs_weight', 'st_nt_weight', 'st_rate', 'st_metal_type', 'st_purity', 'st_nt_type', 'st_gs_type'].includes(field)) {
+      const ntWeight = parseFloat(item.st_nt_weight) || 0;
+      const rate = parseFloat(item.st_rate) || 0;
+      const multiplier = item.st_nt_type === 'KG' ? 1000 : 1;
+
+      if (ntWeight > 0 && rate > 0) {
+        item.st_valuation = (ntWeight * multiplier * rate).toFixed(2);
+      } else {
+        item.st_valuation = '';
+      }
+
+      // Fine weight calculation
+      const purityValNum = parseFloat(item.st_purity) || 0;
+      if (ntWeight > 0 && purityValNum > 0) {
+        item.st_fine_weight = (ntWeight * (purityValNum / 100)).toFixed(3);
+      } else {
+        item.st_fine_weight = '';
+      }
+    }
+
+    updatedItems[index] = item;
     setFormData((prev) => ({ ...prev, items: updatedItems }));
   };
 
@@ -322,11 +452,11 @@ const UpdateLoan = () => {
     }
     if (formData.girv_type === 'secured' && currentStep === 2) {
       const invalidItem = formData.items.find(item =>
-        !item.st_item_name.trim() ||
-        !item.st_quantity.trim() ||
-        !item.st_gs_weight.trim() ||
-        !item.st_nt_weight.trim() ||
-        !item.st_valuation.trim()
+        !String(item.st_item_name || '').trim() ||
+        !String(item.st_quantity || '').trim() ||
+        !String(item.st_gs_weight || '').trim() ||
+        !String(item.st_nt_weight || '').trim() ||
+        !String(item.st_valuation || '').trim()
       );
       if (invalidItem) {
         toast.error('Please fill required fields for all items (Item Name, Qty, Gross Wt, Net Wt, Valuation)');
@@ -342,6 +472,7 @@ const UpdateLoan = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
     if (!selectedUser?.user_id) {
       toast.error('Please select a user before adding a loan.');
@@ -351,11 +482,11 @@ const UpdateLoan = () => {
     // Validation for Secured Loans
     if (formData.girv_type === 'secured') {
       const invalidItem = formData.items.find(item =>
-        !item.st_item_name.trim() ||
-        !item.st_quantity.trim() ||
-        !item.st_gs_weight.trim() ||
-        !item.st_nt_weight.trim() ||
-        !item.st_valuation.trim()
+        !String(item.st_item_name || '').trim() ||
+        !String(item.st_quantity || '').trim() ||
+        !String(item.st_gs_weight || '').trim() ||
+        !String(item.st_nt_weight || '').trim() ||
+        !String(item.st_valuation || '').trim()
       );
       if (invalidItem) {
         toast.error('Please fill required fields for all items (Item Name, Qty, Gross Wt, Net Wt, Valuation)');
@@ -378,6 +509,7 @@ const UpdateLoan = () => {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       const payload = {
         ...formData,
@@ -393,6 +525,8 @@ const UpdateLoan = () => {
     } catch (error) {
       console.error('Error updating loan:', error);
       toast.error(error?.error || 'Failed to update loan.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -597,6 +731,7 @@ const UpdateLoan = () => {
               <th className="text-center fw-bold px-1" style={{ width: '13%', minWidth: '100px' }}>GROSS WT</th>
               <th className="text-center fw-bold px-1" style={{ width: '13%', minWidth: '100px' }}>NET WT</th>
               <th className="text-center fw-bold px-1" style={{ width: '7%', minWidth: '60px' }}>PURITY</th>
+              <th className="text-center fw-bold px-1" style={{ width: '8%', minWidth: '60px' }}>RATE</th>
               <th className="text-center fw-bold px-1" style={{ width: '8%', minWidth: '50px' }}>FINE WT</th>
               <th className="text-center fw-bold px-1" style={{ width: '15%', minWidth: '100px' }}>VALUATION</th>
               <th className="text-center fw-bold px-1" style={{ width: '6%', minWidth: '45px' }}>IMAGE</th>
@@ -686,10 +821,24 @@ const UpdateLoan = () => {
                     onChange={(e) => updateItem(index, 'st_purity', e.target.value)}
                     style={{ fontSize: '0.85rem', appearance: 'none', WebkitAppearance: 'none', paddingRight: 0 }}
                   >
-                    <option value="100%">100%</option>
-                    <option value="92%">92%</option>
-                    <option value="80%">80%</option>
+                    <option value="">Select</option>
+                    {dynamicPurities
+                      .filter(p => p.purity_metal.toUpperCase() === item.st_metal_type.toUpperCase())
+                      .map(p => (
+                        <option key={p.purity_uuid} value={p.purity_value}>{p.purity_value}</option>
+                      ))
+                    }
                   </select>
+                </td>
+                <td className="px-1 py-1">
+                  <input
+                    type="text"
+                    className="form-control form-control-sm px-1 text-end border-secondary"
+                    value={item.st_rate}
+                    onChange={(e) => updateItem(index, 'st_rate', e.target.value)}
+                    placeholder="Rate"
+                    style={{ fontSize: '0.85rem' }}
+                  />
                 </td>
                 <td className="px-1 py-1">
                   <input
@@ -967,7 +1116,16 @@ const UpdateLoan = () => {
       {currentStep < totalSteps ? (
         <button type="button" className="btn btn-primary ms-auto" onClick={handleNext}>Next</button>
       ) : (
-        <button type="submit" className="btn btn-primary btn-lg px-5 ms-auto">Update Loan</button>
+        <button type="submit" className="btn btn-primary btn-lg px-5 ms-auto" disabled={isSubmitting || hasTransactions}>
+          {isSubmitting ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Updating...
+            </>
+          ) : (
+            'Update Loan'
+          )}
+        </button>
       )}
     </div>
   );
