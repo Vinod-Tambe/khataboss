@@ -226,3 +226,9 @@ body {
 .bg-brown-subtle {
     background-color: var(--home-brown-bg) !important;
 }
+
+@media (max-width: 991.98px) {
+    .dashboard-graphs {
+        grid-template-columns: 1fr;
+    }
+}
