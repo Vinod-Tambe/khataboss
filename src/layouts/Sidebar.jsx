@@ -19,8 +19,9 @@ import {
   FiTrendingUp,
   FiBriefcase,
   FiMessageSquare,
-  FiActivity,
   FiLogOut,
+  FiSettings,
+  FiAward,
 } from "react-icons/fi";
 import { FaBook, FaBookOpen, FaBalanceScale } from "react-icons/fa";
 import { useDispatch } from "react-redux";
@@ -135,7 +136,15 @@ const Sidebar = () => {
 
     { id: "sms", label: "SMS", icon: <FiMessageSquare />, path: "/sms" },
     { id: "logs", label: "Logs", icon: <FiFileText />, path: "/logs" },
-    { id: "rate", label: "Rate", icon: <FiActivity />, path: "/rate" },
+    {
+      id: "settings",
+      label: "Settings",
+      icon: <FiSettings />,
+      subItems: [
+        { label: "Rate", path: "/rate", icon: <FiTrendingUp /> },
+        { label: "Purity", path: "/purity", icon: <FiAward /> },
+      ],
+    },
 
     { id: "logout", label: "Sign Out", icon: <FiLogOut />, path: "/logout" },
   ];

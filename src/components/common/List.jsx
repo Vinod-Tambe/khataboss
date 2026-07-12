@@ -138,7 +138,7 @@ const List = ({
         className: "text-center",
         render: function (data, type, row) {
           let buttons = "";
-          const rowId = row.id || row.girv_id || row.girv_uuid || row.firm_id || row.user_id || "";
+          const rowId = row.id || row.girv_id || row.girv_uuid || row.firm_id || row.user_id || row.rate_id || row.rate_uuid || row.purity_uuid || row.purity_id || "";
           const showView = typeof hasView === "function" ? hasView(row) : hasView;
           const showEdit = typeof hasEdit === "function" ? hasEdit(row) : hasEdit;
           const showDelete = typeof hasDelete === "function" ? hasDelete(row) : hasDelete;
@@ -325,36 +325,40 @@ const List = ({
           if (onView) {
             $(tableRef.current).on("click", ".view-btn", function (e) {
               e.stopPropagation();
-              const tr = $(this).closest("tr");
+              let tr = $(this).closest("tr");
+              if (tr.hasClass("child")) tr = tr.prev();
               const rowData = api.row(tr).data();
-              onView(rowData);
+              if (rowData) onView(rowData);
             });
           }
 
           if (onEdit) {
             $(tableRef.current).on("click", ".edit-btn", function (e) {
               e.stopPropagation();
-              const tr = $(this).closest("tr");
+              let tr = $(this).closest("tr");
+              if (tr.hasClass("child")) tr = tr.prev();
               const rowData = api.row(tr).data();
-              onEdit(rowData);
+              if (rowData) onEdit(rowData);
             });
           }
 
           if (onDelete) {
             $(tableRef.current).on("click", ".delete-btn", function (e) {
               e.stopPropagation();
-              const tr = $(this).closest("tr");
+              let tr = $(this).closest("tr");
+              if (tr.hasClass("child")) tr = tr.prev();
               const rowData = api.row(tr).data();
-              setConfirmState({ show: true, rowData });
+              if (rowData) setConfirmState({ show: true, rowData });
             });
           }
 
           if (onPrint) {
             $(tableRef.current).on("click", ".print-btn", function (e) {
               e.stopPropagation();
-              const tr = $(this).closest("tr");
+              let tr = $(this).closest("tr");
+              if (tr.hasClass("child")) tr = tr.prev();
               const rowData = api.row(tr).data();
-              onPrint(rowData);
+              if (rowData) onPrint(rowData);
             });
           }
         },

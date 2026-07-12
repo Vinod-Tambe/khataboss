@@ -203,23 +203,33 @@ const DepositModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, onS
   const payableAmt = parseFloat(formData.dep_payable_amt) || 0;
   
   let validationError = "";
-  const isFormEmpty = payableAmt <= 0;
-
-  if (!isFormEmpty) {
-    if (totalDueAmount !== undefined && (payableAmt - totalDueAmount) > 0.01) {
-      validationError = `Total Amount Rec. (${payableAmt.toFixed(2)}) cannot exceed Total Loan Amount Due (${totalDueAmount.toFixed(2)})`;
-    } else if (Math.abs(payableAmt - totalPayment) > 0.01) {
-      validationError = `Total Payment Modes (${totalPayment.toFixed(2)}) must equal Total Amount Rec. (${payableAmt.toFixed(2)})`;
-    } else if (!loanDetails?.girv_id) {
-      validationError = "Loan details missing";
-    }
+  if (payableAmt <= 0) {
+    validationError = "Total Amount Rec. must be greater than 0";
+  } else if (!loanDetails?.girv_id) {
+    validationError = "Loan details missing";
+  } else if (totalDueAmount !== undefined && (payableAmt - totalDueAmount) > 0.01) {
+    validationError = `Total Amount Rec. (${payableAmt.toFixed(2)}) cannot exceed Total Loan Amount Due (${totalDueAmount.toFixed(2)})`;
+  } else if (Math.abs(payableAmt - totalPayment) > 0.01) {
+    validationError = `Total Payment Modes (${totalPayment.toFixed(2)}) must equal Total Amount Rec. (${payableAmt.toFixed(2)})`;
+  } else if (parseFloat(formData.dep_cash_amt) > 0 && !formData.dep_cash_acc_id) {
+    validationError = "Please select a Cash Account.";
+  } else if (parseFloat(formData.dep_bank_amt) > 0 && !formData.dep_bank_acc_id) {
+    validationError = "Please select a Bank Account.";
+  } else if (parseFloat(formData.dep_online_amt) > 0 && !formData.dep_online_acc_id) {
+    validationError = "Please select an Online Account.";
+  } else if (parseFloat(formData.dep_card_amt) > 0 && !formData.dep_card_acc_id) {
+    validationError = "Please select a Card Account.";
   }
 
-  const isSubmitDisabled = submitting || isFormEmpty || !!validationError;
+  const isSubmitDisabled = submitting || !!validationError;
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-    if (isFormEmpty || validationError) return;
+    if (submitting) return;
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
 
     setSubmitting(true);
 

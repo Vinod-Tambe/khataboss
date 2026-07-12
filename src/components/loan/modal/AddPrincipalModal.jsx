@@ -186,41 +186,33 @@ const AddPrincipalModal = ({ isOpen, onClose, loanDetails, onSuccess, isTab }) =
     (parseFloat(formData.ap_online_amt) || 0) +
     (parseFloat(formData.ap_card_amt) || 0);
 
+  const prinAmt = parseFloat(formData.ap_prin_amt) || 0;
+  
+  let validationError = "";
+  if (prinAmt <= 0) {
+    validationError = "Principal Amount must be greater than 0";
+  } else if ((parseFloat(formData.ap_roi) || 0) <= 0) {
+    validationError = "Rate of Interest must be greater than 0";
+  } else if (Math.abs(totalPayment - prinAmt) > 0.01) {
+    validationError = `Total Payment Modes (${totalPayment.toFixed(2)}) must exactly equal the Principal Amount (${prinAmt.toFixed(2)})`;
+  } else if (parseFloat(formData.ap_cash_amt) > 0 && !formData.ap_cash_acc_id) {
+    validationError = "Please select a Cash Account.";
+  } else if (parseFloat(formData.ap_bank_amt) > 0 && !formData.ap_bank_acc_id) {
+    validationError = "Please select a Bank Account.";
+  } else if (parseFloat(formData.ap_online_amt) > 0 && !formData.ap_online_acc_id) {
+    validationError = "Please select an Online Account.";
+  } else if (parseFloat(formData.ap_card_amt) > 0 && !formData.ap_card_acc_id) {
+    validationError = "Please select a Card Account.";
+  }
+
+  const isSubmitDisabled = submitting || !!validationError;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
 
-    const prinAmt = parseFloat(formData.ap_prin_amt) || 0;
-    if (prinAmt <= 0) {
-      toast.error("Principal Amount must be greater than 0");
-      return;
-    }
-
-    const roi = parseFloat(formData.ap_roi) || 0;
-    if (roi <= 0) {
-      toast.error("Rate of Interest must be greater than 0");
-      return;
-    }
-
-    if (Math.abs(totalPayment - prinAmt) > 0.01) {
-      toast.error(`Payment sum (${totalPayment.toFixed(2)}) must exactly equal the Principal Amount (${prinAmt.toFixed(2)})`);
-      return;
-    }
-
-    // Selected Account validations
-    if (parseFloat(formData.ap_cash_amt) > 0 && !formData.ap_cash_acc_id) {
-      toast.error("Please select a Cash Account.");
-      return;
-    }
-    if (parseFloat(formData.ap_bank_amt) > 0 && !formData.ap_bank_acc_id) {
-      toast.error("Please select a Bank Account.");
-      return;
-    }
-    if (parseFloat(formData.ap_online_amt) > 0 && !formData.ap_online_acc_id) {
-      toast.error("Please select an Online Account.");
-      return;
-    }
-    if (parseFloat(formData.ap_card_amt) > 0 && !formData.ap_card_acc_id) {
-      toast.error("Please select a Card Account.");
+    if (validationError) {
+      toast.error(validationError);
       return;
     }
 
@@ -234,7 +226,7 @@ const AddPrincipalModal = ({ isOpen, onClose, loanDetails, onSuccess, isTab }) =
 
         ap_trans_date: formData.ap_trans_date,
         ap_prin_amt: prinAmt,
-        ap_roi: roi,
+        ap_roi: parseFloat(formData.ap_roi) || 0,
         ap_payable_amt: parseFloat(formData.ap_payable_amt) || prinAmt,
 
         ap_cash_amt: parseFloat(formData.ap_cash_amt) || 0,
@@ -501,14 +493,28 @@ const AddPrincipalModal = ({ isOpen, onClose, loanDetails, onSuccess, isTab }) =
           </div>
         </div>
       </div>
+      {/* Error Message */}
+      {validationError && (
+        <div className="row mt-2">
+          <div className="col text-center">
+            <div className="alert alert-danger py-2 mb-0 fw-bold">{validationError}</div>
+          </div>
+        </div>
+      )}
+
       <div className="row">
-        <div className="col text-center mt-2">
+        <div className="col text-center mt-3">
           <button
             type="submit"
             className="btn btn-primary px-5 py-2"
-            disabled={submitting}
+            disabled={isSubmitDisabled}
           >
-            {submitting ? 'Processing...' : 'Add Principal'}
+            {submitting ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Processing...
+              </>
+            ) : 'Add Principal'}
           </button>
         </div>
       </div>
