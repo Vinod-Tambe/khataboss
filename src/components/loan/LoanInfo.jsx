@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import '../../css/ActiveLoanPanel.css';
 import DepositModal from './modal/DepositModal';
 import TransactionModal from './modal/TransactionModal';
+import { downloadLoanInvoicePdf } from './invoice/downloadLoanInvoicePdf';
 import { getGirviById } from '../../api/girviApi';
 import moment from 'moment';
 import { toast } from 'react-toastify';
@@ -273,7 +275,7 @@ const ReleaseInfoTable = ({ data }) => (
 );
 
 
-const ActionFooter = ({ onUpdateClick, onDepositClick, onTransactionClick, isReleased, isUpdateAllowed }) => (
+const ActionFooter = ({ onUpdateClick, onDepositClick, onTransactionClick, onInvoiceClick, isReleased, isUpdateAllowed, isInvoiceDownloading }) => (
   <div className="action-footer mt-4">
     <div className="d-flex flex-wrap gap-2 justify-content-center">
       <button className="btn btn-outline-primary btn-sm text-nowrap blue-btn" onClick={onDepositClick}>
@@ -300,8 +302,13 @@ const ActionFooter = ({ onUpdateClick, onDepositClick, onTransactionClick, isRel
       <button className="btn btn-outline-warning btn-sm text-nowrap blue-btn">
         <i className="bi bi-envelope-open text-warning me-1"></i> Notice
       </button>
-      <button className="btn btn-outline-primary btn-sm text-nowrap blue-btn">
-        <i className="bi bi-printer text-dark me-1"></i> Print
+      <button
+        className="btn btn-outline-primary btn-sm text-nowrap blue-btn"
+        onClick={onInvoiceClick}
+        disabled={isInvoiceDownloading}
+      >
+        <i className={`bi ${isInvoiceDownloading ? 'bi-hourglass-split' : 'bi-file-earmark-arrow-down'} text-dark me-1`}></i>
+        {isInvoiceDownloading ? 'Downloading...' : 'Invoice'}
       </button>
       <button className="btn btn-outline-danger btn-sm text-nowrap blue-btn">
         <i className="bi bi-envelope text-warning me-1"></i> Alert
@@ -315,11 +322,27 @@ const ActionFooter = ({ onUpdateClick, onDepositClick, onTransactionClick, isRel
 
 const LoanInfo = () => {
   const [activeModal, setActiveModal] = useState(null);
+  const [isInvoiceDownloading, setIsInvoiceDownloading] = useState(false);
   const [loanDetails, setLoanDetails] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const location = useLocation();
   const navigate = useNavigate();
+  const { selectedUser } = useSelector((state) => state.user);
+
+  const handleInvoiceDownload = () => {
+    if (!loanDetails || isInvoiceDownloading) return;
+    try {
+      setIsInvoiceDownloading(true);
+      const fileName = downloadLoanInvoicePdf(loanDetails, selectedUser);
+      toast.success(`Invoice downloaded: ${fileName}`);
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to download invoice');
+    } finally {
+      setIsInvoiceDownloading(false);
+    }
+  };
 
   const fetchLoan = useCallback(async () => {
     try {
@@ -610,6 +633,8 @@ const LoanInfo = () => {
         onUpdateClick={() => navigate("/user/home/edit-loan/" + loanDetails.girv_id)}
         onDepositClick={() => setActiveModal('deposit')}
         onTransactionClick={() => setActiveModal('transaction')}
+        onInvoiceClick={handleInvoiceDownload}
+        isInvoiceDownloading={isInvoiceDownloading}
         isReleased={loanDetails.girv_status === 'RELEASED'}
         isUpdateAllowed={isUpdateAllowed}
       />

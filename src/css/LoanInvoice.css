@@ -1,0 +1,430 @@
+/* Reusable Loan Invoice — print-ready statement layout */
+
+.loan-invoice {
+  --inv-navy: #0f2d4a;
+  --inv-navy-soft: #1a4568;
+  --inv-gold: #b8860b;
+  --inv-gold-soft: #f7efd6;
+  --inv-mint: #e6f6ec;
+  --inv-mint-text: #1b6b3a;
+  --inv-danger-bg: #fdecea;
+  --inv-danger-text: #9b1c1c;
+  --inv-warn-bg: #fff6e5;
+  --inv-warn-text: #8a5a00;
+  --inv-transfer-bg: #eef2f7;
+  --inv-transfer-text: #3d4f66;
+  --inv-border: #d7dee7;
+  --inv-row: #f5f8fb;
+  --inv-text: #1c2b3a;
+  --inv-muted: #5f6f80;
+  --inv-white: #ffffff;
+
+  font-family: 'Segoe UI', 'Calibri', Arial, sans-serif;
+  color: var(--inv-text);
+  background: var(--inv-white);
+  font-size: 12px;
+  line-height: 1.45;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 22px 26px 18px;
+  box-sizing: border-box;
+}
+
+.loan-invoice * {
+  box-sizing: border-box;
+}
+
+.loan-invoice-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 3px solid var(--inv-navy);
+  position: relative;
+}
+
+.loan-invoice-brand::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  width: 120px;
+  height: 3px;
+  background: var(--inv-gold);
+}
+
+.loan-invoice-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--inv-gold);
+  background: var(--inv-gold-soft);
+}
+
+.loan-invoice-logo-fallback {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #d4a017, #8b6914);
+  color: #fff;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.loan-invoice-brand-text h1 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: 1px;
+  color: var(--inv-navy);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.loan-invoice-brand-text p {
+  margin: 2px 0 0;
+  color: var(--inv-muted);
+  font-size: 11px;
+}
+
+.loan-invoice-parties {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.loan-invoice-party {
+  border: 1px solid var(--inv-border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: linear-gradient(180deg, #fbfcfe 0%, #ffffff 100%);
+}
+
+.loan-invoice-party h3 {
+  margin: 0 0 8px;
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--inv-navy);
+  border-bottom: 1px solid var(--inv-border);
+  padding-bottom: 4px;
+}
+
+.loan-invoice-party p {
+  margin: 0 0 3px;
+  color: var(--inv-text);
+}
+
+.loan-invoice-party .party-name {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--inv-navy);
+}
+
+.loan-invoice-party .muted {
+  color: var(--inv-muted);
+}
+
+.loan-invoice-status-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 10px 0 16px;
+}
+
+.loan-invoice-status {
+  display: inline-block;
+  padding: 6px 22px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+.loan-invoice-status--active,
+.loan-invoice-status--closed {
+  background: var(--inv-mint);
+  color: var(--inv-mint-text);
+  border-color: #b7e0c5;
+}
+
+.loan-invoice-status--released {
+  background: var(--inv-danger-bg);
+  color: var(--inv-danger-text);
+  border-color: #f2c4c0;
+}
+
+.loan-invoice-status--transferred {
+  background: var(--inv-transfer-bg);
+  color: var(--inv-transfer-text);
+  border-color: #c9d4e2;
+}
+
+.loan-invoice-section {
+  margin-bottom: 14px;
+}
+
+.loan-invoice-section-title {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--inv-navy);
+  letter-spacing: 0.3px;
+}
+
+.loan-invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+.loan-invoice-table th {
+  background: var(--inv-navy);
+  color: #fff;
+  font-weight: 600;
+  font-size: 10.5px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  padding: 7px 8px;
+  border: 1px solid var(--inv-navy);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.loan-invoice-table td {
+  padding: 6px 8px;
+  border: 1px solid var(--inv-border);
+  vertical-align: middle;
+}
+
+.loan-invoice-table tbody tr:nth-child(even) {
+  background: var(--inv-row);
+}
+
+.loan-invoice-table .text-right,
+.loan-invoice-table th.text-right,
+.loan-invoice-table td.text-right {
+  text-align: right;
+}
+
+.loan-invoice-table .text-center,
+.loan-invoice-table th.text-center,
+.loan-invoice-table td.text-center {
+  text-align: center;
+}
+
+.loan-invoice-table tfoot td {
+  background: #eef3f8;
+  font-weight: 700;
+  color: var(--inv-navy);
+  border-top: 2px solid var(--inv-navy);
+}
+
+.loan-invoice-type {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.loan-invoice-type--opening {
+  background: #e8f0fe;
+  color: #1a4a8a;
+}
+
+.loan-invoice-type--deposit {
+  background: var(--inv-mint);
+  color: var(--inv-mint-text);
+}
+
+.loan-invoice-type--additional {
+  background: var(--inv-warn-bg);
+  color: var(--inv-warn-text);
+}
+
+.loan-invoice-type--release {
+  background: var(--inv-danger-bg);
+  color: var(--inv-danger-text);
+}
+
+.loan-invoice-type--transfer {
+  background: var(--inv-transfer-bg);
+  color: var(--inv-transfer-text);
+}
+
+.loan-invoice-transfer-box {
+  border: 1px solid #c9d4e2;
+  border-left: 4px solid var(--inv-navy);
+  background: var(--inv-transfer-bg);
+  border-radius: 4px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+
+.loan-invoice-transfer-box strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--inv-navy);
+}
+
+.loan-invoice-bottom {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 6px;
+  margin-bottom: 16px;
+}
+
+.loan-invoice-summary {
+  width: 320px;
+  max-width: 100%;
+  border: 1px solid var(--inv-border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.loan-invoice-summary-title {
+  background: var(--inv-navy);
+  color: #fff;
+  padding: 7px 12px;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.loan-invoice-summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--inv-border);
+}
+
+.loan-invoice-summary-row:last-child {
+  border-bottom: none;
+}
+
+.loan-invoice-summary-row.total {
+  background: var(--inv-gold-soft);
+  font-weight: 700;
+  color: var(--inv-navy);
+}
+
+.loan-invoice-summary-row .positive {
+  color: var(--inv-mint-text);
+  font-weight: 700;
+}
+
+.loan-invoice-summary-row .negative {
+  color: var(--inv-danger-text);
+  font-weight: 700;
+}
+
+.loan-invoice-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.loan-invoice-meta-chip {
+  border: 1px solid var(--inv-border);
+  border-radius: 4px;
+  padding: 6px 8px;
+  background: #fafbfc;
+}
+
+.loan-invoice-meta-chip span {
+  display: block;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--inv-muted);
+}
+
+.loan-invoice-meta-chip strong {
+  font-size: 12px;
+  color: var(--inv-navy);
+}
+
+.loan-invoice-empty {
+  text-align: center;
+  color: var(--inv-muted);
+  font-style: italic;
+  padding: 10px !important;
+}
+
+.loan-invoice-footer {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 2px solid var(--inv-navy);
+  position: relative;
+  text-align: center;
+}
+
+.loan-invoice-footer::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 0;
+  width: 40%;
+  height: 2px;
+  background: var(--inv-gold);
+}
+
+.loan-invoice-footer p {
+  margin: 0 0 3px;
+  color: var(--inv-muted);
+  font-size: 11px;
+}
+
+.loan-invoice-footer .thanks {
+  color: var(--inv-navy);
+  font-weight: 600;
+}
+
+@media print {
+  .loan-invoice {
+    max-width: 100%;
+    padding: 0;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .loan-invoice-table th,
+  .loan-invoice-summary-title,
+  .loan-invoice-status,
+  .loan-invoice-type,
+  .loan-invoice-table tbody tr:nth-child(even),
+  .loan-invoice-summary-row.total,
+  .loan-invoice-transfer-box {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .loan-invoice-parties,
+  .loan-invoice-meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .loan-invoice-bottom {
+    justify-content: stretch;
+  }
+
+  .loan-invoice-summary {
+    width: 100%;
+  }
+}
