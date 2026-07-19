@@ -287,23 +287,6 @@ const SmsPage = () => {
 
   return (
     <div className="sms-page">
-      <div className="sms-toolbar">
-        <button type="button" className="btn btn-sms-new" onClick={handleNewTemplate}>
-          <FiPlus size={16} /> New Template
-        </button>
-        <div className="sms-toolbar-spacer" />
-        <div className="sms-search">
-          <FiSearch size={16} />
-          <input
-            type="search"
-            className="form-control"
-            placeholder={searchPlaceholder}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-      </div>
-
       <div className="sms-tabs" role="tablist">
         {CHANNELS.map(({ id, label, icon: Icon }) => (
           <button

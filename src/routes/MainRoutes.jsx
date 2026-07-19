@@ -16,6 +16,7 @@ import LogsRoutes from '../pages/logs/LogsRoutes';
 import RateRoutes from '../pages/rate/RateRoutes';
 import PurityPage from '../components/purity/PurityPage';
 import SmsPage from '../components/sms/SmsPage';
+import MoneyLenderRoutes from '../pages/money-lender/MoneyLenderRoutes';
 const MainRoutes = () => {
 
   return (
@@ -39,6 +40,7 @@ const MainRoutes = () => {
               <Route path="/rate" element={< RateRoutes />} />
               <Route path="/purity" element={< PurityPage />} />
               <Route path="/sms" element={<SmsPage />} />
+              <Route path="/money-lender/*" element={< MoneyLenderRoutes />} />
               <Route path="/*" element={< HomeRoutes />} />
             </Routes>
           </div >

@@ -136,9 +136,9 @@ const UpdateLoan = () => {
           const d = res.data;
           const isClosed = d.girv_status === 'CLOSED' || d.girv_status === 'RELEASED';
           const hasTrans = (d.additionalPrincipals && d.additionalPrincipals.length > 0) ||
-                           (d.deposits && d.deposits.length > 0) ||
-                           (d.releases && d.releases.length > 0);
-          
+            (d.deposits && d.deposits.length > 0) ||
+            (d.releases && d.releases.length > 0);
+
           setHasTransactions(isClosed || hasTrans);
 
           setFormData(prev => ({
@@ -284,18 +284,45 @@ const UpdateLoan = () => {
       setFormData(prev => {
         let updated = false;
         const newItems = prev.items.map(item => {
-          if (!item.st_purity) {
-            const firstPurity = dynamicPurities.find(p => p.purity_metal.toUpperCase() === item.st_metal_type.toUpperCase());
+          let updatedItem = { ...item };
+          let changed = false;
+
+          if (!updatedItem.st_purity) {
+            const firstPurity = dynamicPurities.find(p => p.purity_metal.toUpperCase() === updatedItem.st_metal_type.toUpperCase());
             if (firstPurity) {
-              updated = true;
-              const purityVal = firstPurity.purity_value.toString();
-              let newRate = '';
-              if (firmRates.length > 0) {
-                const matchingRate = firmRates.find(r => r.rate_metal.toUpperCase() === item.st_metal_type.toUpperCase() && r.rate_purity === firstPurity.purity_name);
-                if (matchingRate) newRate = matchingRate.rate_amount;
-              }
-              return { ...item, st_purity: purityVal, st_rate: newRate };
+              updatedItem.st_purity = firstPurity.purity_value.toString();
+              changed = true;
             }
+          }
+
+          if (updatedItem.st_purity && !updatedItem.st_rate && firmRates.length > 0) {
+            const matchingPurity = dynamicPurities.find(
+              p => parseFloat(p.purity_value) === parseFloat(updatedItem.st_purity) &&
+                p.purity_metal?.toUpperCase() === updatedItem.st_metal_type?.toUpperCase()
+            );
+            if (matchingPurity) {
+              const matchingRate = firmRates.find(r =>
+                r.rate_metal?.toUpperCase() === updatedItem.st_metal_type?.toUpperCase() &&
+                r.rate_purity?.trim().toUpperCase() === matchingPurity.purity_name?.trim().toUpperCase()
+              );
+              if (matchingRate) {
+                updatedItem.st_rate = matchingRate.rate_amount;
+
+                const ntWeight = parseFloat(updatedItem.st_nt_weight) || 0;
+                const rate = parseFloat(updatedItem.st_rate) || 0;
+                const multiplier = updatedItem.st_nt_type === 'KG' ? 1000 : 1;
+                if (ntWeight > 0 && rate > 0) {
+                  updatedItem.st_valuation = (ntWeight * multiplier * rate).toFixed(2);
+                }
+
+                changed = true;
+              }
+            }
+          }
+
+          if (changed) {
+            updated = true;
+            return updatedItem;
           }
           return item;
         });
@@ -342,7 +369,7 @@ const UpdateLoan = () => {
       const firstPurity = dynamicPurities.find(p => p.purity_metal.toUpperCase() === 'GOLD');
       if (firstPurity) {
         newItem.st_purity = firstPurity.purity_value.toString();
-        const matchingRate = firmRates.find(r => r.rate_metal.toUpperCase() === 'GOLD' && r.rate_purity === firstPurity.purity_name);
+        const matchingRate = firmRates.find(r => r.rate_metal?.toUpperCase() === 'GOLD' && r.rate_purity?.trim().toUpperCase() === firstPurity.purity_name?.trim().toUpperCase());
         if (matchingRate) newItem.st_rate = matchingRate.rate_amount;
       }
       return {
@@ -360,7 +387,7 @@ const UpdateLoan = () => {
     if (field === 'st_gs_weight') {
       item.st_nt_weight = value;
     }
-    
+
     if (field === 'st_gs_type') {
       item.st_nt_type = value;
     }
@@ -383,16 +410,16 @@ const UpdateLoan = () => {
       }
 
       const matchingPurity = dynamicPurities.find(
-        p => p.purity_value.toString() === purityVal.toString() && 
-             p.purity_metal.toUpperCase() === metalType.toUpperCase()
+        p => parseFloat(p.purity_value) === parseFloat(purityVal) &&
+          p.purity_metal?.toUpperCase() === metalType?.toUpperCase()
       );
       const purityName = matchingPurity ? matchingPurity.purity_name : purityVal;
-      
+
       const matchingRate = firmRates.find(
-        r => r.rate_metal.toUpperCase() === metalType.toUpperCase() && 
-             r.rate_purity === purityName
+        r => r.rate_metal?.toUpperCase() === metalType?.toUpperCase() &&
+          r.rate_purity?.trim().toUpperCase() === purityName?.toString().trim().toUpperCase()
       );
-      
+
       if (matchingRate) {
         item.st_rate = matchingRate.rate_amount;
       } else {
@@ -562,31 +589,14 @@ const UpdateLoan = () => {
             defaultValue={formData.girv_start_date ? moment(formData.girv_start_date).format('DD-MM-YYYY') : ''}
           />
         </div>
+
         <div className="col-12 col-md-6 col-lg-3">
-          <label className="form-label fw-medium">Interest Method <span className="text-danger">*</span></label>
-          <select name="girv_interest_method" className="form-select border-dark" value={formData.girv_interest_method} disabled={hasTransactions} onChange={handleChange} required>
-            <option value="simple">Simple</option>
-            <option value="compound">Compound</option>
-          </select>
+          <label className="form-label fw-medium">Loan / Packet No</label>
+          <input type="text" name="girv_packet_no" placeholder="Enter loan or packet no" className="form-control border-dark" value={formData.girv_packet_no} onChange={handleChange} />
         </div>
-        {formData.girv_interest_method === 'compound' && (
-          <div className="col-12 col-md-6 col-lg-3">
-            <label className="form-label fw-medium">Compound Freq <span className="text-danger">*</span></label>
-            <select name="girv_compound_freq" className="form-select border-dark" value={formData.girv_compound_freq} disabled={hasTransactions} onChange={handleChange} required>
-              <option value="monthly">Monthly</option>
-              <option value="quarterly">Quarterly</option>
-              <option value="half_yearly">Half Yearly</option>
-              <option value="yearly">Yearly</option>
-            </select>
-          </div>
-        )}
         <div className="col-12 col-md-6 col-lg-3">
-          <label className="form-label fw-medium">Interest Option <span className="text-danger">*</span></label>
-          <select name="girv_roi_type" className="form-select border-dark" value={formData.girv_roi_type} disabled={hasTransactions} onChange={handleChange} required>
-            <option value="" disabled>Select option</option>
-            <option value="monthly">Monthly</option>
-            <option value="annual">Annual</option>
-          </select>
+          <label className="form-label fw-medium">Loan Locker No</label>
+          <input type="text" name="girv_locker_no" placeholder="Enter locker no" className="form-control border-dark" value={formData.girv_locker_no} onChange={handleChange} />
         </div>
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Rate of Interest <span className="text-danger">*</span></label>
@@ -604,14 +614,6 @@ const UpdateLoan = () => {
             }}
             required
           />
-        </div>
-        <div className="col-12 col-md-6 col-lg-3">
-          <label className="form-label fw-medium">Loan / Packet No</label>
-          <input type="text" name="girv_packet_no" placeholder="Enter loan or packet no" className="form-control border-dark" value={formData.girv_packet_no} onChange={handleChange} />
-        </div>
-        <div className="col-12 col-md-6 col-lg-3">
-          <label className="form-label fw-medium">Loan Locker No</label>
-          <input type="text" name="girv_locker_no" placeholder="Enter locker no" className="form-control border-dark" value={formData.girv_locker_no} onChange={handleChange} />
         </div>
         <div className="col-12 col-md-6 col-lg-6 d-flex gap-3 align-items-end">
           <div className="flex-grow-1">
@@ -689,9 +691,38 @@ const UpdateLoan = () => {
           </select>
         </div>
         <div className="col-12 col-md-6 col-lg-3">
-
+          <label className="form-label fw-medium">Interest Method <span className="text-danger">*</span></label>
+          <select name="girv_interest_method" className="form-select border-dark" value={formData.girv_interest_method} disabled={hasTransactions} onChange={handleChange} required>
+            <option value="simple">Simple</option>
+            <option value="compound">Compound</option>
+          </select>
+        </div>
+        {formData.girv_interest_method === 'compound' && (
+          <div className="col-12 col-md-6 col-lg-3">
+            <label className="form-label fw-medium">Compound Freq <span className="text-danger">*</span></label>
+            <select name="girv_compound_freq" className="form-select border-dark" value={formData.girv_compound_freq} disabled={hasTransactions} onChange={handleChange} required>
+              <option value="monthly">Monthly</option>
+              <option value="quarterly">Quarterly</option>
+              <option value="half_yearly">Half Yearly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </div>
+        )}
+        <div className="col-12 col-md-6 col-lg-3">
+          <label className="form-label fw-medium">Interest Option <span className="text-danger">*</span></label>
+          <select name="girv_roi_type" className="form-select border-dark" value={formData.girv_roi_type} disabled={hasTransactions} onChange={handleChange} required>
+            <option value="" disabled>Select option</option>
+            <option value="monthly">Monthly</option>
+            <option value="annual">Annual</option>
+          </select>
         </div>
 
+        <div className="col-12 col-md-6 col-lg-3 d-flex align-items-center">
+          <div className="form-check mt-4">
+            <input type="checkbox" name="girv_first_int" className="form-check-input" id="firstMonthInt" checked={formData.girv_first_int} onChange={handleChange} />
+            <label className="form-check-label fw-medium" htmlFor="firstMonthInt">First Month Interest</label>
+          </div>
+        </div>
         <div className="col-12 col-md-6 col-lg-3">
           {formData.girv_first_int && (
             <>
@@ -705,13 +736,6 @@ const UpdateLoan = () => {
             </>
           )}
         </div>
-
-        <div className="col-12 col-md-6 col-lg-3 d-flex align-items-center">
-          <div className="form-check mt-4">
-            <input type="checkbox" name="girv_first_int" className="form-check-input" id="firstMonthInt" checked={formData.girv_first_int} onChange={handleChange} />
-            <label className="form-check-label fw-medium" htmlFor="firstMonthInt">First Month Interest</label>
-          </div>
-        </div>
       </div>
     </>
   );
@@ -721,214 +745,214 @@ const UpdateLoan = () => {
       <h5 className="text-muted mt-3">Item Information</h5>
       {hasTransactions && <div className="alert alert-warning py-1 px-2 mb-2" style={{ fontSize: '0.85rem' }}>Item details cannot be modified because this loan has existing transactions.</div>}
       <fieldset disabled={hasTransactions}>
-      <div className="table-responsive mb-3">
-        <table className="table table-bordered table-hover mb-0">
-          <thead>
-            <tr className="table-light align-middle" style={{ fontSize: '0.85rem' }}>
-              <th className="text-center fw-bold px-1" style={{ width: '7%', minWidth: '50px' }}>METAL</th>
-              <th className="text-center fw-bold px-1" style={{ width: '20%', minWidth: '120px' }}>ITEM NAME</th>
-              <th className="text-center fw-bold px-1" style={{ width: '5%', minWidth: '65px' }}>QTY</th>
-              <th className="text-center fw-bold px-1" style={{ width: '13%', minWidth: '100px' }}>GROSS WT</th>
-              <th className="text-center fw-bold px-1" style={{ width: '13%', minWidth: '100px' }}>NET WT</th>
-              <th className="text-center fw-bold px-1" style={{ width: '7%', minWidth: '60px' }}>PURITY</th>
-              <th className="text-center fw-bold px-1" style={{ width: '8%', minWidth: '60px' }}>RATE</th>
-              <th className="text-center fw-bold px-1" style={{ width: '8%', minWidth: '50px' }}>FINE WT</th>
-              <th className="text-center fw-bold px-1" style={{ width: '15%', minWidth: '100px' }}>VALUATION</th>
-              <th className="text-center fw-bold px-1" style={{ width: '6%', minWidth: '45px' }}>IMAGE</th>
-              <th className="text-center fw-bold px-1" style={{ width: '6%', minWidth: '45px' }}>ACTION</th>
-            </tr>
-          </thead>
-          <tbody>
-            {formData.items.map((item, index) => (
-              <tr key={index}>
-                <td className="px-1 py-1">
-                  <select
-                    className="form-select form-select-sm px-1 border-secondary"
-                    value={item.st_metal_type}
-                    onChange={(e) => updateItem(index, 'st_metal_type', e.target.value)}
-                    style={{ fontSize: '0.85rem' }}
-                  >
-                    <option value="GOLD">GOLD</option>
-                    <option value="SILVER">SILVER</option>
-                  </select>
-                </td>
-                <td className="px-1 py-1">
-                  <input
-                    type="text"
-                    className="form-control form-control-sm px-1 border-secondary"
-                    value={item.st_item_name}
-                    onChange={(e) => updateItem(index, 'st_item_name', e.target.value)}
-                    placeholder="Item Name"
-                    style={{ fontSize: '0.85rem' }}
-                  />
-                </td>
-                <td className="px-1 py-1">
-                  <input
-                    type="text"
-                    className="form-control form-control-sm px-1 text-center border-secondary"
-                    value={item.st_quantity}
-                    onChange={(e) => updateItem(index, 'st_quantity', e.target.value)}
-                    placeholder="Qty"
-                    style={{ fontSize: '0.85rem' }}
-                  />
-                </td>
-                <td className="px-1 py-1">
-                  <div className="input-group input-group-sm">
-                    <input
-                      type="text"
-                      className="form-control px-1 text-end border-secondary"
-                      value={item.st_gs_weight}
-                      onChange={(e) => updateItem(index, 'st_gs_weight', e.target.value)}
-                      placeholder="Gross Wt"
-                      style={{ fontSize: '0.85rem' }}
-                    />
-                    <select
-                      className="form-control px-0 text-center border-secondary no-arrow"
-                      style={{ maxWidth: '45px', fontSize: '0.85rem', appearance: 'none', WebkitAppearance: 'none', paddingRight: 0 }}
-                      value={item.st_gs_type}
-                      onChange={(e) => updateItem(index, 'st_gs_type', e.target.value)}
-                    >
-                      <option value="GM">GM</option>
-                      <option value="KG">KG</option>
-                    </select>
-                  </div>
-                </td>
-                <td className="px-1 py-1">
-                  <div className="input-group input-group-sm">
-                    <input
-                      type="text"
-                      className="form-control px-1 text-end border-secondary"
-                      value={item.st_nt_weight}
-                      onChange={(e) => updateItem(index, 'st_nt_weight', e.target.value)}
-                      placeholder="Net Wt"
-                      style={{ fontSize: '0.85rem' }}
-                    />
-                    <select
-                      className="form-control px-0 text-center border-secondary no-arrow"
-                      style={{ maxWidth: '45px', fontSize: '0.85rem', appearance: 'none', WebkitAppearance: 'none', paddingRight: 0 }}
-                      value={item.st_nt_type}
-                      onChange={(e) => updateItem(index, 'st_nt_type', e.target.value)}
-                    >
-                      <option value="GM">GM</option>
-                      <option value="KG">KG</option>
-                    </select>
-                  </div>
-                </td>
-                <td className="px-1 py-1">
-                  <select
-                    className="form-control form-control-sm px-1 text-center border-secondary no-arrow"
-                    value={item.st_purity}
-                    onChange={(e) => updateItem(index, 'st_purity', e.target.value)}
-                    style={{ fontSize: '0.85rem', appearance: 'none', WebkitAppearance: 'none', paddingRight: 0 }}
-                  >
-                    <option value="">Select</option>
-                    {dynamicPurities
-                      .filter(p => p.purity_metal.toUpperCase() === item.st_metal_type.toUpperCase())
-                      .map(p => (
-                        <option key={p.purity_uuid} value={p.purity_value}>{p.purity_value}</option>
-                      ))
-                    }
-                  </select>
-                </td>
-                <td className="px-1 py-1">
-                  <input
-                    type="text"
-                    className="form-control form-control-sm px-1 text-end border-secondary"
-                    value={item.st_rate}
-                    onChange={(e) => updateItem(index, 'st_rate', e.target.value)}
-                    placeholder="Rate"
-                    style={{ fontSize: '0.85rem' }}
-                  />
-                </td>
-                <td className="px-1 py-1">
-                  <input
-                    type="text"
-                    className="form-control form-control-sm px-1 text-end border-secondary"
-                    value={item.st_fine_weight}
-                    onChange={(e) => updateItem(index, 'st_fine_weight', e.target.value)}
-                    placeholder="FN WT"
-                    style={{ fontSize: '0.85rem' }}
-                  />
-                </td>
-                <td className="px-1 py-1">
-                  <input
-                    type="text"
-                    className="form-control form-control-sm px-1 text-end border-secondary"
-                    value={item.st_valuation}
-                    onChange={(e) => updateItem(index, 'st_valuation', e.target.value)}
-                    placeholder="Valuation"
-                    style={{ fontSize: '0.85rem' }}
-                  />
-                </td>
-                <td className="text-center px-1 py-1 position-relative">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    id={`itemImageInput-${index}`}
-                    style={{ display: 'none' }}
-                    onChange={(e) => {
-                      if (e.target.files?.[0]) {
-                        updateItemImage(index, e.target.files[0]);
-                      }
-                    }}
-                  />
-                  {item.itemImage || item.imageName ? (
-                    <>
-                      <label htmlFor={`itemImageInput-${index}`} style={{ cursor: 'pointer' }}>
-                        <img
-                          src={item.itemImage ? URL.createObjectURL(item.itemImage) : '#'}
-                          alt="Item preview"
-                          style={{
-                            maxWidth: '26px',
-                            maxHeight: '26px',
-                            objectFit: 'cover',
-                            cursor: 'pointer',
-                            border: '1px solid #ccc',
-                            borderRadius: '4px',
-                          }}
-                          onError={(e) => { e.target.style.display = 'none'; }}
-                        />
-                      </label>
-                    </>
-                  ) : (
-                    <label
-                      htmlFor={`itemImageInput-${index}`}
-                      className="btn btn-sm btn-outline-info p-1 mb-0"
-                      style={{ cursor: 'pointer', minWidth: '40px' }}
-                    >
-                      <i className="bi bi-upload"></i>
-                    </label>
-                  )}
-                </td>
-                <td className="text-center px-1 py-1">
-                  <div className="d-flex justify-content-center gap-1">
-                    {formData.items.length > 1 && (
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-outline-danger p-1"
-                        onClick={() => deleteItem(index)}
-                        style={{ minWidth: '30px' }}
-                      >
-                        <i className="bi bi-trash"></i>
-                      </button>
-                    )}
-                    {index === formData.items.length - 1 && (
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-outline-primary p-1"
-                        onClick={addNewRow}
-                        style={{ minWidth: '30px' }}
-                      >
-                        <i className="bi bi-plus"></i>
-                      </button>
-                    )}
-                  </div>
-                </td>
+        <div className="table-responsive mb-3">
+          <table className="table table-bordered table-hover mb-0">
+            <thead>
+              <tr className="table-light align-middle" style={{ fontSize: '0.85rem' }}>
+                <th className="text-center fw-bold px-1" style={{ width: '7%', minWidth: '50px' }}>METAL <span className="text-danger">*</span></th>
+                <th className="text-center fw-bold px-1" style={{ width: '20%', minWidth: '120px' }}>ITEM NAME <span className="text-danger">*</span></th>
+                <th className="text-center fw-bold px-1" style={{ width: '5%', minWidth: '65px' }}>QTY <span className="text-danger">*</span></th>
+                <th className="text-center fw-bold px-1" style={{ width: '13%', minWidth: '100px' }}>GROSS WT <span className="text-danger">*</span></th>
+                <th className="text-center fw-bold px-1" style={{ width: '13%', minWidth: '100px' }}>NET WT <span className="text-danger">*</span></th>
+                <th className="text-center fw-bold px-1" style={{ width: '7%', minWidth: '60px' }}>PURITY <span className="text-danger">*</span></th>
+                <th className="text-center fw-bold px-1" style={{ width: '8%', minWidth: '60px' }}>RATE <span className="text-danger">*</span></th>
+                <th className="text-center fw-bold px-1" style={{ width: '8%', minWidth: '50px' }}>FINE WT</th>
+                <th className="text-center fw-bold px-1" style={{ width: '15%', minWidth: '100px' }}>VALUATION</th>
+                <th className="text-center fw-bold px-1" style={{ width: '6%', minWidth: '45px' }}>IMAGE</th>
+                <th className="text-center fw-bold px-1" style={{ width: '6%', minWidth: '45px' }}>ACTION</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {formData.items.map((item, index) => (
+                <tr key={index}>
+                  <td className="px-1 py-1">
+                    <select
+                      className="form-select form-select-sm px-1 border-secondary"
+                      value={item.st_metal_type}
+                      onChange={(e) => updateItem(index, 'st_metal_type', e.target.value)}
+                      style={{ fontSize: '0.85rem' }}
+                    >
+                      <option value="GOLD">GOLD</option>
+                      <option value="SILVER">SILVER</option>
+                    </select>
+                  </td>
+                  <td className="px-1 py-1">
+                    <input
+                      type="text"
+                      className="form-control form-control-sm px-1 border-secondary"
+                      value={item.st_item_name}
+                      onChange={(e) => updateItem(index, 'st_item_name', e.target.value)}
+                      placeholder="Item Name"
+                      style={{ fontSize: '0.85rem' }}
+                    />
+                  </td>
+                  <td className="px-1 py-1">
+                    <input
+                      type="text"
+                      className="form-control form-control-sm px-1 text-center border-secondary"
+                      value={item.st_quantity}
+                      onChange={(e) => updateItem(index, 'st_quantity', e.target.value)}
+                      placeholder="Qty"
+                      style={{ fontSize: '0.85rem' }}
+                    />
+                  </td>
+                  <td className="px-1 py-1">
+                    <div className="input-group input-group-sm">
+                      <input
+                        type="text"
+                        className="form-control px-1 text-end border-secondary"
+                        value={item.st_gs_weight}
+                        onChange={(e) => updateItem(index, 'st_gs_weight', e.target.value)}
+                        placeholder="Gross Wt"
+                        style={{ fontSize: '0.85rem' }}
+                      />
+                      <select
+                        className="form-control px-0 text-center border-secondary no-arrow"
+                        style={{ maxWidth: '45px', fontSize: '0.85rem', appearance: 'none', WebkitAppearance: 'none', paddingRight: 0 }}
+                        value={item.st_gs_type}
+                        onChange={(e) => updateItem(index, 'st_gs_type', e.target.value)}
+                      >
+                        <option value="GM">GM</option>
+                        <option value="KG">KG</option>
+                      </select>
+                    </div>
+                  </td>
+                  <td className="px-1 py-1">
+                    <div className="input-group input-group-sm">
+                      <input
+                        type="text"
+                        className="form-control px-1 text-end border-secondary"
+                        value={item.st_nt_weight}
+                        onChange={(e) => updateItem(index, 'st_nt_weight', e.target.value)}
+                        placeholder="Net Wt"
+                        style={{ fontSize: '0.85rem' }}
+                      />
+                      <select
+                        className="form-control px-0 text-center border-secondary no-arrow"
+                        style={{ maxWidth: '45px', fontSize: '0.85rem', appearance: 'none', WebkitAppearance: 'none', paddingRight: 0 }}
+                        value={item.st_nt_type}
+                        onChange={(e) => updateItem(index, 'st_nt_type', e.target.value)}
+                      >
+                        <option value="GM">GM</option>
+                        <option value="KG">KG</option>
+                      </select>
+                    </div>
+                  </td>
+                  <td className="px-1 py-1">
+                    <select
+                      className="form-control form-control-sm px-1 text-center border-secondary no-arrow"
+                      value={item.st_purity}
+                      onChange={(e) => updateItem(index, 'st_purity', e.target.value)}
+                      style={{ fontSize: '0.85rem', appearance: 'none', WebkitAppearance: 'none', paddingRight: 0 }}
+                    >
+                      <option value="">Select</option>
+                      {dynamicPurities
+                        .filter(p => p.purity_metal.toUpperCase() === item.st_metal_type.toUpperCase())
+                        .map(p => (
+                          <option key={p.purity_uuid} value={p.purity_value}>{p.purity_value}</option>
+                        ))
+                      }
+                    </select>
+                  </td>
+                  <td className="px-1 py-1">
+                    <input
+                      type="text"
+                      className="form-control form-control-sm px-1 text-end border-secondary"
+                      value={item.st_rate}
+                      onChange={(e) => updateItem(index, 'st_rate', e.target.value)}
+                      placeholder="Rate"
+                      style={{ fontSize: '0.85rem' }}
+                    />
+                  </td>
+                  <td className="px-1 py-1">
+                    <input
+                      type="text"
+                      className="form-control form-control-sm px-1 text-end border-secondary"
+                      value={item.st_fine_weight}
+                      onChange={(e) => updateItem(index, 'st_fine_weight', e.target.value)}
+                      placeholder="FN WT"
+                      style={{ fontSize: '0.85rem' }}
+                    />
+                  </td>
+                  <td className="px-1 py-1">
+                    <input
+                      type="text"
+                      className="form-control form-control-sm px-1 text-end border-secondary"
+                      value={item.st_valuation}
+                      onChange={(e) => updateItem(index, 'st_valuation', e.target.value)}
+                      placeholder="Valuation"
+                      style={{ fontSize: '0.85rem' }}
+                    />
+                  </td>
+                  <td className="text-center px-1 py-1 position-relative">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      id={`itemImageInput-${index}`}
+                      style={{ display: 'none' }}
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) {
+                          updateItemImage(index, e.target.files[0]);
+                        }
+                      }}
+                    />
+                    {item.itemImage || item.imageName ? (
+                      <>
+                        <label htmlFor={`itemImageInput-${index}`} style={{ cursor: 'pointer' }}>
+                          <img
+                            src={item.itemImage ? URL.createObjectURL(item.itemImage) : '#'}
+                            alt="Item preview"
+                            style={{
+                              maxWidth: '26px',
+                              maxHeight: '26px',
+                              objectFit: 'cover',
+                              cursor: 'pointer',
+                              border: '1px solid #ccc',
+                              borderRadius: '4px',
+                            }}
+                            onError={(e) => { e.target.style.display = 'none'; }}
+                          />
+                        </label>
+                      </>
+                    ) : (
+                      <label
+                        htmlFor={`itemImageInput-${index}`}
+                        className="btn btn-sm btn-outline-info p-1 mb-0"
+                        style={{ cursor: 'pointer', minWidth: '40px' }}
+                      >
+                        <i className="bi bi-upload"></i>
+                      </label>
+                    )}
+                  </td>
+                  <td className="text-center px-1 py-1">
+                    <div className="d-flex justify-content-center gap-1">
+                      {formData.items.length > 1 && (
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-danger p-1"
+                          onClick={() => deleteItem(index)}
+                          style={{ minWidth: '30px' }}
+                        >
+                          <i className="bi bi-trash"></i>
+                        </button>
+                      )}
+                      {index === formData.items.length - 1 && (
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-primary p-1"
+                          onClick={addNewRow}
+                          style={{ minWidth: '30px' }}
+                        >
+                          <i className="bi bi-plus"></i>
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </fieldset>
     </>
   );
