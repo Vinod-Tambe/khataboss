@@ -5,8 +5,6 @@ import {
   FiMail,
   FiMessageCircle,
   FiMessageSquare,
-  FiPlus,
-  FiSearch,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import List from "../common/List";
@@ -145,10 +143,7 @@ const SmsPage = () => {
     setSearch("");
   };
 
-  const handleNewTemplate = () => {
-    setEditingId(null);
-    setFormData(getInitialForm(activeChannel));
-  };
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -252,7 +247,6 @@ const SmsPage = () => {
     setFormData(getInitialForm(activeChannel));
   };
 
-  const searchPlaceholder = `Search ${channelTitle(activeChannel)} templates...`;
 
   const columns = [
     { title: "Name", key: "name", orderable: true, searchable: true },
