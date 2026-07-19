@@ -5,8 +5,6 @@ import {
   FiMail,
   FiMessageCircle,
   FiMessageSquare,
-  FiPlus,
-  FiSearch,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import List from "../common/List";
@@ -145,10 +143,7 @@ const SmsPage = () => {
     setSearch("");
   };
 
-  const handleNewTemplate = () => {
-    setEditingId(null);
-    setFormData(getInitialForm(activeChannel));
-  };
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -252,7 +247,6 @@ const SmsPage = () => {
     setFormData(getInitialForm(activeChannel));
   };
 
-  const searchPlaceholder = `Search ${channelTitle(activeChannel)} templates...`;
 
   const columns = [
     { title: "Name", key: "name", orderable: true, searchable: true },
@@ -287,23 +281,6 @@ const SmsPage = () => {
 
   return (
     <div className="sms-page">
-      <div className="sms-toolbar">
-        <button type="button" className="btn btn-sms-new" onClick={handleNewTemplate}>
-          <FiPlus size={16} /> New Template
-        </button>
-        <div className="sms-toolbar-spacer" />
-        <div className="sms-search">
-          <FiSearch size={16} />
-          <input
-            type="search"
-            className="form-control"
-            placeholder={searchPlaceholder}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-      </div>
-
       <div className="sms-tabs" role="tablist">
         {CHANNELS.map(({ id, label, icon: Icon }) => (
           <button

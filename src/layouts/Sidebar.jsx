@@ -97,7 +97,15 @@ const Sidebar = () => {
         { label: "All User", path: "/user/grid", icon: <FiList /> },
       ],
     },
-
+    {
+      id: "money-lender",
+      label: "M Lender",
+      icon: <FiBriefcase />,
+      subItems: [
+        { label: "Add Money Lender", path: "/money-lender/add", icon: <FiPlusCircle /> },
+        { label: "Money Lender List", path: "/money-lender/list", icon: <FiList /> },
+      ],
+    },
     {
       id: "staff",
       label: "Staff",
