@@ -78,12 +78,12 @@ const RatePage = () => {
   };
 
   useEffect(() => {
-    const activeFirmId = formData.rate_firm_id || (selectedFirmId !== 'all' ? selectedFirmId : (reduxFirms[0]?.firm_id || ''));
+    const activeFirmId = selectedFirmId === 'all' ? 'all' : selectedFirmId;
     if (activeFirmId) {
       fetchRates(activeFirmId);
     }
     loadDynamicPurities();
-  }, [formData.rate_firm_id, selectedFirmId, reduxFirms]);
+  }, [selectedFirmId]);
 
   const dynamicPuritiesForMetal = dynamicPurities
     .filter(p => p.purity_metal === formData.metal)
@@ -209,7 +209,7 @@ const RatePage = () => {
       }
 
       handleReset();
-      fetchRates();
+      fetchRates(selectedFirmId === 'all' ? 'all' : selectedFirmId);
     } catch (error) {
       const backendError = error.response?.data?.error || error.response?.data?.message;
       toast.error(backendError || error.message || `Failed to ${editingId ? "update" : "save"} rate`);
@@ -222,7 +222,7 @@ const RatePage = () => {
     try {
       const response = await deleteRate(rowData.rate_uuid);
       toast.success(response.message || "Rate deleted successfully");
-      fetchRates();
+      fetchRates(selectedFirmId === 'all' ? 'all' : selectedFirmId);
     } catch (error) {
       toast.error(error.message || "Failed to delete rate");
     }
@@ -230,6 +230,24 @@ const RatePage = () => {
 
   const columns = [
     { key: "rate_id", title: "ID", orderable: true, searchable: true },
+    {
+      key: "rate_date",
+      title: "Date",
+      orderable: true,
+      searchable: true,
+      dateFilter: true,
+      render: (value) => (value ? moment(value).format("DD-MM-YYYY") : "-"),
+    },
+    {
+      key: "rate_firm_id",
+      title: "Firm",
+      orderable: true,
+      searchable: true,
+      render: (val) => {
+        const firm = reduxFirms.find(f => f.firm_id === val);
+        return firm ? firm.firm_name : val;
+      }
+    },
     { key: "rate_metal", title: "Metal", orderable: true, searchable: true },
     { 
       key: "rate_purity", 
@@ -249,14 +267,6 @@ const RatePage = () => {
       render: (value) => `₹ ${Number(value || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
     },
     { key: "rate_unit", title: "Unit", orderable: true, searchable: true },
-    {
-      key: "rate_date",
-      title: "Date",
-      orderable: true,
-      searchable: true,
-      dateFilter: true,
-      render: (value) => (value ? moment(value).format("DD-MM-YYYY") : "-"),
-    },
     {
       key: "rate_time",
       title: "Time",

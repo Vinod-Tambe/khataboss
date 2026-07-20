@@ -204,18 +204,45 @@ const AddLoan = () => {
       setFormData(prev => {
         let updated = false;
         const newItems = prev.items.map(item => {
-          if (!item.st_purity) {
-            const firstPurity = dynamicPurities.find(p => p.purity_metal.toUpperCase() === item.st_metal_type.toUpperCase());
+          let updatedItem = { ...item };
+          let changed = false;
+
+          if (!updatedItem.st_purity) {
+            const firstPurity = dynamicPurities.find(p => p.purity_metal.toUpperCase() === updatedItem.st_metal_type.toUpperCase());
             if (firstPurity) {
-              updated = true;
-              const purityVal = firstPurity.purity_value.toString();
-              let newRate = '';
-              if (firmRates.length > 0) {
-                const matchingRate = firmRates.find(r => r.rate_metal.toUpperCase() === item.st_metal_type.toUpperCase() && r.rate_purity === firstPurity.purity_name);
-                if (matchingRate) newRate = matchingRate.rate_amount;
-              }
-              return { ...item, st_purity: purityVal, st_rate: newRate };
+              updatedItem.st_purity = firstPurity.purity_value.toString();
+              changed = true;
             }
+          }
+
+          if (updatedItem.st_purity && !updatedItem.st_rate && firmRates.length > 0) {
+            const matchingPurity = dynamicPurities.find(
+              p => parseFloat(p.purity_value) === parseFloat(updatedItem.st_purity) &&
+                p.purity_metal?.toUpperCase() === updatedItem.st_metal_type?.toUpperCase()
+            );
+            if (matchingPurity) {
+              const matchingRate = firmRates.find(r =>
+                r.rate_metal?.toUpperCase() === updatedItem.st_metal_type?.toUpperCase() &&
+                r.rate_purity?.trim().toUpperCase() === matchingPurity.purity_name?.trim().toUpperCase()
+              );
+              if (matchingRate) {
+                updatedItem.st_rate = matchingRate.rate_amount;
+
+                const ntWeight = parseFloat(updatedItem.st_nt_weight) || 0;
+                const rate = parseFloat(updatedItem.st_rate) || 0;
+                const multiplier = updatedItem.st_nt_type === 'KG' ? 1000 : 1;
+                if (ntWeight > 0 && rate > 0) {
+                  updatedItem.st_valuation = (ntWeight * multiplier * rate).toFixed(2);
+                }
+
+                changed = true;
+              }
+            }
+          }
+
+          if (changed) {
+            updated = true;
+            return updatedItem;
           }
           return item;
         });
@@ -262,7 +289,7 @@ const AddLoan = () => {
       const firstPurity = dynamicPurities.find(p => p.purity_metal.toUpperCase() === 'GOLD');
       if (firstPurity) {
         newItem.st_purity = firstPurity.purity_value.toString();
-        const matchingRate = firmRates.find(r => r.rate_metal.toUpperCase() === 'GOLD' && r.rate_purity === firstPurity.purity_name);
+        const matchingRate = firmRates.find(r => r.rate_metal?.toUpperCase() === 'GOLD' && r.rate_purity?.trim().toUpperCase() === firstPurity.purity_name?.trim().toUpperCase());
         if (matchingRate) newItem.st_rate = matchingRate.rate_amount;
       }
       return {
@@ -303,14 +330,14 @@ const AddLoan = () => {
       }
 
       const matchingPurity = dynamicPurities.find(
-        p => p.purity_value.toString() === purityVal.toString() &&
-          p.purity_metal.toUpperCase() === metalType.toUpperCase()
+        p => parseFloat(p.purity_value) === parseFloat(purityVal) &&
+          p.purity_metal?.toUpperCase() === metalType?.toUpperCase()
       );
       const purityName = matchingPurity ? matchingPurity.purity_name : purityVal;
 
       const matchingRate = firmRates.find(
-        r => r.rate_metal.toUpperCase() === metalType.toUpperCase() &&
-          r.rate_purity === purityName
+        r => r.rate_metal?.toUpperCase() === metalType?.toUpperCase() &&
+          r.rate_purity?.trim().toUpperCase() === purityName?.toString().trim().toUpperCase()
       );
 
       if (matchingRate) {
@@ -325,7 +352,7 @@ const AddLoan = () => {
       const ntWeight = parseFloat(item.st_nt_weight) || 0;
       const rate = parseFloat(item.st_rate) || 0;
       const multiplier = item.st_nt_type === 'KG' ? 1000 : 1;
-      
+
       if (ntWeight > 0 && rate > 0) {
         item.st_valuation = (ntWeight * multiplier * rate).toFixed(2);
       } else {
@@ -480,32 +507,16 @@ const AddLoan = () => {
             defaultValue={formData.girv_start_date ? moment(formData.girv_start_date).format('DD-MM-YYYY') : ''}
           />
         </div>
+
         <div className="col-12 col-md-6 col-lg-3">
-          <label className="form-label fw-medium">Interest Method <span className="text-danger">*</span></label>
-          <select name="girv_interest_method" className="form-select border-dark" value={formData.girv_interest_method} onChange={handleChange} required>
-            <option value="simple">Simple</option>
-            <option value="compound">Compound</option>
-          </select>
+          <label className="form-label fw-medium">Loan / Packet No</label>
+          <input type="text" name="girv_packet_no" placeholder="Enter loan or packet no" className="form-control border-dark" value={formData.girv_packet_no} onChange={handleChange} />
         </div>
-        {formData.girv_interest_method === 'compound' && (
-          <div className="col-12 col-md-6 col-lg-3">
-            <label className="form-label fw-medium">Compound Freq <span className="text-danger">*</span></label>
-            <select name="girv_compound_freq" className="form-select border-dark" value={formData.girv_compound_freq} onChange={handleChange} required>
-              <option value="monthly">Monthly</option>
-              <option value="quarterly">Quarterly</option>
-              <option value="half_yearly">Half Yearly</option>
-              <option value="yearly">Yearly</option>
-            </select>
-          </div>
-        )}
         <div className="col-12 col-md-6 col-lg-3">
-          <label className="form-label fw-medium">Interest Option <span className="text-danger">*</span></label>
-          <select name="girv_roi_type" className="form-select border-dark" value={formData.girv_roi_type} onChange={handleChange} required>
-            <option value="" disabled>Select option</option>
-            <option value="monthly">Monthly</option>
-            <option value="annual">Annual</option>
-          </select>
+          <label className="form-label fw-medium">Loan Locker No</label>
+          <input type="text" name="girv_locker_no" placeholder="Enter locker no" className="form-control border-dark" value={formData.girv_locker_no} onChange={handleChange} />
         </div>
+
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Rate of Interest <span className="text-danger">*</span></label>
           <input
@@ -521,14 +532,6 @@ const AddLoan = () => {
             }}
             required
           />
-        </div>
-        <div className="col-12 col-md-6 col-lg-3">
-          <label className="form-label fw-medium">Loan / Packet No</label>
-          <input type="text" name="girv_packet_no" placeholder="Enter loan or packet no" className="form-control border-dark" value={formData.girv_packet_no} onChange={handleChange} />
-        </div>
-        <div className="col-12 col-md-6 col-lg-3">
-          <label className="form-label fw-medium">Loan Locker No</label>
-          <input type="text" name="girv_locker_no" placeholder="Enter locker no" className="form-control border-dark" value={formData.girv_locker_no} onChange={handleChange} />
         </div>
         <div className="col-12 col-md-6 col-lg-6 d-flex gap-3 align-items-end">
           <div className="flex-grow-1">
@@ -606,9 +609,38 @@ const AddLoan = () => {
           </select>
         </div>
         <div className="col-12 col-md-6 col-lg-3">
-
+          <label className="form-label fw-medium">Interest Method <span className="text-danger">*</span></label>
+          <select name="girv_interest_method" className="form-select border-dark" value={formData.girv_interest_method} onChange={handleChange} required>
+            <option value="simple">Simple</option>
+            <option value="compound">Compound</option>
+          </select>
+        </div>
+        {formData.girv_interest_method === 'compound' && (
+          <div className="col-12 col-md-6 col-lg-3">
+            <label className="form-label fw-medium">Compound Freq <span className="text-danger">*</span></label>
+            <select name="girv_compound_freq" className="form-select border-dark" value={formData.girv_compound_freq} onChange={handleChange} required>
+              <option value="monthly">Monthly</option>
+              <option value="quarterly">Quarterly</option>
+              <option value="half_yearly">Half Yearly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </div>
+        )}
+        <div className="col-12 col-md-6 col-lg-3">
+          <label className="form-label fw-medium">Interest Option <span className="text-danger">*</span></label>
+          <select name="girv_roi_type" className="form-select border-dark" value={formData.girv_roi_type} onChange={handleChange} required>
+            <option value="" disabled>Select option</option>
+            <option value="monthly">Monthly</option>
+            <option value="annual">Annual</option>
+          </select>
         </div>
 
+        <div className="col-12 col-md-6 col-lg-3 d-flex align-items-center">
+          <div className="form-check mt-4">
+            <input type="checkbox" name="girv_first_int" className="form-check-input" id="firstMonthInt" checked={formData.girv_first_int} onChange={handleChange} />
+            <label className="form-check-label fw-medium" htmlFor="firstMonthInt">First Month Interest</label>
+          </div>
+        </div>
         <div className="col-12 col-md-6 col-lg-3">
           {formData.girv_first_int && (
             <>
@@ -623,12 +655,6 @@ const AddLoan = () => {
           )}
         </div>
 
-        <div className="col-12 col-md-6 col-lg-3 d-flex align-items-center">
-          <div className="form-check mt-4">
-            <input type="checkbox" name="girv_first_int" className="form-check-input" id="firstMonthInt" checked={formData.girv_first_int} onChange={handleChange} />
-            <label className="form-check-label fw-medium" htmlFor="firstMonthInt">First Month Interest</label>
-          </div>
-        </div>
       </div>
     </>
   );
@@ -640,13 +666,13 @@ const AddLoan = () => {
         <table className="table table-bordered table-hover mb-0">
           <thead>
             <tr className="table-light align-middle" style={{ fontSize: '0.85rem' }}>
-              <th className="text-center fw-bold px-1" style={{ width: '7%', minWidth: '50px' }}>METAL</th>
-              <th className="text-center fw-bold px-1" style={{ width: '20%', minWidth: '120px' }}>ITEM NAME</th>
-              <th className="text-center fw-bold px-1" style={{ width: '5%', minWidth: '65px' }}>QTY</th>
-              <th className="text-center fw-bold px-1" style={{ width: '13%', minWidth: '95px' }}>GS WT</th>
-              <th className="text-center fw-bold px-1" style={{ width: '13%', minWidth: '95px' }}>NT WT</th>
-              <th className="text-center fw-bold px-1" style={{ width: '7%', minWidth: '60px' }}>PURITY</th>
-              <th className="text-center fw-bold px-1" style={{ width: '8%', minWidth: '70px' }}>RATE</th>
+              <th className="text-center fw-bold px-1" style={{ width: '7%', minWidth: '50px' }}>METAL <span className="text-danger">*</span></th>
+              <th className="text-center fw-bold px-1" style={{ width: '20%', minWidth: '120px' }}>ITEM NAME <span className="text-danger">*</span></th>
+              <th className="text-center fw-bold px-1" style={{ width: '5%', minWidth: '65px' }}>QTY <span className="text-danger">*</span></th>
+              <th className="text-center fw-bold px-1" style={{ width: '13%', minWidth: '95px' }}>GS WT <span className="text-danger">*</span></th>
+              <th className="text-center fw-bold px-1" style={{ width: '13%', minWidth: '95px' }}>NT WT <span className="text-danger">*</span></th>
+              <th className="text-center fw-bold px-1" style={{ width: '7%', minWidth: '60px' }}>PURITY <span className="text-danger">*</span></th>
+              <th className="text-center fw-bold px-1" style={{ width: '8%', minWidth: '70px' }}>RATE <span className="text-danger">*</span></th>
               <th className="text-center fw-bold px-1" style={{ width: '8%', minWidth: '50px' }}>FINE WT</th>
               <th className="text-center fw-bold px-1" style={{ width: '15%', minWidth: '100px' }}>VALUATION</th>
               <th className="text-center fw-bold px-1" style={{ width: '6%', minWidth: '45px' }}>IMAGE</th>
