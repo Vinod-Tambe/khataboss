@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import UserHomeList from "../common/UserHomeList";
+import UserHomeMobileLists from "./UserHomeMobileLists";
 import InfoCard from "../common/InfoCard";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +9,8 @@ import { getGirviById } from "../../api/girviApi";
 import { getUserDashboard } from "../../api/dashboardApi";
 import moment from "moment";
 import "../../css/Home.css";
+
+const LAST_N = 5;
 
 const UserHome = () => {
   const navigate = useNavigate();
@@ -43,8 +46,8 @@ const UserHome = () => {
         // Set Totals
         setTotals(totals);
 
-        // Set Finance List
-        const dynamicFinances = (latestFinances || []).map(f => ({
+        // Set Finance List (last 5)
+        const dynamicFinances = (latestFinances || []).slice(0, LAST_N).map(f => ({
           ...f,
           id: f.fin_id,
           finNo: `Fin-${f.fin_id}`,
@@ -55,8 +58,8 @@ const UserHome = () => {
         }));
         setFinanceList(dynamicFinances);
 
-        // Set Loan List
-        const dynamicLoans = (latestLoans || []).map(l => ({
+        // Set Loan List (last 5)
+        const dynamicLoans = (latestLoans || []).slice(0, LAST_N).map(l => ({
           ...l,
           id: l.girv_id,
           loanNo: `Loan-${l.girv_id}`,
@@ -67,8 +70,8 @@ const UserHome = () => {
         }));
         setLoanList(dynamicLoans);
 
-        // Set Transaction List
-        const dynamicTransactions = (latestTransactions || []).map(t => {
+        // Set Transaction List (last 5)
+        const dynamicTransactions = (latestTransactions || []).slice(0, LAST_N).map(t => {
           const fmTrans = t.financeMoneyTransactions?.[0];
           const finId = fmTrans?.fm_fin_id;
           return {
@@ -153,6 +156,26 @@ const UserHome = () => {
     { header: "Status", key: "status" }
   ];
 
+  const getTransactionLink = (row) => {
+    const isLoan = row.category === "Girvi" || row.category === "Loan";
+    if (isLoan) {
+      const match = (row.otherInfo || "").match(/Girvi No\s*-\s*(\d+)/i);
+      const loanId = match ? parseInt(match[1], 10) : null;
+      const loanSuffix = loanId ? " (Loan-" + loanId + ")" : "";
+      return {
+        label: row.category + loanSuffix,
+        onClick: loanId ? () => handleViewLoan(loanId) : undefined,
+      };
+    }
+    const finSuffix = row.originalFinId ? " (Fin-" + row.originalFinId + ")" : "";
+    return {
+      label: row.category + finSuffix,
+      onClick: row.originalFinId
+        ? () => handleViewFinance(row.originalFinId)
+        : undefined,
+    };
+  };
+
   const transactionColumns = [
     { header: "Trans No", key: "transNo" },
     { header: "Amount", key: "amount" },
@@ -161,58 +184,33 @@ const UserHome = () => {
       header: "Category",
       key: "category",
       render: (row) => {
-        const isLoan = row.category === "Girvi" || row.category === "Loan";
-        if (isLoan) {
-          const match = row.otherInfo.match(/Girvi No\s*-\s*(\d+)/i);
-          const loanId = match ? parseInt(match[1]) : null;
-          return (
-            <span
-              className="text-brown cursor-pointer fw-bold"
-              onClick={() => loanId && handleViewLoan(loanId)}
-            >
-              {row.category} {loanId ? `(Loan-${loanId})` : ""}
-            </span>
-          );
-        } else {
-          return (
-            <span
-              className="text-brown cursor-pointer fw-bold"
-              onClick={() => row.originalFinId && handleViewFinance(row.originalFinId)}
-            >
-              {row.category} {row.originalFinId ? `(Fin-${row.originalFinId})` : ""}
-            </span>
-          );
-        }
+        const link = getTransactionLink(row);
+        return (
+          <span
+            className="text-brown cursor-pointer fw-bold"
+            onClick={link.onClick}
+          >
+            {link.label}
+          </span>
+        );
       }
     },
     {
       header: "Date",
       key: "date",
       render: (row) => {
-        const isLoan = row.category === "Girvi" || row.category === "Loan";
-        if (isLoan) {
-          const match = row.otherInfo.match(/Girvi No\s*-\s*(\d+)/i);
-          const loanId = match ? parseInt(match[1]) : null;
-          return (
-            <span
-              className="text-brown cursor-pointer fw-bold"
-              onClick={() => loanId && handleViewLoan(loanId)}
-            >
-              {row.date}
-            </span>
-          );
-        } else {
-          return (
-            <span
-              className="text-brown cursor-pointer fw-bold"
-              onClick={() => row.originalFinId && handleViewFinance(row.originalFinId)}
-            >
-              {row.date}
-            </span>
-          );
-        }
+        const link = getTransactionLink(row);
+        return (
+          <span
+            className="text-brown cursor-pointer fw-bold"
+            onClick={link.onClick}
+          >
+            {row.date}
+          </span>
+        );
       }
-    }
+    },
+    { header: "Status", key: "status" }
   ];
 
   return (
@@ -282,32 +280,52 @@ const UserHome = () => {
         />
       </div>
 
-      {/* ================= TABLES ================= */}
-      <div className="row">
-        <div className="col-12">
-          <UserHomeList
-            title="Active Finance List"
-            data={financeList}
-            columns={financeColumns}
-          />
-        </div>
-        <div className="col-12">
-          <UserHomeList
-            title="Active Loan List"
-            data={loanList}
-            columns={loanColumns}
-          />
-        </div>
+      {/* ================= TABLES (desktop) ================= */}
+      <div className="d-none d-md-block">
+        {financeList.length > 0 && (
+          <div className="row">
+            <div className="col-12">
+              <UserHomeList
+                title="Active Finance List"
+                data={financeList}
+                columns={financeColumns}
+              />
+            </div>
+          </div>
+        )}
+        {loanList.length > 0 && (
+          <div className="row">
+            <div className="col-12">
+              <UserHomeList
+                title="Active Loan List"
+                data={loanList}
+                columns={loanColumns}
+              />
+            </div>
+          </div>
+        )}
+        {transactionList.length > 0 && (
+          <div className="row mt-2">
+            <div className="col-12">
+              <UserHomeList
+                title="Last Transaction"
+                data={transactionList}
+                columns={transactionColumns}
+              />
+            </div>
+          </div>
+        )}
       </div>
-      <div className="row mt-2">
-        <div className="col-12">
-          <UserHomeList
-            title="Last Transaction"
-            data={transactionList}
-            columns={transactionColumns}
-          />
-        </div>
-      </div>
+
+      {/* ================= LISTS (mobile collapse) ================= */}
+      <UserHomeMobileLists
+        financeList={financeList}
+        loanList={loanList}
+        transactionList={transactionList}
+        onViewFinance={handleViewFinance}
+        onViewLoan={handleViewLoan}
+        getTransactionLink={getTransactionLink}
+      />
     </div>
   );
 };

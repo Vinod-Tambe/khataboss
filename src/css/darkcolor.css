@@ -173,6 +173,17 @@
   color: var(--app-text);
 }
 
+/* Bootstrap btn-close uses a dark SVG — invert so it shows on dark sidebar */
+[data-theme="dark"] .sidebar .btn-close {
+  --bs-btn-close-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e");
+  filter: none;
+  opacity: 0.9;
+}
+
+[data-theme="dark"] .sidebar .btn-close:hover {
+  opacity: 1;
+}
+
 [data-theme="dark"] .card,
 [data-theme="dark"] .info-card,
 [data-theme="dark"] .action-card,
@@ -225,6 +236,26 @@
   background-color: #2d2d44;
   color: var(--color-black);
   border-color: var(--app-border);
+}
+
+[data-theme="dark"] .header-menu-btn {
+  background-color: #2d2d44 !important;
+  color: var(--color-black) !important;
+  border-color: var(--app-border) !important;
+}
+
+[data-theme="dark"] .header-icon-btn {
+  color: var(--color-black);
+}
+
+[data-theme="dark"] .header-icon-btn svg {
+  color: inherit;
+  stroke: currentColor;
+}
+
+[data-theme="dark"] .logo-title,
+[data-theme="dark"] .logo-title h1 {
+  color: var(--color-black);
 }
 
 [data-theme="dark"] .btn-outline-secondary {
