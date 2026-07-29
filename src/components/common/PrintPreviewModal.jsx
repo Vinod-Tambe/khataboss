@@ -26,33 +26,35 @@ const loadIframeStyles = (doc) => {
   return Promise.all(linkPromises);
 };
 
-const PrintPreviewModal = ({ show, onHide, title, printAreaId = 'print-preview-area', children }) => {
-  const handlePrint = () => {
-    const printArea = document.getElementById(printAreaId);
-    if (!printArea) return;
+export const printDocumentById = (printAreaId) => {
+  const printArea = document.getElementById(printAreaId);
+  if (!printArea) return;
 
-    const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'position:fixed;left:0;top:0;width:1100px;height:100%;border:none;z-index:-1;';
-    document.body.appendChild(iframe);
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;left:0;top:0;width:1100px;height:100%;border:none;z-index:-1;';
+  document.body.appendChild(iframe);
 
-    const doc = iframe.contentWindow.document;
-    doc.open();
-    doc.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Print</title></head>');
-    doc.write('<body class="print-preview-body">');
-    doc.write(printArea.outerHTML);
-    doc.write('</body></html>');
-    doc.close();
+  const doc = iframe.contentWindow.document;
+  doc.open();
+  doc.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Print</title></head>');
+  doc.write('<body class="print-preview-body">');
+  doc.write(printArea.outerHTML);
+  doc.write('</body></html>');
+  doc.close();
 
-    loadIframeStyles(doc).then(() => {
+  loadIframeStyles(doc).then(() => {
+    setTimeout(() => {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
       setTimeout(() => {
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
-        setTimeout(() => {
-          document.body.removeChild(iframe);
-        }, 1000);
-      }, 600);
-    });
-  };
+        document.body.removeChild(iframe);
+      }, 1000);
+    }, 600);
+  });
+};
+
+const PrintPreviewModal = ({ show, onHide, title, printAreaId = 'print-preview-area', children }) => {
+  const handlePrint = () => printDocumentById(printAreaId);
 
   return (
     <CommonModal show={show} onHide={onHide} title={title} size="xl">
