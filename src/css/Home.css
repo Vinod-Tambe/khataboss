@@ -232,3 +232,274 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* ========== User Home mobile lists ========== */
+.user-home-mobile {
+    margin-top: 4px;
+    padding: 0 4px 12px;
+}
+
+.user-home-mobile-panel {
+    border: 1px solid var(--blue-btn-border, #accfff);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--color-white, #fff);
+    margin-bottom: 12px;
+}
+
+.user-home-mobile-panel__header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border: none;
+    padding: 12px 14px;
+    text-align: left;
+    background: var(--bg-cust-primary, #e9eff9) !important;
+    color: var(--text-brown) !important;
+}
+
+.user-home-mobile-panel__header.is-static {
+    cursor: default;
+}
+
+.user-home-mobile-panel__title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--text-brown);
+}
+
+.user-home-mobile-panel__header-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    color: var(--text-brown) !important;
+}
+
+.user-home-mobile-panel__count {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--bg-cust-primary, #e9eff9);
+    border: 1px solid var(--blue-btn-border, #accfff);
+    color: var(--btn-info-text, #065658);
+    white-space: nowrap;
+}
+
+.user-home-collapse-icon {
+    display: inline-block !important;
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--text-brown) !important;
+    -webkit-text-fill-color: var(--text-brown) !important;
+}
+
+.user-home-mobile-list {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--layout-item-border, #f1f3f6);
+}
+
+.user-home-mobile-row {
+    border-bottom: 1px solid var(--layout-item-border, #f1f3f6);
+}
+
+.user-home-mobile-row:last-child {
+    border-bottom: none;
+}
+
+.user-home-mobile-row.is-open {
+    background: rgba(233, 239, 249, 0.35);
+}
+
+.user-home-mobile-row__main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 6px;
+    padding: 10px 12px;
+}
+
+.user-home-mobile-row__left {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.user-home-mobile-row__center {
+    border: none;
+    background: transparent;
+    padding: 0 4px;
+    text-align: center;
+    justify-self: center;
+    max-width: 110px;
+}
+
+.user-home-mobile-row__id {
+    border: none;
+    background: transparent;
+    padding: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-brown);
+    text-align: left;
+}
+
+.user-home-mobile-row__id.is-static {
+    cursor: default;
+}
+
+.user-home-mobile-row__meta {
+    border: none;
+    background: transparent;
+    padding: 0;
+    text-align: left;
+    font-size: 11px;
+    color: var(--home-muted-text, #6c757d);
+}
+
+.user-home-mobile-row__right {
+    border: none;
+    background: transparent;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    justify-self: end;
+    color: var(--text-brown);
+}
+
+.user-home-mobile-row__right .badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 0.25em 0.5em;
+    white-space: nowrap;
+}
+
+.user-home-mobile-row__amount {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-black-soft, #212529);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-home-mobile-row__details {
+    padding: 0 12px 10px;
+}
+
+.user-home-mobile-row__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 10px;
+}
+
+.user-home-mobile-row__grid > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.user-home-mobile-row__grid > div.is-full {
+    grid-column: 1 / -1;
+}
+
+.user-home-mobile-row__grid span {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--home-muted-text, #6c757d);
+}
+
+.user-home-mobile-row__grid strong {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-black-soft, #212529);
+}
+
+.user-home-mobile-row__link {
+    border: none;
+    background: transparent;
+    padding: 0;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-brown);
+}
+
+.user-home-mobile-row__link:disabled {
+    color: var(--color-black-soft, #212529);
+    opacity: 1;
+    cursor: default;
+}
+
+@media (max-width: 767.98px) {
+    .info-card {
+        border-radius: 14px;
+    }
+
+    .info-card .card-body {
+        padding: 12px !important;
+    }
+
+    .info-card h5.display-number {
+        font-size: 1.15rem;
+    }
+
+    .card-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 12px;
+        font-size: 1.15rem;
+    }
+}
+
+[data-theme="dark"] .user-home-mobile-panel {
+    background: var(--color-white, #1e1e2e);
+    border-color: var(--app-border, #3d3d5c);
+}
+
+[data-theme="dark"] .user-home-mobile-panel__header {
+    background: var(--bg-cust-primary, #252540) !important;
+    color: var(--text-brown, #fcd34d) !important;
+}
+
+[data-theme="dark"] .user-home-mobile-panel__title,
+[data-theme="dark"] .user-home-collapse-icon,
+[data-theme="dark"] .user-home-mobile-row__id,
+[data-theme="dark"] .user-home-mobile-row__link,
+[data-theme="dark"] .user-home-mobile-row__right {
+    color: var(--text-brown, #fcd34d) !important;
+    -webkit-text-fill-color: var(--text-brown, #fcd34d) !important;
+}
+
+[data-theme="dark"] .user-home-mobile-row.is-open {
+    background: rgba(37, 37, 64, 0.55);
+}
+
+[data-theme="dark"] .user-home-mobile-panel__count {
+    background: var(--bg-cust-primary, #252540);
+    border-color: var(--app-border, #3d3d5c);
+    color: var(--text-brown, #fcd34d);
+}
+
+[data-theme="dark"] .user-home-mobile-row,
+[data-theme="dark"] .user-home-mobile-list {
+    border-color: var(--app-border, #3d3d5c);
+}
+
+[data-theme="dark"] .user-home-mobile-row__grid strong,
+[data-theme="dark"] .user-home-mobile-row__amount {
+    color: var(--color-black-soft, #e5e7eb);
+}

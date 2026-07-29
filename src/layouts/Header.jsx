@@ -99,22 +99,25 @@ const Header = () => {
 
   return (
     <header className="header pb-2 pb-lg-0 sticky-top">
-      <div className="admin-header py-2">
-        <button
-          className="btn btn-light d-lg-none me-2 border-secondary"
-          data-bs-toggle="offcanvas"
-          data-bs-target="#sidebar"
-        >
-          <FiMenu size={25} />
-        </button>
+      <div className="admin-header">
+        <div className="header-left">
+          <button
+            className="btn header-icon-btn header-menu-btn d-lg-none"
+            type="button"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#sidebar"
+            aria-label="Open menu"
+          >
+            <FiMenu size={22} />
+          </button>
 
-        {/* LEFT: Logo/Title */}
-        <div className="logo-title">
-          <h1 className='p-0 m-0'>KhataBoss</h1>
+          <div className="logo-title">
+            <h1 className="p-0 m-0">KhataBoss</h1>
+          </div>
         </div>
 
-        {/* CENTER: Search Bar */}
-        <div className={`search-bar`}>
+        {/* CENTER: Search Bar (desktop only) */}
+        <div className="search-bar">
           <div className="input-group">
             <input
               type="text"
@@ -125,6 +128,7 @@ const Header = () => {
             <button
               className="btn btn-outline-secondary"
               type="button"
+              aria-label="Search"
             >
               <FiSearch />
             </button>
@@ -134,7 +138,7 @@ const Header = () => {
         {/* RIGHT: User Actions */}
         <div className="header-right">
           <select
-            className="form-select d-none d-md-block me-2 w-50 cursor-pointer border-dark"
+            className="form-select d-none d-md-block cursor-pointer border-dark"
             aria-label="Firm selection"
             value={selectedFirmId}
             onChange={handleFirmChange}
@@ -148,13 +152,13 @@ const Header = () => {
           </select>
           <div className="notification-dropdown-wrapper" ref={notificationRef}>
             <button
-              className="btn me-2 bg-success-subtle rounded-circle d-flex align-items-center justify-content-center mb-1 notification-btn"
+              className="btn header-icon-btn notification-btn bg-success-subtle"
               type="button"
               aria-expanded={isNotificationOpen}
               aria-label="Toggle notifications"
               onClick={toggleNotifications}
             >
-              <FiBell size={26} />
+              <FiBell size={20} />
               {unreadNotifications > 0 && (
                 <span className="notification-badge">{unreadNotifications}</span>
               )}
@@ -228,13 +232,14 @@ const Header = () => {
           </div>
           <div className="dropdown">
             <button
-              className="btn profile-btn dropdown-toggle btn me-2 bg-info-subtle rounded-circle d-flex align-items-center justify-content-center mb-1"
+              className="btn header-icon-btn profile-btn dropdown-toggle bg-info-subtle"
               type="button"
               id="profileDropdown"
               data-bs-toggle="dropdown"
               aria-expanded="false"
+              aria-label="Open profile menu"
             >
-              <FiUser size={26} />
+              <FiUser size={20} />
             </button>
             <ul className="dropdown-menu profile-dropdown pt-0" aria-labelledby="profileDropdown">
               <li><Link className="dropdown-item border rounded bg-cust-primary text-center" to="#"> {user.own_first_name} {user.own_last_name} <br />( {user.own_email} )</Link></li>
@@ -245,12 +250,12 @@ const Header = () => {
             </ul>
           </div>
           <button
-            className="btn theme-toggle-btn bg-warning-subtle rounded-circle d-flex align-items-center justify-content-center mb-1"
+            className="btn header-icon-btn theme-toggle-btn bg-warning-subtle"
             type="button"
             aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
             onClick={toggleTheme}
           >
-            {theme === 'dark' ? <FiSun size={24} /> : <FiMoon size={24} />}
+            {theme === 'dark' ? <FiSun size={20} /> : <FiMoon size={20} />}
           </button>
         </div>
       </div>
