@@ -9,7 +9,7 @@
     "@testing-library/react": "^16.3.1",
     "@testing-library/user-event": "^13.5.0",
     "apexcharts": "^5.13.0",
-    "axios": "^1.14.0",
+    "axios": "^1.18.1",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
     "datatables.net-bs5": "^2.3.7",
@@ -20,27 +20,24 @@
     "datatables.net-responsive-bs5": "^3.0.8",
     "daterangepicker": "^3.1.0",
     "jquery": "^4.0.0",
-    "jspdf": "^2.5.1",
-    "jspdf-autotable": "^3.5.28",
     "jszip": "^3.10.1",
     "line-awesome": "^1.3.0",
     "moment": "^2.30.1",
     "pdfmake": "^0.3.3",
     "primereact": "^10.9.7",
-    "react": "^19.2.3",
+    "react": "^19.2.7",
     "react-apexcharts": "^2.1.0",
     "react-bootstrap": "^2.10.10",
-    "react-dom": "^19.2.3",
+    "react-dom": "^19.2.7",
     "react-hot-toast": "^2.6.0",
     "react-icons": "^4.10.1",
     "react-perfect-scrollbar": "^1.5.8",
     "react-redux": "^9.2.0",
-    "react-router-dom": "^7.11.0",
+    "react-router-dom": "^7.18.2",
     "react-scripts": "5.0.1",
     "react-toastify": "^11.0.5",
     "sweetalert2": "^11.26.24",
-    "web-vitals": "^2.1.4",
-    "xlsx": "^0.18.5"
+    "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -70,5 +67,20 @@
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.10.0"
+  },
+  "overrides": {
+    "@babel/core": "^7.29.1",
+    "@tootallnate/once": "^3.0.1",
+    "minimatch": "^10.0.3",
+    "nth-check": "^2.1.1",
+    "postcss": "^8.5.24",
+    "react-router": "8.3.0",
+    "serialize-javascript": "^7.0.7",
+    "shell-quote": "^1.10.0",
+    "svgo": "2.8.3",
+    "underscore": "^1.13.8",
+    "uuid": "^11.1.1",
+    "websocket-driver": "^0.7.5",
+    "ws": "^8.18.3"
   }
 }

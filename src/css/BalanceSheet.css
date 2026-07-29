@@ -1,0 +1,398 @@
+/* Mobile Balance Sheet styles — desktop table kept as original */
+
+.balance-sheet-mobile-wrap {
+  margin-top: 8px;
+  border-radius: 12px;
+  padding-bottom: 8px;
+}
+
+.balance-sheet-mobile-section {
+  margin-bottom: 14px;
+}
+
+.balance-sheet-mobile-section__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-brown) !important;
+  padding: 8px 12px;
+  margin-bottom: 0;
+  border-radius: 10px 10px 0 0;
+  background: var(--bg-cust-primary, #e9eff9);
+  border: 1px solid var(--blue-btn-border, #accfff);
+  border-bottom: none;
+}
+
+.balance-sheet-mobile-section__count {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  background: var(--color-white, #fff);
+  border: 1px solid var(--blue-btn-border, #accfff);
+  color: var(--btn-info-text, #065658);
+}
+
+.balance-sheet-mobile-section__list {
+  background: var(--color-white, #fff);
+  border: 1px solid var(--blue-btn-border, #accfff);
+  border-radius: 0 0 10px 10px;
+  overflow: hidden;
+}
+
+.balance-sheet-mobile-row-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--layout-item-border, #f1f3f6);
+}
+
+.balance-sheet-mobile-row-item:last-child {
+  border-bottom: none;
+}
+
+.balance-sheet-mobile-row-item--net {
+  background: rgba(233, 239, 249, 0.45);
+}
+
+.balance-sheet-mobile-row-item--net.is-profit .balance-sheet-mobile-card__name,
+.balance-sheet-mobile-row-item--net.is-profit .balance-sheet-mobile-row__value {
+  color: var(--btn-success-text, #006400) !important;
+}
+
+.balance-sheet-mobile-row-item--net.is-loss .balance-sheet-mobile-card__name,
+.balance-sheet-mobile-row-item--net.is-loss .balance-sheet-mobile-row__value {
+  color: var(--btn-danger-text, #dc143c) !important;
+}
+
+.balance-sheet-mobile-section__total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  font-weight: 700;
+  font-size: 13px;
+  background: var(--btn-danger-bg, #ffdbe1);
+  border-top: 1px solid var(--btn-danger-border, #f999aa);
+  font-variant-numeric: tabular-nums;
+}
+
+.balance-sheet-mobile-empty {
+  font-size: 13px;
+  padding: 14px 12px;
+}
+
+.balance-sheet-mobile-card__name {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-brown) !important;
+  line-height: 1.35;
+  flex: 1;
+  min-width: 0;
+  padding-right: 8px;
+  word-break: break-word;
+}
+
+.balance-sheet-mobile-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.balance-sheet-mobile-row__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--layout-filter-text, #4b5563);
+  flex-shrink: 0;
+}
+
+.balance-sheet-mobile-row__value {
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--color-black-soft, #333);
+}
+
+.balance-sheet-mobile-row__value.balance-sheet-amt-profit {
+  color: var(--btn-success-text, #006400) !important;
+}
+
+.balance-sheet-mobile-row__value.balance-sheet-amt-loss {
+  color: var(--btn-danger-text, #dc143c) !important;
+}
+
+.balance-sheet-mobile-totals {
+  position: sticky;
+  bottom: 72px;
+  z-index: 20;
+  background: var(--color-white, #fff);
+  padding: 14px 16px;
+  font-weight: 600;
+  border: 1px solid var(--blue-btn-border, #accfff);
+  border-top: 2px solid var(--btn-info-text, #065658);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0 8px;
+}
+
+.balance-sheet-mobile-totals__title {
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-brown) !important;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed var(--layout-item-border, #f1f3f6);
+  margin-bottom: 2px;
+}
+
+.balance-sheet-actions-wrap {
+  margin: 12px 0 16px;
+}
+
+@media (max-width: 767.98px) {
+  .balance-sheet-actions-wrap {
+    margin: 12px 0 90px;
+  }
+}
+
+.balance-sheet-action-btn {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  border-width: 1.5px;
+  line-height: 1;
+}
+
+.balance-sheet-action-print {
+  color: var(--btn-primary-text, #000080) !important;
+  background-color: var(--btn-primary-bg, #dfecff) !important;
+  border-color: var(--blue-btn-border, #accfff) !important;
+}
+
+.balance-sheet-action-pdf {
+  color: var(--btn-danger-text, #dc143c) !important;
+  background-color: var(--btn-danger-bg, #ffdbe1) !important;
+  border-color: var(--btn-danger-border, #f999aa) !important;
+}
+
+.balance-sheet-action-whatsapp {
+  color: var(--btn-success-text, #006400) !important;
+  background-color: var(--btn-success-bg, #d8f6d8) !important;
+  border-color: var(--text-green-soft, #86bc86) !important;
+}
+
+.balance-sheet-action-btn:disabled {
+  opacity: 0.55;
+}
+
+.balance-sheet-print-firm {
+  display: none;
+}
+
+.balance-sheet-period-mobile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px auto 4px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: var(--btn-info-bg, #dbfbff);
+  border: 1px solid var(--btn-info-border, #99f6f9);
+  color: var(--btn-info-text, #065658);
+  font-size: 13px;
+  line-height: 1.3;
+  max-width: 100%;
+}
+
+.balance-sheet-period-mobile__label {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.balance-sheet-period-mobile__dates {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Print: original desktop table — equal columns + solid liability/asset grid */
+@media print {
+  .balance-sheet-mobile-screen,
+  .balance-sheet-period-mobile,
+  .balance-sheet-actions-wrap,
+  .mobile-footer,
+  .bottom-nav,
+  .no-print {
+    display: none !important;
+  }
+
+  .balance-sheet-desktop-table.d-none,
+  .balance-sheet-desktop-table,
+  .balance-sheet-print-period,
+  .balance-sheet-print-firm {
+    display: block !important;
+  }
+
+  .balance-sheet-page {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .balance-sheet-page .responsive-text {
+    font-size: 1.5rem !important;
+  }
+
+  .balance-sheet-desktop-table,
+  .balance-sheet-desktop-table .table-responsive {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
+
+  /* Only strip outer shell border — never the table itself */
+  .balance-sheet-desktop-table .balance-sheet-table-shell {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  .balance-sheet-desktop-table .sticky-col {
+    position: static !important;
+  }
+
+  /*
+   * Uniform print grid: only ONE line per edge.
+   * Table draws top+left; each cell draws right+bottom.
+   * Avoids dark (double) vs light (single) border mismatch.
+   */
+  .balance-sheet-desktop-table .balance-sheet-table {
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: fixed !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    border-top: 1px solid #000 !important;
+    border-right: 0 !important;
+    border-bottom: 0 !important;
+    border-left: 1px solid #000 !important;
+  }
+
+  .balance-sheet-desktop-table .bs-col-liab-name,
+  .balance-sheet-desktop-table .bs-col-asset-name {
+    width: 35% !important;
+  }
+
+  .balance-sheet-desktop-table .bs-col-liab-amt,
+  .balance-sheet-desktop-table .bs-col-asset-amt {
+    width: 15% !important;
+  }
+
+  .balance-sheet-desktop-table .balance-sheet-table > :not(caption) > * > *,
+  .balance-sheet-desktop-table .table-bordered > :not(caption) > * > *,
+  .balance-sheet-desktop-table .table-bordered > :not(caption) > * > *:first-child,
+  .balance-sheet-desktop-table th,
+  .balance-sheet-desktop-table td,
+  .balance-sheet-desktop-table .bs-cell {
+    border-top: 0 !important;
+    border-left: 0 !important;
+    border-right: 1px solid #000 !important;
+    border-bottom: 1px solid #000 !important;
+    box-shadow: none !important;
+    outline: none !important;
+    box-sizing: border-box !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+    vertical-align: middle !important;
+    empty-cells: show !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Liability columns */
+  .balance-sheet-desktop-table tbody td:nth-child(1),
+  .balance-sheet-desktop-table tfoot td:nth-child(1) {
+    width: 35% !important;
+    text-align: left !important;
+  }
+
+  .balance-sheet-desktop-table tbody td:nth-child(2),
+  .balance-sheet-desktop-table tfoot td:nth-child(2) {
+    width: 15% !important;
+    text-align: right !important;
+    white-space: nowrap !important;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Asset columns */
+  .balance-sheet-desktop-table tbody td:nth-child(3),
+  .balance-sheet-desktop-table tfoot td:nth-child(3) {
+    width: 35% !important;
+    text-align: left !important;
+  }
+
+  .balance-sheet-desktop-table tbody td:nth-child(4),
+  .balance-sheet-desktop-table tfoot td:nth-child(4) {
+    width: 15% !important;
+    text-align: right !important;
+    white-space: nowrap !important;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .balance-sheet-desktop-table thead th {
+    width: 50% !important;
+  }
+
+  .balance-sheet-spacer-row td {
+    height: 28px !important;
+    line-height: 28px !important;
+  }
+}
+
+[data-theme="dark"] .balance-sheet-mobile-wrap {
+  background: var(--layout-filter-bg, #1e293b);
+}
+
+[data-theme="dark"] .balance-sheet-mobile-section__list,
+[data-theme="dark"] .balance-sheet-mobile-totals {
+  background: var(--color-white, #1e1e2e);
+  border-color: var(--app-border, #3d3d5c);
+}
+
+[data-theme="dark"] .balance-sheet-mobile-section__title {
+  background: var(--bg-cust-primary);
+  border-color: var(--app-border, #3d3d5c);
+}
+
+[data-theme="dark"] .balance-sheet-period-mobile {
+  background: var(--btn-info-bg);
+  border-color: var(--btn-info-border);
+  color: var(--btn-info-text);
+}

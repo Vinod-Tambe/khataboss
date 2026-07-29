@@ -1,0 +1,220 @@
+/* Mobile-only Trial Balance styles — desktop table unchanged */
+
+.trial-balance-mobile-wrap {
+  margin-top: 8px;
+  border-radius: 12px;
+  /* Space for sticky totals + fixed mobile bottom nav (~64px) */
+  padding-bottom: 8px;
+}
+
+.trial-balance-mobile-card {
+  background: var(--color-white, #fff);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--blue-btn-border, #accfff);
+}
+
+.trial-balance-mobile-card__name {
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text-brown) !important;
+  display: block;
+  line-height: 1.3;
+}
+
+.trial-balance-mobile-card__code {
+  font-size: 12px;
+  color: var(--layout-message-text, #6b7280);
+  margin-top: 2px;
+}
+
+.trial-balance-mobile-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.trial-balance-mobile-row__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--layout-filter-text, #4b5563);
+  flex-shrink: 0;
+}
+
+.trial-balance-mobile-row__value {
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.trial-balance-mobile-row__value.trial-balance-amt-dr {
+  color: var(--btn-success-text, #006400) !important;
+}
+
+.trial-balance-mobile-row__value.trial-balance-amt-cr {
+  color: var(--btn-danger-text, #dc143c) !important;
+}
+
+.trial-balance-mobile-row__value.trial-balance-amt-zero {
+  color: var(--layout-muted-text, #8b8bb0) !important;
+}
+
+.trial-balance-mobile-totals {
+  /* Sit above the fixed mobile bottom nav, not inside it */
+  position: sticky;
+  bottom: 72px;
+  z-index: 20;
+  background: var(--color-white, #fff);
+  padding: 14px 16px;
+  font-weight: 600;
+  border: 1px solid var(--blue-btn-border, #accfff);
+  border-top: 2px solid var(--btn-info-text, #065658);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0 8px;
+}
+
+.trial-balance-actions-wrap {
+  margin: 12px 0 16px;
+}
+
+/* Extra bottom space on mobile so actions clear fixed bottom nav */
+@media (max-width: 767.98px) {
+  .trial-balance-actions-wrap {
+    margin: 12px 0 90px;
+  }
+}
+
+.trial-balance-action-btn {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  border-width: 1.5px;
+  line-height: 1;
+}
+
+.trial-balance-action-print {
+  color: var(--btn-primary-text, #000080) !important;
+  background-color: var(--btn-primary-bg, #dfecff) !important;
+  border-color: var(--blue-btn-border, #accfff) !important;
+}
+
+.trial-balance-action-pdf {
+  color: var(--btn-danger-text, #dc143c) !important;
+  background-color: var(--btn-danger-bg, #ffdbe1) !important;
+  border-color: var(--btn-danger-border, #f999aa) !important;
+}
+
+.trial-balance-action-whatsapp {
+  color: var(--btn-success-text, #006400) !important;
+  background-color: var(--btn-success-bg, #d8f6d8) !important;
+  border-color: var(--text-green-soft, #86bc86) !important;
+}
+
+.trial-balance-action-btn:disabled {
+  opacity: 0.55;
+}
+
+.trial-balance-print-firm {
+  display: none;
+}
+
+/* Direct print: desktop table format, no preview modal */
+@media print {
+  .trial-balance-mobile-screen,
+  .trial-balance-period-mobile,
+  .trial-balance-actions-wrap,
+  .mobile-footer,
+  .bottom-nav,
+  .no-print {
+    display: none !important;
+  }
+
+  .trial-balance-desktop-table,
+  .trial-balance-print-period,
+  .trial-balance-print-firm {
+    display: block !important;
+  }
+
+  .trial-balance-page .responsive-text {
+    font-size: 1.5rem !important;
+  }
+
+  .trial-balance-desktop-table .table-responsive {
+    overflow: visible !important;
+  }
+
+  .trial-balance-desktop-table .sticky-col {
+    position: static !important;
+  }
+}
+
+.trial-balance-mobile-totals__title {
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-brown) !important;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed var(--layout-item-border, #f1f3f6);
+  margin-bottom: 2px;
+}
+
+/* Period chip — mobile only */
+.trial-balance-period-mobile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px auto 4px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: var(--btn-info-bg, #dbfbff);
+  border: 1px solid var(--btn-info-border, #99f6f9);
+  color: var(--btn-info-text, #065658);
+  font-size: 13px;
+  line-height: 1.3;
+  max-width: 100%;
+}
+
+.trial-balance-period-mobile__label {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.trial-balance-period-mobile__dates {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-theme="dark"] .trial-balance-mobile-wrap {
+  background: var(--layout-filter-bg, #1e293b);
+}
+
+[data-theme="dark"] .trial-balance-mobile-card,
+[data-theme="dark"] .trial-balance-mobile-totals {
+  background: var(--color-white, #1e1e2e);
+  border-color: var(--app-border, #3d3d5c);
+}
+
+[data-theme="dark"] .trial-balance-period-mobile {
+  background: var(--btn-info-bg);
+  border-color: var(--btn-info-border);
+  color: var(--btn-info-text);
+}

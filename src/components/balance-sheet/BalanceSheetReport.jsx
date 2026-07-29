@@ -1,119 +1,159 @@
 import React from 'react';
+import BalanceSheetMobileList from './BalanceSheetMobileList';
+import {
+  calculateBalanceSheetTotals,
+  formatCurrency,
+} from './balanceSheetUtils';
 
-const BalanceSheetReport = ({ balanceSheetData }) => {
-    if (!balanceSheetData) {
-        return <p>No data available</p>;
-    }
+/** Keep cell painted so print borders never drop on empty sides */
+const cellText = (value) => (value ? value : '\u00A0');
 
-    const { assets = [], liabilities = [] } = balanceSheetData;
+const BalanceSheetReport = ({ balanceSheetData, isPrint = false }) => {
+  if (!balanceSheetData) {
+    return <p>No data available</p>;
+  }
 
-    // Convert assets & liabilities into [{name, value}] format
-    const formatData = (arr) =>
-        arr.map((item) => {
-            const key = Object.keys(item)[0];
-            return { name: key, value: item[key] };
-        });
+  const {
+    assetList,
+    liabilityList,
+    totalAssets,
+    totalLiabilities,
+    diffBalance,
+    balancedTotal,
+  } = calculateBalanceSheetTotals(balanceSheetData);
 
-    const assetList = formatData(assets);
-    const liabilityList = formatData(liabilities);
+  const maxRows = Math.max(assetList.length, liabilityList.length);
 
-    // Totals
-    const totalAssets = assetList.reduce((sum, a) => sum + a.value, 0);
-    const totalLiabilities = liabilityList.reduce((sum, l) => sum + l.value, 0);
-    const diffBalance = totalAssets - totalLiabilities;
+  return (
+    <>
+      {/* Original desktop table — also used for print */}
+      <div
+        className={
+          isPrint
+            ? 'balance-sheet-desktop-table'
+            : 'balance-sheet-desktop-table d-none d-md-block'
+        }
+      >
+        <div className="balance-sheet-table-shell border border-danger-subtle bg-green">
+          <div className="table-responsive">
+            <table
+              className="table table-hover table-bordered border-secondary mb-0 balance-sheet-table"
+              style={{ tableLayout: 'fixed', borderCollapse: 'collapse' }}
+            >
+              <colgroup>
+                <col className="bs-col-liab-name" style={{ width: '35%' }} />
+                <col className="bs-col-liab-amt" style={{ width: '15%' }} />
+                <col className="bs-col-asset-name" style={{ width: '35%' }} />
+                <col className="bs-col-asset-amt" style={{ width: '15%' }} />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th colSpan="2" className="bg-cust-primary text-center text-brown fs-6 sticky-col">
+                    Liabilities
+                  </th>
+                  <th colSpan="2" className="bg-cust-primary text-brown text-center fs-6 sticky-col">
+                    Assets
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {maxRows > 0 ? (
+                  Array.from({ length: maxRows }).map((_, idx) => {
+                    const liability = liabilityList[idx];
+                    const asset = assetList[idx];
+                    return (
+                      <tr key={idx}>
+                        <td className="bs-cell bs-cell-liab text-start text-break pe-2">
+                          {cellText(liability ? liability.name.toUpperCase() : '')}
+                        </td>
+                        <td className="bs-cell bs-cell-liab text-end pe-2">
+                          {cellText(liability ? formatCurrency(liability.value) : '')}
+                        </td>
+                        <td className="bs-cell bs-cell-asset text-start text-break pe-2">
+                          {cellText(asset ? asset.name.toUpperCase() : '')}
+                        </td>
+                        <td className="bs-cell bs-cell-asset text-end pe-2">
+                          {cellText(asset ? formatCurrency(asset.value) : '')}
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan="4" className="text-center p-4">
+                      No records found for the selected period.
+                    </td>
+                  </tr>
+                )}
 
-    // To make table balanced (equal rows), pad shorter side with empty rows
-    const maxRows = Math.max(assetList.length, liabilityList.length);
+                <tr className="balance-sheet-spacer-row">
+                  <td className="bs-cell bs-cell-liab">{'\u00A0'}</td>
+                  <td className="bs-cell bs-cell-liab">{'\u00A0'}</td>
+                  <td className="bs-cell bs-cell-asset">{'\u00A0'}</td>
+                  <td className="bs-cell bs-cell-asset">{'\u00A0'}</td>
+                </tr>
 
-    return (
-        <div className='border border-danger-subtle bg-green'>
-            <div className="table-responsive">
-                <table className="table table-hover table-bordered border-secondary mb-0" style={{ tableLayout: 'fixed', borderCollapse: 'collapse' }}>
-                    <colgroup>
-                        <col style={{ width: '35%' }} />
-                        <col style={{ width: '15%' }} />
-                        <col style={{ width: '35%' }} />
-                        <col style={{ width: '15%' }} />
-                    </colgroup>
-                    <thead>
-                        <tr>
-                            <th colSpan="2" className="bg-cust-primary text-center text-brown fs-6 sticky-col">
-                                Liabilities
-                            </th>
-                            <th colSpan="2" className="bg-cust-primary text-brown text-center fs-6 sticky-col">
-                                Assets
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {Array.from({ length: maxRows }).map((_, idx) => {
-                            const liability = liabilityList[idx];
-                            const asset = assetList[idx];
-                            return (
-                                <tr key={idx}>
-                                    {/* Using separate table cells instead of nested divs to prevent line overlapping during PDF print */}
-                                    <td className="text-start text-break pe-2" style={{ verticalAlign: 'middle' }}>
-                                        {liability ? liability.name.toUpperCase() : ''}
-                                    </td>
-                                    <td className="text-end pe-2" style={{ verticalAlign: 'middle' }}>
-                                        {liability ? liability.value.toLocaleString() : ''}
-                                    </td>
-                                    <td className="text-start text-break pe-2" style={{ verticalAlign: 'middle' }}>
-                                        {asset ? asset.name.toUpperCase() : ''}
-                                    </td>
-                                    <td className="text-end pe-2" style={{ verticalAlign: 'middle' }}>
-                                        {asset ? asset.value.toLocaleString() : ''}
-                                    </td>
-                                </tr>
-                            );
-                        })}
+                {diffBalance !== 0 && (
+                  <tr>
+                    {diffBalance > 0 ? (
+                      <>
+                        <td className="bs-cell bs-cell-liab text-start fw-bold text-success pe-2">
+                          NET PROFIT
+                        </td>
+                        <td className="bs-cell bs-cell-liab text-end fw-bold text-success pe-2">
+                          {formatCurrency(diffBalance)}
+                        </td>
+                        <td className="bs-cell bs-cell-asset">{'\u00A0'}</td>
+                        <td className="bs-cell bs-cell-asset">{'\u00A0'}</td>
+                      </>
+                    ) : (
+                      <>
+                        <td className="bs-cell bs-cell-liab">{'\u00A0'}</td>
+                        <td className="bs-cell bs-cell-liab">{'\u00A0'}</td>
+                        <td className="bs-cell bs-cell-asset text-start fw-bold text-danger pe-2">
+                          NET LOSS
+                        </td>
+                        <td className="bs-cell bs-cell-asset text-end fw-bold text-danger pe-2">
+                          {formatCurrency(Math.abs(diffBalance))}
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                )}
+              </tbody>
 
-                        <tr>
-                            <td style={{ height: '20vh' }}></td>
-                            <td style={{ height: '20vh' }}></td>
-                            <td style={{ height: '20vh' }}></td>
-                            <td style={{ height: '20vh' }}></td>
-                        </tr>
-
-                        {/* Show Profit or Loss */}
-                        {(diffBalance !== 0) && (
-                            <tr>
-                                {diffBalance > 0 ? (
-                                    <>
-                                        <td className="text-start fw-bold text-success pe-2" style={{ verticalAlign: 'middle' }}>NET PROFIT</td>
-                                        <td className="text-end fw-bold text-success pe-2" style={{ verticalAlign: 'middle' }}>{diffBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                                        <td></td>
-                                        <td></td>
-                                    </>
-                                ) : (
-                                    <>
-                                        <td></td>
-                                        <td></td>
-                                        <td className="text-start fw-bold text-danger pe-2" style={{ verticalAlign: 'middle' }}>NET LOSS</td>
-                                        <td className="text-end fw-bold text-danger pe-2" style={{ verticalAlign: 'middle' }}>{Math.abs(diffBalance).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                                    </>
-                                )}
-                            </tr>
-                        )}
-                    </tbody>
-
-                    {/* Totals row */}
-                    <tfoot>
-                        <tr className="fw-bold bg-red">
-                            <td className="bg-red text-start pe-2">Total</td>
-                            <td className="bg-red text-end pe-2">
-                                {Math.max(totalLiabilities, totalAssets).toLocaleString()}
-                            </td>
-                            <td className="bg-red text-start pe-2">Total</td>
-                            <td className="bg-red text-end pe-2">
-                                {Math.max(totalLiabilities, totalAssets).toLocaleString()}
-                            </td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
+              <tfoot>
+                <tr className="fw-bold bg-red">
+                  <td className="bs-cell bs-cell-liab bg-red text-start pe-2">Total</td>
+                  <td className="bs-cell bs-cell-liab bg-red text-end pe-2">
+                    {formatCurrency(balancedTotal)}
+                  </td>
+                  <td className="bs-cell bs-cell-asset bg-red text-start pe-2">Total</td>
+                  <td className="bs-cell bs-cell-asset bg-red text-end pe-2">
+                    {formatCurrency(balancedTotal)}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
         </div>
-    );
+      </div>
+
+      {/* Mobile cards — screen only */}
+      {!isPrint && (
+        <div className="d-md-none balance-sheet-mobile-screen">
+          <BalanceSheetMobileList
+            assetList={assetList}
+            liabilityList={liabilityList}
+            totalAssets={totalAssets}
+            totalLiabilities={totalLiabilities}
+            diffBalance={diffBalance}
+            balancedTotal={balancedTotal}
+          />
+        </div>
+      )}
+    </>
+  );
 };
 
 export default BalanceSheetReport;
