@@ -5,6 +5,7 @@ import PrintPreviewHeader from '../common/PrintPreviewHeader';
 import TradingAccount from './TradingAccount';
 import ProfitLossAccount from './ProfitLossAccount';
 import CapitalAccount from './CapitalAccount';
+import '../../css/ProfitLoss.css';
 
 const ProfitLossPrintPreview = ({
   show,

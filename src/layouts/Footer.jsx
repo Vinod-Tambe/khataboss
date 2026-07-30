@@ -29,66 +29,59 @@ const Footer = () => {
         </div>
 
         {/* Mobile Footer Navigation */}
-        <div className="mobile-footer d-md-none fixed-bottom bg-light border-top shadow-sm">
-          <div className="d-flex bottom-nav justify-content-around text-center py-2">
-
+        <div className="mobile-footer d-md-none">
+          <nav className="bottom-nav" aria-label="Mobile navigation">
             <NavLink
               to="/"
               end
               className={({ isActive }) =>
-                `text-decoration-none flex-fill ${isActive ? "text-primary-emphasis fw-bold" : "text-dark"
-                }`
+                `bottom-nav-item ${isActive ? "active" : ""}`
               }
             >
-              <i className="bi bi-house-door-fill fs-5"></i>
-              <div className="small">Home</div>
+              <i className="bi bi-house-door-fill bottom-nav-icon" aria-hidden="true"></i>
+              <span className="bottom-nav-label">Home</span>
             </NavLink>
 
             <NavLink
               to="/user/grid"
               className={({ isActive }) =>
-                `text-decoration-none flex-fill ${isActive ? "text-primary-emphasis fw-bold" : "text-dark"
-                }`
+                `bottom-nav-item ${isActive ? "active" : ""}`
               }
             >
-              <i className="bi bi-people fs-5"></i>
-              <div className="small">Users</div>
+              <i className="bi bi-people bottom-nav-icon" aria-hidden="true"></i>
+              <span className="bottom-nav-label">Users</span>
             </NavLink>
 
             <NavLink
               to="/loan"
               className={({ isActive }) =>
-                `text-decoration-none flex-fill ${isActive ? "text-primary-emphasis fw-bold" : "text-dark"
-                }`
+                `bottom-nav-item ${isActive ? "active" : ""}`
               }
             >
-              <i className="bi bi-bar-chart-line fs-5"></i>
-              <div className="small">Loan</div>
+              <i className="bi bi-bar-chart-line bottom-nav-icon" aria-hidden="true"></i>
+              <span className="bottom-nav-label">Loan</span>
             </NavLink>
 
             <NavLink
               to="/finance"
               className={({ isActive }) =>
-                `text-decoration-none flex-fill ${isActive ? "text-primary-emphasis fw-bold" : "text-dark"
-                }`
+                `bottom-nav-item ${isActive ? "active" : ""}`
               }
             >
-              <i className="bi bi-chat-dots fs-5"></i>
-              <div className="small">Finance</div>
+              <i className="bi bi-wallet2 bottom-nav-icon" aria-hidden="true"></i>
+              <span className="bottom-nav-label">Finance</span>
             </NavLink>
 
             <NavLink
               to="/profile"
               className={({ isActive }) =>
-                `text-decoration-none flex-fill ${isActive ? "text-primary-emphasis fw-bold" : "text-dark"
-                }`
+                `bottom-nav-item ${isActive ? "active" : ""}`
               }
             >
-              <i className="bi bi-person fs-5"></i>
-              <div className="small">Profile</div>
+              <i className="bi bi-person bottom-nav-icon" aria-hidden="true"></i>
+              <span className="bottom-nav-label">Profile</span>
             </NavLink>
-
-          </div>
+          </nav>
         </div>
 
       </footer>

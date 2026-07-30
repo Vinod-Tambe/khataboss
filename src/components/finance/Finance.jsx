@@ -6,6 +6,7 @@ import PaymentForm from './PaymentForm'
 import CommonModal from '../common/CommonModal'
 import { getFinanceDetails } from '../../api/financeApi'
 import { toast } from 'react-toastify'
+import '../../css/Finance.css'
 
 const Finance = () => {
     const location = useLocation();
@@ -58,17 +59,30 @@ const Finance = () => {
         fetchDetails(); // Refresh data after payment
     };
 
+    const customerName = initialFinance?.user?.user_first_name
+        ? `${initialFinance.user.user_first_name} ${initialFinance.user.user_last_name || ''}`.trim()
+        : '';
+
     if (!initialFinance) {
         return <div className="alert alert-warning">No finance record selected. Please go back and select a record.</div>;
     }
 
     return (
         <>
-            <div className="row g-3">
+            <div className="row g-3 finance-page">
                 {view === 'info' ? (
-                    <div className="col-md-12 py-3 px-3">
-                        <div className="d-flex justify-content-between align-items-center mb-1 px-2">
-                            <h5 className="text-primary fw-bold mb-0">Finance Information</h5>
+                    <div className="col-md-12 py-2 py-md-3 px-2 px-md-3">
+                        <div className="finance-page__header d-flex justify-content-between align-items-start mb-1 px-1 px-md-2">
+                            <div>
+                                <h5 className="finance-page__title text-primary fw-bold mb-0">Finance Information</h5>
+                                {(customerName || initialFinance?.fin_id) && (
+                                    <p className="finance-page__subtitle d-md-none">
+                                        {customerName && <span>{customerName}</span>}
+                                        {customerName && initialFinance?.fin_id ? ' · ' : ''}
+                                        {initialFinance?.fin_id ? `Fin #${initialFinance.fin_id}` : ''}
+                                    </p>
+                                )}
+                            </div>
                         </div>
                         <FinanceInfo
                             data={financeData?.finance_trans || []}
@@ -81,11 +95,20 @@ const Finance = () => {
                         />
                     </div>
                 ) : (
-                    <div className="col-md-12 py-3 px-3">
-                        <div className="d-flex justify-content-between align-items-center mb-3">
-                            <h5 className="text-primary fw-bold mb-0">Finance History</h5>
-                            <button className="btn btn-sm btn-outline-secondary px-3" onClick={handleBackToInfo}>
-                                <i className="bi bi-arrow-left me-1"></i> Back to Info
+                    <div className="col-md-12 py-2 py-md-3 px-2 px-md-3">
+                        <div className="finance-page__header d-flex justify-content-between align-items-start mb-2 gap-2 px-1 px-md-0">
+                            <div>
+                                <h5 className="finance-page__title text-primary fw-bold mb-0">Finance History</h5>
+                                {(customerName || initialFinance?.fin_id) && (
+                                    <p className="finance-page__subtitle d-md-none">
+                                        {customerName && <span>{customerName}</span>}
+                                        {customerName && initialFinance?.fin_id ? ' · ' : ''}
+                                        {initialFinance?.fin_id ? `Fin #${initialFinance.fin_id}` : ''}
+                                    </p>
+                                )}
+                            </div>
+                            <button className="btn btn-sm btn-outline-secondary px-3 finance-page__back" onClick={handleBackToInfo}>
+                                <i className="bi bi-arrow-left me-1"></i> Back
                             </button>
                         </div>
                         <FinanceHistory

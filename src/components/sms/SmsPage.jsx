@@ -2,9 +2,12 @@ import React, { useEffect, useMemo, useState } from "react";
 import moment from "moment";
 import { useSelector } from "react-redux";
 import {
+  FiEdit3,
+  FiEye,
+  FiList,
   FiMail,
-  FiMessageCircle,
   FiMessageSquare,
+  FiPlus,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import List from "../common/List";
@@ -13,9 +16,9 @@ import TemplatePreview from "./TemplatePreview";
 import "../../css/Sms.css";
 
 const CHANNELS = [
-  { id: "whatsapp", label: "WhatsApp Templates", icon: FiMessageCircle },
-  { id: "sms", label: "Text SMS", icon: FiMessageSquare },
-  { id: "email", label: "Email Templates", icon: FiMail },
+  { id: "whatsapp", label: "WhatsApp", shortLabel: "WhatsApp", iconClass: "bi bi-whatsapp" },
+  { id: "sms", label: "Text SMS", shortLabel: "SMS", icon: FiMessageSquare },
+  { id: "email", label: "Email", shortLabel: "Email", icon: FiMail },
 ];
 
 const CATEGORIES = ["Marketing", "Transactional", "Customer Care", "OTP"];
@@ -111,39 +114,29 @@ const SmsPage = () => {
 
   const [activeChannel, setActiveChannel] = useState("whatsapp");
   const [templates, setTemplates] = useState(loadTemplates);
-  const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState(getInitialForm("whatsapp"));
   const [openSelect, setOpenSelect] = useState(null);
+  const [mobileMode, setMobileMode] = useState("list"); // list | create | preview (mobile only)
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(templates));
   }, [templates]);
 
   const filteredTemplates = useMemo(() => {
-    const q = search.trim().toLowerCase();
     return templates
       .filter((t) => t.channel === activeChannel)
-      .filter((t) => {
-        if (!q) return true;
-        return (
-          t.name.toLowerCase().includes(q) ||
-          t.category.toLowerCase().includes(q) ||
-          t.body.toLowerCase().includes(q) ||
-          (t.subject || "").toLowerCase().includes(q)
-        );
-      })
       .sort((a, b) => moment(b.updatedAt).valueOf() - moment(a.updatedAt).valueOf());
-  }, [templates, activeChannel, search]);
+  }, [templates, activeChannel]);
+
+  const bodyLength = stripHtml(formData.body).length;
+  const smsParts = Math.max(1, Math.ceil(bodyLength / 160));
 
   const handleChannelChange = (channel) => {
     setActiveChannel(channel);
     setEditingId(null);
     setFormData(getInitialForm(channel));
-    setSearch("");
   };
-
-
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -184,6 +177,7 @@ const SmsPage = () => {
       body: row.body,
       channel: row.channel,
     });
+    setMobileMode("create");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -245,8 +239,31 @@ const SmsPage = () => {
     toast.success(editingId ? "Template updated" : "Template saved");
     setEditingId(null);
     setFormData(getInitialForm(activeChannel));
+    setMobileMode("list");
   };
 
+  const renderChannelTabs = (extraClass = "") => (
+    <div className={`sms-tabs ${extraClass}`.trim()} role="tablist" aria-label="Template channels">
+      {CHANNELS.map(({ id, label, shortLabel, icon: Icon, iconClass }) => (
+        <button
+          key={id}
+          type="button"
+          role="tab"
+          aria-selected={activeChannel === id}
+          className={`sms-tab sms-tab-${id} ${activeChannel === id ? "active" : ""}`}
+          onClick={() => handleChannelChange(id)}
+        >
+          {iconClass ? (
+            <i className={`${iconClass} sms-tab-icon`} aria-hidden="true" />
+          ) : (
+            Icon && <Icon size={16} className="sms-tab-icon" />
+          )}
+          <span className="sms-tab-label-full">{label}</span>
+          <span className="sms-tab-label-short">{shortLabel}</span>
+        </button>
+      ))}
+    </div>
+  );
 
   const columns = [
     { title: "Name", key: "name", orderable: true, searchable: true },
@@ -280,139 +297,219 @@ const SmsPage = () => {
   ];
 
   return (
-    <div className="sms-page">
-      <div className="sms-tabs" role="tablist">
-        {CHANNELS.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={activeChannel === id}
-            className={`sms-tab ${activeChannel === id ? "active" : ""}`}
-            onClick={() => handleChannelChange(id)}
-          >
-            <Icon size={16} />
-            {label}
-          </button>
-        ))}
+    <div className={`sms-page mobile-mode-${mobileMode}`}>
+      <div className="sms-page-header">
+        <div>
+          <h2 className="sms-page-title">Message Templates</h2>
+          <p className="sms-page-subtitle">
+            Create WhatsApp, SMS, and Email templates with a live phone preview.
+          </p>
+        </div>
       </div>
 
-      <div className="sms-editor-row">
-        <div className="sms-form-card">
-          <h4>Create/Edit {channelTitle(activeChannel)} Template</h4>
-          <form noValidate onSubmit={handleSubmit}>
-            <div className="row g-3">
-              <div className="col-12 col-md-4">
-                <label className="form-label">Template Name (lowercase)</label>
-                <input
-                  type="text"
-                  name="name"
-                  className="form-control"
-                  placeholder="e.g. welcome_message_v2"
-                  value={formData.name}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="col-12 col-md-4">
-                <label className="form-label">Category</label>
-                <div className={`sms-select-wrap ${openSelect === "category" ? "is-open" : ""}`}>
-                  <select
-                    name="category"
-                    className="form-select"
-                    value={formData.category}
-                    onMouseDown={() => setOpenSelect("category")}
-                    onChange={(e) => {
-                      handleChange(e);
-                      setOpenSelect(null);
-                    }}
-                    onBlur={() => setOpenSelect(null)}
-                  >
-                    {CATEGORIES.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="col-12 col-md-4">
-                <label className="form-label">Language</label>
-                <div className={`sms-select-wrap ${openSelect === "language" ? "is-open" : ""}`}>
-                  <select
-                    name="language"
-                    className="form-select"
-                    value={formData.language}
-                    onMouseDown={() => setOpenSelect("language")}
-                    onChange={(e) => {
-                      handleChange(e);
-                      setOpenSelect(null);
-                    }}
-                    onBlur={() => setOpenSelect(null)}
-                  >
-                    {LANGUAGES.map((l) => (
-                      <option key={l} value={l}>
-                        {l}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+      {/* Desktop: channel tabs always visible */}
+      {renderChannelTabs("sms-tabs-desktop")}
 
-              {activeChannel === "email" && (
-                <div className="col-12">
-                  <label className="form-label">Subject</label>
+      {/* Mobile top: List | Create Template | Preview */}
+      <div className="sms-mobile-mode-tabs" role="tablist" aria-label="Mobile sections">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mobileMode === "list"}
+          className={`sms-mobile-mode-tab ${mobileMode === "list" ? "active" : ""}`}
+          onClick={() => setMobileMode("list")}
+        >
+          <FiList size={16} />
+          <span>List</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mobileMode === "create"}
+          className={`sms-mobile-mode-tab ${mobileMode === "create" ? "active" : ""}`}
+          onClick={() => setMobileMode("create")}
+        >
+          {editingId ? <FiEdit3 size={16} /> : <FiPlus size={16} />}
+          <span>{editingId ? "Edit" : "Create"}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mobileMode === "preview"}
+          className={`sms-mobile-mode-tab ${mobileMode === "preview" ? "active" : ""}`}
+          onClick={() => setMobileMode("preview")}
+        >
+          <FiEye size={16} />
+          <span>Preview</span>
+        </button>
+      </div>
+
+      {/* Mobile: channel tabs for List + Preview */}
+      {renderChannelTabs("sms-tabs-mobile-channels")}
+
+      <div className="sms-workspace">
+        <div className="sms-workspace-body">
+          <div className="sms-form-card">
+            <div className="sms-form-card-head">
+              <div>
+                <h4>
+                  {editingId ? (
+                    <>
+                      <FiEdit3 size={16} className="me-1" />
+                      Edit {channelTitle(activeChannel)} Template
+                    </>
+                  ) : (
+                    <>Create {channelTitle(activeChannel)} Template</>
+                  )}
+                </h4>
+                <p className="sms-form-hint">
+                  Use variable chips in the editor. Preview updates instantly on the right.
+                </p>
+              </div>
+              {editingId ? <span className="sms-edit-badge">Editing</span> : null}
+            </div>
+
+            <form noValidate onSubmit={handleSubmit}>
+              <div className="row g-3">
+                <div className="col-12 sms-mobile-channel-field">
+                  <label className="form-label">Channel</label>
+                  <select
+                    className="form-select"
+                    value={activeChannel}
+                    onChange={(e) => handleChannelChange(e.target.value)}
+                  >
+                    {CHANNELS.map((ch) => (
+                      <option key={ch.id} value={ch.id}>
+                        {ch.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-12 col-md-4">
+                  <label className="form-label">Template Name</label>
                   <input
                     type="text"
-                    name="subject"
+                    name="name"
                     className="form-control"
-                    placeholder="Email subject"
-                    value={formData.subject}
+                    placeholder="e.g. welcome_message_v2"
+                    value={formData.name}
                     onChange={handleChange}
                   />
+                  <small className="sms-field-hint">Saved as lowercase with underscores</small>
                 </div>
-              )}
+                <div className="col-12 col-md-4">
+                  <label className="form-label">Category</label>
+                  <div className={`sms-select-wrap ${openSelect === "category" ? "is-open" : ""}`}>
+                    <select
+                      name="category"
+                      className="form-select"
+                      value={formData.category}
+                      onMouseDown={() => setOpenSelect("category")}
+                      onChange={(e) => {
+                        handleChange(e);
+                        setOpenSelect(null);
+                      }}
+                      onBlur={() => setOpenSelect(null)}
+                    >
+                      {CATEGORIES.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="col-12 col-md-4">
+                  <label className="form-label">Language</label>
+                  <div className={`sms-select-wrap ${openSelect === "language" ? "is-open" : ""}`}>
+                    <select
+                      name="language"
+                      className="form-select"
+                      value={formData.language}
+                      onMouseDown={() => setOpenSelect("language")}
+                      onChange={(e) => {
+                        handleChange(e);
+                        setOpenSelect(null);
+                      }}
+                      onBlur={() => setOpenSelect(null)}
+                    >
+                      {LANGUAGES.map((l) => (
+                        <option key={l} value={l}>
+                          {l}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
 
-              <div className="col-12">
-                <label className="form-label">Message Body</label>
-                <MessageBodyEditor
-                  value={formData.body}
-                  onChange={handleBodyChange}
-                  variables={VARIABLES}
-                  placeholder="Write your message template..."
-                />
-                {activeChannel === "sms" && (
-                  <div className="sms-char-count">
-                    {stripHtml(formData.body).length} / 160 characters
-                    {stripHtml(formData.body).length > 160
-                      ? ` · ${Math.ceil(stripHtml(formData.body).length / 160)} SMS parts`
-                      : ""}
+                {activeChannel === "email" && (
+                  <div className="col-12">
+                    <label className="form-label">Subject</label>
+                    <input
+                      type="text"
+                      name="subject"
+                      className="form-control"
+                      placeholder="Email subject line"
+                      value={formData.subject}
+                      onChange={handleChange}
+                    />
                   </div>
                 )}
+
+                <div className="col-12">
+                  <label className="form-label">Message Body</label>
+                  <MessageBodyEditor
+                    value={formData.body}
+                    onChange={handleBodyChange}
+                    variables={VARIABLES}
+                    placeholder="Write your message template..."
+                  />
+                  {activeChannel === "sms" ? (
+                    <div className={`sms-char-count ${bodyLength > 160 ? "is-warn" : ""}`}>
+                      <span>{bodyLength} / 160 characters</span>
+                      {bodyLength > 160 ? <span>· {smsParts} SMS parts</span> : <span>· 1 SMS part</span>}
+                    </div>
+                  ) : (
+                    <div className="sms-char-count">
+                      {bodyLength} characters
+                    </div>
+                  )}
+                </div>
               </div>
+
+              <div className="sms-form-actions">
+                <button type="button" className="btn btn-sms-discard" onClick={handleDiscard}>
+                  Discard
+                </button>
+                <button type="submit" className="btn btn-sms-save">
+                  {editingId ? "Update Template" : "Create Template"}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <aside className="sms-preview-panel">
+            <div className="sms-preview-panel-head">
+              <div>
+                <h5>Live Preview</h5>
+                <p>How your {channelTitle(activeChannel).toLowerCase()} will look to customers</p>
+              </div>
+              <span className="sms-preview-channel-pill">{channelTitle(activeChannel)}</span>
             </div>
 
-            <div className="sms-form-actions">
-              <button type="button" className="btn btn-sms-discard" onClick={handleDiscard}>
-                Discard Changes
-              </button>
-              <button type="submit" className="btn btn-sms-save">
-                Save Template
-              </button>
+            <div className="sms-preview-wrap">
+              <TemplatePreview
+                channel={activeChannel}
+                body={formData.body}
+                subject={formData.subject}
+                firmName={firmName}
+              />
             </div>
-          </form>
-        </div>
-
-        <div className="sms-preview-wrap">
-          <TemplatePreview
-            channel={activeChannel}
-            body={formData.body}
-            subject={formData.subject}
-            firmName={firmName}
-          />
+          </aside>
         </div>
       </div>
 
-      <div className="card shadow-sm border-0 border-md-1 border-secondary">
+      <div className="sms-list-card card shadow-sm border-0 border-md-1 border-secondary">
         <List
           data={filteredTemplates}
           columns={columns}
@@ -422,6 +519,7 @@ const SmsPage = () => {
           hasEdit={true}
           onEdit={handleEdit}
           showFooter={false}
+          showSearch={false}
           deleteConfirmMessage={(row) =>
             `Are you sure you want to delete template "${row?.name}"?`
           }
