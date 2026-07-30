@@ -1,5 +1,16 @@
 import React from "react";
-import { FiMoreVertical, FiPhone, FiVideo, FiPaperclip, FiMic, FiSend } from "react-icons/fi";
+import {
+  FiArrowLeft,
+  FiBattery,
+  FiMoreVertical,
+  FiPhone,
+  FiVideo,
+  FiPaperclip,
+  FiMic,
+  FiSend,
+  FiWifi,
+  FiBarChart2,
+} from "react-icons/fi";
 import { plainToHtml, stripHtml } from "./MessageBodyEditor";
 
 const SAMPLE_VARS = {
@@ -16,35 +27,54 @@ const PreviewHtml = ({ body, emptyText }) => {
   const hasText = stripHtml(html).trim().length > 0;
 
   if (!hasText) {
-    return <>{emptyText}</>;
+    return <span className="sms-preview-empty">{emptyText}</span>;
   }
 
   return <div className="sms-preview-html" dangerouslySetInnerHTML={{ __html: html }} />;
 };
 
-const PhoneShell = ({ children, screenClassName = "" }) => (
+const StatusBar = () => (
+  <div className="sms-status-bar">
+    <span>9:41</span>
+    <div className="sms-status-bar-icons">
+      <FiBarChart2 size={10} />
+      <FiWifi size={10} />
+      <FiBattery size={12} />
+    </div>
+  </div>
+);
+
+const PhoneShell = ({ children, screenClassName = "", channelLabel }) => (
   <div className="sms-phone" aria-hidden="true">
-    <div className="sms-phone-notch" />
-    <div className={`sms-phone-screen ${screenClassName}`}>{children}</div>
+    <div className="sms-phone-bezel">
+      <div className="sms-phone-notch" />
+      <div className={`sms-phone-screen ${screenClassName}`}>
+        <StatusBar />
+        {children}
+      </div>
+    </div>
+    {channelLabel ? <div className="sms-phone-caption">{channelLabel}</div> : null}
   </div>
 );
 
 const WhatsAppPreview = ({ body, firmName }) => (
-  <PhoneShell>
+  <PhoneShell channelLabel="WhatsApp preview">
     <div className="wa-header">
+      <FiArrowLeft size={14} />
       <div className="wa-avatar">{(firmName || "AC").slice(0, 2).toUpperCase()}</div>
       <div className="wa-header-meta">
         <strong>{firmName || "Acme Corp"}</strong>
         <span>online</span>
       </div>
-      <FiVideo size={16} />
-      <FiPhone size={16} />
-      <FiMoreVertical size={16} />
+      <FiVideo size={14} />
+      <FiPhone size={14} />
+      <FiMoreVertical size={14} />
     </div>
     <div className="wa-chat">
+      <div className="wa-date-chip">Today</div>
       <div className="wa-bubble">
-        <PreviewHtml body={body} emptyText="Your message preview will appear here." />
-        <span className="wa-time">Today 9:15 AM</span>
+        <PreviewHtml body={body} emptyText="Start typing to preview your WhatsApp message…" />
+        <span className="wa-time">9:15 AM ✓✓</span>
       </div>
     </div>
     <div className="wa-composer">
@@ -58,41 +88,55 @@ const WhatsAppPreview = ({ body, firmName }) => (
 );
 
 const SmsPreview = ({ body, firmName }) => (
-  <PhoneShell screenClassName="sms-imessage">
+  <PhoneShell screenClassName="sms-imessage" channelLabel="SMS preview">
     <div className="im-header">
-      <strong>{firmName || "Acme Corp"}</strong>
-      <span>Text Message · iMessage</span>
+      <FiArrowLeft size={14} className="im-back" />
+      <div className="im-header-center">
+        <div className="im-avatar">{(firmName || "AC").slice(0, 1).toUpperCase()}</div>
+        <strong>{firmName || "Acme Corp"}</strong>
+        <span>Text Message</span>
+      </div>
     </div>
     <div className="im-chat">
       <div className="im-bubble">
-        <PreviewHtml body={body} emptyText="Your SMS preview will appear here." />
+        <PreviewHtml body={body} emptyText="Start typing to preview your SMS…" />
       </div>
     </div>
     <div className="im-composer">
-      <div className="im-composer-input">iMessage</div>
-      <FiSend size={14} color="#007aff" />
+      <div className="im-composer-input">Text Message</div>
+      <div className="im-send">
+        <FiSend size={12} />
+      </div>
     </div>
   </PhoneShell>
 );
 
 const EmailPreview = ({ body, subject, firmName }) => (
-  <PhoneShell screenClassName="email-preview">
+  <PhoneShell screenClassName="email-preview" channelLabel="Email preview">
     <div className="email-header">
-      <strong>Inbox</strong>
+      <div className="email-toolbar">
+        <FiArrowLeft size={14} />
+        <strong>Inbox</strong>
+      </div>
       <div className="email-meta">
         <div>
-          <b>From:</b> {firmName || "Acme Corp"} &lt;noreply@acme.com&gt;
+          <b>From</b>
+          <span>
+            {firmName || "Acme Corp"} &lt;noreply@firm.com&gt;
+          </span>
         </div>
         <div>
-          <b>To:</b> jane.doe@email.com
+          <b>To</b>
+          <span>jane.doe@email.com</span>
         </div>
         <div>
-          <b>Subject:</b> {subject || "Welcome to Acme Corp"}
+          <b>Subject</b>
+          <span>{subject?.trim() || "Your email subject"}</span>
         </div>
       </div>
     </div>
     <div className="email-body">
-      <PreviewHtml body={body} emptyText="Your email preview will appear here." />
+      <PreviewHtml body={body} emptyText="Start typing to preview your email…" />
     </div>
   </PhoneShell>
 );

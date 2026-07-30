@@ -102,6 +102,7 @@
   --layout-time-text: #64748b;
   --success: #5cb8a5;
   --success-alt: #6ee7b7;
+  --layout-brand: #ffffff;
   --light: #252540;
   --layout-sidebar-border: #2d2d44;
   --layout-sidebar-active-bg: rgba(92, 174, 157, 0.18);
@@ -173,15 +174,41 @@
   color: var(--app-text);
 }
 
-/* Bootstrap btn-close uses a dark SVG — invert so it shows on dark sidebar */
-[data-theme="dark"] .sidebar .btn-close {
-  --bs-btn-close-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e");
-  filter: none;
-  opacity: 0.9;
+[data-theme="dark"] .bottom-nav {
+  background: var(--layout-header-bg);
+  border-top-color: var(--layout-header-border);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.35);
 }
 
-[data-theme="dark"] .sidebar .btn-close:hover {
-  opacity: 1;
+[data-theme="dark"] .bottom-nav-item {
+  color: var(--layout-muted-text);
+}
+
+[data-theme="dark"] .bottom-nav-item.active {
+  color: #ffffff;
+  background: var(--layout-sidebar-active-bg);
+}
+
+/*
+ * Bootstrap btn-close is a black SVG; app uses data-theme (not data-bs-theme),
+ * so Bootstrap's dark invert never runs — force a light icon on dark surfaces.
+ */
+[data-theme="dark"] .btn-close {
+  --bs-btn-close-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23e5e7eb'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e");
+  --bs-btn-close-opacity: 0.9;
+  --bs-btn-close-hover-opacity: 1;
+  --bs-btn-close-focus-opacity: 1;
+  filter: none;
+  opacity: var(--bs-btn-close-opacity);
+}
+
+[data-theme="dark"] .btn-close:hover,
+[data-theme="dark"] .btn-close:focus {
+  opacity: var(--bs-btn-close-hover-opacity);
+}
+
+[data-theme="dark"] .btn-close.btn-close-white {
+  filter: none;
 }
 
 [data-theme="dark"] .card,
@@ -254,8 +281,11 @@
 }
 
 [data-theme="dark"] .logo-title,
-[data-theme="dark"] .logo-title h1 {
-  color: var(--color-black);
+[data-theme="dark"] .logo-title h1,
+[data-theme="dark"] .sidebar-brand,
+[data-theme="dark"] .sidebar-brand h1,
+[data-theme="dark"] .sidebar-brand svg {
+  color: #ffffff;
 }
 
 [data-theme="dark"] .btn-outline-secondary {

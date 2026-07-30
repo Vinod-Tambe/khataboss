@@ -9,6 +9,7 @@ import reportWebVitals from './reportWebVitals';
 
 const savedTheme = localStorage.getItem('theme') || 'light';
 document.documentElement.setAttribute('data-theme', savedTheme);
+document.documentElement.setAttribute('data-bs-theme', savedTheme);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 

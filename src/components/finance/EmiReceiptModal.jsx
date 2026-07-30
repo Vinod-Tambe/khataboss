@@ -1,18 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import CommonModal from '../common/CommonModal';
 import moment from 'moment';
 import '../../css/Modal.css';
+import '../../css/Finance.css';
+import {
+    downloadEmiReceiptPdf,
+    getEmiReceiptPdfBlob,
+    getEmiReceiptShareText,
+    getEmiReceiptFileName,
+} from './downloadEmiReceiptPdf';
 
 const EmiReceiptModal = ({ show, onHide, emiData, initialFinance }) => {
+    const [sharing, setSharing] = useState(false);
+
+    const receiptOptions = { emiData, initialFinance };
 
     const handlePrint = () => {
-        const content = document.getElementById('receipt-print-area').outerHTML;
+        const content = document.getElementById('emi-receipt-print-area')?.outerHTML;
+        if (!content) return;
+
         const iframe = document.createElement('iframe');
         iframe.style.display = 'none';
         document.body.appendChild(iframe);
 
         iframe.contentDocument.write('<html><head><title>Print Receipt</title>');
-        // Clone all stylesheets and style blocks from the parent window
         const styles = document.querySelectorAll('style, link[rel="stylesheet"]');
         styles.forEach(style => {
             iframe.contentDocument.head.appendChild(style.cloneNode(true));
@@ -22,7 +33,6 @@ const EmiReceiptModal = ({ show, onHide, emiData, initialFinance }) => {
         iframe.contentDocument.write('</body></html>');
         iframe.contentDocument.close();
 
-        // Wait for styles to load then print
         setTimeout(() => {
             iframe.contentWindow.focus();
             iframe.contentWindow.print();
@@ -32,18 +42,51 @@ const EmiReceiptModal = ({ show, onHide, emiData, initialFinance }) => {
         }, 500);
     };
 
+    const handleDownloadPdf = () => {
+        if (!emiData) return;
+        downloadEmiReceiptPdf(receiptOptions);
+    };
+
+    const handleWhatsAppShare = async () => {
+        if (!emiData) return;
+        setSharing(true);
+        const shareText = getEmiReceiptShareText(receiptOptions);
+        const fileName = getEmiReceiptFileName(emiData);
+
+        try {
+            const blob = await getEmiReceiptPdfBlob(receiptOptions);
+            const file = new File([blob], fileName, { type: 'application/pdf' });
+
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    files: [file],
+                    title: 'Finance Payment Receipt',
+                    text: shareText,
+                });
+                setSharing(false);
+                return;
+            }
+        } catch (error) {
+            console.error('WhatsApp share failed:', error);
+        } finally {
+            setSharing(false);
+        }
+
+        window.open(
+            `https://wa.me/?text=${encodeURIComponent(shareText)}`,
+            '_blank',
+            'noopener,noreferrer'
+        );
+    };
+
     if (!emiData) return null;
 
     const customerName = initialFinance?.user?.user_first_name
         ? `${initialFinance.user.user_first_name} ${initialFinance.user.user_last_name || ''}`
         : 'N/A';
 
-    // Fallbacks if data missing
     const regNo = initialFinance?.fin_id || 'N/A';
     const firmName = initialFinance?.firm?.firm_name || 'TAHLKA FINANCE & COMPANY';
-    // const firmAddress = initialFinance?.firm?.firm_address || '';
-
-    // Calculate total amount based on principal and EMI count, or just use what's available
     const depositAmt = initialFinance?.fin_prin_amt || 0;
     const remAmt = emiData.ft_pending_amt || 0;
 
@@ -55,7 +98,11 @@ const EmiReceiptModal = ({ show, onHide, emiData, initialFinance }) => {
             size="md"
         >
             <div className="p-3 bg-light">
-                <div id="receipt-print-area" className="bg-white emi-receipt-print-box" style={{ border: '1px solid #dee2e6', borderRadius: '4px', maxWidth: '500px', margin: '0 auto' }}>
+                <div
+                    id="emi-receipt-print-area"
+                    className="bg-white emi-receipt-print-box"
+                    style={{ border: '1px solid #dee2e6', borderRadius: '4px', maxWidth: '500px', margin: '0 auto' }}
+                >
                     <div className="text-center mt-4 mb-2">
                         <h5 className="fw-bold text-uppercase mb-0">{firmName}</h5>
                     </div>
@@ -101,7 +148,7 @@ const EmiReceiptModal = ({ show, onHide, emiData, initialFinance }) => {
                                 </tr>
                                 <tr>
                                     <th className="fw-bold text-dark">EMI No :</th>
-                                    <td className="text-dark">{emiData.ft_emi_no}</td>
+                                    <td className="text-dark">{emiData.ft_emi_no == null || emiData.ft_emi_no === '' ? '-' : `EMI-${String(emiData.ft_emi_no).replace(/^emi[-\s]?/i, '')}`}</td>
                                 </tr>
                                 <tr>
                                     <th className="fw-bold text-dark">EMI Amt :</th>
@@ -116,14 +163,35 @@ const EmiReceiptModal = ({ show, onHide, emiData, initialFinance }) => {
                     </div>
                 </div>
 
-                <div className="d-flex justify-content-center gap-3 mt-4 mb-2">
-                    <button className="btn btn-outline-primary px-4 py-1 d-flex align-items-center rounded" onClick={handlePrint}>
+                <div className="emi-receipt-actions d-flex flex-wrap justify-content-center gap-2 mt-4 mb-2">
+                    <button
+                        type="button"
+                        className="btn btn-outline-primary px-3 py-2 d-flex align-items-center rounded"
+                        onClick={handlePrint}
+                    >
                         <i className="bi bi-printer me-2"></i> Print
                     </button>
-                    <button className="btn btn-outline-success px-4 py-1 d-flex align-items-center rounded">
-                        <i className="bi bi-whatsapp me-2"></i> WhatsApp
+                    <button
+                        type="button"
+                        className="btn btn-outline-danger px-3 py-2 d-flex align-items-center rounded"
+                        onClick={handleDownloadPdf}
+                    >
+                        <i className="bi bi-filetype-pdf me-2"></i> PDF
                     </button>
-                    <button className="btn btn-secondary px-4 py-1 d-flex align-items-center rounded" onClick={onHide}>
+                    <button
+                        type="button"
+                        className="btn btn-outline-success px-3 py-2 d-flex align-items-center rounded"
+                        onClick={handleWhatsAppShare}
+                        disabled={sharing}
+                    >
+                        <i className="bi bi-whatsapp me-2"></i>
+                        {sharing ? 'Sharing...' : 'WhatsApp'}
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-secondary px-3 py-2 d-flex align-items-center rounded"
+                        onClick={onHide}
+                    >
                         <i className="bi bi-x-circle me-2"></i> Close
                     </button>
                 </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
+import { Offcanvas } from "bootstrap";
 import PerfectScrollbar from "perfect-scrollbar";
 import "perfect-scrollbar/css/perfect-scrollbar.css";
 import { NavLink } from "react-router-dom";
@@ -24,16 +25,22 @@ import {
   FiAward,
 } from "react-icons/fi";
 import { FaBook, FaBookOpen, FaBalanceScale } from "react-icons/fa";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../store/slices/authSlice";
+import { setSelectedFirmId } from "../store/slices/firmSlice";
 
 const Sidebar = () => {
   const [openSubmenus, setOpenSubmenus] = useState({});
   const dispatch = useDispatch();
+  const { firms, selectedFirmId } = useSelector((state) => state.firm);
 
   const handleLogout = (e) => {
     e.preventDefault();
     dispatch(logout());
+  };
+
+  const handleFirmChange = (e) => {
+    dispatch(setSelectedFirmId(e.target.value));
   };
 
   useEffect(() => {
@@ -157,31 +164,47 @@ const Sidebar = () => {
     { id: "logout", label: "Sign Out", icon: <FiLogOut />, path: "/logout" },
   ];
 
+  const closeSidebarOnMobile = () => {
+    if (window.innerWidth >= 992) return;
+    const el = document.getElementById("sidebar");
+    if (!el) return;
+    const instance = Offcanvas.getInstance(el);
+    if (instance) instance.hide();
+  };
+
   return (
-    <div className="offcanvas offcanvas-start sidebar" id="sidebar">
+    <div className="offcanvas offcanvas-start sidebar" id="sidebar" tabIndex={-1}>
       <div className="offcanvas-body p-0 d-flex flex-column">
         {/* Fixed Logo/Header */}
         <div className="sidebar-profile sidebar-menu-border">
-          <FaBookOpen size={40} />
-          <div>
-            <h1 className="fw-bold fs-4 mb-0">KhataBoss</h1>
+          <div className="sidebar-brand">
+            <FaBookOpen size={36} />
+            <div>
+              <h1 className="fw-bold fs-4 mb-0">KhataBoss</h1>
+            </div>
           </div>
-          <div className="offcanvas-header d-lg-none ms-auto">
-            <button
-              type="button"
-              className="btn-close"
-              data-bs-dismiss="offcanvas"
-              aria-label="Close"
-            ></button>
-          </div>
+          <button
+            type="button"
+            className="btn-close sidebar-close-btn d-lg-none"
+            data-bs-dismiss="offcanvas"
+            aria-label="Close"
+          ></button>
         </div>
 
         {/* Scrollable Menu */}
-        <div className="flex-grow-1 overflow-hidden">
-          <select class="form-select ps-5 bg-secondary-subtle p-2 cursor-pointer border-secondary d-block d-lg-none" aria-label="Default select example">
-            <option value="1">Ram</option>
-            <option value="2">Two</option>
-            <option value="3">Three</option>
+        <div className="flex-grow-1 overflow-hidden d-flex flex-column">
+          <select
+            className="form-select sidebar-firm-select bg-secondary-subtle p-2 cursor-pointer border-secondary d-block d-lg-none"
+            aria-label="Firm selection"
+            value={selectedFirmId}
+            onChange={handleFirmChange}
+          >
+            <option value="all">All Firm</option>
+            {firms.map((firm) => (
+              <option key={firm.firm_id} value={firm.firm_id}>
+                {firm.firm_name}
+              </option>
+            ))}
           </select>
           <div id="sidebar-menu-scroll" className="h-100">
             <ul className="sidebar-menu">
@@ -208,6 +231,7 @@ const Sidebar = () => {
                               className={({ isActive }) =>
                                 isActive ? "active sub-active" : ""
                               }
+                              onClick={closeSidebarOnMobile}
                             >
                               {sub.icon && <span className="sub-icon me-3">{sub.icon}</span>}
                               <span>{sub.label}</span>
@@ -220,7 +244,10 @@ const Sidebar = () => {
                     <NavLink
                       to={item.path}
                       className={({ isActive }) => (isActive ? "active" : "")}
-                      onClick={item.id === "logout" ? handleLogout : undefined}
+                      onClick={(e) => {
+                        if (item.id === "logout") handleLogout(e);
+                        closeSidebarOnMobile();
+                      }}
                     >
                       {item.icon}
                       <span>{item.label}</span>
