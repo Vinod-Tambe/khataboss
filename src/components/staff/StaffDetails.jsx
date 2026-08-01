@@ -192,7 +192,7 @@ const StaffDetails = () => {
     };
 
     return (
-        <div className="" style={{ minHeight: '100vh' }}>
+        <div className="staff-details-page pb-2 pb-md-0">
             <style>
                 {`
           .custom-checkbox {
@@ -244,6 +244,121 @@ const StaffDetails = () => {
           .user-details-card h6.text-secondary {
             margin-bottom: 0.75rem !important;
           }
+          .staff-detail-tabs-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            margin-left: -4px;
+            margin-right: -4px;
+            padding-left: 4px;
+            padding-right: 4px;
+          }
+          .staff-detail-tabs-wrap::-webkit-scrollbar {
+            display: none;
+          }
+          .staff-detail-tabs {
+            flex-wrap: nowrap !important;
+            width: max-content;
+            min-width: 100%;
+          }
+          .staff-detail-tabs .nav-item {
+            flex-shrink: 0;
+          }
+          .staff-detail-tabs .nav-link {
+            white-space: nowrap;
+            font-size: 0.8rem;
+          }
+          @media (min-width: 768px) {
+            .staff-profile-sidebar {
+              align-items: center !important;
+              text-align: center !important;
+            }
+            .staff-profile-actions {
+              width: 100%;
+            }
+            .staff-profile-status {
+              width: 100%;
+              text-align: center;
+              margin-top: 0.75rem;
+            }
+            .staff-profile-status .form-label {
+              display: block;
+              margin-bottom: 0.35rem;
+            }
+            .staff-profile-status .form-check {
+              justify-content: center;
+            }
+          }
+          @media (max-width: 767.98px) {
+            .staff-profile-sidebar {
+              width: 100% !important;
+              flex-direction: column !important;
+              align-items: center !important;
+              text-align: center !important;
+              gap: 0;
+              padding-bottom: 1rem;
+              margin-bottom: 0.75rem !important;
+              border-bottom: 1px solid #eef0f2;
+            }
+            .staff-profile-avatar {
+              width: 96px !important;
+              height: 96px !important;
+              flex-shrink: 0;
+              margin-bottom: 0.75rem;
+            }
+            .staff-profile-actions {
+              width: 100%;
+              max-width: 220px;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              margin-bottom: 0.25rem;
+            }
+            .staff-profile-actions .btn {
+              width: 100%;
+              font-size: 0.8125rem;
+              padding: 0.45rem 0.75rem;
+              border-radius: 8px;
+            }
+            .staff-profile-status {
+              margin-top: 1rem !important;
+              max-width: 220px;
+              text-align: center !important;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 0.5rem;
+              width: 100%;
+            }
+            .staff-profile-status .form-label {
+              margin-bottom: 0 !important;
+            }
+            .staff-profile-status .form-check {
+              justify-content: center !important;
+            }
+            .staff-details-tab-content {
+              min-height: auto !important;
+            }
+            .staff-details-save-row {
+              position: sticky;
+              bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+              background: #fff;
+              margin-left: -0.75rem;
+              margin-right: -0.75rem;
+              padding: 0.75rem;
+              z-index: 10;
+              box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+            }
+            .staff-permissions-header {
+              flex-direction: column;
+              align-items: flex-start !important;
+              gap: 0.5rem;
+            }
+            .staff-permission-section-head {
+              flex-wrap: wrap;
+              gap: 0.35rem;
+            }
+          }
         `}
             </style>
 
@@ -262,16 +377,17 @@ const StaffDetails = () => {
 
                             <div className="row g-4">
                                 {/* Left Side: Profile Image */}
-                                <div className="col-12 col-md-auto text-center text-md-start mb-3 mb-md-0 d-flex flex-column align-items-center" style={{ width: '150px' }}>
-                                    <div className="bg-light rounded p-2 d-inline-block position-relative" style={{ width: '130px', height: '130px' }}>
+                                <div className="col-12 col-md-auto text-center mb-3 mb-md-0 d-flex flex-column align-items-center staff-profile-sidebar" style={{ width: '150px' }}>
+                                    <div className="bg-light rounded p-2 d-inline-block position-relative staff-profile-avatar" style={{ width: '130px', height: '130px' }}>
                                         <img
                                             src={userData.image}
                                             alt={userData.firstName}
                                             className="rounded object-fit-cover w-100 h-100"
                                         />
                                     </div>
-                                    <div className="mt-2 w-100">
-                                        <label className="btn btn-sm btn-outline-secondary w-100 fw-bold">
+                                    <div className="mt-2 mt-md-2 w-100 staff-profile-actions">
+                                        <label className="btn btn-sm btn-outline-secondary w-100 fw-bold staff-change-photo-btn">
+                                            <i className="bi bi-camera me-1 d-md-none"></i>
                                             Change Photo
                                             <input
                                                 type="file"
@@ -290,8 +406,8 @@ const StaffDetails = () => {
                                             />
                                         </label>
                                     </div>
-                                    <div className="mt-3 w-100 text-center">
-                                        <label className="form-label text-muted small fw-bold mb-1 d-block">Status</label>
+                                    <div className="mt-3 w-100 staff-profile-status">
+                                        <label className="form-label text-muted small fw-bold mb-1">Status</label>
                                         <div className="form-check form-switch d-flex justify-content-center m-0 p-0">
                                             <input
                                                 className="form-check-input custom-switch m-0"
@@ -306,7 +422,8 @@ const StaffDetails = () => {
 
                                 {/* Right Side: Tabbed Forms */}
                                 <div className="col">
-                                    <ul className="nav nav-pills mb-3 gap-1 bg-light p-1 rounded" style={{ width: 'fit-content' }}>
+                                    <div className="staff-detail-tabs-wrap mb-3">
+                                    <ul className="nav nav-pills gap-1 bg-light p-1 rounded staff-detail-tabs d-flex">
                                         <li className="nav-item">
                                             <button
                                                 type="button"
@@ -362,8 +479,9 @@ const StaffDetails = () => {
                                             </button>
                                         </li>
                                     </ul>
+                                    </div>
 
-                                    <div className="tab-content pt-2" style={{ minHeight: '230px' }}>
+                                    <div className="tab-content pt-2 staff-details-tab-content" style={{ minHeight: '230px' }}>
                                         {activeDetailTab === 'personal' && (
                                             <div className="row g-3">
                                                 <div className="col-12 col-md-6 col-lg-4">
@@ -582,8 +700,8 @@ const StaffDetails = () => {
                                 </div>
                             </div>
 
-                            <div className="d-flex justify-content-end mt-4 border-top pt-3">
-                                <button type="button" className="btn btn-success px-4 fw-bold" onClick={handleSaveProfileDetails}>
+                            <div className="d-flex justify-content-end mt-4 border-top pt-3 staff-details-save-row">
+                                <button type="button" className="btn btn-success px-4 fw-bold w-100 w-md-auto" onClick={handleSaveProfileDetails}>
                                     <i className="bi bi-save me-2"></i>Save Details
                                 </button>
                             </div>
@@ -650,7 +768,7 @@ const StaffDetails = () => {
             {/* Permissions Section */}
             <div className="card border-0 mb-3 bg-white mx-auto user-details-card" style={{ borderRadius: '12px' }}>
                 <div className="card-body p-3 p-md-4">
-                    <div className="d-flex align-items-center justify-content-between mb-3 pb-2 card-header-line">
+                    <div className="d-flex align-items-center justify-content-between mb-3 pb-2 card-header-line staff-permissions-header">
                         <h5 className="fw-bold mb-0 text-brown d-flex align-items-center">
                             <i className="bi bi-shield-check-fill me-2"></i> Permissions & Roles
                         </h5>
@@ -670,7 +788,7 @@ const StaffDetails = () => {
                     <div className="d-flex flex-column gap-3 mt-3">
                         {/* Firm access */}
                         <div className="border rounded p-2 bg-light bg-opacity-25">
-                            <div className="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-light-subtle">
+                            <div className="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-light-subtle staff-permission-section-head">
                                 <p className="fw-bold mb-1 small text-secondary d-flex align-items-center">
                                     <i className="bi bi-building-fill me-2"></i> Firm access :
                                 </p>
@@ -709,7 +827,7 @@ const StaffDetails = () => {
 
                         {/* Account access */}
                         <div className="border rounded p-2 bg-light bg-opacity-25">
-                            <div className="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-light-subtle">
+                            <div className="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-light-subtle staff-permission-section-head">
                                 <p className="fw-bold mb-1 small text-secondary d-flex align-items-center">
                                     <i className="bi bi-wallet2 me-2"></i> Account access :
                                 </p>
@@ -748,7 +866,7 @@ const StaffDetails = () => {
 
                         {/* Staff access */}
                         <div className="border rounded p-2 bg-light bg-opacity-25">
-                            <div className="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-light-subtle">
+                            <div className="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-light-subtle staff-permission-section-head">
                                 <p className="fw-bold mb-1 small text-secondary d-flex align-items-center">
                                     <i className="bi bi-briefcase-fill me-2"></i> Staff access :
                                 </p>
@@ -787,7 +905,7 @@ const StaffDetails = () => {
 
                         {/* Loan access */}
                         <div className="border rounded p-2 bg-light bg-opacity-25">
-                            <div className="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-light-subtle">
+                            <div className="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-light-subtle staff-permission-section-head">
                                 <p className="fw-bold mb-1 small text-secondary d-flex align-items-center">
                                     <i className="bi bi-journal-text me-2"></i> Loan access :
                                 </p>
@@ -886,7 +1004,7 @@ const StaffDetails = () => {
 
                         {/* Finance access */}
                         <div className="border rounded p-2 bg-light bg-opacity-25">
-                            <div className="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-light-subtle">
+                            <div className="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-light-subtle staff-permission-section-head">
                                 <p className="fw-bold mb-1 small text-secondary d-flex align-items-center">
                                     <i className="bi bi-cash-coin me-2"></i> Finance access :
                                 </p>
@@ -949,7 +1067,7 @@ const StaffDetails = () => {
 
                         {/* Reports & Logs */}
                         <div className="border rounded p-2 bg-light bg-opacity-25">
-                            <div className="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-light-subtle">
+                            <div className="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-light-subtle staff-permission-section-head">
                                 <p className="fw-bold mb-1 small text-secondary d-flex align-items-center">
                                     <i className="bi bi-eye-fill me-2"></i> Reports & Logs (List Only) :
                                 </p>
