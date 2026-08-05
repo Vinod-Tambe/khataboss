@@ -1,12 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { createUser } from '../../api/userApi';
+import { setSelectedUser } from '../../store/slices/userSlice';
 import DocumentUploadCard from '../common/DocumentUploadCard';
 import CommonModal from '../common/CommonModal';
 import { validateMobile, validateAadhaar } from '../../utils/validation';
 
 const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const [activeAction, setActiveAction] = useState(null);
     const [photoPreview, setPhotoPreview] = useState(null);
     const photoInputRef = useRef(null);
 
@@ -123,10 +129,21 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
         return true;
     };
 
-    const handleSubmit = async () => {
-        if (!validateForm()) return;
+    const resetForm = () => {
+        setFormData({
+            ...initialFormData,
+            firmId: (selectedFirmId && selectedFirmId !== 'all')
+                ? selectedFirmId
+                : (firms.length === 1 ? firms[0].firm_id : ''),
+        });
+        setPhotoPreview(null);
+    };
+
+    const handleSubmit = async (action = 'submit') => {
+        if (!validateForm() || loading) return;
 
         setLoading(true);
+        setActiveAction(action);
         try {
             const data = new FormData();
 
@@ -155,21 +172,34 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
             }
 
             const res = await createUser(data);
+            const createdUser = res.data || res.user || res;
             toast.success(res.message || 'User created successfully');
 
-            // Reset form
-            setFormData({
-                firstName: '', lastName: '', fatherName: '',
-                mobileNo: '', gender: 'Male', adhaarNo: '',
-                firmId: (selectedFirmId && selectedFirmId !== 'all') ? selectedFirmId : (firms.length === 1 ? firms[0].firm_id : ''),
-                currentAddress: '', photo: null
-            });
-            setPhotoPreview(null);
+            if (action === 'submit') {
+                // Only submit — keep modal open, no redirect
+                resetForm();
+                return;
+            }
+
+            if (createdUser) {
+                dispatch(setSelectedUser(createdUser));
+            }
+
             onClose();
+            resetForm();
+
+            if (action === 'home') {
+                navigate('/user/home');
+            } else if (action === 'finance') {
+                navigate('/user/home/add-finance');
+            } else if (action === 'loan') {
+                navigate('/user/home/add-loan');
+            }
         } catch (err) {
             toast.error(err.message || 'Error creating user');
         } finally {
             setLoading(false);
+            setActiveAction(null);
         }
     };
 
@@ -181,7 +211,7 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
                 title="Quick Add User"
                 size="lg"
             >
-                <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="p-3">
+                <form onSubmit={(e) => { e.preventDefault(); handleSubmit('submit'); }} className="p-3">
                     <div className="row g-2">
                         {/* Profile Image Field */}
                         <div className="col-md-2">
@@ -313,10 +343,45 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
                             />
                         </div>
 
-                        <div className="col-12 text-center mt-3">
-                            <button type="submit" className="btn btn-primary px-5 py-2 fw-bold" disabled={loading}>
-                                {loading ? 'Processing...' : 'Submit User Details'}
-                            </button>
+                        <div className="col-12 mt-3">
+                            <div className="d-flex flex-wrap justify-content-center gap-2">
+                                <button
+                                    type="button"
+                                    className="btn btn-primary px-4 py-2 fw-bold d-inline-flex align-items-center gap-1"
+                                    disabled={loading}
+                                    onClick={() => handleSubmit('submit')}
+                                >
+                                    <i className="bi bi-check2-circle"></i>
+                                    {loading && activeAction === 'submit' ? 'Processing...' : 'Submit'}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-success px-4 py-2 fw-bold d-inline-flex align-items-center gap-1"
+                                    disabled={loading}
+                                    onClick={() => handleSubmit('home')}
+                                >
+                                    <i className="bi bi-house-door"></i>
+                                    {loading && activeAction === 'home' ? 'Processing...' : 'Home'}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-warning px-4 py-2 fw-bold d-inline-flex align-items-center gap-1"
+                                    disabled={loading}
+                                    onClick={() => handleSubmit('finance')}
+                                >
+                                    <i className="bi bi-cash-stack"></i>
+                                    {loading && activeAction === 'finance' ? 'Processing...' : 'Finance'}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-secondary px-4 py-2 fw-bold d-inline-flex align-items-center gap-1"
+                                    disabled={loading}
+                                    onClick={() => handleSubmit('loan')}
+                                >
+                                    <i className="bi bi-bank"></i>
+                                    {loading && activeAction === 'loan' ? 'Processing...' : 'Loan'}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </form>

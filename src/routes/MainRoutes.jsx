@@ -17,6 +17,8 @@ import RateRoutes from '../pages/rate/RateRoutes';
 import PurityPage from '../components/purity/PurityPage';
 import SmsPage from '../components/sms/SmsPage';
 import MoneyLenderRoutes from '../pages/money-lender/MoneyLenderRoutes';
+import FinanceRoutes from '../pages/finance/FinanceRoutes';
+import LoanRoutes from '../pages/loan/LoanRoutes';
 const MainRoutes = () => {
 
   return (
@@ -31,6 +33,8 @@ const MainRoutes = () => {
               <Route path="/user/*" element={< UserRoutes />} />
               <Route path="/staff/*" element={< StaffRoutes />} />
               <Route path="/account/*" element={< AccountRoutes />} />
+              <Route path="/finance/*" element={< FinanceRoutes />} />
+              <Route path="/loan/*" element={< LoanRoutes />} />
               <Route path="/daybook" element={< DayBookRoutes />} />
               <Route path="/book" element={< BookRoutes />} />
               <Route path="/trial-balance" element={< TrialBalanceRoutes />} />

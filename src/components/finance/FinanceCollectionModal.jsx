@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import moment from 'moment';
 import $ from 'jquery';
@@ -7,16 +9,22 @@ import 'daterangepicker/daterangepicker.css';
 import useFormNavigation from '../../hooks/useFormNavigation';
 import CommonModal from '../common/CommonModal';
 import { getUsers } from '../../api/userApi';
-import { getFinanceDetails, createFinancePayment } from '../../api/financeApi';
+import { getFinances, getFinanceDetails, createFinancePayment } from '../../api/financeApi';
 import { getAccountsDropdown } from '../../api/accountApi';
+import { setSelectedUser } from '../../store/slices/userSlice';
 
 const FinanceCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) => {
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const [activeAction, setActiveAction] = useState(null);
     const [checking, setChecking] = useState(false);
+    const [loadingList, setLoadingList] = useState(false);
     const [firmId, setFirmId] = useState('');
     const [userSearch, setUserSearch] = useState('');
     const [searchResults, setSearchResults] = useState([]);
-    const [selectedUser, setSelectedUser] = useState(null);
+    const [selectedUser, setSelectedUserLocal] = useState(null);
+    const [userFinances, setUserFinances] = useState([]);
     const [financeNo, setFinanceNo] = useState('');
     const [financeInfo, setFinanceInfo] = useState(null);
     const [financeError, setFinanceError] = useState('');
@@ -53,7 +61,8 @@ const FinanceCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) =
         setFinanceInfo(null);
         setFinanceError('');
         setUserSearch('');
-        setSelectedUser(null);
+        setSelectedUserLocal(null);
+        setUserFinances([]);
         setFormData({
             fm_trans_date: new Date().toISOString().split('T')[0],
             fm_cash_amt: 0,
@@ -99,7 +108,8 @@ const FinanceCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) =
                 setFirmId(firms[0].firm_id);
             }
             // Reset state
-            setSelectedUser(null);
+            setSelectedUserLocal(null);
+            setUserFinances([]);
             setUserSearch('');
             setSearchResults([]);
             setFinanceNo('');
@@ -195,11 +205,36 @@ const FinanceCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) =
         }
     };
 
+    const fetchUserFinances = async (user) => {
+        setLoadingList(true);
+        setUserFinances([]);
+        setFinanceNo('');
+        setFinanceInfo(null);
+        setFinanceError('');
+        try {
+            const response = await getFinances({
+                firmId: firmId || undefined,
+                userId: user.user_id,
+                status: 'ACTIVE',
+            });
+            const data = Array.isArray(response) ? response : (response.data || []);
+            setUserFinances(data);
+            if (data.length === 0) {
+                setFinanceError('No active finance found for this user.');
+            }
+        } catch (err) {
+            console.error(err);
+            setFinanceError('Failed to load user finances.');
+        } finally {
+            setLoadingList(false);
+        }
+    };
+
     const handleSelectUser = (user) => {
-        setSelectedUser(user);
+        setSelectedUserLocal(user);
         setUserSearch(`${user.user_first_name} ${user.user_last_name} (${user.user_mobile_no})`);
         setSearchResults([]);
-        // Focus Finance No after selecting user
+        fetchUserFinances(user);
         setTimeout(() => {
             if (financeNoRef.current) {
                 financeNoRef.current.focus();
@@ -207,64 +242,46 @@ const FinanceCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) =
         }, 100);
     };
 
-    const handleFinanceNoKeyDown = (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            if (financeInfo) {
-                // Already found, just move focus
-                if (totalAmountRef.current) {
-                    totalAmountRef.current.focus();
-                    totalAmountRef.current.select();
-                }
-            } else {
-                // Try to find it now
-                handleFinanceNoChange(financeNo, true);
-            }
-        }
-    };
-
-    const handleFinanceNoChange = async (rawVal, shouldFocus = false) => {
-        const val = rawVal.replace(/\D/g, ''); // Keep only digits
-        setFinanceNo(val);
-        const cleanFinId = val.trim();
-        if (cleanFinId.length >= 1) {
-            setChecking(true);
-            try {
-                const res = await getFinanceDetails(cleanFinId);
-                const data = res.data || res;
-
-                if (data && data.fin_user_id === selectedUser.user_id) {
-                    const trans = data.finance_trans || [];
-                    const paid = trans.reduce((acc, curr) => acc + (parseFloat(curr.ft_paid_amt) || 0), 0);
-                    const pending = trans.reduce((acc, curr) => acc + (parseFloat(curr.ft_pending_amt) || 0), 0);
-                    const pendingEmi = trans.filter(t => t.ft_emi_status === 'PENDING').length;
-                    const partialEmi = trans.filter(t => t.ft_emi_status === 'PARTIAL').length;
-
-                    setFinanceInfo({ paid, pending, pendingEmi, partialEmi, fin_id: data.fin_id });
-                    setFinanceError('');
-
-                    // Focus Total Amount only if requested (via Enter key)
-                    if (shouldFocus) {
-                        setTimeout(() => {
-                            if (totalAmountRef.current) {
-                                totalAmountRef.current.focus();
-                                totalAmountRef.current.select();
-                            }
-                        }, 100);
-                    }
-                } else {
-                    setFinanceInfo(null);
-                    setFinanceError(data ? 'This Finance No belongs to another user.' : 'Finance No not found.');
-                }
-            } catch (err) {
-                setFinanceInfo(null);
-                setFinanceError('Finance No not found.');
-            } finally {
-                setChecking(false);
-            }
-        } else {
+    const handleFinanceSelect = async (finId, shouldFocus = true) => {
+        setFinanceNo(finId);
+        if (!finId) {
             setFinanceInfo(null);
             setFinanceError('');
+            return;
+        }
+
+        setChecking(true);
+        try {
+            const res = await getFinanceDetails(finId);
+            const data = res.data || res;
+
+            if (data && String(data.fin_user_id) === String(selectedUser?.user_id)) {
+                const trans = data.finance_trans || [];
+                const paid = trans.reduce((acc, curr) => acc + (parseFloat(curr.ft_paid_amt) || 0), 0);
+                const pending = trans.reduce((acc, curr) => acc + (parseFloat(curr.ft_pending_amt) || 0), 0);
+                const pendingEmi = trans.filter(t => t.ft_emi_status === 'PENDING').length;
+                const partialEmi = trans.filter(t => t.ft_emi_status === 'PARTIAL').length;
+
+                setFinanceInfo({ paid, pending, pendingEmi, partialEmi, fin_id: data.fin_id });
+                setFinanceError('');
+
+                if (shouldFocus) {
+                    setTimeout(() => {
+                        if (totalAmountRef.current) {
+                            totalAmountRef.current.focus();
+                            totalAmountRef.current.select();
+                        }
+                    }, 100);
+                }
+            } else {
+                setFinanceInfo(null);
+                setFinanceError(data ? 'This Finance No belongs to another user.' : 'Finance No not found.');
+            }
+        } catch (err) {
+            setFinanceInfo(null);
+            setFinanceError('Finance No not found.');
+        } finally {
+            setChecking(false);
         }
     };
 
@@ -301,9 +318,8 @@ const FinanceCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) =
         return totalDistributed > financeInfo.pending + 0.01;
     }, [totalDistributed, financeInfo]);
 
-    const handleSubmit = async (e) => {
-        if (e) e.preventDefault();
-        if (!financeInfo) return;
+    const handleSubmit = async (action = 'submit') => {
+        if (!financeInfo || loading) return;
 
         if (totalDistributed <= 0) {
             toast.error("Amount must be greater than 0");
@@ -316,6 +332,7 @@ const FinanceCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) =
         }
 
         setLoading(true);
+        setActiveAction(action);
         try {
             const payload = {
                 ...formData,
@@ -325,12 +342,32 @@ const FinanceCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) =
             };
             await createFinancePayment(payload);
             toast.success("Payment processed successfully");
+
+            if (action === 'submit') {
+                // Submit only — stay on form, no redirect
+                resetForm();
+                return;
+            }
+
+            // Submit & Go to Info
+            if (selectedUser) {
+                dispatch(setSelectedUser(selectedUser));
+            }
+            const finId = financeInfo.fin_id;
             resetForm();
             onClose();
+            try {
+                const res = await getFinanceDetails(finId);
+                const fullData = res.data || res;
+                navigate('/user/home/finance', { state: { finance: fullData } });
+            } catch {
+                navigate('/user/home/finance', { state: { finance: { fin_id: finId } } });
+            }
         } catch (err) {
             toast.error(err.message || "Failed to process payment");
         } finally {
             setLoading(false);
+            setActiveAction(null);
         }
     };
 
@@ -341,7 +378,7 @@ const FinanceCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) =
             title="Finance Collection"
             size="lg"
         >
-            <form ref={formRef} onSubmit={handleSubmit} className="p-3">
+            <form ref={formRef} onSubmit={(e) => { e.preventDefault(); handleSubmit('submit'); }} className="p-3">
                 <div className="row g-3 bg-red pb-4">
                     {/* Firm Select */}
                     <div className="col-md-4">
@@ -382,22 +419,36 @@ const FinanceCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) =
                         )}
                     </div>
 
-                    {/* Finance No */}
+                    {/* Finance No Dropdown */}
                     <div className="col-md-4">
                         <label className="form-label fw-bold small text-muted mb-1">Finance No</label>
                         <div className="input-group">
                             <span className="input-group-text border-dark bg-light fw-bold text-muted">F</span>
-                            <input
-                                type="text"
+                            <select
                                 ref={financeNoRef}
-                                className="form-control border-dark"
-                                placeholder="Finance No"
+                                className="form-select border-dark"
                                 value={financeNo}
-                                onChange={(e) => handleFinanceNoChange(e.target.value, false)}
-                                onKeyDown={handleFinanceNoKeyDown}
-                                disabled={!selectedUser}
-                            />
-                            {checking && <span className="input-group-text bg-white border-dark"><div className="spinner-border spinner-border-sm text-primary"></div></span>}
+                                onChange={(e) => handleFinanceSelect(e.target.value)}
+                                disabled={!selectedUser || loadingList}
+                            >
+                                <option value="">
+                                    {loadingList
+                                        ? 'Loading finances...'
+                                        : selectedUser
+                                            ? (userFinances.length ? 'Select Finance No' : 'No finance found')
+                                            : 'Select user first'}
+                                </option>
+                                {userFinances.map((fin) => (
+                                    <option key={fin.fin_id} value={fin.fin_id}>
+                                        {fin.fin_id} — ₹{Number(fin.fin_prin_amt || 0).toLocaleString()} ({fin.fin_status || 'ACTIVE'})
+                                    </option>
+                                ))}
+                            </select>
+                            {(checking || loadingList) && (
+                                <span className="input-group-text bg-white border-dark">
+                                    <div className="spinner-border spinner-border-sm text-primary"></div>
+                                </span>
+                            )}
                         </div>
                         {financeError && <div className="text-danger extra-small fw-bold mt-1">{financeError}</div>}
                     </div>
@@ -511,19 +562,50 @@ const FinanceCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) =
                         </div>
                     </div>
 
-                    <div className="col-12 text-center mt-3 mb-3">
-                        <button
-                            type="submit"
-                            className={`btn ${isOverLimit ? 'btn-danger' : 'btn-primary'} px-5 py-2 fw-bold`}
-                            disabled={loading || !financeInfo || totalDistributed <= 0 || isOverLimit}
-                        >
-                            {loading ? (
-                                <>
-                                    <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                                    Checking...
-                                </>
-                            ) : `Submit Payment - ₹${totalDistributed.toLocaleString()}`}
-                        </button>
+                    <div className="col-12 mt-3 mb-3">
+                        <div className="d-flex flex-wrap justify-content-center gap-2">
+                            <button
+                                type="button"
+                                className={`btn ${isOverLimit ? 'btn-danger' : 'btn-primary'} px-4 py-2 fw-bold d-inline-flex align-items-center gap-1`}
+                                disabled={loading || !financeInfo || totalDistributed <= 0 || isOverLimit}
+                                onClick={() => handleSubmit('submit')}
+                            >
+                                {loading && activeAction === 'submit' ? (
+                                    <>
+                                        <span className="spinner-border spinner-border-sm" role="status"></span>
+                                        Saving...
+                                    </>
+                                ) : (
+                                    <>
+                                        <i className="bi bi-check2-circle"></i>
+                                        Submit
+                                    </>
+                                )}
+                            </button>
+                            <button
+                                type="button"
+                                className={`btn ${isOverLimit ? 'btn-outline-danger' : 'btn-success'} px-4 py-2 fw-bold d-inline-flex align-items-center gap-1`}
+                                disabled={loading || !financeInfo || totalDistributed <= 0 || isOverLimit}
+                                onClick={() => handleSubmit('goInfo')}
+                            >
+                                {loading && activeAction === 'goInfo' ? (
+                                    <>
+                                        <span className="spinner-border spinner-border-sm" role="status"></span>
+                                        Saving...
+                                    </>
+                                ) : (
+                                    <>
+                                        <i className="bi bi-box-arrow-up-right"></i>
+                                        Submit & Go to Info
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                        {totalDistributed > 0 && (
+                            <div className="text-center text-muted small mt-2">
+                                Amount: ₹{totalDistributed.toLocaleString()}
+                            </div>
+                        )}
                     </div>
                 </div>
             </form>

@@ -287,6 +287,7 @@ const UserHome = () => {
             <div className="col-12">
               <UserHomeList
                 title="Active Finance List"
+                icon="bi-cash-stack"
                 data={financeList}
                 columns={financeColumns}
               />
@@ -298,6 +299,7 @@ const UserHome = () => {
             <div className="col-12">
               <UserHomeList
                 title="Active Loan List"
+                icon="bi-bank"
                 data={loanList}
                 columns={loanColumns}
               />
@@ -309,6 +311,7 @@ const UserHome = () => {
             <div className="col-12">
               <UserHomeList
                 title="Last Transaction"
+                icon="bi-arrow-left-right"
                 data={transactionList}
                 columns={transactionColumns}
               />

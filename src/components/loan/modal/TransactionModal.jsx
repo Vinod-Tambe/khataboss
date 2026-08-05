@@ -121,7 +121,16 @@ const TransactionModal = ({ isOpen, onClose, loanDetails, totalDueAmount, pendin
             />
           )}
           {activeTab === 'auction' && (
-            <AuctionModal isOpen={true} isTab={true} onClose={onClose} />
+            <AuctionModal
+              isOpen={true}
+              isTab={true}
+              onClose={onClose}
+              loanDetails={loanDetails}
+              totalDueAmount={totalDueAmount}
+              pendingPrincipal={pendingPrincipal}
+              pendingInterest={pendingInterest}
+              onSuccess={onSuccess}
+            />
           )}
           {activeTab === 'deposit' && (
             <DepositModal 

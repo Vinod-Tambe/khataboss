@@ -11,10 +11,13 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-const SectionPanel = ({ title, count, children }) => (
+const SectionPanel = ({ title, icon, count, children }) => (
   <div className="user-home-mobile-panel is-open">
     <div className="user-home-mobile-panel__header is-static">
-      <span className="user-home-mobile-panel__title">{title}</span>
+      <span className="user-home-mobile-panel__title d-inline-flex align-items-center gap-2">
+        {icon && <i className={`bi ${icon}`}></i>}
+        {title}
+      </span>
       <span className="user-home-mobile-panel__header-right">
         <span className="user-home-mobile-panel__count">{count}</span>
       </span>
@@ -119,7 +122,7 @@ const UserHomeMobileLists = ({
   return (
     <div className="user-home-mobile d-md-none">
       {financeList.length > 0 && (
-        <SectionPanel title="Active Finance List" count={financeList.length}>
+        <SectionPanel title="Active Finance List" icon="bi-cash-stack" count={financeList.length}>
           {financeList.map((row) => {
             const key = `finance-${row.id}`;
             return (
@@ -158,7 +161,7 @@ const UserHomeMobileLists = ({
       )}
 
       {loanList.length > 0 && (
-        <SectionPanel title="Active Loan List" count={loanList.length}>
+        <SectionPanel title="Active Loan List" icon="bi-bank" count={loanList.length}>
           {loanList.map((row) => {
             const key = `loan-${row.id}`;
             return (
@@ -197,7 +200,7 @@ const UserHomeMobileLists = ({
       )}
 
       {transactionList.length > 0 && (
-        <SectionPanel title="Last Transaction" count={transactionList.length}>
+        <SectionPanel title="Last Transaction" icon="bi-arrow-left-right" count={transactionList.length}>
           {transactionList.map((row) => {
             const key = `transaction-${row.id}`;
             const link = getTransactionLink?.(row) || {

@@ -3,13 +3,26 @@ import { Link } from 'react-router-dom'
 
 import QuickAddUserModal from '../user/QuickAddUserModal'
 import FinanceCollectionModal from '../finance/FinanceCollectionModal'
+import LoanCollectionModal from '../loan/LoanCollectionModal'
 
 const actionItems = [
+  {
+    title: "Finance Collection",
+    icon: "bi-currency-rupee",
+    color: "warning",
+    isModal: true
+  },
+  {
+    title: "Loan Collection",
+    icon: "bi-bank",
+    color: "danger",
+    isModal: true
+  },
   {
     title: "Add User",
     icon: "bi-person-plus",
     color: "success",
-     isModal: true
+    isModal: true
   },
   {
     title: "Add Staff",
@@ -22,18 +35,6 @@ const actionItems = [
     icon: "bi-building",
     color: "info",
     to: "/firm/add"
-  },
-  {
-    title: "Finance Collection",
-    icon: "bi-currency-rupee",
-    color: "warning",
-    isModal: true
-  },
-  {
-    title: "Quick Loan",
-    icon: "bi-hand-thumbs-up",
-    color: "danger",
-    to: "#"
   },
   {
     title: "Daybook",
@@ -82,12 +83,15 @@ const actionItems = [
 const ActionCards = ({ firms, selectedFirmId }) => {
   const [showModal, setShowModal] = useState(false);
   const [showFinanceModal, setShowFinanceModal] = useState(false);
+  const [showLoanModal, setShowLoanModal] = useState(false);
 
   const handleItemClick = (item) => {
     if (item.title === "Add User") {
       setShowModal(true);
     } else if (item.title === "Finance Collection") {
       setShowFinanceModal(true);
+    } else if (item.title === "Loan Collection") {
+      setShowLoanModal(true);
     }
   };
 
@@ -97,13 +101,12 @@ const ActionCards = ({ firms, selectedFirmId }) => {
         {actionItems.map((item, index) => (
           <div key={index} className="col-4 col-md-2">
 
-            {/* ✅ MODAL ITEM */}
             {item.isModal ? (
               <div
                 className="action-card border cursor-pointer"
                 onClick={(e) => {
-                  e.preventDefault();     // 🔥 stop any navigation
-                  e.stopPropagation();    // 🔥 stop bubbling
+                  e.preventDefault();
+                  e.stopPropagation();
                   handleItemClick(item);
                 }}
               >
@@ -115,12 +118,11 @@ const ActionCards = ({ firms, selectedFirmId }) => {
                 </div>
               </div>
             ) : (
-              /* ✅ NORMAL NAVIGATION */
               <Link
                 to={item.to}
                 className="action-card border"
                 onClick={(e) => {
-                  if (item.to === "#") e.preventDefault(); // avoid page jump
+                  if (item.to === "#") e.preventDefault();
                 }}
               >
                 <div className="card-content text-center">
@@ -136,7 +138,6 @@ const ActionCards = ({ firms, selectedFirmId }) => {
         ))}
       </div>
 
-      {/* ✅ MODAL */}
       <QuickAddUserModal
         show={showModal}
         onClose={() => setShowModal(false)}
@@ -150,35 +151,15 @@ const ActionCards = ({ firms, selectedFirmId }) => {
         firms={firms}
         selectedFirmId={selectedFirmId}
       />
+
+      <LoanCollectionModal
+        show={showLoanModal}
+        onClose={() => setShowLoanModal(false)}
+        firms={firms}
+        selectedFirmId={selectedFirmId}
+      />
     </>
   )
 }
 
 export default ActionCards;
-
-
-
-
-
-// const ActionCards = () => {
-//   return (
-//     <div className="row g-4 mt-1">
-//       {actionItems.map((item, index) => (
-//         <div key={index} className="col-4 col-md-2">
-//           <Link to={item.to} className="action-card border">
-//             <div className="card-content">
-//               <div 
-//                 className={`card-icon bg-${item.color}-subtle text-${item.color} rounded-circle d-flex align-items-center justify-content-center mb-1`}
-//               >
-//                 <i className={`bi ${item.icon} fs-4`}></i>
-//               </div>
-//               <p className="text-muted mb-1 fw-medium small">{item.title}</p>
-//             </div>
-//           </Link>
-//         </div>
-//       ))}
-//     </div>
-//   )
-// }
-
-// export default ActionCards

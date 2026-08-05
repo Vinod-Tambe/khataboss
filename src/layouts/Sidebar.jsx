@@ -102,6 +102,28 @@ const Sidebar = () => {
       subItems: [
         { label: "Add User", path: "/user/add", icon: <FiUserPlus /> },
         { label: "All User", path: "/user/grid", icon: <FiList /> },
+        { label: "Auction User List", path: "/user/auction-list", icon: <FiAward /> },
+      ],
+    },
+    {
+      id: "finance",
+      label: "Finance",
+      icon: <FiTrendingUp />,
+      subItems: [
+        { label: "Active Finance List", path: "/finance/active-list", icon: <FiList /> },
+        { label: "Close Finance List", path: "/finance/close-list", icon: <FiList /> },
+        { label: "Today Pending EMI", path: "/finance/today-pending-emi", icon: <FiFileText /> },
+      ],
+    },
+    {
+      id: "loan",
+      label: "Loan",
+      icon: <FiClipboard />,
+      subItems: [
+        { label: "Active Loan List", path: "/loan/active-list", icon: <FiList /> },
+        { label: "Release Loan List", path: "/loan/release-list", icon: <FiList /> },
+        { label: "Auction Loan List", path: "/loan/auction-list", icon: <FiAward /> },
+        { label: "Transfer Loan List", path: "/loan/transfer-list", icon: <FiFileText /> },
       ],
     },
     {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getFirmsDropdown } from '../../../api/firmApi';
 import { getAccountsDropdown } from '../../../api/accountApi';
+import { getMoneyLenders } from '../../../api/moneyLenderApi';
 import { transferLoan } from '../../../api/girviApi';
 import { toast } from 'react-hot-toast';
 import moment from 'moment';
@@ -8,8 +9,10 @@ import '../../../css/Modal.css';
 
 const TransferModal = ({ isOpen, onClose, isTab, loanDetails, pendingPrincipal, pendingInterest, onSuccess }) => {
   const [firms, setFirms] = useState([]);
+  const [moneyLenders, setMoneyLenders] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [activeTransferTab, setActiveTransferTab] = useState('user');
 
   const [formData, setFormData] = useState({
     transfer_date: moment().format('YYYY-MM-DD'),
@@ -17,6 +20,7 @@ const TransferModal = ({ isOpen, onClose, isTab, loanDetails, pendingPrincipal, 
     girv_roi: '',
     girv_interest_method: 'simple',
     targetFirmId: '',
+    targetMoneyLenderId: '',
     girv_packet_no: '',
     girv_locker_no: '',
     girv_cash_acc_id: '',
@@ -38,12 +42,15 @@ const TransferModal = ({ isOpen, onClose, isTab, loanDetails, pendingPrincipal, 
   useEffect(() => {
     if (isOpen) {
       if (!isTab) document.body.style.overflow = 'hidden';
+      setActiveTransferTab('user');
       fetchFirms();
-      // fetchAccounts is now triggered by targetFirmId useEffect
+      fetchMoneyLenders();
       if (loanDetails) {
         const defaultCashAmt = (pendingPrincipal || 0) + (pendingInterest || 0);
         setFormData(prev => ({
           ...prev,
+          targetFirmId: '',
+          targetMoneyLenderId: '',
           girv_prin_amt: pendingPrincipal ? pendingPrincipal.toFixed(2) : (loanDetails.girv_prin_amt || ''),
           girv_roi: loanDetails.girv_roi || '',
           girv_interest_method: loanDetails.girv_interest_method || 'simple',
@@ -69,6 +76,16 @@ const TransferModal = ({ isOpen, onClose, isTab, loanDetails, pendingPrincipal, 
     }
   };
 
+  const fetchMoneyLenders = async () => {
+    try {
+      const res = await getMoneyLenders();
+      const list = res.data || res || [];
+      setMoneyLenders(Array.isArray(list) ? list : []);
+    } catch (error) {
+      toast.error('Failed to load money lenders');
+    }
+  };
+
   const fetchAccounts = async (firmId) => {
     try {
       const idToFetch = firmId || loanDetails?.girv_firm_id || null;
@@ -87,7 +104,6 @@ const TransferModal = ({ isOpen, onClose, isTab, loanDetails, pendingPrincipal, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, formData.targetFirmId, loanDetails?.girv_firm_id]);
 
-  // Auto-select accounts on fetch
   useEffect(() => {
     if (accounts.length > 0) {
       setFormData(prev => {
@@ -152,6 +168,22 @@ const TransferModal = ({ isOpen, onClose, isTab, loanDetails, pendingPrincipal, 
     });
   };
 
+  const handleTabChange = (tab) => {
+    setActiveTransferTab(tab);
+    setFormData(prev => ({
+      ...prev,
+      targetFirmId: '',
+      targetMoneyLenderId: '',
+      girv_cash_acc_id: '',
+      girv_bank_acc_id: '',
+      girv_online_acc_id: '',
+      girv_card_acc_id: '',
+    }));
+  };
+
+  const isUserTransfer = activeTransferTab === 'user';
+  const isMoneyLenderTransfer = activeTransferTab === 'money_lender';
+
   const totalPayment = (parseFloat(formData.girv_cash_amt) || 0) +
     (parseFloat(formData.girv_bank_amt) || 0) +
     (parseFloat(formData.girv_online_amt) || 0) +
@@ -166,6 +198,8 @@ const TransferModal = ({ isOpen, onClose, isTab, loanDetails, pendingPrincipal, 
     validationError = "Transfer Amount must be greater than 0";
   } else if (!formData.targetFirmId) {
     validationError = "Please select a transfer firm.";
+  } else if (isMoneyLenderTransfer && !formData.targetMoneyLenderId) {
+    validationError = "Please select a money lender.";
   } else if (Math.abs(requiredTotal - totalPayment) > 0.01) {
     validationError = `Total Payment Modes (${totalPayment.toFixed(2)}) must equal the Transfer Amount (${requiredTotal.toFixed(2)})`;
   } else if (parseFloat(formData.girv_cash_amt) > 0 && !formData.girv_cash_acc_id) {
@@ -190,7 +224,14 @@ const TransferModal = ({ isOpen, onClose, isTab, loanDetails, pendingPrincipal, 
 
     try {
       setLoading(true);
-      await transferLoan(loanDetails.girv_uuid, formData);
+      const payload = {
+        ...formData,
+        transfer_to: isMoneyLenderTransfer ? 'money_lender' : 'firm',
+      };
+      if (isUserTransfer) {
+        payload.targetMoneyLenderId = '';
+      }
+      await transferLoan(loanDetails.girv_uuid, payload);
       toast.success('Loan transferred successfully!');
       if (onSuccess) onSuccess();
     } catch (error) {
@@ -202,9 +243,113 @@ const TransferModal = ({ isOpen, onClose, isTab, loanDetails, pendingPrincipal, 
 
   if (!isOpen) return null;
 
+  const paymentSection = (
+    <div className="row g-4">
+      <div className="col-md-8">
+        <div className="section-title">Payment Details</div>
+
+        <div className="row g-2 mb-2 align-items-end">
+          <div className="col-md-4">
+            <select name="girv_cash_acc_id" className="form-select form-select-sm border-dark" value={formData.girv_cash_acc_id} onChange={handleChange}>
+              <option value="">-- Cash Account --</option>
+              {accounts.map(a => <option key={a.acc_id} value={a.acc_id}>{a.acc_name}</option>)}
+            </select>
+          </div>
+          <div className="col-md-4">
+            <input type="text" name="girv_cash_info" className="form-control form-control-sm border-dark" placeholder="CASH INFORMATION" value={formData.girv_cash_info} onChange={handleChange} />
+          </div>
+          <div className="col-md-4">
+            <input type="number" name="girv_cash_amt" className="form-control form-control-sm border-dark" placeholder="CASH AMOUNT" value={formData.girv_cash_amt} onChange={handleChange} />
+          </div>
+        </div>
+
+        <div className="row g-2 mb-2 align-items-end">
+          <div className="col-md-4">
+            <select name="girv_bank_acc_id" className="form-select form-select-sm border-dark" value={formData.girv_bank_acc_id} onChange={handleChange}>
+              <option value="">-- Bank Account --</option>
+              {accounts.map(a => <option key={a.acc_id} value={a.acc_id}>{a.acc_name}</option>)}
+            </select>
+          </div>
+          <div className="col-md-4">
+            <input type="text" name="girv_bank_info" className="form-control form-control-sm border-dark" placeholder="BANK INFORMATION" value={formData.girv_bank_info} onChange={handleChange} />
+          </div>
+          <div className="col-md-4">
+            <input type="number" name="girv_bank_amt" className="form-control form-control-sm border-dark" placeholder="BANK AMOUNT" value={formData.girv_bank_amt} onChange={handleChange} />
+          </div>
+        </div>
+
+        <div className="row g-2 mb-2 align-items-end">
+          <div className="col-md-4">
+            <select name="girv_online_acc_id" className="form-select form-select-sm border-dark" value={formData.girv_online_acc_id} onChange={handleChange}>
+              <option value="">-- Online Account --</option>
+              {accounts.map(a => <option key={a.acc_id} value={a.acc_id}>{a.acc_name}</option>)}
+            </select>
+          </div>
+          <div className="col-md-4">
+            <input type="text" name="girv_online_info" className="form-control form-control-sm border-dark" placeholder="ONLINE INFORMATION" value={formData.girv_online_info} onChange={handleChange} />
+          </div>
+          <div className="col-md-4">
+            <input type="number" name="girv_online_amt" className="form-control form-control-sm border-dark" placeholder="ONLINE AMOUNT" value={formData.girv_online_amt} onChange={handleChange} />
+          </div>
+        </div>
+
+        <div className="row g-2 mb-2 align-items-end">
+          <div className="col-md-4">
+            <select name="girv_card_acc_id" className="form-select form-select-sm border-dark" value={formData.girv_card_acc_id} onChange={handleChange}>
+              <option value="">-- Card Account --</option>
+              {accounts.map(a => <option key={a.acc_id} value={a.acc_id}>{a.acc_name}</option>)}
+            </select>
+          </div>
+          <div className="col-md-4">
+            <input type="text" name="girv_card_info" className="form-control form-control-sm border-dark" placeholder="CARD INFORMATION" value={formData.girv_card_info} onChange={handleChange} />
+          </div>
+          <div className="col-md-4">
+            <input type="number" name="girv_card_amt" className="form-control form-control-sm border-dark" placeholder="CARD AMOUNT" value={formData.girv_card_amt} onChange={handleChange} />
+          </div>
+        </div>
+      </div>
+
+      <div className="col-md-4">
+        <div className="section-title">Other Information</div>
+        <div className="mb-2">
+          <textarea name="girv_pay_info" className="form-control border-dark" placeholder="PAYMENT OTHER INFORMATION" rows={3} value={formData.girv_pay_info} onChange={handleChange}></textarea>
+        </div>
+        <div>
+          <textarea name="girv_other_info" className="form-control border-dark" placeholder="OTHER INFORMATION" rows={3} value={formData.girv_other_info} onChange={handleChange}></textarea>
+        </div>
+      </div>
+    </div>
+  );
+
   const content = (
     <div className="custom-modal-body bg-cust-info">
-      {/* Top Section - Row 1 */}
+      {/* Tabs - top right */}
+      <div className="d-flex justify-content-end mb-3">
+        <ul className="nav nav-pills gap-1">
+          <li className="nav-item">
+            <button
+              type="button"
+              className={`nav-link py-1 px-3 d-flex align-items-center gap-1 ${isUserTransfer ? 'active' : 'text-dark'}`}
+              onClick={() => handleTabChange('user')}
+            >
+              <i className="bi bi-building"></i>
+              Firm
+            </button>
+          </li>
+          <li className="nav-item">
+            <button
+              type="button"
+              className={`nav-link py-1 px-3 d-flex align-items-center gap-1 ${isMoneyLenderTransfer ? 'active' : 'text-dark'}`}
+              onClick={() => handleTabChange('money_lender')}
+            >
+              <i className="bi bi-person-badge"></i>
+              Money Lender
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      {/* Row 1 - Loan details (same for both tabs) */}
       <div className="row g-3 mb-3">
         <div className="col-md-3">
           <label className="form-label">Transfer Date</label>
@@ -227,115 +372,72 @@ const TransferModal = ({ isOpen, onClose, isTab, loanDetails, pendingPrincipal, 
         </div>
       </div>
 
-      {/* Top Section - Row 2 */}
-      <div className="row g-3 mb-3">
-        <div className="col-md-3">
-          <label className="form-label">Existing Firm</label>
-          <input type="text" className="form-control border-dark text-center" value={loanDetails?.firm?.firm_name || ''} readOnly disabled />
-        </div>
-        <div className="col-md-3">
-          <label className="form-label">Transfer Firm</label>
-          <select name="targetFirmId" className="form-select border-dark" value={formData.targetFirmId} onChange={handleChange}>
-            <option value="">-- Select Firm --</option>
-            {firms.map(f => (
-              <option key={f.firm_id} value={f.firm_id}>{f.firm_name}</option>
-            ))}
-          </select>
-        </div>
-        <div className="col-md-3">
-          <label className="form-label">New Packet No</label>
-          <input type="text" name="girv_packet_no" className="form-control border-dark text-center" value={formData.girv_packet_no} onChange={handleChange} />
-        </div>
-        <div className="col-md-3">
-          <label className="form-label">New Locker No</label>
-          <input type="text" name="girv_locker_no" className="form-control border-dark text-center" value={formData.girv_locker_no} onChange={handleChange} />
-        </div>
-      </div>
-
-      {/* Payment Details Section */}
-      <div className="row g-4">
-        {/* Left Column (Payment Rows) */}
-        <div className="col-md-8">
-          <div className="section-title">Payment Details</div>
-
-          {/* Cash Row */}
-          <div className="row g-2 mb-2 align-items-end">
-            <div className="col-md-4">
-              <select name="girv_cash_acc_id" className="form-select form-select-sm border-dark" value={formData.girv_cash_acc_id} onChange={handleChange}>
-                <option value="">-- Cash Account --</option>
-                {accounts.map(a => <option key={a.acc_id} value={a.acc_id}>{a.acc_name}</option>)}
-              </select>
-            </div>
-            <div className="col-md-4">
-              <input type="text" name="girv_cash_info" className="form-control form-control-sm border-dark" placeholder="CASH INFORMATION" value={formData.girv_cash_info} onChange={handleChange} />
-            </div>
-            <div className="col-md-4">
-              <input type="number" name="girv_cash_amt" className="form-control form-control-sm border-dark" placeholder="CASH AMOUNT" value={formData.girv_cash_amt} onChange={handleChange} />
-            </div>
+      {/* Row 2 - differs by tab */}
+      {isUserTransfer && (
+        <div className="row g-3 mb-3">
+          <div className="col-md-3">
+            <label className="form-label">Existing Firm</label>
+            <input type="text" className="form-control border-dark text-center" value={loanDetails?.firm?.firm_name || ''} readOnly disabled />
           </div>
-
-          {/* Bank Row */}
-          <div className="row g-2 mb-2 align-items-end">
-            <div className="col-md-4">
-              <select name="girv_bank_acc_id" className="form-select form-select-sm border-dark" value={formData.girv_bank_acc_id} onChange={handleChange}>
-                <option value="">-- Bank Account --</option>
-                {accounts.map(a => <option key={a.acc_id} value={a.acc_id}>{a.acc_name}</option>)}
-              </select>
-            </div>
-            <div className="col-md-4">
-              <input type="text" name="girv_bank_info" className="form-control form-control-sm border-dark" placeholder="BANK INFORMATION" value={formData.girv_bank_info} onChange={handleChange} />
-            </div>
-            <div className="col-md-4">
-              <input type="number" name="girv_bank_amt" className="form-control form-control-sm border-dark" placeholder="BANK AMOUNT" value={formData.girv_bank_amt} onChange={handleChange} />
-            </div>
+          <div className="col-md-3">
+            <label className="form-label">Transfer Firm</label>
+            <select name="targetFirmId" className="form-select border-dark" value={formData.targetFirmId} onChange={handleChange}>
+              <option value="">-- Select Firm --</option>
+              {firms.map(f => (
+                <option key={f.firm_id} value={f.firm_id}>{f.firm_name}</option>
+              ))}
+            </select>
           </div>
-
-          {/* Online Row */}
-          <div className="row g-2 mb-2 align-items-end">
-            <div className="col-md-4">
-              <select name="girv_online_acc_id" className="form-select form-select-sm border-dark" value={formData.girv_online_acc_id} onChange={handleChange}>
-                <option value="">-- Online Account --</option>
-                {accounts.map(a => <option key={a.acc_id} value={a.acc_id}>{a.acc_name}</option>)}
-              </select>
-            </div>
-            <div className="col-md-4">
-              <input type="text" name="girv_online_info" className="form-control form-control-sm border-dark" placeholder="ONLINE INFORMATION" value={formData.girv_online_info} onChange={handleChange} />
-            </div>
-            <div className="col-md-4">
-              <input type="number" name="girv_online_amt" className="form-control form-control-sm border-dark" placeholder="ONLINE AMOUNT" value={formData.girv_online_amt} onChange={handleChange} />
-            </div>
+          <div className="col-md-3">
+            <label className="form-label">New Packet No</label>
+            <input type="text" name="girv_packet_no" className="form-control border-dark text-center" value={formData.girv_packet_no} onChange={handleChange} />
           </div>
-
-          {/* Card Row */}
-          <div className="row g-2 mb-2 align-items-end">
-            <div className="col-md-4">
-              <select name="girv_card_acc_id" className="form-select form-select-sm border-dark" value={formData.girv_card_acc_id} onChange={handleChange}>
-                <option value="">-- Card Account --</option>
-                {accounts.map(a => <option key={a.acc_id} value={a.acc_id}>{a.acc_name}</option>)}
-              </select>
-            </div>
-            <div className="col-md-4">
-              <input type="text" name="girv_card_info" className="form-control form-control-sm border-dark" placeholder="CARD INFORMATION" value={formData.girv_card_info} onChange={handleChange} />
-            </div>
-            <div className="col-md-4">
-              <input type="number" name="girv_card_amt" className="form-control form-control-sm border-dark" placeholder="CARD AMOUNT" value={formData.girv_card_amt} onChange={handleChange} />
-            </div>
+          <div className="col-md-3">
+            <label className="form-label">New Locker No</label>
+            <input type="text" name="girv_locker_no" className="form-control border-dark text-center" value={formData.girv_locker_no} onChange={handleChange} />
           </div>
         </div>
+      )}
 
-        {/* Right Column (Other Info) */}
-        <div className="col-md-4">
-          <div className="section-title">Other Information</div>
-          <div className="mb-2">
-            <textarea name="girv_pay_info" className="form-control border-dark" placeholder="PAYMENT OTHER INFORMATION" rows={3} value={formData.girv_pay_info} onChange={handleChange}></textarea>
+      {isMoneyLenderTransfer && (
+        <div className="row g-3 mb-3">
+          <div className="col-md-4 col-lg">
+            <label className="form-label">Existing Firm</label>
+            <input type="text" className="form-control border-dark text-center" value={loanDetails?.firm?.firm_name || ''} readOnly disabled />
           </div>
-          <div>
-            <textarea name="girv_other_info" className="form-control border-dark" placeholder="OTHER INFORMATION" rows={3} value={formData.girv_other_info} onChange={handleChange}></textarea>
+          <div className="col-md-4 col-lg">
+            <label className="form-label">Transfer Firm</label>
+            <select name="targetFirmId" className="form-select border-dark" value={formData.targetFirmId} onChange={handleChange}>
+              <option value="">-- Select Firm --</option>
+              {firms.map(f => (
+                <option key={f.firm_id} value={f.firm_id}>{f.firm_name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="col-md-4 col-lg">
+            <label className="form-label">Money Lender</label>
+            <select name="targetMoneyLenderId" className="form-select border-dark" value={formData.targetMoneyLenderId} onChange={handleChange}>
+              <option value="">-- Select Money Lender --</option>
+              {moneyLenders.map(ml => (
+                <option key={ml.ml_id} value={ml.ml_id}>
+                  {[ml.ml_first_name, ml.ml_last_name].filter(Boolean).join(' ').trim() || `Money Lender #${ml.ml_id}`}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="col-md-4 col-lg">
+            <label className="form-label">New Packet No</label>
+            <input type="text" name="girv_packet_no" className="form-control border-dark text-center" value={formData.girv_packet_no} onChange={handleChange} />
+          </div>
+          <div className="col-md-4 col-lg">
+            <label className="form-label">New Locker No</label>
+            <input type="text" name="girv_locker_no" className="form-control border-dark text-center" value={formData.girv_locker_no} onChange={handleChange} />
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Submit Button Row */}
+      {paymentSection}
+
       {validationError && (
         <div className="row mt-2">
           <div className="col text-center">
