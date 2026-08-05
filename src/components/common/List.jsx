@@ -259,7 +259,7 @@ const List = ({
 
         dom: "Bfrtip",
         lengthChange: false,
-        pageLength: 15,
+        pageLength: 10,
         paging: true,
         searching: true,
         ordering: true,

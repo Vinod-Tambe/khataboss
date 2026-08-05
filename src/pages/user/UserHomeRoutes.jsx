@@ -88,15 +88,15 @@ const UserHomeRoutes = () => {
                 <Dropdown.Menu>
                   <Dropdown.Item as={Link} to="/user/home/active-finance" className="d-flex align-items-center gap-2">
                     <i className="bi bi-check2-circle text-success"></i>
-                    Active Finance
+                    Active Finance List
                   </Dropdown.Item>
                   <Dropdown.Item as={Link} to="/user/home/inactive-finance" className="d-flex align-items-center gap-2">
                     <i className="bi bi-check2-all text-primary"></i>
-                    Completed Finance
+                    Completed Finance List
                   </Dropdown.Item>
                   <Dropdown.Item as={Link} to="/user/home/all-finance" className="d-flex align-items-center gap-2">
                     <i className="bi bi-list-ul text-warning"></i>
-                    All Finance
+                    All Finance List
                   </Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>
@@ -112,19 +112,19 @@ const UserHomeRoutes = () => {
                 <Dropdown.Menu>
                   <Dropdown.Item as={Link} to="/user/home/active-loan" className="d-flex align-items-center gap-2">
                     <i className="bi bi-lightning-charge text-success"></i>
-                    Active Loan
+                    Active Loan List
                   </Dropdown.Item>
                   <Dropdown.Item as={Link} to="/user/home/release-loan" className="d-flex align-items-center gap-2">
                     <i className="bi bi-box-arrow-up-right text-info"></i>
-                    Release Loan
+                    Release Loan List
                   </Dropdown.Item>
                   <Dropdown.Item as={Link} to="/user/home/close-loan" className="d-flex align-items-center gap-2">
                     <i className="bi bi-lock text-danger"></i>
-                    Closed Loan
+                    Closed Loan List
                   </Dropdown.Item>
                   <Dropdown.Item as={Link} to="/user/home/all-loan" className="d-flex align-items-center gap-2">
                     <i className="bi bi-list-ul text-secondary"></i>
-                    All Loan
+                    All Loan List
                   </Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>
@@ -168,17 +168,17 @@ const UserHomeRoutes = () => {
 
                 <Dropdown.Item as={Link} to="/user/home/active-finance" className="d-flex align-items-center gap-2">
                   <i className="bi bi-check2-circle text-success"></i>
-                  Active Finance
+                  Active Finance List
                 </Dropdown.Item>
 
                 <Dropdown.Item as={Link} to="/user/home/inactive-finance" className="d-flex align-items-center gap-2">
                   <i className="bi bi-check2-all text-primary"></i>
-                  Inactive Finance
+                  Inactive Finance List
                 </Dropdown.Item>
 
                 <Dropdown.Item as={Link} to="/user/home/all-finance" className="d-flex align-items-center gap-2">
                   <i className="bi bi-list-ul text-warning"></i>
-                  All Finance
+                  All Finance List
                 </Dropdown.Item>
 
                 <Dropdown.Divider />
@@ -190,22 +190,22 @@ const UserHomeRoutes = () => {
 
                 <Dropdown.Item as={Link} to="/user/home/active-loan" className="d-flex align-items-center gap-2">
                   <i className="bi bi-lightning-charge text-success"></i>
-                  Active Loan
+                  Active Loan List
                 </Dropdown.Item>
 
                 <Dropdown.Item as={Link} to="/user/home/release-loan" className="d-flex align-items-center gap-2">
                   <i className="bi bi-box-arrow-up-right text-info"></i>
-                  Release Loan
+                  Release Loan List
                 </Dropdown.Item>
 
                 <Dropdown.Item as={Link} to="/user/home/close-loan" className="d-flex align-items-center gap-2">
                   <i className="bi bi-lock text-danger"></i>
-                  Closed Loan
+                  Closed Loan List
                 </Dropdown.Item>
 
                 <Dropdown.Item as={Link} to="/user/home/all-loan" className="d-flex align-items-center gap-2">
                   <i className="bi bi-list-ul text-secondary"></i>
-                  All Loan
+                  All Loan List
                 </Dropdown.Item>
 
               </Dropdown.Menu>

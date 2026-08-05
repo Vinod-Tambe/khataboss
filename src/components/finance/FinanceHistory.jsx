@@ -64,7 +64,7 @@ const HistoryExportActions = ({ disabled, onPrint, onPdf, onWhatsApp }) => (
 const FinanceHistory = ({ data = [], isLoading, financeData, initialFinance }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    const [rowsPerPage] = useState(5);
+    const [rowsPerPage] = useState(10);
     const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
     const [selectedHistoryData, setSelectedHistoryData] = useState(null);
 

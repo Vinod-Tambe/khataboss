@@ -14,21 +14,70 @@
   font-size: 16px !important;
   font-weight: 900 !important;
 } */
-/* .main-content {
+.main-content {
   display: flex;
   flex: 1;
-} */
+  min-height: 0;
+  width: 100%;
+}
 
 .content-area {
   flex: 1;
   margin-left: 0;
   transition: margin-left 0.3s ease;
+  min-width: 0;
+  width: 100%;
 }
 
 @media (min-width: 992px) {
   .content-area {
     margin-left: 200px;
+    width: calc(100% - 200px);
   }
+}
+
+/* Desktop app footer */
+.app-footer {
+  width: 100%;
+  background: var(--bs-dark, #212529);
+  color: #f8f9fa;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.app-footer-desktop {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 20px;
+  display: none;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 768px) {
+  .app-footer-desktop {
+    display: flex;
+  }
+}
+
+.app-footer-desktop__left,
+.app-footer-desktop__right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.app-footer-desktop__right a {
+  color: #f8f9fa;
+  text-decoration: none;
+}
+
+.app-footer-desktop__right a:hover {
+  color: #ffffff;
+  text-decoration: underline;
 }
 
 /* Header */

@@ -72,7 +72,7 @@ const EmiExportActions = ({ disabled, onPrint, onPdf, onWhatsApp }) => (
 const FinanceInfo = ({ data = [], onPayment, onRollback, onHistory, isLoading, financeData, initialFinance }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
     const [selectedEmiData, setSelectedEmiData] = useState(null);
 

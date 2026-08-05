@@ -48,9 +48,10 @@ const DayBookTable = ({ title, colorClass, amtColor, data = [], isPrint = false 
       paging: true,
       info: false,
       dom: "l t",
+      pageLength: 10,
       lengthMenu: [
-        [5, 10, 50, 100, -1],
-        [5, 10, 50, 100, "All"],
+        [10, 25, 50, 100, -1],
+        [10, 25, 50, 100, "All"],
       ],
     });
 
