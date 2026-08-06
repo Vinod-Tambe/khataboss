@@ -36,6 +36,15 @@ export const getGirvis = async (filters = {}) => {
   }
 };
 
+export const getGirvisDropdown = async (userId, filters = {}) => {
+  try {
+    const response = await axiosInstance.get(`/girvi/dropdown/${userId}`, { params: filters });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
 export const getGirviById = async (id) => {
   try {
     const response = await axiosInstance.get(`/girvi/${id}`);

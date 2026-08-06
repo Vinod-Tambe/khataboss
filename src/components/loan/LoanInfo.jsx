@@ -332,18 +332,18 @@ const ReleaseInfoTable = ({ data }) => (
 );
 
 
-const ActionFooter = ({ onUpdateClick, onDepositClick, onTransactionClick, onInvoiceClick, isReleased, isUpdateAllowed, isInvoiceDownloading }) => (
+const ActionFooter = ({ onUpdateClick, onDepositClick, onTransactionClick, onInvoiceClick, isReleased, isAuction, isUpdateAllowed, isInvoiceDownloading }) => (
   <div className="action-footer mt-4">
     <div className="d-flex flex-wrap gap-2 justify-content-center">
       <button className="btn btn-sm text-nowrap blue-btn" onClick={onDepositClick}>
         <i className="bi bi-file-text text-primary me-1"></i> FORM 8
       </button>
-      {isUpdateAllowed && (
+      {isUpdateAllowed && !isAuction && (
         <button className="btn btn-sm text-nowrap blue-btn" onClick={onUpdateClick}>
           <i className="bi bi-pencil text-info me-1"></i> Update
         </button>
       )}
-      {!isReleased && (
+      {!isReleased && !isAuction && (
         <>
           <button className="btn btn-sm text-nowrap blue-btn" onClick={onDepositClick}>
             <i className="bi bi-box-arrow-in-down text-success me-1"></i> Deposit
@@ -468,6 +468,7 @@ const LoanMobileView = ({
   totalAdditionalPrincipal,
   isUnsecured,
   isReleased,
+  isAuction,
   isUpdateAllowed,
   isInvoiceDownloading,
   customerName = '',
@@ -812,12 +813,12 @@ const LoanMobileView = ({
         <button type="button" className="btn loan-mobile-action-btn" onClick={onDepositClick}>
           <i className="bi bi-file-text text-primary"></i> Form 8
         </button>
-        {isUpdateAllowed && (
+        {isUpdateAllowed && !isAuction && (
           <button type="button" className="btn loan-mobile-action-btn" onClick={onUpdateClick}>
             <i className="bi bi-pencil text-info"></i> Update
           </button>
         )}
-        {!isReleased && (
+        {!isReleased && !isAuction && (
           <>
             <button type="button" className="btn loan-mobile-action-btn" onClick={onDepositClick}>
               <i className="bi bi-box-arrow-in-down text-success"></i> Deposit
@@ -1117,6 +1118,7 @@ const LoanInfo = () => {
 
   const isUnsecured = String(loanDetails.girv_type || '').toLowerCase() === 'unsecured';
   const isReleased = String(loanDetails.girv_status || '').toUpperCase() === 'RELEASED';
+  const isAuction = String(loanDetails.girv_status || '').toUpperCase() === 'AUCTION';
   // Show items for secured loans, or whenever API returned item rows
   const showItems = !isUnsecured || loanItems.length > 0;
 
@@ -1139,6 +1141,7 @@ const LoanInfo = () => {
         totalAdditionalPrincipal={totalAdditionalPrincipal}
         isUnsecured={isUnsecured}
         isReleased={isReleased}
+        isAuction={isAuction}
         isUpdateAllowed={isUpdateAllowed}
         isInvoiceDownloading={isInvoiceDownloading}
         customerName={customerName}
@@ -1268,6 +1271,7 @@ const LoanInfo = () => {
           onInvoiceClick={handleInvoiceDownload}
           isInvoiceDownloading={isInvoiceDownloading}
           isReleased={isReleased}
+          isAuction={isAuction}
           isUpdateAllowed={isUpdateAllowed}
         />
       </div>

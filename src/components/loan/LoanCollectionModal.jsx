@@ -9,7 +9,7 @@ import 'daterangepicker/daterangepicker.css';
 import useFormNavigation from '../../hooks/useFormNavigation';
 import CommonModal from '../common/CommonModal';
 import { getUsers } from '../../api/userApi';
-import { getGirvis, getGirviById } from '../../api/girviApi';
+import { getGirvisDropdown, getGirviById } from '../../api/girviApi';
 import { addDeposit } from '../../api/depositApi';
 import { getAccountsDropdown } from '../../api/accountApi';
 import { setSelectedUser } from '../../store/slices/userSlice';
@@ -262,10 +262,8 @@ const LoanCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) => {
         setLoanInfo(null);
         setLoanError('');
         try {
-            const response = await getGirvis({
-                firmId: firmId || undefined,
-                userId: user.user_id,
-                status: 'ACTIVE',
+            const response = await getGirvisDropdown(user.user_id, {
+                firmId: firmId || undefined
             });
             const data = Array.isArray(response) ? response : (response.data || []);
             setUserLoans(data);

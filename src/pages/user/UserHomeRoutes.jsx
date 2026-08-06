@@ -10,6 +10,7 @@ import Dropdown from "react-bootstrap/Dropdown";
 import Finance from "../../components/finance/Finance";
 import LoanInfo from "../../components/loan/LoanInfo";
 import ListLoan from "../../components/loan/ListLoan";
+import AuctionLoanList from "../../components/loan/AuctionLoanList";
 
 const UserHomeRoutes = () => {
   const { selectedUser } = useSelector((state) => state.user);
@@ -90,9 +91,13 @@ const UserHomeRoutes = () => {
                     <i className="bi bi-check2-circle text-success"></i>
                     Active Finance List
                   </Dropdown.Item>
-                  <Dropdown.Item as={Link} to="/user/home/inactive-finance" className="d-flex align-items-center gap-2">
+                  <Dropdown.Item as={Link} to="/user/home/completed-finance" className="d-flex align-items-center gap-2">
                     <i className="bi bi-check2-all text-primary"></i>
                     Completed Finance List
+                  </Dropdown.Item>
+                  <Dropdown.Item as={Link} to="/user/home/close-finance" className="d-flex align-items-center gap-2">
+                    <i className="bi bi-lock text-danger"></i>
+                    Closed Finance List
                   </Dropdown.Item>
                   <Dropdown.Item as={Link} to="/user/home/all-finance" className="d-flex align-items-center gap-2">
                     <i className="bi bi-list-ul text-warning"></i>
@@ -121,6 +126,10 @@ const UserHomeRoutes = () => {
                   <Dropdown.Item as={Link} to="/user/home/close-loan" className="d-flex align-items-center gap-2">
                     <i className="bi bi-lock text-danger"></i>
                     Closed Loan List
+                  </Dropdown.Item>
+                  <Dropdown.Item as={Link} to="/user/home/auction-loan" className="d-flex align-items-center gap-2">
+                    <i className="bi bi-hammer text-warning"></i>
+                    Auction Loan List
                   </Dropdown.Item>
                   <Dropdown.Item as={Link} to="/user/home/all-loan" className="d-flex align-items-center gap-2">
                     <i className="bi bi-list-ul text-secondary"></i>
@@ -171,9 +180,14 @@ const UserHomeRoutes = () => {
                   Active Finance List
                 </Dropdown.Item>
 
-                <Dropdown.Item as={Link} to="/user/home/inactive-finance" className="d-flex align-items-center gap-2">
+                <Dropdown.Item as={Link} to="/user/home/completed-finance" className="d-flex align-items-center gap-2">
                   <i className="bi bi-check2-all text-primary"></i>
-                  Inactive Finance List
+                  Completed Finance List
+                </Dropdown.Item>
+
+                <Dropdown.Item as={Link} to="/user/home/close-finance" className="d-flex align-items-center gap-2">
+                  <i className="bi bi-lock text-danger"></i>
+                  Closed Finance List
                 </Dropdown.Item>
 
                 <Dropdown.Item as={Link} to="/user/home/all-finance" className="d-flex align-items-center gap-2">
@@ -223,13 +237,15 @@ const UserHomeRoutes = () => {
           <Route path="/edit-loan/:id" element={<UpdateLoan />} />
           <Route path="/add-finance" element={<AddFinance />} />
           <Route path="/active-finance" element={<ListFinance status="ACTIVE" />} />
-          <Route path="/inactive-finance" element={<ListFinance status="INACTIVE" />} />
+          <Route path="/completed-finance" element={<ListFinance status="COMPLETED" />} />
+          <Route path="/close-finance" element={<ListFinance status="CLOSED" />} />
           <Route path="/all-finance" element={<ListFinance status="ALL" />} />
           <Route path="/finance" element={<Finance />} />
-          
+
           <Route path="/active-loan" element={<ListLoan status="ACTIVE" />} />
           <Route path="/release-loan" element={<ListLoan status="RELEASED" />} />
           <Route path="/close-loan" element={<ListLoan status="CLOSED" />} />
+          <Route path="/auction-loan" element={<AuctionLoanList />} />
           <Route path="/all-loan" element={<ListLoan status="ALL" />} />
         </Routes>
 

@@ -9,7 +9,7 @@ import 'daterangepicker/daterangepicker.css';
 import useFormNavigation from '../../hooks/useFormNavigation';
 import CommonModal from '../common/CommonModal';
 import { getUsers } from '../../api/userApi';
-import { getFinances, getFinanceDetails, createFinancePayment } from '../../api/financeApi';
+import { getFinancesDropdown, getFinanceDetails, createFinancePayment } from '../../api/financeApi';
 import { getAccountsDropdown } from '../../api/accountApi';
 import { setSelectedUser } from '../../store/slices/userSlice';
 
@@ -212,10 +212,8 @@ const FinanceCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) =
         setFinanceInfo(null);
         setFinanceError('');
         try {
-            const response = await getFinances({
-                firmId: firmId || undefined,
-                userId: user.user_id,
-                status: 'ACTIVE',
+            const response = await getFinancesDropdown(user.user_id, {
+                firmId: firmId || undefined
             });
             const data = Array.isArray(response) ? response : (response.data || []);
             setUserFinances(data);

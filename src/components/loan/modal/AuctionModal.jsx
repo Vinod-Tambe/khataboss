@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { getAccountsDropdown } from '../../../api/accountApi';
-import { addAuction } from '../../../api/auctionApi';
+import { addAuction, getAuctionUsers } from '../../../api/auctionApi';
 import { toast } from 'react-hot-toast';
 import '../../../css/Modal.css';
 import useFormNavigation from '../../../hooks/useFormNavigation';
@@ -11,6 +11,11 @@ const AuctionModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pen
   const { selectedUser } = useSelector((state) => state.user);
   const [accounts, setAccounts] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [userImage, setUserImage] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [existingBuyers, setExistingBuyers] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const imageInputRef = useRef(null);
   const formRef = useRef(null);
 
   useFormNavigation(formRef, false, isOpen);
@@ -26,6 +31,29 @@ const AuctionModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pen
       }, 150);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    const firmId = loanDetails?.girv_firm_id;
+    if (isOpen && firmId) {
+      const fetchBuyers = async () => {
+        try {
+          const users = await getAuctionUsers(firmId);
+          const unique = [];
+          const seen = new Set();
+          users.forEach(u => {
+            if (u.au_full_name && !seen.has(u.au_full_name.toLowerCase())) {
+              seen.add(u.au_full_name.toLowerCase());
+              unique.push(u);
+            }
+          });
+          setExistingBuyers(unique);
+        } catch (err) {
+          console.error("Failed to fetch buyers", err);
+        }
+      };
+      fetchBuyers();
+    }
+  }, [isOpen, loanDetails]);
 
   const [formData, setFormData] = useState({
     auc_prin_amt: '',
@@ -81,8 +109,6 @@ const AuctionModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pen
   useEffect(() => {
     if (!isOpen) return;
 
-    const customer = selectedUser || loanDetails?.user || {};
-    const fullName = [customer.user_first_name, customer.user_last_name].filter(Boolean).join(' ').trim();
     const prinAmt = pendingPrincipal != null
       ? Number(pendingPrincipal).toFixed(2)
       : (loanDetails?.girv_prin_amt != null ? Number(loanDetails.girv_prin_amt).toFixed(2) : '');
@@ -101,18 +127,18 @@ const AuctionModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pen
       auc_dep_amt: '',
       auc_payable_amt: payable,
 
-      auc_user_full_name: fullName,
-      auc_user_mobile: customer.user_mobile_no || '',
-      auc_user_email: customer.user_email_id || '',
-      auc_user_aadhaar: customer.user_adhaar_no || '',
-      auc_user_gender: customer.user_gender || '',
-      auc_user_pan: customer.user_pan_no || '',
-      auc_user_address: customer.user_curr_address || customer.user_per_address || '',
-      auc_user_state: customer.user_state || '',
-      auc_user_city: customer.user_city || '',
-      auc_user_country: customer.user_country || '',
-      auc_user_village: customer.user_village || '',
-      auc_user_pincode: customer.user_pincode || '',
+      auc_user_full_name: '',
+      auc_user_mobile: '',
+      auc_user_email: '',
+      auc_user_aadhaar: '',
+      auc_user_gender: '',
+      auc_user_pan: '',
+      auc_user_address: '',
+      auc_user_state: '',
+      auc_user_city: '',
+      auc_user_country: '',
+      auc_user_village: '',
+      auc_user_pincode: '',
 
       auc_cash_amt: payable,
       auc_bank_amt: '',
@@ -226,6 +252,18 @@ const AuctionModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pen
     });
   };
 
+  const handleFileSelect = (e, fieldName, setPreview) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('File size must be less than 5MB');
+        return;
+      }
+      setUserImage(file);
+      setPreview(URL.createObjectURL(file));
+    }
+  };
+
   const totalPayment = (parseFloat(formData.auc_cash_amt) || 0) +
     (parseFloat(formData.auc_bank_amt) || 0) +
     (parseFloat(formData.auc_online_amt) || 0) +
@@ -267,14 +305,23 @@ const AuctionModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pen
     setSubmitting(true);
 
     try {
-      const payload = {
+      const payloadData = {
         ...formData,
         auc_girv_id: loanDetails.girv_id,
         auc_firm_id: loanDetails.girv_firm_id,
         auc_user_id: loanDetails.girv_user_id
       };
 
-      await addAuction(payload);
+      const finalPayload = new FormData();
+      for (const key in payloadData) {
+        finalPayload.append(key, payloadData[key]);
+      }
+      
+      if (userImage) {
+        finalPayload.append("user_image", userImage);
+      }
+
+      await addAuction(finalPayload);
       toast.success("Auction submitted successfully");
       if (onSuccess) onSuccess();
       if (onClose && !isTab) onClose();
@@ -315,9 +362,77 @@ const AuctionModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pen
       {/* User Information */}
       <div className="section-title">User Information</div>
       <div className="row g-3 mb-3">
-        <div className="col-md-3">
+        <div className="col-md-1 d-flex justify-content-center">
+          <div 
+            className="d-flex justify-content-center align-items-center mt-4"
+            style={{ width: '42px', height: '42px', cursor: 'pointer', overflow: 'hidden', borderRadius: '50%', border: preview ? 'none' : '1px solid #ccc' }}
+            onClick={() => imageInputRef.current?.click()}
+          >
+            {preview ? (
+              <img src={preview} alt="user" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <i className="bi bi-camera fs-5 text-secondary"></i>
+            )}
+          </div>
+          <input 
+            type="file" 
+            ref={imageInputRef} 
+            className="d-none" 
+            accept="image/*" 
+            onChange={(e) => handleFileSelect(e, 'user_image', setPreview)} 
+          />
+        </div>
+        <div className="col-md-3 position-relative">
           <label className="form-label">Full Name</label>
-          <input type="text" id="auc_user_full_name" value={formData.auc_user_full_name} onChange={handleInputChange} className="form-control border-dark" placeholder="Enter full name" />
+          <input 
+            type="text" 
+            id="auc_user_full_name" 
+            value={formData.auc_user_full_name} 
+            onChange={(e) => {
+              handleInputChange(e);
+              setShowSuggestions(true);
+            }} 
+            onFocus={() => setShowSuggestions(true)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+            className="form-control border-dark" 
+            placeholder="Enter full name" 
+            autoComplete="off"
+          />
+          {showSuggestions && formData.auc_user_full_name && (
+            <ul className="list-group position-absolute w-100 shadow-sm" style={{ zIndex: 1000, maxHeight: '200px', overflowY: 'auto' }}>
+              {existingBuyers
+                .filter(b => b.au_full_name.toLowerCase().includes(formData.auc_user_full_name.toLowerCase()))
+                .map(b => (
+                  <li 
+                    key={b.au_id} 
+                    className="list-group-item list-group-item-action py-1 px-2" 
+                    style={{ cursor: 'pointer' }}
+                    onMouseDown={(e) => {
+                      e.preventDefault(); // Prevent input from losing focus immediately
+                      setFormData(prev => ({
+                        ...prev,
+                        auc_user_full_name: b.au_full_name,
+                        auc_user_mobile: b.au_mobile || "",
+                        auc_user_email: b.au_email || "",
+                        auc_user_gender: b.au_gender || "",
+                        auc_user_aadhaar: b.au_aadhaar || "",
+                        auc_user_pan: b.au_pan || "",
+                        auc_user_address: b.au_address || "",
+                        auc_user_state: b.au_state || "",
+                        auc_user_city: b.au_city || "",
+                        auc_user_country: b.au_country || "",
+                        auc_user_village: b.au_village || "",
+                        auc_user_pincode: b.au_pincode || "",
+                      }));
+                      setShowSuggestions(false);
+                    }}
+                  >
+                    <div className="fw-bold">{b.au_full_name}</div>
+                    {b.au_mobile && <small className="text-muted d-block" style={{ fontSize: '0.75rem' }}>{b.au_mobile}</small>}
+                  </li>
+                ))}
+            </ul>
+          )}
         </div>
         <div className="col-md-3">
           <label className="form-label">Mobile</label>
@@ -327,7 +442,7 @@ const AuctionModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pen
           <label className="form-label">Email</label>
           <input type="email" id="auc_user_email" value={formData.auc_user_email} onChange={handleInputChange} className="form-control border-dark" placeholder="Enter email" />
         </div>
-        <div className="col-md-3">
+        <div className="col-md-2">
           <label className="form-label">Gender</label>
           <select id="auc_user_gender" value={formData.auc_user_gender} onChange={handleInputChange} className="form-select border-dark">
             <option value="">Select</option>

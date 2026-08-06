@@ -20,3 +20,15 @@ export const getAuctionUsers = async (firmId, search = "") => {
     throw new Error(message);
   }
 };
+
+export const getAuctionLoans = async (filters) => {
+  try {
+    const response = await axiosInstance.get("/auction/loans", {
+      params: filters,
+    });
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.error || error.response?.data?.message || error.message;
+    throw new Error(message);
+  }
+};

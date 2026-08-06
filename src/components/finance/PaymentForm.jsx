@@ -112,6 +112,18 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
         }, { pending: 0, paid: 0 });
     }, [finance?.finance_trans]);
 
+    useEffect(() => {
+        if (transType === 'CLOSE' && totals.pending > 0) {
+            setFormData(prev => ({
+                ...prev,
+                fm_cash_amt: totals.pending,
+                fm_bank_amt: 0,
+                fm_online_amt: 0,
+                fm_card_amt: 0
+            }));
+        }
+    }, [transType, totals.pending]);
+
     const totalDistributed = useMemo(() => {
         return (parseFloat(formData.fm_cash_amt) || 0) +
             (parseFloat(formData.fm_bank_amt) || 0) +
@@ -120,7 +132,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
     }, [formData.fm_cash_amt, formData.fm_bank_amt, formData.fm_online_amt, formData.fm_card_amt]);
 
     const isOverLimit = useMemo(() => {
-        const max = transType === 'PAID' ? totals.pending : totals.paid;
+        const max = (transType === 'PAID' || transType === 'CLOSE') ? totals.pending : totals.paid;
         return totalDistributed > max + 0.01;
     }, [totalDistributed, transType, totals]);
 
@@ -134,7 +146,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
         }
 
         // Limit Validation
-        if (transType === 'PAID' && transAmt > totals.pending + 0.01) {
+        if ((transType === 'PAID' || transType === 'CLOSE') && transAmt > totals.pending + 0.01) {
             toast.error(`Maximum payable amount is ${totals.pending.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
             return;
         }
@@ -172,7 +184,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                 fm_trans_type: transType
             };
             await createFinancePayment(payload);
-            toast.success(`${transType === 'ROLLBACK' ? 'Rollback' : 'Payment'} processed successfully`);
+            toast.success(`${transType === 'ROLLBACK' ? 'Rollback' : transType === 'CLOSE' ? 'Close Payment' : 'Payment'} processed successfully`);
 
             // Wait a bit so user can see toast before modal closes
             setTimeout(() => {
@@ -204,7 +216,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                     {isOverLimit && (
                         <div className="text-danger extra-small fw-bold  animate__animated animate__shakeX">
                             <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                            You Paid maximum -   {transType === 'PAID' ? totals.pending.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : totals.paid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            You Paid maximum -   {(transType === 'PAID' || transType === 'CLOSE') ? totals.pending.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : totals.paid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                     )}
                 </div>
@@ -380,7 +392,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                                 Processing...
                             </>
                         ) : (
-                            transType === 'PAID' ? 'Submit Payment' : 'Confirm Rollback'
+                            transType === 'PAID' ? 'Submit Payment' : transType === 'CLOSE' ? 'Submit Close Payment' : 'Confirm Rollback'
                         )}
                     </button>
                 </div>

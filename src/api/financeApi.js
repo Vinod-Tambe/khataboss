@@ -37,6 +37,16 @@ export const getFinances = async (filters = {}) => {
   }
 };
 
+export const getFinancesDropdown = async (userId, filters = {}) => {
+  try {
+    const response = await axiosInstance.get(`/finance/dropdown/${userId}`, { params: filters });
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.error || error.response?.data?.message || error.message;
+    throw new Error(message);
+  }
+};
+
 /**
  * Get recent finance transactions
  * @param {object} filters - Filters like userId, firmId

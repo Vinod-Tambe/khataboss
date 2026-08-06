@@ -46,6 +46,11 @@ const Finance = () => {
         setShowModal(true);
     };
 
+    const handleClosePayment = () => {
+        setModalConfig({ title: 'Close Finance', type: 'CLOSE' });
+        setShowModal(true);
+    };
+
     const handleHistory = () => {
         setView('history');
     };
@@ -84,11 +89,12 @@ const Finance = () => {
                                 )}
                             </div>
                         </div>
-                        <FinanceInfo
-                            data={financeData?.finance_trans || []}
-                            onPayment={handlePayment}
-                            onRollback={handleRollback}
-                            onHistory={handleHistory}
+                            <FinanceInfo
+                                data={financeData?.finance_trans || []}
+                                onPayment={handlePayment}
+                                onRollback={handleRollback}
+                                onClose={handleClosePayment}
+                                onHistory={handleHistory}
                             isLoading={loading}
                             financeData={financeData}
                             initialFinance={initialFinance}

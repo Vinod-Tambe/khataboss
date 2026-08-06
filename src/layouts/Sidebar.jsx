@@ -24,6 +24,10 @@ import {
   FiSettings,
   FiAward,
   FiDatabase,
+  FiCheckCircle,
+  FiCheckSquare,
+  FiLock,
+  FiClock,
 } from "react-icons/fi";
 import { FaBook, FaBookOpen, FaBalanceScale } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
@@ -111,9 +115,11 @@ const Sidebar = () => {
       label: "Finance",
       icon: <FiTrendingUp />,
       subItems: [
-        { label: "Active Finance List", path: "/finance/active-list", icon: <FiList /> },
-        { label: "Close Finance List", path: "/finance/close-list", icon: <FiList /> },
-        { label: "Today Pending EMI", path: "/finance/today-pending-emi", icon: <FiFileText /> },
+        { label: "Active Finance List", path: "/finance/active-list", icon: <FiCheckCircle /> },
+        { label: "Comp Finance List", path: "/finance/completed-list", icon: <FiCheckSquare /> },
+        { label: "Close Finance List", path: "/finance/close-list", icon: <FiLock /> },
+        { label: "Today Pending EMI", path: "/finance/today-pending-emi", icon: <FiClock /> },
+        { label: "All Finance List", path: "/finance/all-list", icon: <FiList /> },
       ],
     },
     {
@@ -121,6 +127,7 @@ const Sidebar = () => {
       label: "Loan",
       icon: <FiClipboard />,
       subItems: [
+        { label: "All Loan List", path: "/loan/all-list", icon: <FiList /> },
         { label: "Active Loan List", path: "/loan/active-list", icon: <FiList /> },
         { label: "Release Loan List", path: "/loan/release-list", icon: <FiList /> },
         { label: "Auction Loan List", path: "/loan/auction-list", icon: <FiAward /> },

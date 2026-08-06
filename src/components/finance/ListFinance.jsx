@@ -13,6 +13,12 @@ const ListFinance = ({ status = "ALL" }) => {
   const [finances, setFinances] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const getTitle = () => {
+    if (status === "ALL") return "All Finance List";
+    if (status === "TODAY_PENDING_EMI") return "Today Pending EMI";
+    return `${status.charAt(0) + status.slice(1).toLowerCase()} Finance List`;
+  };
+
   const fetchFinances = useCallback(async () => {
     try {
       setLoading(true);
@@ -67,6 +73,22 @@ const ListFinance = ({ status = "ALL" }) => {
       render: (data) => `${data}.`
     },
     {
+      key: "user",
+      title: "Customer",
+      render: (data, type, row) => row.user ? `${row.user.user_first_name} ${row.user.user_last_name}` : "N/A"
+    },
+    {
+      key: "firm",
+      title: "Firm",
+      render: (data, type, row) => row.firm ? row.firm.firm_name : "N/A"
+    },
+    {
+      key: "fin_start_date",
+      title: "Start Date",
+      dateFilter: true,
+      render: (data) => `<span class="text-brown fw-bold cursor-pointer view-btn">${moment(data).format("DD-MM-YYYY")}</span>`
+    },
+    {
       key: "fin_prin_amt",
       title: "Principal",
       sum: true,
@@ -76,7 +98,7 @@ const ListFinance = ({ status = "ALL" }) => {
     },
     {
       key: "fin_emi_amt",
-      title: "EMI Details",
+      title: "EMI Amt",
       sum: true,
       render: (data, type, row) => `
          ${Number(data).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -107,12 +129,6 @@ const ListFinance = ({ status = "ALL" }) => {
       render: (data) => `${Number(data || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     },
     {
-      key: "fin_start_date",
-      title: "Start Date",
-      dateFilter: true,
-      render: (data) => `<span class="text-brown fw-bold cursor-pointer view-btn">${moment(data).format("DD-MM-YYYY")}</span>`
-    },
-    {
       key: "fin_status",
       title: "Status",
       render: (data) => {
@@ -133,7 +149,7 @@ const ListFinance = ({ status = "ALL" }) => {
     <div className="card shadow-sm border-0">
       <div className="card-header bg-white d-flex justify-content-between align-items-center py-3">
         <h5 className="mb-0 fw-bold">
-          {status === "ALL" ? "All Finance List" : status === "INACTIVE" ? "Completed Inactive Finance" : `${status.charAt(0) + status.slice(1).toLowerCase()} Finance List`}
+          {getTitle()}
         </h5>
         <button
           onClick={() => navigate("/user/home/add-finance")}
@@ -147,7 +163,7 @@ const ListFinance = ({ status = "ALL" }) => {
         <List
           data={finances}
           columns={columns}
-          title={status === "ALL" ? "All Finance List" : status === "INACTIVE" ? "Completed Inactive Finance" : `${status.charAt(0) + status.slice(1).toLowerCase()} Finance List`}
+          title={getTitle()}
           primaryKey="fin_id"
           subtitleKey="fin_start_date"
           amountKey="fin_prin_amt"

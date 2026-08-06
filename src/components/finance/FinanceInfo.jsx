@@ -69,7 +69,7 @@ const EmiExportActions = ({ disabled, onPrint, onPdf, onWhatsApp }) => (
     </div>
 );
 
-const FinanceInfo = ({ data = [], onPayment, onRollback, onHistory, isLoading, financeData, initialFinance }) => {
+const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onHistory, isLoading, financeData, initialFinance }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -267,13 +267,22 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onHistory, isLoading, f
                         <span>Pay</span>
                     </button>
                     <button
-                        className="btn btn-danger"
+                        className="btn btn-warning"
                         onClick={onRollback}
-                        disabled={totals.paidAmt <= 0}
-                        title={totals.paidAmt <= 0 ? 'No payment records to rollback' : 'Rollback a payment'}
+                        disabled={totals.paidAmt <= 0 || financeData?.fin_status === 'CLOSED'}
+                        title={financeData?.fin_status === 'CLOSED' ? 'Cannot rollback a closed finance' : totals.paidAmt <= 0 ? 'No payment records to rollback' : 'Rollback a payment'}
                     >
                         <i className="bi bi-arrow-counterclockwise"></i>
                         <span>Rollback</span>
+                    </button>
+                    <button
+                        className="btn btn-danger"
+                        onClick={onClose}
+                        disabled={totals.pendingAmt <= 0 || financeData.fin_status === 'CLOSED'}
+                        title={totals.pendingAmt <= 0 ? 'All installments are paid' : 'Close this finance'}
+                    >
+                        <i className="bi bi-x-circle"></i>
+                        <span>Close</span>
                     </button>
                     <button className="btn btn-primary" onClick={onHistory}>
                         <i className="bi bi-clock-history"></i>
@@ -405,12 +414,20 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onHistory, isLoading, f
                                 <i className="bi bi-wallet2 me-1"></i> Payment
                             </button>
                             <button
-                                className="btn btn-sm btn-danger px-3"
+                                className="btn btn-sm btn-warning px-3 text-dark"
                                 onClick={onRollback}
-                                disabled={totals.paidAmt <= 0}
-                                title={totals.paidAmt <= 0 ? 'No payment records to rollback' : 'Rollback a payment'}
+                                disabled={totals.paidAmt <= 0 || financeData?.fin_status === 'CLOSED'}
+                                title={financeData?.fin_status === 'CLOSED' ? 'Cannot rollback a closed finance' : totals.paidAmt <= 0 ? 'No payment records to rollback' : 'Rollback a payment'}
                             >
                                 <i className="bi bi-arrow-counterclockwise me-1"></i> Rollback
+                            </button>
+                            <button
+                                className="btn btn-sm btn-danger px-3"
+                                onClick={onClose}
+                                disabled={totals.pendingAmt <= 0 || financeData.fin_status === 'CLOSED'}
+                                title={totals.pendingAmt <= 0 ? 'All installments are paid' : 'Close this finance'}
+                            >
+                                <i className="bi bi-x-circle me-1"></i> Close
                             </button>
                             <button className="btn btn-sm btn-primary px-3" onClick={onHistory}>
                                 <i className="bi bi-clock-history me-1"></i> History

@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import moment from "moment";
 import List from "../common/List";
 
-const ListLoan = ({ status = "ALL" }) => {
+const ListLoan = ({ status = "ALL", global = false }) => {
   const navigate = useNavigate();
   const { selectedUser } = useSelector((state) => state.user);
   const { selectedFirm } = useSelector((state) => state.firm);
@@ -18,9 +18,11 @@ const ListLoan = ({ status = "ALL" }) => {
       setLoading(true);
       const filters = {
         firmId: selectedFirm?.firm_id,
-        userId: selectedUser?.user_id,
         status: status,
       };
+      if (!global && selectedUser?.user_id) {
+        filters.userId = selectedUser.user_id;
+      }
       console.log("Fetching loans with filters:", filters);
       const response = await getGirvis(filters);
       console.log("Loan API response:", response);
@@ -33,13 +35,13 @@ const ListLoan = ({ status = "ALL" }) => {
     } finally {
       setLoading(false);
     }
-  }, [selectedFirm?.firm_id, selectedUser?.user_id, status]);
+  }, [selectedFirm?.firm_id, selectedUser?.user_id, status, global]);
 
   useEffect(() => {
-    if (selectedUser?.user_id) {
+    if (global || selectedUser?.user_id) {
       fetchLoans();
     }
-  }, [selectedUser?.user_id, fetchLoans]);
+  }, [selectedUser?.user_id, fetchLoans, global]);
 
   const handleView = (rowData) => {
     navigate("/user/home/loan-info", { state: { loan: rowData } });
@@ -54,27 +56,50 @@ const ListLoan = ({ status = "ALL" }) => {
     toast.error("Delete not implemented");
   };
 
-  const columns = useMemo(() => [
-    {
-      key: "girv_id",
-      title: "Loan No",
-      render: (data) => `${data}.`
-    },
-    {
-      key: "girv_status",
-      title: "Status",
-      render: (data) => {
-        let text = data || "ACTIVE";
-        switch (text) {
-          case "ACTIVE": text = "Active"; break;
-          case "RELEASED": text = "Released"; break;
-          case "CLOSED": text = "Closed"; break;
-          case "TRANSFERRED": text = "Transferred"; break;
-          default: break;
-        }
-        return `${text}`;
+  const columns = useMemo(() => {
+    const cols = [
+      {
+        key: "girv_id",
+        title: "Loan No",
+        render: (data) => `${data}.`
       }
-    },
+    ];
+
+    if (global) {
+      cols.push({
+        key: "girv_id",
+        title: "Customer Name",
+        searchable: true,
+        render: (data, type, row) => {
+          if (!row || !row.user) return "-";
+          return `${row.user.user_first_name || ""} ${row.user.user_last_name || ""}`.trim() || "-";
+        }
+      });
+      cols.push({
+        key: "girv_id",
+        title: "Mobile",
+        searchable: true,
+        render: (data, type, row) => row.user?.user_mobile_no || "-"
+      });
+    }
+
+    cols.push(
+      {
+        key: "girv_status",
+        title: "Status",
+        render: (data) => {
+          let text = data || "ACTIVE";
+          switch (text) {
+            case "ACTIVE": text = "Active"; break;
+            case "RELEASED": text = "Released"; break;
+            case "CLOSED": text = "Closed"; break;
+            case "TRANSFERRED": text = "Transferred"; break;
+            case "AUCTION": text = "Auction"; break;
+            default: break;
+          }
+          return `${text}`;
+        }
+      },
     {
       key: "girv_start_date",
       title: "Start Date",
@@ -121,16 +146,20 @@ const ListLoan = ({ status = "ALL" }) => {
       sum: true,
       render: (data) => `${Number(data || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     }
-  ], []);
+    );
+    return cols;
+  }, [global]);
 
   const getTitle = () => {
+    let baseTitle = "";
     switch (status) {
-      case "ALL": return "All Loan List";
-      case "ACTIVE": return "Active Loan List";
-      case "RELEASED": return "Released Loan List";
-      case "CLOSED": return "Closed Loan List";
-      default: return `${status} Loan List`;
+      case "ALL": baseTitle = "All Loan List"; break;
+      case "ACTIVE": baseTitle = "Active Loan List"; break;
+      case "RELEASED": baseTitle = "Released Loan List"; break;
+      case "CLOSED": baseTitle = "Closed Loan List"; break;
+      default: baseTitle = `${status} Loan List`; break;
     }
+    return global ? `Global ${baseTitle}` : baseTitle;
   }
 
   return (
