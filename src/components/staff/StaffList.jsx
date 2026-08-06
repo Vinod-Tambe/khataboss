@@ -54,6 +54,9 @@ const StaffList = () => {
         data={userData}
         columns={columns}
         title="All Staff List"
+        primaryKey="name"
+        subtitleKey="createdAt"
+        amountKey="salary"
         onEdit={handleEdit}
         onDelete={handleDelete}
         onPrint={handlePrint}

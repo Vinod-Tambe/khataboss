@@ -98,6 +98,8 @@ const UserList = () => {
         data={userData}
         columns={columns}
         title="All User List"
+        primaryKey="user_first_name"
+        subtitleKey="user_add_date"
         onEdit={handleEdit}
         onDelete={handleDelete}
         onPrint={handlePrint}

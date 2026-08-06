@@ -373,6 +373,7 @@ const FinanceHistory = ({ data = [], isLoading, financeData, initialFinance }) =
                     data={data}
                     columns={columns}
                     title="Finance Payment History"
+                    showMobileList={false}
                     hasEdit={false}
                     hasDelete={false}
                     hasPrint={false}

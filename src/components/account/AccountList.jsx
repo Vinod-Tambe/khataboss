@@ -115,6 +115,9 @@ const AccountList = () => {
           data={accounts}
           columns={columns}
           title="All Account List"
+          primaryKey="acc_name"
+          subtitleKey="acc_opening_date"
+          amountKey="acc_cash_balance"
           onEdit={handleEdit}
           onDelete={handleDelete}
           onPrint={handlePrint}

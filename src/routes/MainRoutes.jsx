@@ -19,6 +19,7 @@ import SmsPage from '../components/sms/SmsPage';
 import MoneyLenderRoutes from '../pages/money-lender/MoneyLenderRoutes';
 import FinanceRoutes from '../pages/finance/FinanceRoutes';
 import LoanRoutes from '../pages/loan/LoanRoutes';
+import BackupRoutes from '../pages/backup/BackupRoutes';
 const MainRoutes = () => {
 
   return (
@@ -44,8 +45,10 @@ const MainRoutes = () => {
               <Route path="/rate" element={< RateRoutes />} />
               <Route path="/purity" element={< PurityPage />} />
               <Route path="/sms" element={<SmsPage />} />
+              <Route path="/backup" element={<BackupRoutes />} />
               <Route path="/money-lender/*" element={< MoneyLenderRoutes />} />
               <Route path="/*" element={< HomeRoutes />} />
+
             </Routes>
           </div>
           <div className="mt-auto w-100">

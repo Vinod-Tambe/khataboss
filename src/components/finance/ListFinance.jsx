@@ -148,6 +148,9 @@ const ListFinance = ({ status = "ALL" }) => {
           data={finances}
           columns={columns}
           title={status === "ALL" ? "All Finance List" : status === "INACTIVE" ? "Completed Inactive Finance" : `${status.charAt(0) + status.slice(1).toLowerCase()} Finance List`}
+          primaryKey="fin_id"
+          subtitleKey="fin_start_date"
+          amountKey="fin_prin_amt"
           onView={handleView}
           onDelete={handleDelete}
           onEdit={handleEdit}

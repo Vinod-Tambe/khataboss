@@ -231,6 +231,9 @@ const PurityPage = () => {
             data={purities}
             columns={columns}
             title="Dynamic Purity List"
+            primaryKey="purity_name"
+            subtitleKey="purity_created_at"
+            amountKey="purity_value"
             onDelete={handleDelete}
             hasDelete={true}
             hasEdit={true}

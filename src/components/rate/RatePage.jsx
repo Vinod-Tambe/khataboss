@@ -485,6 +485,9 @@ const RatePage = () => {
           data={rates}
           columns={columns}
           title="Gold & Silver Rate List"
+          primaryKey="rate_metal"
+          subtitleKey="rate_date"
+          amountKey="rate_amount"
           onDelete={handleDelete}
           hasDelete={true}
           hasEdit={true}

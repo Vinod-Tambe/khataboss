@@ -151,6 +151,9 @@ const ListLoan = ({ status = "ALL" }) => {
           data={loans}
           columns={columns}
           title={getTitle()}
+          primaryKey="girv_id"
+          subtitleKey="girv_start_date"
+          amountKey="girv_prin_amt"
           onView={handleView}
           onDelete={handleDelete}
           onEdit={handleEdit}

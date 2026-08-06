@@ -514,6 +514,8 @@ const SmsPage = () => {
           data={filteredTemplates}
           columns={columns}
           title={`Saved ${channelTitle(activeChannel)} Templates`}
+          primaryKey="name"
+          subtitleKey="updatedAt"
           onDelete={handleDelete}
           hasDelete={true}
           hasEdit={true}

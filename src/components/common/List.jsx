@@ -20,6 +20,7 @@ import JSZip from "jszip";
 import pdfMake from "pdfmake/build/pdfmake";
 import * as pdfFonts from "pdfmake/build/vfs_fonts";
 import Confirm from "./Confirm";
+import MobileList from "./MobileList";
 
 // Register globally
 window.JSZip = JSZip;
@@ -33,13 +34,23 @@ const List = ({
   onDelete,
   onPrint,
   onView,
+  onDownload,
+  onRestore,
   hasEdit = false,
   hasDelete = false,
   hasPrint = false,
   hasView = false,
+  hasDownload = false,
+  hasRestore = false,
   isLoading = false,
   showFooter = true,
-  deleteConfirmMessage = "Are you sure you want to delete this record?"
+  deleteConfirmMessage = "Are you sure you want to delete this record?",
+  /** Mobile collapsible list keys (optional) */
+  primaryKey,
+  subtitleKey,
+  amountKey,
+  /** Set false only when page already has its own mobile UI */
+  showMobileList = true,
 }) => {
   const tableRef = useRef(null);
   const dateRef = useRef(null);
@@ -127,7 +138,7 @@ const List = ({
 
 
     // Action column
-    if (hasEdit || hasDelete || hasPrint || hasView) {
+    if (hasEdit || hasDelete || hasPrint || hasView || hasDownload || hasRestore) {
       dtColumns.push({
         data: null,
         title: "Action",
@@ -138,23 +149,31 @@ const List = ({
         className: "text-center",
         render: function (data, type, row) {
           let buttons = "";
-          const rowId = row.id || row.girv_id || row.girv_uuid || row.firm_id || row.user_id || row.rate_id || row.rate_uuid || row.purity_uuid || row.purity_id || "";
+          const rowId = row.id || row.girv_id || row.girv_uuid || row.firm_id || row.user_id || row.rate_id || row.rate_uuid || row.purity_uuid || row.purity_id || row.backup_id || row.backup_uuid || "";
           const showView = typeof hasView === "function" ? hasView(row) : hasView;
           const showEdit = typeof hasEdit === "function" ? hasEdit(row) : hasEdit;
           const showDelete = typeof hasDelete === "function" ? hasDelete(row) : hasDelete;
           const showPrint = typeof hasPrint === "function" ? hasPrint(row) : hasPrint;
+          const showDownload = typeof hasDownload === "function" ? hasDownload(row) : hasDownload;
+          const showRestore = typeof hasRestore === "function" ? hasRestore(row) : hasRestore;
 
           if (showView) {
-            buttons += `<button class="btn btn-sm btn-yellow pt-0 mt-0 pb-0 mb-0 view-btn me-1" data-id="${rowId}"><i class="bi bi-eye text-dark"></i></button>`;
+            buttons += `<button class="btn btn-sm btn-yellow pt-0 mt-0 pb-0 mb-0 view-btn me-1" data-id="${rowId}" title="View"><i class="bi bi-eye text-dark"></i></button>`;
+          }
+          if (showDownload) {
+            buttons += `<button class="btn btn-sm btn-info pt-0 mt-0 pb-0 mb-0 download-btn me-1" data-id="${rowId}" title="Download"><i class="bi bi-download text-white"></i></button>`;
+          }
+          if (showRestore) {
+            buttons += `<button class="btn btn-sm btn-success pt-0 mt-0 pb-0 mb-0 restore-btn me-1" data-id="${rowId}" title="Restore"><i class="bi bi-arrow-counterclockwise"></i></button>`;
           }
           if (showEdit) {
-            buttons += `<button class="btn btn-sm btn-primary pt-0 mt-0 pb-0 mb-0 edit-btn me-1" data-id="${rowId}"><i class="bi bi-pencil"></i></button>`;
+            buttons += `<button class="btn btn-sm btn-primary pt-0 mt-0 pb-0 mb-0 edit-btn me-1" data-id="${rowId}" title="Edit"><i class="bi bi-pencil"></i></button>`;
           }
           if (showDelete) {
-            buttons += `<button class="btn btn-sm btn-danger pt-0 mt-0 pb-0 mb-0 delete-btn me-1" data-id="${rowId}"><i class="bi bi-trash"></i></button>`;
+            buttons += `<button class="btn btn-sm btn-danger pt-0 mt-0 pb-0 mb-0 delete-btn me-1" data-id="${rowId}" title="Delete"><i class="bi bi-trash"></i></button>`;
           }
           if (showPrint) {
-            buttons += `<button class="btn btn-sm btn-warning pt-0 mt-0 pb-0 mb-0 print-btn" data-id="${rowId}"><i class="bi bi-printer"></i></button>`;
+            buttons += `<button class="btn btn-sm btn-warning pt-0 mt-0 pb-0 mb-0 print-btn" data-id="${rowId}" title="Print"><i class="bi bi-printer"></i></button>`;
           }
           return buttons;
         },
@@ -332,6 +351,26 @@ const List = ({
             });
           }
 
+          if (onDownload) {
+            $(tableRef.current).on("click", ".download-btn", function (e) {
+              e.stopPropagation();
+              let tr = $(this).closest("tr");
+              if (tr.hasClass("child")) tr = tr.prev();
+              const rowData = api.row(tr).data();
+              if (rowData) onDownload(rowData);
+            });
+          }
+
+          if (onRestore) {
+            $(tableRef.current).on("click", ".restore-btn", function (e) {
+              e.stopPropagation();
+              let tr = $(this).closest("tr");
+              if (tr.hasClass("child")) tr = tr.prev();
+              const rowData = api.row(tr).data();
+              if (rowData) onRestore(rowData);
+            });
+          }
+
           if (onEdit) {
             $(tableRef.current).on("click", ".edit-btn", function (e) {
               e.stopPropagation();
@@ -372,7 +411,7 @@ const List = ({
     } catch (err) {
       console.error("Error initializing DataTable:", err);
     }
-  }, [data, columns, title, onEdit, onDelete, onPrint, onView, hasEdit, hasDelete, hasPrint, hasView, showFooter]);
+  }, [data, columns, title, onEdit, onDelete, onPrint, onView, onDownload, onRestore, hasEdit, hasDelete, hasPrint, hasView, hasDownload, hasRestore, showFooter]);
 
 
   // ─── Date Range Filter ────────────────────────────────────────
@@ -443,121 +482,148 @@ const List = ({
   };
 
   return (
-    <div className="card p-3 pt-1 shadow-sm">
-      {/* ... existing code ... */}
-      <Confirm
-        show={confirmState.show}
-        onHide={handleCloseConfirm}
-        onConfirm={handleConfirmDelete}
-        message={typeof deleteConfirmMessage === 'function' ? deleteConfirmMessage(confirmState.rowData) : deleteConfirmMessage}
-      />
-      {title && <h5 className="mb-2 text-center text-brown p-0 m-0 fw-semibold mt-2">{title}</h5>}
-
-      {/* Controls */}
-      <div className="row align-items-center mb-3 g-3">
-        <div className="col-12 col-md-4">
-          <input
-            className="form-control border-secondary"
-            placeholder="Search..."
-            onChange={handleGlobalSearch}
+    <>
+      {/* Desktop / tablet table */}
+      <div className="d-none d-md-block">
+        <div className="card p-3 pt-1 shadow-sm">
+          <Confirm
+            show={confirmState.show}
+            onHide={handleCloseConfirm}
+            onConfirm={handleConfirmDelete}
+            message={typeof deleteConfirmMessage === 'function' ? deleteConfirmMessage(confirmState.rowData) : deleteConfirmMessage}
           />
-        </div>
+          {title && <h5 className="mb-2 text-center text-brown p-0 m-0 fw-semibold mt-2">{title}</h5>}
 
-        {columns?.some((col) => col.dateFilter) && (
-          <div className="col-12 col-md-4">
-            <input
-              ref={dateRef}
-              className="form-control text-center border-secondary"
-              readOnly
-              placeholder="Select date range..."
-            />
-          </div>
-        )}
-
-        <div className="col-12 col-md-4 d-flex justify-content-center align-items-center flex-wrap gap-1">
-          <button className="btn btn-success" onClick={() => tableInstance?.button(0).trigger()} title="Export to Excel">
-            <i className="bi bi-file-earmark-excel"></i>
-          </button>
-          <button className="btn btn-danger" onClick={() => tableInstance?.button(1).trigger()} title="Export to PDF">
-            <i className="bi bi-filetype-pdf"></i>
-          </button>
-          <button className="btn btn-primary" onClick={() => tableInstance?.button(2).trigger()} title="Print">
-            <i className="bi bi-printer"></i>
-          </button>
-          <button className="btn btn-info text-white" onClick={() => tableInstance?.button(3).trigger()} title="Copy">
-            <i className="bi bi-copy"></i>
-          </button>
-
-          <select className="form-select text-center" style={{ width: "auto" }} onChange={handlePageLengthChange} defaultValue="15">
-            <option value="" disabled>Rows</option>
-            <option value="5">5</option>
-            <option value="10">10</option>
-            <option value="15">15</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
-            <option value="All">All</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Table */}
-      {/* <div className="table-wrapper position-relative"> */}
-      <div className="table-wrapper position-relative" style={{ overflowX: "auto" }}>
-        {isLoading && (
-          <div
-            className="position-absolute w-100 h-100 d-flex justify-content-center align-items-center bg-white bg-opacity-75"
-            style={{ zIndex: 10, top: 0, left: 0 }}
-          >
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Loading...</span>
+          {/* Controls */}
+          <div className="row align-items-center mb-3 g-3">
+            <div className="col-12 col-md-4">
+              <input
+                className="form-control border-secondary"
+                placeholder="Search..."
+                onChange={handleGlobalSearch}
+              />
             </div>
-          </div>
-        )}
-        <div className="dt-container-fixed">
-          <table
-            ref={tableRef}
-            className="table table-hover table-bordered border-secondary mb-2 dataTable dtr-inline text-capitalize dynamic-data-table"
-            style={{ minWidth: "900px" }}
-          >
-            <thead className="table-secondary border-bottom border-dark-subtle">
-              <tr>
-                {columns?.map((col) => (
-                  <th key={col.key} style={{ position: col.key === columns[0]?.key ? "sticky" : "relative", left: col.key === columns[0]?.key ? 0 : "auto" }}>
-                    <span className="title-text" style={{ display: "block", pointerEvents: "none" }}>
-                      {col.title}
-                    </span>
-                  </th>
-                ))}
-                {(hasEdit || hasDelete || hasPrint || hasView) && (
-                  <th key="action-header" style={{ position: "relative" }}>
-                    <span className="title-text" style={{ display: "block", pointerEvents: "none" }}>
-                      Action
-                    </span>
-                  </th>
-                )}
-              </tr>
-            </thead>
 
-            {showFooter && (
-              <tfoot>
-                <tr>
-                  {columns?.map((col, i) => (
-                    <th
-                      key={i}
-                      className={col.sum ? "text-end fw-bold text-dark" : ""}
-                      style={{ backgroundColor: col.sum ? "#e9ecef" : "inherit" }}
-                    />
-                  ))}
-                  {(hasEdit || hasDelete || hasPrint || hasView) && <th />}
-                </tr>
-              </tfoot>
+            {columns?.some((col) => col.dateFilter) && (
+              <div className="col-12 col-md-4">
+                <input
+                  ref={dateRef}
+                  className="form-control text-center border-secondary"
+                  readOnly
+                  placeholder="Select date range..."
+                />
+              </div>
             )}
 
-            <tbody />
-          </table>
+            <div className="col-12 col-md-4 d-flex justify-content-center align-items-center flex-wrap gap-1">
+              <button className="btn btn-success" onClick={() => tableInstance?.button(0).trigger()} title="Export to Excel">
+                <i className="bi bi-file-earmark-excel"></i>
+              </button>
+              <button className="btn btn-danger" onClick={() => tableInstance?.button(1).trigger()} title="Export to PDF">
+                <i className="bi bi-filetype-pdf"></i>
+              </button>
+              <button className="btn btn-primary" onClick={() => tableInstance?.button(2).trigger()} title="Print">
+                <i className="bi bi-printer"></i>
+              </button>
+              <button className="btn btn-info text-white" onClick={() => tableInstance?.button(3).trigger()} title="Copy">
+                <i className="bi bi-copy"></i>
+              </button>
+
+              <select className="form-select text-center" style={{ width: "auto" }} onChange={handlePageLengthChange} defaultValue="15">
+                <option value="" disabled>Rows</option>
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="15">15</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="All">All</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="table-wrapper position-relative" style={{ overflowX: "auto" }}>
+            {isLoading && (
+              <div
+                className="position-absolute w-100 h-100 d-flex justify-content-center align-items-center bg-white bg-opacity-75"
+                style={{ zIndex: 10, top: 0, left: 0 }}
+              >
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+              </div>
+            )}
+            <div className="dt-container-fixed">
+              <table
+                ref={tableRef}
+                className="table table-hover table-bordered border-secondary mb-2 dataTable dtr-inline text-capitalize dynamic-data-table"
+                style={{ minWidth: "900px" }}
+              >
+                <thead className="table-secondary border-bottom border-dark-subtle">
+                  <tr>
+                    {columns?.map((col) => (
+                      <th key={col.key} style={{ position: col.key === columns[0]?.key ? "sticky" : "relative", left: col.key === columns[0]?.key ? 0 : "auto" }}>
+                        <span className="title-text" style={{ display: "block", pointerEvents: "none" }}>
+                          {col.title}
+                        </span>
+                      </th>
+                    ))}
+                    {(hasEdit || hasDelete || hasPrint || hasView || hasDownload || hasRestore) && (
+                      <th key="action-header" style={{ position: "relative" }}>
+                        <span className="title-text" style={{ display: "block", pointerEvents: "none" }}>
+                          Action
+                        </span>
+                      </th>
+                    )}
+                  </tr>
+                </thead>
+
+                {showFooter && (
+                  <tfoot>
+                    <tr>
+                      {columns?.map((col, i) => (
+                        <th
+                          key={i}
+                          className={col.sum ? "text-end fw-bold text-dark" : ""}
+                          style={{ backgroundColor: col.sum ? "#e9ecef" : "inherit" }}
+                        />
+                      ))}
+                      {(hasEdit || hasDelete || hasPrint || hasView || hasDownload || hasRestore) && <th />}
+                    </tr>
+                  </tfoot>
+                )}
+
+                <tbody />
+              </table>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Mobile collapsible cards — all modules using List get this automatically */}
+      {showMobileList && (
+        <MobileList
+          data={data}
+          columns={columns}
+          title={title}
+          primaryKey={primaryKey}
+          subtitleKey={subtitleKey}
+          amountKey={amountKey}
+          hasEdit={hasEdit}
+          hasDelete={hasDelete}
+          hasPrint={hasPrint}
+          hasView={hasView}
+          hasDownload={hasDownload}
+          hasRestore={hasRestore}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onPrint={onPrint}
+          onView={onView}
+          onDownload={onDownload}
+          onRestore={onRestore}
+          deleteConfirmMessage={deleteConfirmMessage}
+        />
+      )}
+    </>
   );
 };
 

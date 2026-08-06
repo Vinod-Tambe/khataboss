@@ -143,6 +143,9 @@ const AuctionUserList = () => {
         data={filteredData}
         columns={columns}
         title="Auction User List"
+        primaryKey="auc_user_full_name"
+        subtitleKey="auc_user_mobile"
+        amountKey="auc_payable_amt"
         hasEdit={false}
         hasDelete={false}
         hasPrint={false}

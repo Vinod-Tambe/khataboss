@@ -75,6 +75,8 @@ const MoneyLenderList = () => {
           data={moneyLenders}
           columns={columns}
           title="All Money Lender List"
+          primaryKey="ml_name"
+          subtitleKey="created_at"
           onEdit={handleEdit}
           onDelete={handleDelete}
           hasDelete={true}

@@ -23,6 +23,7 @@ import {
   FiLogOut,
   FiSettings,
   FiAward,
+  FiDatabase,
 } from "react-icons/fi";
 import { FaBook, FaBookOpen, FaBalanceScale } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
@@ -180,6 +181,7 @@ const Sidebar = () => {
       subItems: [
         { label: "Rate", path: "/rate", icon: <FiTrendingUp /> },
         { label: "Purity", path: "/purity", icon: <FiAward /> },
+        { label: "Backup", path: "/backup", icon: <FiDatabase /> },
       ],
     },
 

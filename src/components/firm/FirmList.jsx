@@ -79,6 +79,8 @@ const FirmList = () => {
           data={firms}
           columns={columns}
           title="All Firm List"
+          primaryKey="firm_name"
+          subtitleKey="firm_add_date"
           onEdit={handleEdit}
           onDelete={handleDelete}
           onPrint={handlePrint}

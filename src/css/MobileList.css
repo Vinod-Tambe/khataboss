@@ -1,0 +1,202 @@
+.mobile-list {
+  margin-bottom: 1rem;
+}
+
+.mobile-list__panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0.35rem 0 0.85rem;
+}
+
+.mobile-list__title {
+  font-weight: 600;
+  color: var(--text-brown, #6b4f2a);
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.mobile-list__count-badge {
+  min-width: 1.75rem;
+  height: 1.75rem;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background-color: rgba(196, 146, 42, 0.15);
+  color: #a87a1f;
+}
+
+.mobile-list__search .form-control:focus {
+  box-shadow: none;
+  border-color: #c4922a;
+}
+
+.mobile-list__empty {
+  text-align: center;
+  padding: 2rem 1rem;
+  border: 1px dashed var(--app-border, #ced4da);
+  border-radius: 12px;
+  color: var(--app-text-muted, #6c757d);
+  background-color: var(--light, #f8f9fa);
+}
+
+.mobile-list__cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.mobile-list__card {
+  background-color: var(--home-card-bg, #fff);
+  border: 1px solid var(--app-border, #e5e5e5);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mobile-list__card.is-open {
+  border-color: rgba(196, 146, 42, 0.45);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+.mobile-list__card-main {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+
+.mobile-list__card-left {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.mobile-list__card-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--app-text, #212529);
+  line-height: 1.3;
+}
+
+.mobile-list__card-subtitle {
+  font-size: 0.78rem;
+  color: var(--app-text-muted, #6c757d);
+}
+
+.mobile-list__card-right {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-shrink: 0;
+}
+
+.mobile-list__card-amount {
+  font-size: 0.9rem;
+  color: var(--app-text, #212529);
+  white-space: nowrap;
+}
+
+.mobile-list__chevron {
+  font-size: 0.95rem;
+  color: #a87a1f;
+}
+
+.mobile-list__details {
+  padding: 0 1rem 0.9rem;
+  border-top: 1px solid var(--app-border, #eee);
+}
+
+.mobile-list__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem 0.75rem;
+  padding-top: 0.75rem;
+}
+
+.mobile-list__cell {
+  min-width: 0;
+}
+
+.mobile-list__cell-label {
+  display: block;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--app-text-muted, #6c757d);
+  margin-bottom: 0.15rem;
+}
+
+.mobile-list__cell-value {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--app-text, #212529);
+  word-break: break-word;
+}
+
+.mobile-list__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--app-border, #eee);
+}
+
+.mobile-list__actions .btn {
+  min-width: 2.25rem;
+}
+
+[data-theme="dark"] .mobile-list__card {
+  background-color: var(--home-card-bg, #2d2d44);
+  border-color: var(--app-border);
+}
+
+[data-theme="dark"] .mobile-list__card.is-open {
+  border-color: rgba(212, 160, 23, 0.5);
+}
+
+[data-theme="dark"] .mobile-list__title,
+[data-theme="dark"] .mobile-list__card-title,
+[data-theme="dark"] .mobile-list__card-amount,
+[data-theme="dark"] .mobile-list__cell-value {
+  color: var(--datatable-body-text, #eaeaea);
+}
+
+[data-theme="dark"] .mobile-list__empty {
+  background-color: #2d2d44;
+  border-color: var(--app-border);
+}
+
+[data-theme="dark"] .mobile-list__search .input-group-text,
+[data-theme="dark"] .mobile-list__search .form-control {
+  background-color: #2d2d44;
+  color: var(--datatable-body-text, #eaeaea);
+  border-color: var(--app-border);
+}
+
+[data-theme="dark"] .mobile-list__count-badge {
+  background-color: rgba(212, 160, 23, 0.2);
+  color: #e0b02a;
+}
+
+[data-theme="dark"] .mobile-list__details,
+[data-theme="dark"] .mobile-list__actions {
+  border-color: var(--app-border);
+}

@@ -37,6 +37,8 @@ const LogsList = () => {
         data={LOGS_STATIC_DATA}
         columns={columns}
         title="All Logs List"
+        primaryKey="subject"
+        subtitleKey="log_date"
         showFooter={false}
       />
     </div>
