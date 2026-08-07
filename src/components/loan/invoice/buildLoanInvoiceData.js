@@ -1,4 +1,5 @@
 import moment from 'moment';
+import { formatTimePeriod } from '../../../utils/formatTimePeriod';
 
 const formatMoney = (value) => {
   const num = Number(value) || 0;
@@ -303,7 +304,7 @@ export const buildLoanInvoiceData = (loanDetails, customer = null) => {
       processingAmt: formatMoney(loanDetails.girv_process_amt),
       chargeAmt: formatMoney(loanDetails.girv_charge_amt),
       firstMonthInt: loanDetails.girv_first_int === 'Y',
-      timePeriod: `${origMonths.toFixed(1)} Months`,
+      timePeriod: formatTimePeriod(startDate, today),
     },
     items: items.map((item) => ({
       metalType: (item.st_metal_type || '-').toUpperCase(),

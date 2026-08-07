@@ -376,11 +376,15 @@ body {
     color: var(--text-brown);
 }
 
-.user-home-mobile-row__right .badge {
+.user-home-mobile-row__right .badge:not(.status-badge) {
     font-size: 10px;
     font-weight: 600;
     padding: 0.25em 0.5em;
     white-space: nowrap;
+}
+
+.user-home-mobile-row__right .badge.status-badge {
+    font-size: 0.7rem;
 }
 
 .user-home-mobile-row__amount {

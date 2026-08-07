@@ -1,4 +1,6 @@
 import React from "react";
+import { getStatusBadgeMeta } from "../../utils/listFormatters";
+import "../../css/DataTable.css";
 
 const UserHomeList = ({ title, icon, data, columns }) => {
   const defaultColumns = [
@@ -53,15 +55,10 @@ const UserHomeList = ({ title, icon, data, columns }) => {
                       {col.render ? (
                         col.render(row)
                       ) : col.key === "status" ? (
-                        <span
-                          className={`badge ${
-                            row[col.key] === "Active" || row[col.key] === "ACTIVE" || row[col.key] === "PAID"
-                              ? "bg-success"
-                              : "bg-secondary"
-                          }`}
-                        >
-                          {row[col.key]}
-                        </span>
+                        (() => {
+                          const { label, className } = getStatusBadgeMeta(row[col.key]);
+                          return <span className={className}>{label}</span>;
+                        })()
                       ) : (
                         row[col.key]
                       )}

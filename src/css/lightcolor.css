@@ -52,6 +52,26 @@
   --datatable-row-bg-blue: rgb(239, 243, 255);
   --datatable-body-bg: #ffffff;
   --datatable-body-text: #212529;
+
+  /* Status badges (light) */
+  --status-badge-success-bg: #edf4ea;
+  --status-badge-success-text: #006400;
+  --status-badge-success-border: #b7dfb7;
+  --status-badge-danger-bg: #ffdbe1;
+  --status-badge-danger-text: #dc143c;
+  --status-badge-danger-border: #f999aa;
+  --status-badge-warning-bg: #fff3cd;
+  --status-badge-warning-text: #aa6600;
+  --status-badge-warning-border: #ffd48a;
+  --status-badge-info-bg: #dbfbff;
+  --status-badge-info-text: #065658;
+  --status-badge-info-border: #99f6f9;
+  --status-badge-primary-bg: #dfecff;
+  --status-badge-primary-text: #000080;
+  --status-badge-primary-border: #accfff;
+  --status-badge-secondary-bg: #f0eded;
+  --status-badge-secondary-text: #495057;
+  --status-badge-secondary-border: #d6d3d3;
   --print-preview-wrapper-bg: #f0f2f5;
   --print-field-bg: #fff;
   --print-field-border: #212529;

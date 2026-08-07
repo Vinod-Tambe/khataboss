@@ -13,7 +13,7 @@ import { getFinancesDropdown, getFinanceDetails, createFinancePayment } from '..
 import { getAccountsDropdown } from '../../api/accountApi';
 import { setSelectedUser } from '../../store/slices/userSlice';
 
-const FinanceCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) => {
+const FinanceCollectionModal = ({ show, onClose, firms = [], selectedFirmId, initialUser = null }) => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
@@ -102,7 +102,10 @@ const FinanceCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) =
 
         if (show) {
             resetForm();
-            if (selectedFirmId && selectedFirmId !== 'all') {
+            const firmFromUser = initialUser?.user_firm_id;
+            if (firmFromUser) {
+                setFirmId(firmFromUser);
+            } else if (selectedFirmId && selectedFirmId !== 'all') {
                 setFirmId(selectedFirmId);
             } else if (firms.length === 1) {
                 setFirmId(firms[0].firm_id);
@@ -115,13 +118,23 @@ const FinanceCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) =
             setFinanceNo('');
             setFinanceInfo(null);
 
-            // Focus first element (Firm Name) when modal opens
-            setTimeout(() => {
-                const firstEl = formRef.current?.querySelector('select, input');
-                if (firstEl) firstEl.focus();
-            }, 300);
+            // Prefill user from header search
+            if (initialUser?.user_id) {
+                const firm = firmFromUser || (selectedFirmId !== 'all' ? selectedFirmId : null);
+                setTimeout(() => {
+                    setSelectedUserLocal(initialUser);
+                    setUserSearch(`${initialUser.user_first_name || ''} ${initialUser.user_last_name || ''} (${initialUser.user_mobile_no || ''})`.trim());
+                    setSearchResults([]);
+                    fetchUserFinances(initialUser, firm);
+                }, 80);
+            } else {
+                setTimeout(() => {
+                    const firstEl = formRef.current?.querySelector('select, input');
+                    if (firstEl) firstEl.focus();
+                }, 300);
+            }
         }
-    }, [show, selectedFirmId, firms]);
+    }, [show, selectedFirmId, firms, initialUser]);
 
     // Focus User Search after Firm is selected
     useEffect(() => {
@@ -205,7 +218,7 @@ const FinanceCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) =
         }
     };
 
-    const fetchUserFinances = async (user) => {
+    const fetchUserFinances = async (user, firmOverride) => {
         setLoadingList(true);
         setUserFinances([]);
         setFinanceNo('');
@@ -213,7 +226,7 @@ const FinanceCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) =
         setFinanceError('');
         try {
             const response = await getFinancesDropdown(user.user_id, {
-                firmId: firmId || undefined
+                firmId: firmOverride || firmId || user.user_firm_id || undefined
             });
             const data = Array.isArray(response) ? response : (response.data || []);
             setUserFinances(data);
@@ -232,7 +245,8 @@ const FinanceCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) =
         setSelectedUserLocal(user);
         setUserSearch(`${user.user_first_name} ${user.user_last_name} (${user.user_mobile_no})`);
         setSearchResults([]);
-        fetchUserFinances(user);
+        if (user.user_firm_id) setFirmId(user.user_firm_id);
+        fetchUserFinances(user, user.user_firm_id);
         setTimeout(() => {
             if (financeNoRef.current) {
                 financeNoRef.current.focus();

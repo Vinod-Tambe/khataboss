@@ -6,6 +6,7 @@ import { toast } from 'react-hot-toast';
 import useFormNavigation from '../../hooks/useFormNavigation';
 import { getMoneyLenderByUuid, updateMoneyLender } from '../../api/moneyLenderApi';
 import { getFirmsDropdown } from '../../api/firmApi';
+import { getValidatedUploadFile, validateUploadFile } from '../../utils/fileUpload';
 
 const UpdateMoneyLender = () => {
     const { uuid } = useParams();
@@ -147,11 +148,10 @@ const UpdateMoneyLender = () => {
     };
 
     const handleFileSelect = (e, fieldName, setPreview) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            setFormData(prev => ({ ...prev, [fieldName]: file }));
-            setPreview(URL.createObjectURL(file));
-        }
+        const file = getValidatedUploadFile(e);
+        if (!file) return;
+        setFormData(prev => ({ ...prev, [fieldName]: file }));
+        setPreview(URL.createObjectURL(file));
     };
 
     const removeFile = (fieldName, setPreview) => {
@@ -198,6 +198,7 @@ const UpdateMoneyLender = () => {
 
         canvasRef.current.toBlob((blob) => {
             const file = new File([blob], `${activeCaptureField}_captured.jpg`, { type: "image/jpeg" });
+            if (!validateUploadFile(file)) return;
 
             setFormData(prev => ({ ...prev, [activeCaptureField]: file }));
 

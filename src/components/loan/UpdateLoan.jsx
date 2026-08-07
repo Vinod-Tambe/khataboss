@@ -13,6 +13,7 @@ import { getGirviById, updateGirvi } from '../../api/girviApi';
 import { getPurities } from '../../api/purityApi';
 import { getRates } from '../../api/rateApi';
 import { toast } from 'react-hot-toast';
+import { validateUploadFile } from '../../utils/fileUpload';
 
 const UpdateLoan = () => {
   const { id } = useParams();
@@ -454,6 +455,7 @@ const UpdateLoan = () => {
 
   const updateItemImage = (index, file) => {
     if (!file) return;
+    if (!validateUploadFile(file)) return;
     const updatedItems = [...formData.items];
     updatedItems[index] = {
       ...updatedItems[index],

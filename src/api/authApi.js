@@ -91,3 +91,50 @@ export const verifyToken = async (token) => {
     return { valid: false };
   }
 };
+
+export const getMyProfile = async () => {
+  try {
+    const response = await axiosInstance.get('/auth/me');
+    return {
+      success: true,
+      data: response.data.data || response.data,
+      message: response.data.message,
+    };
+  } catch (error) {
+    const message = error.response?.data?.message || error.response?.data?.error || error.message;
+    throw new Error(message);
+  }
+};
+
+export const updateMyProfile = async (formData) => {
+  try {
+    const response = await axiosInstance.patch('/auth/profile', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return {
+      success: true,
+      data: response.data.data || response.data,
+      message: response.data.message || 'Profile updated successfully.',
+    };
+  } catch (error) {
+    const message = error.response?.data?.message || error.response?.data?.error || error.message;
+    throw new Error(message);
+  }
+};
+
+export const changePassword = async ({ old_password, new_password, confirm_password }) => {
+  try {
+    const response = await axiosInstance.post('/auth/change-password', {
+      old_password,
+      new_password,
+      confirm_password,
+    });
+    return {
+      success: true,
+      message: response.data.message || 'Password updated successfully.',
+    };
+  } catch (error) {
+    const message = error.response?.data?.message || error.response?.data?.error || error.message;
+    throw new Error(message);
+  }
+};

@@ -5,6 +5,7 @@ import { addAuction, getAuctionUsers } from '../../../api/auctionApi';
 import { toast } from 'react-hot-toast';
 import '../../../css/Modal.css';
 import useFormNavigation from '../../../hooks/useFormNavigation';
+import { getValidatedUploadFile } from '../../../utils/fileUpload';
 
 const AuctionModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pendingPrincipal, pendingInterest, onSuccess }) => {
   const { selectedFirm } = useSelector((state) => state.firm);
@@ -253,15 +254,10 @@ const AuctionModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pen
   };
 
   const handleFileSelect = (e, fieldName, setPreview) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('File size must be less than 5MB');
-        return;
-      }
-      setUserImage(file);
-      setPreview(URL.createObjectURL(file));
-    }
+    const file = getValidatedUploadFile(e);
+    if (!file) return;
+    setUserImage(file);
+    setPreview(URL.createObjectURL(file));
   };
 
   const totalPayment = (parseFloat(formData.auc_cash_amt) || 0) +

@@ -28,6 +28,9 @@ import {
   FiCheckSquare,
   FiLock,
   FiClock,
+  FiZap,
+  FiArrowUpRight,
+  FiRepeat,
 } from "react-icons/fi";
 import { FaBook, FaBookOpen, FaBalanceScale } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
@@ -127,11 +130,11 @@ const Sidebar = () => {
       label: "Loan",
       icon: <FiClipboard />,
       subItems: [
-        { label: "All Loan List", path: "/loan/all-list", icon: <FiList /> },
-        { label: "Active Loan List", path: "/loan/active-list", icon: <FiList /> },
-        { label: "Release Loan List", path: "/loan/release-list", icon: <FiList /> },
+        { label: "Active Loan List", path: "/loan/active-list", icon: <FiZap /> },
+        { label: "Release Loan List", path: "/loan/release-list", icon: <FiArrowUpRight /> },
         { label: "Auction Loan List", path: "/loan/auction-list", icon: <FiAward /> },
-        { label: "Transfer Loan List", path: "/loan/transfer-list", icon: <FiFileText /> },
+        { label: "Transfer Loan List", path: "/loan/transfer-list", icon: <FiRepeat /> },
+        { label: "All Loan List", path: "/loan/all-list", icon: <FiList /> },
       ],
     },
     {
@@ -189,6 +192,7 @@ const Sidebar = () => {
         { label: "Rate", path: "/rate", icon: <FiTrendingUp /> },
         { label: "Purity", path: "/purity", icon: <FiAward /> },
         { label: "Backup", path: "/backup", icon: <FiDatabase /> },
+        { label: "Update Password", path: "/settings/update-password", icon: <FiLock /> },
       ],
     },
 

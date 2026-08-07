@@ -36,6 +36,7 @@ const List = ({
   onView,
   onDownload,
   onRestore,
+  onCustomerHome,
   hasEdit = false,
   hasDelete = false,
   hasPrint = false,
@@ -400,6 +401,16 @@ const List = ({
               if (rowData) onPrint(rowData);
             });
           }
+
+          if (onCustomerHome) {
+            $(tableRef.current).on("click", ".customer-home-btn", function (e) {
+              e.stopPropagation();
+              let tr = $(this).closest("tr");
+              if (tr.hasClass("child")) tr = tr.prev();
+              const rowData = api.row(tr).data();
+              if (rowData) onCustomerHome(rowData);
+            });
+          }
         },
       });
 
@@ -411,7 +422,7 @@ const List = ({
     } catch (err) {
       console.error("Error initializing DataTable:", err);
     }
-  }, [data, columns, title, onEdit, onDelete, onPrint, onView, onDownload, onRestore, hasEdit, hasDelete, hasPrint, hasView, hasDownload, hasRestore, showFooter]);
+  }, [data, columns, title, onEdit, onDelete, onPrint, onView, onDownload, onRestore, onCustomerHome, hasEdit, hasDelete, hasPrint, hasView, hasDownload, hasRestore, showFooter]);
 
 
   // ─── Date Range Filter ────────────────────────────────────────
@@ -620,6 +631,7 @@ const List = ({
           onView={onView}
           onDownload={onDownload}
           onRestore={onRestore}
+          onCustomerHome={onCustomerHome}
           deleteConfirmMessage={deleteConfirmMessage}
         />
       )}

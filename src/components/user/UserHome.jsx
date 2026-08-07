@@ -8,9 +8,22 @@ import { getFinanceDetails } from "../../api/financeApi";
 import { getGirviById } from "../../api/girviApi";
 import { getUserDashboard } from "../../api/dashboardApi";
 import moment from "moment";
+import { formatTimePeriod } from "../../utils/formatTimePeriod";
 import "../../css/Home.css";
 
 const LAST_N = 5;
+
+const formatAmt = (value) =>
+  Number(value || 0).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+const ClickableCell = ({ children, onClick }) => (
+  <span className="text-brown cursor-pointer fw-bold" onClick={onClick}>
+    {children}
+  </span>
+);
 
 const UserHome = () => {
   const navigate = useNavigate();
@@ -46,28 +59,68 @@ const UserHome = () => {
         // Set Totals
         setTotals(totals);
 
-        // Set Finance List (last 5)
-        const dynamicFinances = (latestFinances || []).slice(0, LAST_N).map(f => ({
-          ...f,
-          id: f.fin_id,
-          finNo: `Fin-${f.fin_id}`,
-          principal: `${(f.fin_prin_amt || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-          emi: `${(f.fin_emi_amt || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-          startDate: moment(f.fin_start_date).format("DD-MM-YYYY"),
-          status: f.fin_status
-        }));
+        // Set Finance List (last 5) with detailed info
+        const dynamicFinances = (latestFinances || []).slice(0, LAST_N).map((f) => {
+          const emis = Array.isArray(f.finance_trans) ? f.finance_trans : [];
+          const totalEmis = Number(f.fin_no_of_emi) || emis.length || 0;
+          const paidEmis = emis.filter((t) => String(t.ft_emi_status).toUpperCase() === "PAID").length;
+          const pendingEmis = Math.max(0, totalEmis - paidEmis);
+          const pendingAmt = emis.reduce((sum, t) => sum + (Number(t.ft_pending_amt) || 0), 0);
+
+          return {
+            ...f,
+            id: f.fin_id,
+            finNo: `Fin-${f.fin_id}`,
+            principal: formatAmt(f.fin_prin_amt),
+            emi: formatAmt(f.fin_emi_amt),
+            finalAmt: formatAmt(f.fin_final_amt),
+            collectedAmt: formatAmt(f.fin_collec_amt),
+            pendingAmt: formatAmt(pendingAmt),
+            noOfEmi: totalEmis || "-",
+            paidEmi: paidEmis,
+            pendingEmi: pendingEmis,
+            emiProgress: totalEmis ? `${paidEmis}/${totalEmis}` : "-",
+            roi: f.fin_roi != null && f.fin_roi !== "" ? `${f.fin_roi}%` : "-",
+            freq: f.fin_freq_type || "-",
+            startDate: f.fin_start_date ? moment(f.fin_start_date).format("DD-MM-YYYY") : "-",
+            cash: formatAmt(f.fin_cash_amt),
+            bank: formatAmt(f.fin_bank_amt),
+            online: formatAmt(f.fin_online_amt),
+            card: formatAmt(f.fin_card_amt),
+            firmName: f.firm?.firm_name || "-",
+            otherInfo: f.fin_other_info || "-",
+            status: f.fin_status,
+          };
+        });
         setFinanceList(dynamicFinances);
 
-        // Set Loan List (last 5)
-        const dynamicLoans = (latestLoans || []).slice(0, LAST_N).map(l => ({
-          ...l,
-          id: l.girv_id,
-          loanNo: `Loan-${l.girv_id}`,
-          principal: `${(l.girv_prin_amt || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-          roi: `${l.girv_roi}%`,
-          startDate: moment(l.girv_start_date).format("DD-MM-YYYY"),
-          status: l.girv_status
-        }));
+        // Set Loan List (last 5) with detailed info
+        const dynamicLoans = (latestLoans || []).slice(0, LAST_N).map((l) => {
+          const startDate = l.girv_start_date ? moment(l.girv_start_date) : null;
+          // Active loans have no stored end date — use today (same as Loan Info)
+          const endDate = moment();
+          const roiType = l.girv_roi_type ? String(l.girv_roi_type).toUpperCase() : "";
+          return {
+            ...l,
+            id: l.girv_id,
+            loanNo: `Loan-${l.girv_id}`,
+            principal: formatAmt(l.girv_prin_amt),
+            finalAmt: formatAmt(l.girv_final_amt),
+            roi: l.girv_roi != null && l.girv_roi !== "" ? `${l.girv_roi}%${roiType ? ` ${roiType}` : ""}` : "-",
+            type: l.girv_type ? String(l.girv_type).toUpperCase() : "-",
+            startDate: startDate?.isValid() ? startDate.format("DD-MM-YYYY") : "-",
+            endDate: endDate.format("DD-MM-YYYY"),
+            timePeriod: startDate?.isValid() ? formatTimePeriod(startDate, endDate) : "-",
+            packetNo: l.girv_packet_no || "-",
+            lockerNo: l.girv_locker_no || "-",
+            cash: formatAmt(l.girv_cash_amt),
+            bank: formatAmt(l.girv_bank_amt),
+            online: formatAmt(l.girv_online_amt),
+            card: formatAmt(l.girv_card_amt),
+            otherInfo: l.girv_other_info || "-",
+            status: l.girv_status,
+          };
+        });
         setLoanList(dynamicLoans);
 
         // Set Transaction List (last 5)
@@ -119,41 +172,63 @@ const UserHome = () => {
   };
 
   const financeColumns = [
-    { header: "Fin No", key: "finNo" },
-    { header: "Principal", key: "principal" },
-    { header: "EMI Amount", key: "emi" },
+    {
+      header: "Fin No",
+      key: "finNo",
+      render: (row) => (
+        <ClickableCell onClick={() => handleViewFinance(row.id)}>{row.finNo}</ClickableCell>
+      ),
+    },
+    { header: "Status", key: "status" },
     {
       header: "Start Date",
       key: "startDate",
       render: (row) => (
-        <span
-          className="text-brown cursor-pointer fw-bold"
-          onClick={() => handleViewFinance(row.id)}
-        >
-          {row.startDate}
-        </span>
-      )
+        <ClickableCell onClick={() => handleViewFinance(row.id)}>{row.startDate}</ClickableCell>
+      ),
     },
-    { header: "Status", key: "status" }
+    { header: "Principal", key: "principal" },
+    { header: "EMI Amt", key: "emi" },
+    { header: "EMIs", key: "emiProgress" },
+    { header: "Collected", key: "collectedAmt" },
+    { header: "Pending", key: "pendingAmt" },
+    { header: "ROI", key: "roi" },
+    { header: "Freq", key: "freq" },
+    { header: "Final Amt", key: "finalAmt" },
+    { header: "Cash", key: "cash" },
+    { header: "Bank", key: "bank" },
+    { header: "Online", key: "online" },
+    { header: "Card", key: "card" },
   ];
 
   const loanColumns = [
-    { header: "Loan No", key: "loanNo" },
-    { header: "Principal", key: "principal" },
-    { header: "ROI", key: "roi" },
+    {
+      header: "Loan No",
+      key: "loanNo",
+      render: (row) => (
+        <ClickableCell onClick={() => handleViewLoan(row.id)}>{row.loanNo}</ClickableCell>
+      ),
+    },
+    { header: "Status", key: "status" },
     {
       header: "Start Date",
       key: "startDate",
       render: (row) => (
-        <span
-          className="text-brown cursor-pointer fw-bold"
-          onClick={() => handleViewLoan(row.id)}
-        >
-          {row.startDate}
-        </span>
-      )
+        <ClickableCell onClick={() => handleViewLoan(row.id)}>{row.startDate}</ClickableCell>
+      ),
     },
-    { header: "Status", key: "status" }
+    { header: "End Date", key: "endDate" },
+    { header: "T.Period", key: "timePeriod" },
+    { header: "Type", key: "type" },
+    { header: "Principal", key: "principal" },
+    { header: "ROI", key: "roi" },
+    { header: "Packet", key: "packetNo" },
+    { header: "Locker", key: "lockerNo" },
+    { header: "Final Amt", key: "finalAmt" },
+    { header: "Cash", key: "cash" },
+    { header: "Bank", key: "bank" },
+    { header: "Online", key: "online" },
+    { header: "Card", key: "card" },
   ];
 
   const getTransactionLink = (row) => {

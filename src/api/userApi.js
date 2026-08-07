@@ -37,6 +37,26 @@ export const getUsers = async (firmId, search = "") => {
 };
 
 /**
+ * Fast header autocomplete search
+ * @param {string} q - mobile / email / name / customer id
+ * @param {number|string|null} firmId - firm filter; omit/null for all firms
+ * @param {number} limit - max results (default 12)
+ */
+export const searchUsers = async (q, firmId = null, limit = 12) => {
+  try {
+    const params = { q, limit };
+    if (firmId != null && firmId !== '' && firmId !== 'all') {
+      params.firmId = firmId;
+    }
+    const response = await axiosInstance.get('/user/search', { params });
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.error || error.response?.data?.message || error.message;
+    throw new Error(message);
+  }
+};
+
+/**
  * Delete a user by UUID
  * @param {string} uuid - User UUID
  * @returns {Promise} - Response object

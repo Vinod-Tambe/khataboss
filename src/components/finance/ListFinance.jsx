@@ -1,22 +1,31 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { getFinances, deleteFinance } from "../../api/financeApi";
 import { toast } from "react-toastify";
-import moment from "moment";
 import List from "../common/List";
+import { setSelectedUser } from "../../store/slices/userSlice";
+import {
+  formatListAmt,
+  formatListDate,
+  statusBadgeHtml,
+  getFinanceEmiStats,
+} from "../../utils/listFormatters";
 
-const ListFinance = ({ status = "ALL" }) => {
+const ListFinance = ({ status = "ALL", global = false }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { selectedUser } = useSelector((state) => state.user);
   const { selectedFirm } = useSelector((state) => state.firm);
   const [finances, setFinances] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const getTitle = () => {
-    if (status === "ALL") return "All Finance List";
-    if (status === "TODAY_PENDING_EMI") return "Today Pending EMI";
-    return `${status.charAt(0) + status.slice(1).toLowerCase()} Finance List`;
+    let baseTitle = "";
+    if (status === "ALL") baseTitle = "All Finance List";
+    else if (status === "TODAY_PENDING_EMI") baseTitle = "Today Pending EMI";
+    else baseTitle = `${status.charAt(0) + status.slice(1).toLowerCase()} Finance List`;
+    return global ? `Global ${baseTitle}` : baseTitle;
   };
 
   const fetchFinances = useCallback(async () => {
@@ -24,13 +33,12 @@ const ListFinance = ({ status = "ALL" }) => {
       setLoading(true);
       const filters = {
         firmId: selectedFirm?.firm_id,
-        userId: selectedUser?.user_id,
         status: status,
       };
-      console.log("Fetching finances with filters:", filters);
+      if (!global && selectedUser?.user_id) {
+        filters.userId = selectedUser.user_id;
+      }
       const response = await getFinances(filters);
-      console.log("Finance API response:", response);
-      // Check if response is the array or contains a data property
       const data = Array.isArray(response) ? response : (response.data || []);
       setFinances(data);
     } catch (error) {
@@ -39,20 +47,19 @@ const ListFinance = ({ status = "ALL" }) => {
     } finally {
       setLoading(false);
     }
-  }, [selectedFirm?.firm_id, selectedUser?.user_id, status]);
+  }, [selectedFirm?.firm_id, selectedUser?.user_id, status, global]);
 
   useEffect(() => {
-    if (selectedUser?.user_id) {
+    if (global || selectedUser?.user_id) {
       fetchFinances();
     }
-  }, [selectedUser?.user_id, fetchFinances]);
+  }, [selectedUser?.user_id, fetchFinances, global]);
 
   const handleView = (rowData) => {
     navigate("/user/home/finance", { state: { finance: rowData } });
   };
 
   const handleEdit = (rowData) => {
-    // Navigate to edit page if implemented, for now using view logic or toast
     navigate("/user/home/finance", { state: { finance: rowData } });
   };
 
@@ -66,98 +73,161 @@ const ListFinance = ({ status = "ALL" }) => {
     }
   };
 
-  const columns = useMemo(() => [
-    {
-      key: "fin_id",
-      title: "Fin No",
-      render: (data) => `${data}.`
-    },
-    {
-      key: "user",
-      title: "Customer",
-      render: (data, type, row) => row.user ? `${row.user.user_first_name} ${row.user.user_last_name}` : "N/A"
-    },
-    {
-      key: "firm",
-      title: "Firm",
-      render: (data, type, row) => row.firm ? row.firm.firm_name : "N/A"
-    },
-    {
-      key: "fin_start_date",
-      title: "Start Date",
-      dateFilter: true,
-      render: (data) => `<span class="text-brown fw-bold cursor-pointer view-btn">${moment(data).format("DD-MM-YYYY")}</span>`
-    },
-    {
-      key: "fin_prin_amt",
-      title: "Principal",
-      sum: true,
-      render: (data, type, row) => `
-        ${Number(data).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-      `
-    },
-    {
-      key: "fin_emi_amt",
-      title: "EMI Amt",
-      sum: true,
-      render: (data, type, row) => `
-         ${Number(data).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-      `
-    },
-    {
-      key: "fin_cash_amt",
-      title: "Cash",
-      sum: true,
-      render: (data) => `${Number(data || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-    },
-    {
-      key: "fin_bank_amt",
-      title: "Bank",
-      sum: true,
-      render: (data) => `${Number(data || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-    },
-    {
-      key: "fin_online_amt",
-      title: "Online",
-      sum: true,
-      render: (data) => `${Number(data || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-    },
-    {
-      key: "fin_card_amt",
-      title: "Card",
-      sum: true,
-      render: (data) => `${Number(data || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-    },
-    {
-      key: "fin_status",
-      title: "Status",
-      render: (data) => {
-        let text = data;
-        switch (data) {
-          case "ACTIVE": text = "Active"; break;
-          case "INACTIVE": text = "Inactive"; break;
-          case "CLOSED": text = "Closed"; break;
-          case "COMPLETED": text = "Completed"; break;
-          default: text = data; break;
-        }
-        return `${text}`;
-      }
+  const handleCustomerHome = (rowData) => {
+    const user = rowData?.user;
+    const userId = user?.user_id || rowData?.fin_user_id;
+    if (!userId) {
+      toast.error("Customer details not found");
+      return;
     }
-  ], []);
+    dispatch(setSelectedUser({
+      ...user,
+      user_id: userId,
+      user_uuid: user?.user_uuid,
+      user_first_name: user?.user_first_name || "",
+      user_last_name: user?.user_last_name || "",
+      user_mobile_no: user?.user_mobile_no || "",
+    }));
+    navigate("/user/home");
+  };
+
+  const columns = useMemo(() => {
+    const cols = [
+      {
+        key: "fin_id",
+        title: "Fin No",
+        render: (data) => `${data}.`,
+      },
+    ];
+
+    if (global) {
+      cols.push(
+        {
+          key: "user",
+          title: "Customer",
+          searchable: true,
+          customerHome: true,
+          render: (data, type, row) => {
+            const name = row.user
+              ? `${row.user.user_first_name || ""} ${row.user.user_last_name || ""}`.trim()
+              : "N/A";
+            if (type !== "display") return name || "N/A";
+            if (!row.user) return "N/A";
+            return `<span class="text-brown fw-bold cursor-pointer customer-home-btn" title="Open customer home">${name}</span>`;
+          },
+        },
+        {
+          key: "user",
+          title: "Mobile",
+          searchable: true,
+          render: (data, type, row) => row.user?.user_mobile_no || "-",
+        }
+      );
+    }
+
+    cols.push(
+      {
+        key: "firm",
+        title: "Firm",
+        render: (data, type, row) => row.firm?.firm_name || "N/A",
+      },
+      {
+        key: "fin_status",
+        title: "Status",
+        render: (data) => statusBadgeHtml(data),
+      },
+      {
+        key: "fin_start_date",
+        title: "Start Date",
+        dateFilter: true,
+        render: (data) =>
+          `<span class="text-brown fw-bold cursor-pointer view-btn">${formatListDate(data)}</span>`,
+      },
+      {
+        key: "fin_prin_amt",
+        title: "Principal",
+        sum: true,
+        render: (data) => formatListAmt(data),
+      },
+      {
+        key: "fin_emi_amt",
+        title: "EMI Amt",
+        sum: true,
+        render: (data) => formatListAmt(data),
+      },
+      {
+        key: "fin_no_of_emi",
+        title: "EMIs",
+        render: (data, type, row) => getFinanceEmiStats(row).emiProgress,
+      },
+      {
+        key: "fin_collec_amt",
+        title: "Collected",
+        sum: true,
+        render: (data) => formatListAmt(data),
+      },
+      {
+        key: "fin_id",
+        title: "Pending",
+        render: (data, type, row) => formatListAmt(getFinanceEmiStats(row).pendingAmt),
+      },
+      {
+        key: "fin_roi",
+        title: "ROI",
+        render: (data) => (data != null && data !== "" ? `${data}%` : "-"),
+      },
+      {
+        key: "fin_freq_type",
+        title: "Freq",
+        render: (data) => data || "-",
+      },
+      {
+        key: "fin_final_amt",
+        title: "Final Amt",
+        sum: true,
+        render: (data) => formatListAmt(data),
+      },
+      {
+        key: "fin_cash_amt",
+        title: "Cash",
+        sum: true,
+        render: (data) => formatListAmt(data),
+      },
+      {
+        key: "fin_bank_amt",
+        title: "Bank",
+        sum: true,
+        render: (data) => formatListAmt(data),
+      },
+      {
+        key: "fin_online_amt",
+        title: "Online",
+        sum: true,
+        render: (data) => formatListAmt(data),
+      },
+      {
+        key: "fin_card_amt",
+        title: "Card",
+        sum: true,
+        render: (data) => formatListAmt(data),
+      }
+    );
+
+    return cols;
+  }, [global]);
 
   return (
     <div className="card shadow-sm border-0">
       <div className="card-header bg-white d-flex justify-content-between align-items-center py-3">
-        <h5 className="mb-0 fw-bold">
-          {getTitle()}
-        </h5>
-        <button
-          onClick={() => navigate("/user/home/add-finance")}
-          className="btn btn-primary btn-sm"
-        >
-          Add Finance +
-
-        </button>
+        <h5 className="mb-0 fw-bold">{getTitle()}</h5>
+        {!global && (
+          <button
+            onClick={() => navigate("/user/home/add-finance")}
+            className="btn btn-primary btn-sm"
+          >
+            Add Finance +
+          </button>
+        )}
       </div>
       <div className="card-body p-0">
         <List
@@ -170,8 +240,9 @@ const ListFinance = ({ status = "ALL" }) => {
           onView={handleView}
           onDelete={handleDelete}
           onEdit={handleEdit}
+          onCustomerHome={global ? handleCustomerHome : undefined}
           hasView={true}
-          hasDelete={true}
+          hasDelete={!global}
           hasEdit={true}
           isLoading={loading}
           showFooter={true}
@@ -183,4 +254,3 @@ const ListFinance = ({ status = "ALL" }) => {
 };
 
 export default ListFinance;
-

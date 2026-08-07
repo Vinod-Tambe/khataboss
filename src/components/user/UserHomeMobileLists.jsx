@@ -1,14 +1,10 @@
 import React, { useState } from "react";
+import { getStatusBadgeMeta } from "../../utils/listFormatters";
+import "../../css/DataTable.css";
 
 const StatusBadge = ({ status }) => {
-  const value = status || "-";
-  const isActive =
-    value === "Active" || value === "ACTIVE" || value === "PAID";
-  return (
-    <span className={`badge ${isActive ? "bg-success" : "bg-secondary"}`}>
-      {value}
-    </span>
-  );
+  const { label, className } = getStatusBadgeMeta(status);
+  return <span className={className}>{label}</span>;
 };
 
 const SectionPanel = ({ title, icon, count, children }) => (
@@ -139,16 +135,31 @@ const UserHomeMobileLists = ({
               >
                 <DetailGrid
                   items={[
-                    { label: "EMI Amount", value: row.emi },
+                    { label: "Status", node: <StatusBadge status={row.status} /> },
+                    { label: "Start Date", value: row.startDate },
+                    { label: "Principal", value: row.principal },
+                    { label: "EMI Amt", value: row.emi },
+                    { label: "EMIs Paid", value: row.emiProgress },
+                    { label: "Collected", value: row.collectedAmt },
+                    { label: "Pending Amt", value: row.pendingAmt },
+                    { label: "ROI", value: row.roi },
+                    { label: "Frequency", value: row.freq },
+                    { label: "Final Amt", value: row.finalAmt },
+                    { label: "Cash", value: row.cash },
+                    { label: "Bank", value: row.bank },
+                    { label: "Online", value: row.online },
+                    { label: "Card", value: row.card },
+                    { label: "Firm", value: row.firmName, full: true },
                     {
                       label: "Action",
+                      full: true,
                       node: (
                         <button
                           type="button"
                           className="user-home-mobile-row__link"
                           onClick={() => onViewFinance?.(row.id)}
                         >
-                          View Details
+                          View Finance Details
                         </button>
                       ),
                     },
@@ -178,16 +189,30 @@ const UserHomeMobileLists = ({
               >
                 <DetailGrid
                   items={[
+                    { label: "Status", node: <StatusBadge status={row.status} /> },
+                    { label: "Start Date", value: row.startDate },
+                    { label: "End Date", value: row.endDate },
+                    { label: "T.Period", value: row.timePeriod },
+                    { label: "Type", value: row.type },
+                    { label: "Principal", value: row.principal },
                     { label: "ROI", value: row.roi },
+                    { label: "Packet No", value: row.packetNo },
+                    { label: "Locker No", value: row.lockerNo },
+                    { label: "Final Amt", value: row.finalAmt },
+                    { label: "Cash", value: row.cash },
+                    { label: "Bank", value: row.bank },
+                    { label: "Online", value: row.online },
+                    { label: "Card", value: row.card },
                     {
                       label: "Action",
+                      full: true,
                       node: (
                         <button
                           type="button"
                           className="user-home-mobile-row__link"
                           onClick={() => onViewLoan?.(row.id)}
                         >
-                          View Details
+                          View Loan Details
                         </button>
                       ),
                     },

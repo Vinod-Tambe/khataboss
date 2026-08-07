@@ -7,6 +7,7 @@ import { setSelectedUser } from '../../store/slices/userSlice';
 import DocumentUploadCard from '../common/DocumentUploadCard';
 import CommonModal from '../common/CommonModal';
 import { validateMobile, validateAadhaar } from '../../utils/validation';
+import { getValidatedUploadFile, validateUploadFile } from '../../utils/fileUpload';
 
 const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
     const dispatch = useDispatch();
@@ -51,11 +52,10 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
 
     // ─── Handlers ────────────────────────────────────────────────────────
     const handleFileSelect = (e, fieldName, setPreview) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            setFormData(prev => ({ ...prev, [fieldName]: file }));
-            setPreview(URL.createObjectURL(file));
-        }
+        const file = getValidatedUploadFile(e);
+        if (!file) return;
+        setFormData(prev => ({ ...prev, [fieldName]: file }));
+        setPreview(URL.createObjectURL(file));
     };
 
     const removeFile = (fieldName, setPreview) => {
@@ -102,6 +102,7 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
 
         canvasRef.current.toBlob((blob) => {
             const file = new File([blob], `${activeCaptureField}_captured.jpg`, { type: "image/jpeg" });
+            if (!validateUploadFile(file)) return;
             setFormData(prev => ({ ...prev, [activeCaptureField]: file }));
 
             const previewUrl = URL.createObjectURL(file);

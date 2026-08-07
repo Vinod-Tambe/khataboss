@@ -5,6 +5,7 @@ import moment from 'moment';
 import DocumentUploadCard from '../common/DocumentUploadCard';
 import { createFirm } from '../../api/firmApi';
 import { validatePincode, validatePan, validateAadhaar, validateGstin, validateIfsc } from '../../utils/validation';
+import { getValidatedUploadFile } from '../../utils/fileUpload';
 import useFormNavigation from '../../hooks/useFormNavigation';
 
 const AddFirm = () => {
@@ -90,11 +91,10 @@ const AddFirm = () => {
   };
 
   const handleFileSelect = (e, fieldName, setPreview) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFormData((prev) => ({ ...prev, [fieldName]: file }));
-      setPreview(URL.createObjectURL(file));
-    }
+    const file = getValidatedUploadFile(e);
+    if (!file) return;
+    setFormData((prev) => ({ ...prev, [fieldName]: file }));
+    setPreview(URL.createObjectURL(file));
   };
 
   const removeFile = (fieldName, setPreview) => {

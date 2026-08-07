@@ -1,5 +1,7 @@
 
 import React from 'react';
+import { getValidatedUploadFile } from '../../utils/fileUpload';
+
 const DocumentUploadCard = ({
   title,
   fieldName,
@@ -52,13 +54,17 @@ const DocumentUploadCard = ({
             ref={inputRef}
             style={{ display: 'none' }}
             accept={accept}
-            onChange={(e) => handleFileSelect(e, fieldName, setPreview)}
+            onChange={(e) => {
+              const file = getValidatedUploadFile(e);
+              if (!file) return;
+              handleFileSelect(e, fieldName, setPreview);
+            }}
           />
 
           <button
             type="button"
             className={`btn btn-outline-primary ${small ? 'btn-sm' : 'btn-lg'} ${iconBorder ? '' : 'border-0'} d-flex flex-column align-items-center`}
-            title="Upload"
+            title="Upload (max 5MB)"
             style={{ padding: small ? '2px 13px' : undefined }}
             onClick={() => inputRef.current?.click()}
           >

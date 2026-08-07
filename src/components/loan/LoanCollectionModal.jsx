@@ -76,7 +76,7 @@ const getLoanPendingSummary = (data) => {
     };
 };
 
-const LoanCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) => {
+const LoanCollectionModal = ({ show, onClose, firms = [], selectedFirmId, initialUser = null }) => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
@@ -156,7 +156,10 @@ const LoanCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) => {
 
         if (show) {
             resetForm();
-            if (selectedFirmId && selectedFirmId !== 'all') {
+            const firmFromUser = initialUser?.user_firm_id;
+            if (firmFromUser) {
+                setFirmId(firmFromUser);
+            } else if (selectedFirmId && selectedFirmId !== 'all') {
                 setFirmId(selectedFirmId);
             } else if (firms.length === 1) {
                 setFirmId(firms[0].firm_id);
@@ -168,12 +171,22 @@ const LoanCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) => {
             setLoanNo('');
             setLoanInfo(null);
 
-            setTimeout(() => {
-                const firstEl = formRef.current?.querySelector('select, input');
-                if (firstEl) firstEl.focus();
-            }, 300);
+            if (initialUser?.user_id) {
+                const firm = firmFromUser || (selectedFirmId !== 'all' ? selectedFirmId : null);
+                setTimeout(() => {
+                    setSelectedUserLocal(initialUser);
+                    setUserSearch(`${initialUser.user_first_name || ''} ${initialUser.user_last_name || ''} (${initialUser.user_mobile_no || ''})`.trim());
+                    setSearchResults([]);
+                    fetchUserLoans(initialUser, firm);
+                }, 80);
+            } else {
+                setTimeout(() => {
+                    const firstEl = formRef.current?.querySelector('select, input');
+                    if (firstEl) firstEl.focus();
+                }, 300);
+            }
         }
-    }, [show, selectedFirmId, firms, resetForm]);
+    }, [show, selectedFirmId, firms, resetForm, initialUser]);
 
     useEffect(() => {
         if (firmId && firmId !== 'all') {
@@ -255,7 +268,7 @@ const LoanCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) => {
         }
     };
 
-    const fetchUserLoans = async (user) => {
+    const fetchUserLoans = async (user, firmOverride) => {
         setLoadingList(true);
         setUserLoans([]);
         setLoanNo('');
@@ -263,7 +276,7 @@ const LoanCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) => {
         setLoanError('');
         try {
             const response = await getGirvisDropdown(user.user_id, {
-                firmId: firmId || undefined
+                firmId: firmOverride || firmId || user.user_firm_id || undefined
             });
             const data = Array.isArray(response) ? response : (response.data || []);
             setUserLoans(data);
@@ -282,7 +295,8 @@ const LoanCollectionModal = ({ show, onClose, firms = [], selectedFirmId }) => {
         setSelectedUserLocal(user);
         setUserSearch(`${user.user_first_name} ${user.user_last_name} (${user.user_mobile_no})`);
         setSearchResults([]);
-        fetchUserLoans(user);
+        if (user.user_firm_id) setFirmId(user.user_firm_id);
+        fetchUserLoans(user, user.user_firm_id);
         setTimeout(() => {
             if (loanNoRef.current) {
                 loanNoRef.current.focus();

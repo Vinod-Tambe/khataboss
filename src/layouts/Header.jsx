@@ -1,11 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FiSearch, FiUser, FiMenu, FiBell, FiSun, FiMoon } from 'react-icons/fi';
+import { FiUser, FiMenu, FiBell, FiSun, FiMoon, FiBriefcase, FiLock, FiLogOut } from 'react-icons/fi';
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../store/slices/authSlice";
 import { getFirmsDropdown } from "../api/firmApi";
 import { setFirms, setSelectedFirmId, setLoading as setFirmLoading, setError as setFirmError } from "../store/slices/firmSlice";
 import { useTheme } from "../context/ThemeContext";
+import HeaderSearch from "../components/common/HeaderSearch";
+import FinanceCollectionModal from "../components/finance/FinanceCollectionModal";
+import LoanCollectionModal from "../components/loan/LoanCollectionModal";
 
 const dummyNotifications = [
   {
@@ -37,6 +40,9 @@ const Header = () => {
   const { theme, toggleTheme } = useTheme();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [notificationFilter, setNotificationFilter] = useState("all");
+  const [showFinancePayModal, setShowFinancePayModal] = useState(false);
+  const [showLoanDepositModal, setShowLoanDepositModal] = useState(false);
+  const [collectionUser, setCollectionUser] = useState(null);
   const notificationRef = useRef(null);
   const unreadNotifications = dummyNotifications.filter((notification) => !notification.read).length;
   const readNotifications = dummyNotifications.filter((notification) => notification.read).length;
@@ -97,6 +103,16 @@ const Header = () => {
     setIsNotificationOpen((prevState) => !prevState);
   };
 
+  const openFinancePay = (userRow) => {
+    setCollectionUser(userRow);
+    setShowFinancePayModal(true);
+  };
+
+  const openLoanDeposit = (userRow) => {
+    setCollectionUser(userRow);
+    setShowLoanDepositModal(true);
+  };
+
   return (
     <header className="header pb-2 pb-lg-0 sticky-top">
       <div className="admin-header">
@@ -118,38 +134,32 @@ const Header = () => {
 
         {/* CENTER: Search Bar (desktop only) */}
         <div className="search-bar">
-          <div className="input-group">
-            <input
-              type="text"
-              className="form-control border-dark"
-              placeholder="Search..."
-              style={{ borderRadius: '8px 0 0 8px', borderRight: 'none' }}
-            />
-            <button
-              className="btn btn-outline-secondary"
-              type="button"
-              aria-label="Search"
-            >
-              <FiSearch />
-            </button>
-          </div>
+          <HeaderSearch
+            onOpenFinancePay={openFinancePay}
+            onOpenLoanDeposit={openLoanDeposit}
+          />
         </div>
 
         {/* RIGHT: User Actions */}
         <div className="header-right">
-          <select
-            className="form-select d-none d-md-block cursor-pointer border-dark"
-            aria-label="Firm selection"
-            value={selectedFirmId}
-            onChange={handleFirmChange}
-          >
-            <option value="all">All Firm</option>
-            {firms.map((firm) => (
-              <option key={firm.firm_id} value={firm.firm_id}>
-                {firm.firm_name}
-              </option>
-            ))}
-          </select>
+          <div className="input-group header-firm-select d-none d-md-flex">
+            <span className="input-group-text border-dark bg-cust-primary" title="Firm">
+              <FiBriefcase size={16} />
+            </span>
+            <select
+              className="form-select cursor-pointer border-dark"
+              aria-label="Firm selection"
+              value={selectedFirmId}
+              onChange={handleFirmChange}
+            >
+              <option value="all">All Firm</option>
+              {firms.map((firm) => (
+                <option key={firm.firm_id} value={firm.firm_id}>
+                  {firm.firm_name}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="notification-dropdown-wrapper" ref={notificationRef}>
             <button
               className="btn header-icon-btn notification-btn bg-success-subtle"
@@ -241,12 +251,38 @@ const Header = () => {
             >
               <FiUser size={20} />
             </button>
-            <ul className="dropdown-menu profile-dropdown pt-0" aria-labelledby="profileDropdown">
-              <li><Link className="dropdown-item border rounded bg-cust-primary text-center" to="#"> {user.own_first_name} {user.own_last_name} <br />( {user.own_email} )</Link></li>
-              <li><Link className="dropdown-item" to="#">Profile</Link></li>
-              <li><Link className="dropdown-item" to="#">Settings</Link></li>
-              <li><hr className="dropdown-divider" /></li>
-              <li><Link className="dropdown-item" to="#" onClick={handleLogout}>Logout</Link></li>
+            <ul className="dropdown-menu dropdown-menu-end profile-dropdown" aria-labelledby="profileDropdown">
+              <li className="px-3 py-2 border-bottom">
+                <div className="fw-bold text-truncate">
+                  {[user?.own_first_name, user?.own_last_name].filter(Boolean).join(" ") || "Owner"}
+                </div>
+                <div className="small text-muted text-truncate">{user?.own_email || ""}</div>
+              </li>
+              <li>
+                <Link className="dropdown-item d-flex align-items-center gap-2" to="/profile">
+                  <FiUser size={16} />
+                  <span>Profile</span>
+                </Link>
+              </li>
+              <li>
+                <Link className="dropdown-item d-flex align-items-center gap-2" to="/settings/update-password">
+                  <FiLock size={16} />
+                  <span>Update Password</span>
+                </Link>
+              </li>
+              <li className="d-md-none">
+                <hr className="dropdown-divider my-1" />
+              </li>
+              <li className="d-md-none">
+                <button
+                  type="button"
+                  className="dropdown-item d-flex align-items-center gap-2 text-danger"
+                  onClick={handleLogout}
+                >
+                  <FiLogOut size={16} />
+                  <span>Logout</span>
+                </button>
+              </li>
             </ul>
           </div>
           <button
@@ -257,24 +293,44 @@ const Header = () => {
           >
             {theme === 'dark' ? <FiSun size={20} /> : <FiMoon size={20} />}
           </button>
-        </div>
-      </div>
-      <div className={`mobile-search-bar d-block d-md-none ps-3 pe-3`}>
-        <div className="input-group">
-          <input
-            type="text"
-            className="form-control border-dark"
-            placeholder="Search..."
-            style={{ borderRadius: '8px 0 0 8px', borderRight: 'none' }}
-          />
           <button
-            className="btn btn-outline-secondary border-dark"
+            className="btn header-icon-btn logout-icon-btn bg-danger-subtle d-none d-md-inline-flex"
             type="button"
+            aria-label="Logout"
+            title="Logout"
+            onClick={handleLogout}
           >
-            <FiSearch />
+            <FiLogOut size={20} />
           </button>
         </div>
       </div>
+      <div className="mobile-search-bar d-block d-md-none ps-3 pe-3">
+        <HeaderSearch
+          onOpenFinancePay={openFinancePay}
+          onOpenLoanDeposit={openLoanDeposit}
+        />
+      </div>
+
+      <FinanceCollectionModal
+        show={showFinancePayModal}
+        onClose={() => {
+          setShowFinancePayModal(false);
+          setCollectionUser(null);
+        }}
+        firms={firms}
+        selectedFirmId={selectedFirmId}
+        initialUser={collectionUser}
+      />
+      <LoanCollectionModal
+        show={showLoanDepositModal}
+        onClose={() => {
+          setShowLoanDepositModal(false);
+          setCollectionUser(null);
+        }}
+        firms={firms}
+        selectedFirmId={selectedFirmId}
+        initialUser={collectionUser}
+      />
     </header>
   );
 };

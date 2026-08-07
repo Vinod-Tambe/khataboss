@@ -5,6 +5,7 @@ import $ from 'jquery';
 import 'daterangepicker';
 import 'daterangepicker/daterangepicker.css';
 import useFormNavigation from '../../hooks/useFormNavigation';
+import { getValidatedUploadFile } from '../../utils/fileUpload';
 
 const AddStaff = () => {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -67,11 +68,10 @@ const AddStaff = () => {
     };
 
     const handleFileSelect = (e, fieldName, setPreview) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            setFormData(prev => ({ ...prev, [fieldName]: file }));
-            setPreview(URL.createObjectURL(file));
-        }
+        const file = getValidatedUploadFile(e);
+        if (!file) return;
+        setFormData(prev => ({ ...prev, [fieldName]: file }));
+        setPreview(URL.createObjectURL(file));
     };
 
     const removeFile = (fieldName, setPreview) => {

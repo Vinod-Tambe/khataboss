@@ -20,6 +20,8 @@ import MoneyLenderRoutes from '../pages/money-lender/MoneyLenderRoutes';
 import FinanceRoutes from '../pages/finance/FinanceRoutes';
 import LoanRoutes from '../pages/loan/LoanRoutes';
 import BackupRoutes from '../pages/backup/BackupRoutes';
+import OwnerProfile from '../components/owner/OwnerProfile';
+import UpdatePassword from '../components/owner/UpdatePassword';
 const MainRoutes = () => {
 
   return (
@@ -47,6 +49,8 @@ const MainRoutes = () => {
               <Route path="/sms" element={<SmsPage />} />
               <Route path="/backup" element={<BackupRoutes />} />
               <Route path="/money-lender/*" element={< MoneyLenderRoutes />} />
+              <Route path="/profile" element={<OwnerProfile />} />
+              <Route path="/settings/update-password" element={<UpdatePassword />} />
               <Route path="/*" element={< HomeRoutes />} />
 
             </Routes>

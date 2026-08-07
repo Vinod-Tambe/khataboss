@@ -84,6 +84,7 @@ const MobileList = ({
   onView,
   onDownload,
   onRestore,
+  onCustomerHome,
   deleteConfirmMessage = "Are you sure you want to delete this record?",
   emptyMessage = "No records found",
 }) => {
@@ -238,11 +239,21 @@ const MobileList = ({
                     {detailColumns.length > 0 && (
                       <div className="mobile-list__grid">
                         {detailColumns.map((col) => (
-                          <div key={col.key} className="mobile-list__cell">
+                          <div key={`${col.key}-${col.title}`} className="mobile-list__cell">
                             <span className="mobile-list__cell-label">{col.title}</span>
-                            <strong className="mobile-list__cell-value">
-                              {getCellValue(row, col)}
-                            </strong>
+                            {col.customerHome && onCustomerHome ? (
+                              <button
+                                type="button"
+                                className="btn btn-link p-0 text-brown fw-bold text-decoration-none mobile-list__cell-value"
+                                onClick={() => onCustomerHome(row)}
+                              >
+                                {getCellValue(row, col)}
+                              </button>
+                            ) : (
+                              <strong className="mobile-list__cell-value">
+                                {getCellValue(row, col)}
+                              </strong>
+                            )}
                           </div>
                         ))}
                       </div>

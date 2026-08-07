@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import DocumentUploadCard from '../common/DocumentUploadCard';
 import moment from 'moment';
 import $ from 'jquery';
@@ -7,13 +8,16 @@ import 'daterangepicker';
 import 'daterangepicker/daterangepicker.css';
 import { toast } from 'react-hot-toast';
 import { validatePincode, validatePan, validateAadhaar, validateGstin, validateIfsc, validateMobile, validatePhone } from '../../utils/validation';
+import { getValidatedUploadFile, validateUploadFile } from '../../utils/fileUpload';
 import useFormNavigation from '../../hooks/useFormNavigation';
 import { getFirmsDropdown } from '../../api/firmApi';
 import { getUser, updateUser } from '../../api/userApi';
+import { setSelectedUser } from '../../store/slices/userSlice';
 
 const UpdateUser = () => {
     const { uuid } = useParams();
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [currentStep, setCurrentStep] = useState(1);
 
@@ -201,11 +205,10 @@ const UpdateUser = () => {
     };
 
     const handleFileSelect = (e, fieldName, setPreview) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            setFormData(prev => ({ ...prev, [fieldName]: file }));
-            setPreview(URL.createObjectURL(file));
-        }
+        const file = getValidatedUploadFile(e);
+        if (!file) return;
+        setFormData(prev => ({ ...prev, [fieldName]: file }));
+        setPreview(URL.createObjectURL(file));
     };
 
     const removeFile = (fieldName, setPreview) => {
@@ -249,6 +252,7 @@ const UpdateUser = () => {
 
         canvasRef.current.toBlob((blob) => {
             const file = new File([blob], `${activeCaptureField}_captured.jpg`, { type: "image/jpeg" });
+            if (!validateUploadFile(file)) return;
             setFormData(prev => ({ ...prev, [activeCaptureField]: file }));
             const previewUrl = URL.createObjectURL(file);
 
@@ -281,6 +285,7 @@ const UpdateUser = () => {
             .then(res => res.blob())
             .then(blob => {
                 const file = new File([blob], "signature.png", { type: "image/png" });
+                if (!validateUploadFile(file)) return;
                 setFormData(prev => ({ ...prev, signature: file }));
                 toast.success("Signature saved!");
             });
@@ -353,7 +358,14 @@ const UpdateUser = () => {
 
             const result = await updateUser(uuid, data);
             toast.success(result.message || 'User updated successfully!');
-            setTimeout(() => navigate('/user/list'), 1500);
+
+            if (result.data) {
+                dispatch(setSelectedUser(result.data));
+                navigate('/user/home');
+                return;
+            }
+
+            navigate('/user/home');
         } catch (error) {
             toast.error(error.message || 'Error updating user');
         } finally {

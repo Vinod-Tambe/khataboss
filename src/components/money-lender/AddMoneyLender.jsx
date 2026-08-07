@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { createMoneyLender } from '../../api/moneyLenderApi';
 import { getFirmsDropdown } from '../../api/firmApi';
+import { getValidatedUploadFile, validateUploadFile } from '../../utils/fileUpload';
 
 const AddMoneyLender = () => {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -89,11 +90,10 @@ const AddMoneyLender = () => {
     };
 
     const handleFileSelect = (e, fieldName, setPreview) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            setFormData(prev => ({ ...prev, [fieldName]: file }));
-            setPreview(URL.createObjectURL(file));
-        }
+        const file = getValidatedUploadFile(e);
+        if (!file) return;
+        setFormData(prev => ({ ...prev, [fieldName]: file }));
+        setPreview(URL.createObjectURL(file));
     };
 
     const removeFile = (fieldName, setPreview) => {
@@ -140,6 +140,7 @@ const AddMoneyLender = () => {
 
         canvasRef.current.toBlob((blob) => {
             const file = new File([blob], `${activeCaptureField}_captured.jpg`, { type: "image/jpeg" });
+            if (!validateUploadFile(file)) return;
 
             setFormData(prev => ({ ...prev, [activeCaptureField]: file }));
 

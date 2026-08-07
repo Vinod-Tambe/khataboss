@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { showToast } from "../common/ToastAlert";
+import { getValidatedUploadFile } from "../../utils/fileUpload";
 
 // Using the same mock data as StaffGrid for fallback support
 const mockUsers = [
@@ -394,7 +395,7 @@ const StaffDetails = () => {
                                                 accept="image/*"
                                                 className="d-none"
                                                 onChange={(e) => {
-                                                    const file = e.target.files?.[0];
+                                                    const file = getValidatedUploadFile(e);
                                                     if (file) {
                                                         setUserData(prev => ({
                                                             ...prev,
@@ -632,7 +633,7 @@ const StaffDetails = () => {
                                                         <label className="btn btn-sm btn-outline-success fw-bold w-100">
                                                             Upload Aadhaar Front
                                                             <input type="file" accept="image/*" className="d-none" onChange={(e) => {
-                                                                const file = e.target.files?.[0];
+                                                                const file = getValidatedUploadFile(e);
                                                                 if (file) setUserData(prev => ({ ...prev, aadhaarFront: URL.createObjectURL(file) }));
                                                             }} />
                                                         </label>
@@ -647,7 +648,7 @@ const StaffDetails = () => {
                                                         <label className="btn btn-sm btn-outline-success fw-bold w-100">
                                                             Upload Aadhaar Back
                                                             <input type="file" accept="image/*" className="d-none" onChange={(e) => {
-                                                                const file = e.target.files?.[0];
+                                                                const file = getValidatedUploadFile(e);
                                                                 if (file) setUserData(prev => ({ ...prev, aadhaarBack: URL.createObjectURL(file) }));
                                                             }} />
                                                         </label>
@@ -662,7 +663,7 @@ const StaffDetails = () => {
                                                         <label className="btn btn-sm btn-outline-success fw-bold w-100">
                                                             Upload PAN Card
                                                             <input type="file" accept="image/*" className="d-none" onChange={(e) => {
-                                                                const file = e.target.files?.[0];
+                                                                const file = getValidatedUploadFile(e);
                                                                 if (file) setUserData(prev => ({ ...prev, panCard: URL.createObjectURL(file) }));
                                                             }} />
                                                         </label>
@@ -682,7 +683,7 @@ const StaffDetails = () => {
                                                         <label className="btn btn-sm btn-outline-success fw-bold w-100">
                                                             Upload Signature
                                                             <input type="file" accept="image/*" className="d-none" onChange={(e) => {
-                                                                const file = e.target.files?.[0];
+                                                                const file = getValidatedUploadFile(e);
                                                                 if (file) setUserData(prev => ({ ...prev, signature: URL.createObjectURL(file) }));
                                                             }} />
                                                         </label>

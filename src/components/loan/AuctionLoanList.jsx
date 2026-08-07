@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { getAuctionLoans } from "../../api/auctionApi";
 import { toast } from "react-toastify";
 import moment from "moment";
 import List from "../common/List";
+import { setSelectedUser } from "../../store/slices/userSlice";
 
 const AuctionLoanList = ({ global = false }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { selectedUser } = useSelector((state) => state.user);
   const { selectedFirm } = useSelector((state) => state.firm);
   const [loans, setLoans] = useState([]);
@@ -45,6 +47,24 @@ const AuctionLoanList = ({ global = false }) => {
     }
   };
 
+  const handleCustomerHome = (rowData) => {
+    const user = rowData?.originalCustomer;
+    const userId = user?.user_id || rowData?.girviDetails?.girv_user_id;
+    if (!userId) {
+      toast.error("Customer details not found");
+      return;
+    }
+    dispatch(setSelectedUser({
+      ...user,
+      user_id: userId,
+      user_uuid: user?.user_uuid,
+      user_first_name: user?.user_first_name || "",
+      user_last_name: user?.user_last_name || "",
+      user_mobile_no: user?.user_mobile_no || rowData?.originalCustomerMobile || "",
+    }));
+    navigate("/user/home");
+  };
+
   const columns = useMemo(() => {
     const cols = [
       {
@@ -65,7 +85,12 @@ const AuctionLoanList = ({ global = false }) => {
         key: "al_girv_id",
         title: "Original Customer",
         searchable: true,
-        render: (data, type, row) => row.originalCustomerName || "-"
+        customerHome: true,
+        render: (data, type, row) => {
+          const name = row.originalCustomerName || "-";
+          if (type !== "display") return name;
+          return `<span class="text-brown fw-bold cursor-pointer customer-home-btn" title="Open customer home">${name}</span>`;
+        }
       });
       cols.push({
         key: "al_girv_id",
@@ -111,26 +136,21 @@ const AuctionLoanList = ({ global = false }) => {
     return cols;
   }, [global]);
 
-  const actionButtons = [
-    {
-      label: "View Loan",
-      icon: "bi-eye",
-      className: "btn-outline-primary",
-      onClick: handleView
-    }
-  ];
-
   return (
     <List
       title={global ? "Global Auction Loans" : "Auction Loan Details"}
       data={loans}
       columns={columns}
-      loading={loading}
-      searchPlaceholder="Search auction loans..."
+      primaryKey="al_girv_id"
+      subtitleKey="al_date"
+      amountKey="al_payable_amt"
+      isLoading={loading}
       hasEdit={false}
       hasDelete={false}
-      hasView={false}
-      customActions={actionButtons}
+      hasView={true}
+      onView={handleView}
+      onCustomerHome={global ? handleCustomerHome : undefined}
+      showFooter={true}
     />
   );
 };

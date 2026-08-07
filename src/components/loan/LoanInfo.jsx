@@ -9,6 +9,9 @@ import { downloadLoanInvoicePdf } from './invoice/downloadLoanInvoicePdf';
 import { getGirviById } from '../../api/girviApi';
 import moment from 'moment';
 import { toast } from 'react-toastify';
+import { formatTimePeriod } from '../../utils/formatTimePeriod';
+import { getStatusBadgeMeta } from '../../utils/listFormatters';
+import '../../css/DataTable.css';
 
 const formatAmt = (value) =>
   Number(value || 0).toLocaleString(undefined, {
@@ -16,10 +19,21 @@ const formatAmt = (value) =>
     maximumFractionDigits: 2,
   });
 
-const statusBadgeClass = (status = '') => {
+const statusBadgeClass = (status = '', solid = false) => {
   const s = String(status).toUpperCase();
-  if (s === 'RELEASED') return 'bg-danger-subtle text-danger';
-  if (s === 'RECEIVED' || s === 'ACTIVE') return 'bg-success-subtle text-success';
+
+  if (solid) {
+    if (s === 'RELEASED' || s === 'CLOSED') return 'bg-danger';
+    if (s === 'AUCTION') return 'bg-warning text-dark';
+    if (s === 'TRANSFERRED') return 'bg-secondary';
+    if (s === 'ADDED') return 'bg-primary';
+    if (s === 'RECEIVED' || s === 'ACTIVE' || s === 'PAID' || s === 'COMPLETED') return 'bg-success';
+    return 'bg-secondary';
+  }
+
+  if (s === 'RELEASED' || s === 'CLOSED') return 'bg-danger-subtle text-danger';
+  if (s === 'AUCTION') return 'bg-warning-subtle text-warning';
+  if (s === 'RECEIVED' || s === 'ACTIVE' || s === 'PAID' || s === 'COMPLETED') return 'bg-success-subtle text-success';
   if (s === 'ADDED') return 'bg-primary-subtle text-primary';
   if (s === 'TRANSFERRED') return 'bg-secondary-subtle text-secondary';
   return 'bg-warning-subtle text-warning';
@@ -536,9 +550,10 @@ const LoanMobileView = ({
           </p>
         </div>
         <div className="loan-mobile-header__actions">
-          <span className={`badge rounded-pill loan-mobile-header__badge ${statusBadgeClass(loanDetails.girv_status)}`}>
-            {loanDetails.girv_status || '-'}
-          </span>
+          {(() => {
+            const { label, className } = getStatusBadgeMeta(loanDetails.girv_status);
+            return <span className={`${className} loan-mobile-header__badge`}>{label}</span>;
+          })()}
           <button type="button" className="btn btn-outline-secondary" onClick={onBack} aria-label="Back">
             <i className="bi bi-arrow-left"></i>
           </button>
@@ -776,7 +791,12 @@ const LoanMobileView = ({
       {loanDetails.girv_status === 'TRANSFERRED' && (
         <div className="alert alert-secondary loan-mobile-alert mb-3">
           <strong>Loan Transferred</strong>
-          <div className="mt-1">{loanDetails.girv_other_info || 'This loan has been transferred to another firm.'}</div>
+          <div className="mt-1">
+            {loanDetails.girv_other_info ||
+              (loanDetails.girv_transfer_ml_id
+                ? 'This loan has been transferred to a money lender.'
+                : 'This loan has been transferred to another firm.')}
+          </div>
         </div>
       )}
 
@@ -989,7 +1009,7 @@ const LoanInfo = () => {
     total: originalPrincipal + origInterest,
     startDate: startDate.format('DD-MM-YYYY'),
     endDate: today.format('DD-MM-YYYY'),
-    timePeriod: `${origMonths.toFixed(1)} Months`,
+    timePeriod: formatTimePeriod(startDate, today),
     valuation: totalValuation, // Overall valuation
     profitLoss: overallProfitLoss, // Overall profit/loss
     status: loanDetails.girv_status || 'ACTIVE',
@@ -1029,7 +1049,7 @@ const LoanInfo = () => {
         total: apPrin + apInterest,
         startDate: apStartDate.format('DD-MM-YYYY'),
         endDate: today.format('DD-MM-YYYY'),
-        timePeriod: `${apMonths.toFixed(1)} Months`,
+        timePeriod: formatTimePeriod(apStartDate, today),
         valuation: '-',
         profitLoss: '-',
         status: 'ADDED',
@@ -1166,9 +1186,10 @@ const LoanInfo = () => {
           <div className="col-8">
             <div className="d-flex justify-content-end align-items-center w-100">
               <div className="top-actions mb-2 d-flex align-items-center gap-2">
-                <span className={`badge ${loanDetails.girv_status === 'RELEASED' ? 'bg-danger' : 'bg-success'} px-3 py-2 shadow-sm rounded-pill`}>
-                  {loanDetails.girv_status}
-                </span>
+                {(() => {
+                  const { label, className } = getStatusBadgeMeta(loanDetails.girv_status);
+                  return <span className={`${className} shadow-sm`}>{label}</span>;
+                })()}
                 <button className="btn btn-outline-danger btn-sm d-flex align-items-center gap-1 shadow-sm" onClick={() => navigate(-1)} title="Back">
                   <i className="bi bi-arrow-left-circle"></i>
                 </button>
@@ -1208,10 +1229,21 @@ const LoanInfo = () => {
                 <i className="bi bi-info-circle-fill text-secondary fs-4 me-3"></i>
                 <div>
                   <strong className="d-block mb-1">Loan Transferred</strong>
-                  {loanDetails.girv_other_info || 'This loan has been transferred to another firm.'}
-                  {(loanDetails.girv_transfer_firm_id || loanDetails.girv_transfer_girv_id) && (
+                  {loanDetails.girv_other_info ||
+                    (loanDetails.girv_transfer_ml_id
+                      ? 'This loan has been transferred to a money lender.'
+                      : 'This loan has been transferred to another firm.')}
+                  {(loanDetails.girv_transfer_firm_id || loanDetails.girv_transfer_girv_id || loanDetails.girv_transfer_ml_id) && (
                     <div className="mt-1 small">
                       {loanDetails.girv_transfer_firm_id && <span className="me-3"><strong>Target Firm ID:</strong> {loanDetails.girv_transfer_firm_id}</span>}
+                      {loanDetails.girv_transfer_ml_id && (
+                        <span className="me-3">
+                          <strong>Money Lender:</strong>{' '}
+                          {loanDetails.transferMoneyLender
+                            ? [loanDetails.transferMoneyLender.ml_first_name, loanDetails.transferMoneyLender.ml_last_name].filter(Boolean).join(' ')
+                            : `#${loanDetails.girv_transfer_ml_id}`}
+                        </span>
+                      )}
                       {loanDetails.girv_transfer_girv_id && <span><strong>New Loan ID:</strong> {loanDetails.girv_transfer_girv_id}</span>}
                     </div>
                   )}

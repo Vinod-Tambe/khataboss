@@ -74,6 +74,26 @@
   --datatable-row-bg-blue: rgb(30 35 55);
   --datatable-body-bg: #252540;
   --datatable-body-text: #e5e7eb;
+
+  /* Status badges (dark - soft tinted backgrounds) */
+  --status-badge-success-bg: rgba(34, 197, 94, 0.18);
+  --status-badge-success-text: #86efac;
+  --status-badge-success-border: rgba(34, 197, 94, 0.35);
+  --status-badge-danger-bg: rgba(239, 68, 68, 0.18);
+  --status-badge-danger-text: #fca5a5;
+  --status-badge-danger-border: rgba(239, 68, 68, 0.35);
+  --status-badge-warning-bg: rgba(245, 158, 11, 0.18);
+  --status-badge-warning-text: #fcd34d;
+  --status-badge-warning-border: rgba(245, 158, 11, 0.35);
+  --status-badge-info-bg: rgba(6, 182, 212, 0.18);
+  --status-badge-info-text: #67e8f9;
+  --status-badge-info-border: rgba(6, 182, 212, 0.35);
+  --status-badge-primary-bg: rgba(59, 130, 246, 0.18);
+  --status-badge-primary-text: #93c5fd;
+  --status-badge-primary-border: rgba(59, 130, 246, 0.35);
+  --status-badge-secondary-bg: rgba(148, 163, 184, 0.16);
+  --status-badge-secondary-text: #cbd5e1;
+  --status-badge-secondary-border: rgba(148, 163, 184, 0.3);
   --print-preview-wrapper-bg: #121218;
   --print-field-bg: #1e1e2e;
   --print-field-border: #64748b;

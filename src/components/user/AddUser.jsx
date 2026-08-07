@@ -6,6 +6,7 @@ import 'daterangepicker';
 import 'daterangepicker/daterangepicker.css';
 import { toast } from 'react-hot-toast';
 import { validatePincode, validatePan, validateAadhaar, validateGstin, validateIfsc, validateMobile, validatePhone } from '../../utils/validation';
+import { getValidatedUploadFile, validateUploadFile } from '../../utils/fileUpload';
 import useFormNavigation from '../../hooks/useFormNavigation';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -106,11 +107,10 @@ const AddUser = () => {
     };
 
     const handleFileSelect = (e, fieldName, setPreview) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            setFormData(prev => ({ ...prev, [fieldName]: file }));
-            setPreview(URL.createObjectURL(file));
-        }
+        const file = getValidatedUploadFile(e);
+        if (!file) return;
+        setFormData(prev => ({ ...prev, [fieldName]: file }));
+        setPreview(URL.createObjectURL(file));
     };
 
     const removeFile = (fieldName, setPreview) => {
@@ -157,6 +157,7 @@ const AddUser = () => {
 
         canvasRef.current.toBlob((blob) => {
             const file = new File([blob], `${activeCaptureField}_captured.jpg`, { type: "image/jpeg" });
+            if (!validateUploadFile(file)) return;
 
             setFormData(prev => ({ ...prev, [activeCaptureField]: file }));
 
@@ -257,6 +258,7 @@ const AddUser = () => {
             .then(res => res.blob())
             .then(blob => {
                 const file = new File([blob], "signature.png", { type: "image/png" });
+                if (!validateUploadFile(file)) return;
                 setFormData(prev => ({ ...prev, signature: file }));
             });
     };

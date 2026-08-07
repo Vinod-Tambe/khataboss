@@ -128,3 +128,67 @@ h5 {
   text-align: left !important;
   position: sticky !important;
 }
+
+/* Consistent status badge size + light theme-aware backgrounds */
+.badge.status-badge,
+span.badge.status-badge {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  min-width: 104px;
+  width: 104px;
+  max-width: 104px;
+  padding: 0.35rem 0.4rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  line-height: 1.1 !important;
+  text-align: center;
+  text-transform: capitalize !important;
+  white-space: nowrap;
+  border-radius: 0.375rem;
+  box-sizing: border-box;
+  vertical-align: middle;
+  border: 1px solid transparent;
+}
+
+.badge.status-badge.status-badge--success,
+.badge.status-badge.bg-success-subtle {
+  background-color: var(--status-badge-success-bg) !important;
+  color: var(--status-badge-success-text) !important;
+  border-color: var(--status-badge-success-border) !important;
+}
+
+.badge.status-badge.status-badge--danger,
+.badge.status-badge.bg-danger-subtle {
+  background-color: var(--status-badge-danger-bg) !important;
+  color: var(--status-badge-danger-text) !important;
+  border-color: var(--status-badge-danger-border) !important;
+}
+
+.badge.status-badge.status-badge--warning,
+.badge.status-badge.bg-warning-subtle {
+  background-color: var(--status-badge-warning-bg) !important;
+  color: var(--status-badge-warning-text) !important;
+  border-color: var(--status-badge-warning-border) !important;
+}
+
+.badge.status-badge.status-badge--info,
+.badge.status-badge.bg-info-subtle {
+  background-color: var(--status-badge-info-bg) !important;
+  color: var(--status-badge-info-text) !important;
+  border-color: var(--status-badge-info-border) !important;
+}
+
+.badge.status-badge.status-badge--primary,
+.badge.status-badge.bg-primary-subtle {
+  background-color: var(--status-badge-primary-bg) !important;
+  color: var(--status-badge-primary-text) !important;
+  border-color: var(--status-badge-primary-border) !important;
+}
+
+.badge.status-badge.status-badge--secondary,
+.badge.status-badge.bg-secondary-subtle {
+  background-color: var(--status-badge-secondary-bg) !important;
+  color: var(--status-badge-secondary-text) !important;
+  border-color: var(--status-badge-secondary-border) !important;
+}

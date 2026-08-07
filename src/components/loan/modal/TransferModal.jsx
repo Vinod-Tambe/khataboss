@@ -9,6 +9,7 @@ import '../../../css/Modal.css';
 
 const TransferModal = ({ isOpen, onClose, isTab, loanDetails, pendingPrincipal, pendingInterest, onSuccess }) => {
   const [firms, setFirms] = useState([]);
+  const [allFirms, setAllFirms] = useState([]);
   const [moneyLenders, setMoneyLenders] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -69,7 +70,10 @@ const TransferModal = ({ isOpen, onClose, isTab, loanDetails, pendingPrincipal, 
   const fetchFirms = async () => {
     try {
       const res = await getFirmsDropdown();
-      const filtered = (res.data || res).filter(f => f.firm_id !== loanDetails?.girv_firm_id);
+      const list = res.data || res || [];
+      setAllFirms(Array.isArray(list) ? list : []);
+      // Firm-to-firm: exclude current firm. Money-lender: keep all (can stay in same firm).
+      const filtered = list.filter(f => f.firm_id !== loanDetails?.girv_firm_id);
       setFirms(filtered);
     } catch (error) {
       toast.error('Failed to load firms');
@@ -132,6 +136,12 @@ const TransferModal = ({ isOpen, onClose, isTab, loanDetails, pendingPrincipal, 
     }
   }, [accounts]);
 
+  const filteredMoneyLenders = moneyLenders.filter((ml) => {
+    if (!formData.targetFirmId) return true;
+    if (!ml.ml_firm_id) return true;
+    return String(ml.ml_firm_id) === String(formData.targetFirmId);
+  });
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     let finalValue = value;
@@ -148,6 +158,26 @@ const TransferModal = ({ isOpen, onClose, isTab, loanDetails, pendingPrincipal, 
         updated.girv_bank_acc_id = '';
         updated.girv_online_acc_id = '';
         updated.girv_card_acc_id = '';
+        // Clear ML if it doesn't belong to newly selected firm
+        if (prev.targetMoneyLenderId) {
+          const selectedMl = moneyLenders.find((ml) => String(ml.ml_id) === String(prev.targetMoneyLenderId));
+          if (selectedMl?.ml_firm_id && String(selectedMl.ml_firm_id) !== String(finalValue)) {
+            updated.targetMoneyLenderId = '';
+          }
+        }
+      }
+
+      if (name === 'targetMoneyLenderId' && finalValue) {
+        const selectedMl = moneyLenders.find((ml) => String(ml.ml_id) === String(finalValue));
+        if (selectedMl?.ml_firm_id) {
+          updated.targetFirmId = String(selectedMl.ml_firm_id);
+          if (String(prev.targetFirmId) !== String(selectedMl.ml_firm_id)) {
+            updated.girv_cash_acc_id = '';
+            updated.girv_bank_acc_id = '';
+            updated.girv_online_acc_id = '';
+            updated.girv_card_acc_id = '';
+          }
+        }
       }
 
       if (name === 'girv_prin_amt') {
@@ -172,7 +202,10 @@ const TransferModal = ({ isOpen, onClose, isTab, loanDetails, pendingPrincipal, 
     setActiveTransferTab(tab);
     setFormData(prev => ({
       ...prev,
-      targetFirmId: '',
+      // Money lender: default to current firm; firm transfer: must pick another firm
+      targetFirmId: tab === 'money_lender' && loanDetails?.girv_firm_id
+        ? String(loanDetails.girv_firm_id)
+        : '',
       targetMoneyLenderId: '',
       girv_cash_acc_id: '',
       girv_bank_acc_id: '',
@@ -232,10 +265,14 @@ const TransferModal = ({ isOpen, onClose, isTab, loanDetails, pendingPrincipal, 
         payload.targetMoneyLenderId = '';
       }
       await transferLoan(loanDetails.girv_uuid, payload);
-      toast.success('Loan transferred successfully!');
+      toast.success(
+        isMoneyLenderTransfer
+          ? 'Loan transferred to money lender successfully!'
+          : 'Loan transferred successfully!'
+      );
       if (onSuccess) onSuccess();
     } catch (error) {
-      toast.error(error.error || 'Failed to transfer loan');
+      toast.error(error.error || error.message || 'Failed to transfer loan');
     } finally {
       setLoading(false);
     }
@@ -409,7 +446,7 @@ const TransferModal = ({ isOpen, onClose, isTab, loanDetails, pendingPrincipal, 
             <label className="form-label">Transfer Firm</label>
             <select name="targetFirmId" className="form-select border-dark" value={formData.targetFirmId} onChange={handleChange}>
               <option value="">-- Select Firm --</option>
-              {firms.map(f => (
+              {allFirms.map(f => (
                 <option key={f.firm_id} value={f.firm_id}>{f.firm_name}</option>
               ))}
             </select>
@@ -418,9 +455,10 @@ const TransferModal = ({ isOpen, onClose, isTab, loanDetails, pendingPrincipal, 
             <label className="form-label">Money Lender</label>
             <select name="targetMoneyLenderId" className="form-select border-dark" value={formData.targetMoneyLenderId} onChange={handleChange}>
               <option value="">-- Select Money Lender --</option>
-              {moneyLenders.map(ml => (
+              {filteredMoneyLenders.map(ml => (
                 <option key={ml.ml_id} value={ml.ml_id}>
                   {[ml.ml_first_name, ml.ml_last_name].filter(Boolean).join(' ').trim() || `Money Lender #${ml.ml_id}`}
+                  {ml.ml_phone ? ` (${ml.ml_phone})` : ''}
                 </option>
               ))}
             </select>
