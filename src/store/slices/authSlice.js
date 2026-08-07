@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { loginWithCredentials, verifyAndLogin } from '../../api/authApi';
+import { getMyProfile, loginWithCredentials, verifyAndLogin } from '../../api/authApi';
 
 // Initial state, checking storage for existing session
 const initialState = {
@@ -7,6 +7,7 @@ const initialState = {
   token: sessionStorage.getItem('token') || null,
   loading: false,
   loginLoading: false,
+  profileLoading: false,
   error: null,
   isAuthenticated: !!sessionStorage.getItem('token'),
 };
@@ -51,6 +52,27 @@ export const login = createAsyncThunk(
   }
 );
 
+/** Refresh profile + permissions from API (used on page refresh / app boot). */
+export const fetchCurrentUser = createAsyncThunk(
+  'auth/fetchCurrentUser',
+  async (_, { rejectWithValue, getState }) => {
+    try {
+      const token = getState()?.auth?.token || sessionStorage.getItem('token');
+      if (!token) {
+        return rejectWithValue('No session');
+      }
+      const response = await getMyProfile();
+      if (!response?.data) {
+        return rejectWithValue(response?.message || 'Failed to load profile');
+      }
+      localStorage.setItem('user', JSON.stringify(response.data));
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -59,6 +81,7 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
+      state.profileLoading = false;
       state.error = null;
       localStorage.removeItem('user');
       sessionStorage.removeItem('token');
@@ -109,6 +132,26 @@ const authSlice = createSlice({
         state.loginLoading = false;
         state.error = action.payload;
         state.isAuthenticated = false;
+      })
+      .addCase(fetchCurrentUser.pending, (state) => {
+        state.profileLoading = true;
+      })
+      .addCase(fetchCurrentUser.fulfilled, (state, action) => {
+        state.profileLoading = false;
+        state.user = action.payload;
+        state.isAuthenticated = true;
+      })
+      .addCase(fetchCurrentUser.rejected, (state, action) => {
+        state.profileLoading = false;
+        // Invalid/expired session → force logout (keep UI if we still have cached user for network blips)
+        const msg = String(action.payload || '');
+        if (/token|unauthorized|401|403|404|not found|expired|invalid/i.test(msg)) {
+          state.user = null;
+          state.token = null;
+          state.isAuthenticated = false;
+          localStorage.removeItem('user');
+          sessionStorage.removeItem('token');
+        }
       });
   },
 });

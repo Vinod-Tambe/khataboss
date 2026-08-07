@@ -1,25 +1,36 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchCurrentUser } from '../store/slices/authSlice';
 
 /**
- * A wrapper for routes that should only be accessible to authenticated users.
- * Redirects to the login page if the user is not authenticated.
- * @param {object} props - Component props
- * @param {React.ReactNode} props.children - Component to render if authenticated
- * @returns {React.ReactNode} - Protected component or redirect
+ * Authenticated routes wrapper.
+ * Renders immediately from cached session, then refreshes
+ * permissions in the background (no long blocking loader).
  */
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const { isAuthenticated, token, user } = useSelector((state) => state.auth);
   const location = useLocation();
+  const fetchedRef = useRef(false);
 
+  useEffect(() => {
+    if (!isAuthenticated || !token || fetchedRef.current) return;
+    fetchedRef.current = true;
+    dispatch(fetchCurrentUser());
+  }, [dispatch, isAuthenticated, token]);
 
-  if (!isAuthenticated) {
-    // Redirect to the login page, but save the current location they were
-    // trying to go to when they were redirected. This allows us to send them
-    // along to that page after they login, which is a nicer user experience
-    // than dropping them off on the home page.
+  if (!isAuthenticated || !token) {
     return <Navigate to="/" state={{ from: location }} replace />;
+  }
+
+  // Cached user may be missing on rare first paint — keep a tiny fallback only then
+  if (!user) {
+    return (
+      <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '40vh' }}>
+        <div className="spinner-border spinner-border-sm text-secondary" role="status" />
+      </div>
+    );
   }
 
   return children;

@@ -1,122 +1,229 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { showToast } from "../common/ToastAlert";
 import { getValidatedUploadFile } from "../../utils/fileUpload";
+import {
+    getStaff,
+    updateStaff,
+    updateStaffPassword,
+    updateStaffPermissions,
+} from "../../api/staffApi";
+import {
+    getPasswordRuleChecks,
+    PASSWORD_MAX_LENGTH,
+    PASSWORD_MIN_LENGTH,
+} from "../../utils/passwordValidation";
 
-// Using the same mock data as StaffGrid for fallback support
-const mockUsers = [
-    { id: 1, name: "Vinod Gokul Tambe", phone: "9579082528, 8010445844", address: "Hadapsar, Pune, 411039", image: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-    { id: 2, name: "Rahul Patil", phone: "9876543210", address: "Wakad, Pune, 411057", image: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-    { id: 3, name: "Amit Kulkarni", phone: "9823456789", address: "Kothrud, Pune, 411038", image: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-    { id: 4, name: "Sneha Joshi", phone: "9765432198", address: "Karve Nagar, Pune, 411052", image: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-    { id: 5, name: "Rohit Deshmukh", phone: "9890123456", address: "Aundh, Pune, 411007", image: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-    { id: 6, name: "Pooja Shinde", phone: "9012345678", address: "Baner, Pune, 411045", image: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-    { id: 7, name: "Sanket Pawar", phone: "9123456789", address: "Pimple Saudagar, Pune, 411027", image: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-    { id: 8, name: "Neha Chavan", phone: "9988776655", address: "Hinjewadi, Pune, 411057", image: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-    { id: 9, name: "Akash Jadhav", phone: "9345678123", address: "Viman Nagar, Pune, 411014", image: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" },
-    { id: 10, name: "Kiran More", phone: "9765123490", address: "Katraj, Pune, 411046", image: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" }
-];
+const IMAGE_BASE_URL = "http://localhost:9000/";
+const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+const DOC_PLACEHOLDER = "https://cdn-icons-png.flaticon.com/512/281/281764.png";
+
+const emptyPermissions = {
+    firm: { view: false, create: false, edit: false, delete: false },
+    account: { view: false, create: false, edit: false, delete: false },
+    staff: { view: false, create: false, edit: false, delete: false },
+    user: { view: false, create: false, edit: false, delete: false },
+    moneyLender: { view: false, create: false, edit: false, delete: false },
+    loan: {
+        view: false, create: false, edit: false, delete: false,
+        form8: false, deposit: false, addPrincipal: false, transfer: false,
+        release: false, auction: false, notice: false, customize: false,
+        print: false, loanLogs: false,
+    },
+    finance: {
+        view: false, create: false, edit: false, delete: false,
+        payment: false, rollback: false, history: false, printReceipt: false,
+    },
+    reports: {
+        daybook: false, balanceSheet: false, logs: false, profitLoss: false, trialBalance: false,
+    },
+    settings: { manage: false },
+};
+
+const resolveImg = (img, fallback = DEFAULT_AVATAR) => {
+    if (!img) return fallback;
+    if (typeof img === "string") {
+        return img.startsWith("http") || img.startsWith("blob:")
+            ? img
+            : `${IMAGE_BASE_URL}${img.replace(/^\/+/, "")}`;
+    }
+    if (img.path) return `${IMAGE_BASE_URL}${String(img.path).replace(/^\/+/, "")}`;
+    return fallback;
+};
+
+const mapStaffToForm = (staff) => ({
+    firstName: staff.staff_first_name || "",
+    lastName: staff.staff_last_name || "",
+    fatherName: staff.staff_father_name || "",
+    motherName: staff.staff_mother_name || "",
+    mobileNo: staff.staff_mobile_no || "",
+    phoneNo: staff.staff_phone_no || "",
+    emailId: staff.staff_email_id || "",
+    gender: staff.staff_gender || "",
+    cast: staff.staff_cast || "",
+    maritalStatus: staff.staff_marital_status || "",
+    occupation: staff.staff_occupation || "",
+    dateOfBirth: staff.staff_birth_date
+        ? String(staff.staff_birth_date).slice(0, 10)
+        : "",
+    gstin: staff.staff_gstin || "",
+    taxNo: staff.staff_tax_no || "",
+    panNo: staff.staff_pan_no || "",
+    adhaarNo: staff.staff_adhaar_no || "",
+    permanentAddress: staff.staff_per_address || "",
+    currentAddress: staff.staff_curr_address || "",
+    village: staff.staff_village || "",
+    wardNumber: staff.staff_ward_no || "",
+    tehsil: staff.staff_tehsil || "",
+    city: staff.staff_city || "",
+    state: staff.staff_state || "",
+    country: staff.staff_country || "",
+    pincode: staff.staff_pincode || "",
+    bankName: staff.staff_bank_name || "",
+    bankAccNo: staff.staff_bank_acc_no || "",
+    ifscCode: staff.staff_ifsc_code || "",
+    otherInformation: staff.staff_other_info || "",
+    aadhaarFront: resolveImg(staff.staff_adhaar_front_img, DOC_PLACEHOLDER),
+    aadhaarBack: resolveImg(staff.staff_adhaar_back_img, DOC_PLACEHOLDER),
+    panCard: resolveImg(staff.staff_pan_card_img, DOC_PLACEHOLDER),
+    signature: resolveImg(staff.staff_sign_img, DOC_PLACEHOLDER),
+    image: resolveImg(staff.staff_profile_img),
+    status: staff.staff_status === "Active",
+    photoFile: null,
+    aadhaarFrontFile: null,
+    aadhaarBackFile: null,
+    panCardFile: null,
+    signatureFile: null,
+});
+
+const mergePermissions = (incoming = {}) => {
+    const next = JSON.parse(JSON.stringify(emptyPermissions));
+    for (const section of Object.keys(next)) {
+        if (!incoming[section]) continue;
+        for (const key of Object.keys(next[section])) {
+            if (incoming[section][key] !== undefined) {
+                next[section][key] = !!incoming[section][key];
+            }
+        }
+    }
+    return next;
+};
 
 const StaffDetails = () => {
     const { id } = useParams();
-    // Resolve static staff details on load
-    const selectedMockUser = mockUsers.find((u) => u.id === parseInt(id)) || mockUsers[0];
-    const first = selectedMockUser ? selectedMockUser.name.split(" ")[0] : "Vinod";
-    const last = selectedMockUser ? (selectedMockUser.name.split(" ").slice(1).join(" ") || "") : "Tambe";
-    const email = selectedMockUser ? (selectedMockUser.email || first.toLowerCase() + "@example.com") : "vinod@example.com";
+    const authUser = useSelector((state) => state.auth.user);
+    const ownerLoginId =
+        authUser?.role === "STAFF"
+            ? authUser?.owner_login_id || ""
+            : authUser?.own_login_id || "";
 
-    const [userData, setUserData] = useState({
-        firstName: first,
-        lastName: last,
-        fatherName: "Gokul Tambe",
-        motherName: "Lata Tambe",
-        mobileNo: selectedMockUser ? selectedMockUser.phone.split(',')[0].trim() : "9579082528",
-        phoneNo: selectedMockUser ? (selectedMockUser.phone.split(',')[1]?.trim() || "") : "",
-        emailId: email,
-        gender: "Male",
-        cast: "Maratha",
-        maritalStatus: "Married",
-        occupation: "Software Engineer",
-        dateOfBirth: "1990-01-01",
-        gstin: "27AAAAA1111A1Z1",
-        taxNo: first.toLowerCase() + "123",
-        panNo: "Admin@123",
-        adhaarNo: "Admin@123",
-        permanentAddress: selectedMockUser ? selectedMockUser.address : "Hadapsar, Pune, 411039",
-        currentAddress: selectedMockUser ? selectedMockUser.address : "Hadapsar, Pune, 411039",
-        village: "Hadapsar",
-        wardNumber: "12",
-        tehsil: "Haveli",
-        city: "Pune",
-        state: "Maharashtra",
-        country: "India",
-        pincode: "411039",
-        bankName: "State Bank of India",
-        bankAccNo: "30012345678",
-        ifscCode: "SBIN0001234",
-        otherInformation: "No extra info.",
-        aadhaarFront: "https://cdn-icons-png.flaticon.com/512/281/281764.png",
-        aadhaarBack: "https://cdn-icons-png.flaticon.com/512/281/281764.png",
-        panCard: "https://cdn-icons-png.flaticon.com/512/281/281764.png",
-        signature: "https://cdn-icons-png.flaticon.com/512/2921/2921226.png",
-        image: selectedMockUser ? selectedMockUser.image : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
-        status: true
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [savingPassword, setSavingPassword] = useState(false);
+    const [savingPermissions, setSavingPermissions] = useState(false);
+    const [fullLoginId, setFullLoginId] = useState("");
+    const [userData, setUserData] = useState(mapStaffToForm({}));
+    const [loginId, setLoginId] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [showRequirements, setShowRequirements] = useState(false);
+    const [passwordTouched, setPasswordTouched] = useState({
+        password: false,
+        confirmPassword: false,
     });
-
-    // Password and Login ID states
-    const [loginId, setLoginId] = useState(first.toLowerCase() + "123");
-    const [password, setPassword] = useState("Admin@123");
-    const [confirmPassword, setConfirmPassword] = useState("Admin@123");
-
-    // Scoped Details tab state
     const [activeDetailTab, setActiveDetailTab] = useState("personal");
+    const [permissions, setPermissions] = useState(emptyPermissions);
 
-    // Initializing permissions state based exactly on the user options
-    const initialPermissions = {
-        firm: { view: true, create: false, edit: true, delete: true },
-        account: { view: true, create: false, edit: true, delete: true },
-        staff: { view: true, create: false, edit: true, delete: true },
-        loan: {
-            view: true,
-            create: false,
-            edit: true,
-            delete: true,
-            form8: true,
-            deposit: true,
-            addPrincipal: false,
-            transfer: false,
-            release: true,
-            auction: false,
-            notice: true,
-            customize: true,
-            print: true,
-            loanLogs: true
-        },
-        finance: {
-            view: true,
-            create: false,
-            edit: true,
-            delete: true,
-            payment: true,
-            rollback: false,
-            history: true,
-            printReceipt: true
-        },
-        reports: { daybook: true, balanceSheet: true, logs: true, profitLoss: true }
-    };
-    const [permissions, setPermissions] = useState(initialPermissions);
+    const personalInfo = useMemo(
+        () => ({
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            loginId,
+            email: userData.emailId,
+            mobile: userData.mobileNo,
+        }),
+        [userData.firstName, userData.lastName, userData.emailId, userData.mobileNo, loginId]
+    );
+
+    const passwordRules = useMemo(() => {
+        const result = getPasswordRuleChecks(password, {
+            oldPassword: "",
+            personalInfo,
+        });
+        const checks = result.checks.filter((rule) => rule.key !== "different");
+        const failed = checks.find((c) => !c.ok);
+        return {
+            checks,
+            isValid: checks.every((c) => c.ok),
+            message: failed ? failed.label : "Strong password",
+        };
+    }, [password, personalInfo]);
+
+    const passwordValidation = useMemo(() => {
+        const passwordFailed = !password || !passwordRules.isValid;
+        const passwordMsg = !password ? "Password is required" : passwordRules.message;
+
+        let confirmMsg = "";
+        let confirmFailed = false;
+        if (!confirmPassword) {
+            confirmMsg = "Confirm password is required";
+            confirmFailed = true;
+        } else if (confirmPassword !== password) {
+            confirmMsg = "Confirm password does not match";
+            confirmFailed = true;
+        } else if (passwordRules.isValid) {
+            confirmMsg = "Passwords match";
+        } else {
+            confirmMsg = "Fix password rules first";
+            confirmFailed = true;
+        }
+
+        return {
+            password: { failed: passwordFailed, message: passwordMsg },
+            confirmPassword: { failed: confirmFailed, message: confirmMsg },
+            isValid: !passwordFailed && !confirmFailed && !!loginId.trim(),
+        };
+    }, [password, confirmPassword, passwordRules, loginId]);
 
     const triggerAlert = (message, type = "success") => {
         const toastType = type === "danger" ? "error" : type;
         showToast(message, toastType);
     };
 
+    useEffect(() => {
+        let cancelled = false;
+        const load = async () => {
+            setLoading(true);
+            try {
+                const res = await getStaff(id);
+                if (cancelled) return;
+                const staff = res.data;
+                setUserData(mapStaffToForm(staff));
+                setLoginId(staff.staff_login_id || "");
+                setFullLoginId(staff.full_login_id || `${ownerLoginId}+${staff.staff_login_id || ""}`);
+                setPermissions(mergePermissions(staff.permissions));
+                setPassword("");
+                setConfirmPassword("");
+            } catch (err) {
+                triggerAlert(err.message || "Failed to load staff", "danger");
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        };
+        if (id) load();
+        return () => { cancelled = true; };
+    }, [id, ownerLoginId]);
+
     const handleFieldChange = (e) => {
         const { name, value } = e.target;
         setUserData(prev => prev ? { ...prev, [name]: value } : null);
     };
 
-    const handleSaveProfileDetails = () => {
+    const handleSaveProfileDetails = async () => {
+        if (saving) return;
         if (!userData.firstName || !userData.lastName) {
             triggerAlert("First Name and Last Name are required!", "danger");
             return;
@@ -126,23 +233,113 @@ const StaffDetails = () => {
             return;
         }
 
-        // Simulating save details locally
-        triggerAlert("Staff profile details saved successfully ...");
+        setSaving(true);
+        const payload = new FormData();
+        payload.append("firstName", userData.firstName);
+        payload.append("lastName", userData.lastName);
+        payload.append("fatherName", userData.fatherName || "");
+        payload.append("motherName", userData.motherName || "");
+        payload.append("mobileNo", userData.mobileNo);
+        payload.append("phoneNo", userData.phoneNo || "");
+        payload.append("emailId", userData.emailId || "");
+        payload.append("gender", userData.gender || "");
+        payload.append("cast", userData.cast || "");
+        payload.append("maritalStatus", userData.maritalStatus || "");
+        payload.append("occupation", userData.occupation || "");
+        payload.append("dateOfBirth", userData.dateOfBirth || "");
+        payload.append("gstin", userData.gstin || "");
+        payload.append("taxNo", userData.taxNo || "");
+        payload.append("panNo", userData.panNo || "");
+        payload.append("adhaarNo", userData.adhaarNo || "");
+        payload.append("loginId", loginId || "");
+        payload.append("permanentAddress", userData.permanentAddress || "");
+        payload.append("currentAddress", userData.currentAddress || "");
+        payload.append("village", userData.village || "");
+        payload.append("wardNumber", userData.wardNumber || "");
+        payload.append("tehsil", userData.tehsil || "");
+        payload.append("city", userData.city || "");
+        payload.append("state", userData.state || "");
+        payload.append("country", userData.country || "");
+        payload.append("pincode", userData.pincode || "");
+        payload.append("bankName", userData.bankName || "");
+        payload.append("bankAccNo", userData.bankAccNo || "");
+        payload.append("ifscCode", userData.ifscCode || "");
+        payload.append("otherInformation", userData.otherInformation || "");
+        payload.append("staff_status", userData.status ? "Active" : "Inactive");
+        if (userData.photoFile) payload.append("photo", userData.photoFile);
+        if (userData.aadhaarFrontFile) payload.append("adhaarFront", userData.aadhaarFrontFile);
+        if (userData.aadhaarBackFile) payload.append("adhaarBack", userData.aadhaarBackFile);
+        if (userData.panCardFile) payload.append("panCard", userData.panCardFile);
+        if (userData.signatureFile) payload.append("signature", userData.signatureFile);
+
+        try {
+            const res = await updateStaff(id, payload);
+            setUserData(mapStaffToForm(res.data));
+            setFullLoginId(res.data.full_login_id || fullLoginId);
+            triggerAlert("Staff profile details saved successfully.");
+        } catch (err) {
+            triggerAlert(err.message || "Failed to save staff", "danger");
+        } finally {
+            setSaving(false);
+        }
     };
 
-    const handlePasswordUpdateOnly = () => {
-        if (!password) {
-            triggerAlert("Password cannot be empty!", "danger");
+    const handlePasswordUpdateOnly = async () => {
+        if (savingPassword) return;
+        setPasswordTouched({ password: true, confirmPassword: true });
+        setShowRequirements(true);
+
+        if (!loginId.trim()) {
+            triggerAlert("Login ID cannot be empty!", "danger");
             return;
         }
-        if (password !== confirmPassword) {
-            triggerAlert("Password and Confirm Password do not match!", "danger");
+        if (loginId.includes("+")) {
+            triggerAlert("Enter staff login ID only (without owner prefix).", "danger");
+            return;
+        }
+        if (!passwordValidation.isValid) {
+            triggerAlert(
+                passwordValidation.password.failed
+                    ? passwordValidation.password.message
+                    : passwordValidation.confirmPassword.message,
+                "danger"
+            );
             return;
         }
 
-        // Simulating password save locally
-        setUserData(prev => prev ? { ...prev, panNo: password, adhaarNo: confirmPassword, taxNo: loginId } : null);
-        triggerAlert("Login ID and password updated successfully ...");
+        setSavingPassword(true);
+        try {
+            const res = await updateStaffPassword(id, {
+                loginId: loginId.trim().toLowerCase(),
+                password,
+                confirm_password: confirmPassword,
+            });
+            setLoginId(res.data.staff_login_id);
+            setFullLoginId(res.data.full_login_id || `${ownerLoginId}+${res.data.staff_login_id}`);
+            setPassword("");
+            setConfirmPassword("");
+            setShowRequirements(false);
+            setPasswordTouched({ password: false, confirmPassword: false });
+            triggerAlert("Login ID and password updated successfully.");
+        } catch (err) {
+            triggerAlert(err.message || "Failed to update password", "danger");
+        } finally {
+            setSavingPassword(false);
+        }
+    };
+
+    const handleSavePermissions = async () => {
+        if (savingPermissions) return;
+        setSavingPermissions(true);
+        try {
+            const res = await updateStaffPermissions(id, permissions);
+            setPermissions(mergePermissions(res.data.permissions));
+            triggerAlert("Staff permissions saved successfully.");
+        } catch (err) {
+            triggerAlert(err.message || "Failed to save permissions", "danger");
+        } finally {
+            setSavingPermissions(false);
+        }
     };
 
     const handleSectionSelectAll = (section, isChecked) => {
@@ -191,6 +388,10 @@ const StaffDetails = () => {
     const isSectionFullySelected = (section) => {
         return Object.values(permissions[section]).every(val => val === true);
     };
+
+    if (loading) {
+        return <div className="text-center text-muted py-5">Loading staff details...</div>;
+    }
 
     return (
         <div className="staff-details-page pb-2 pb-md-0">
@@ -419,6 +620,11 @@ const StaffDetails = () => {
                                             />
                                         </div>
                                     </div>
+                                    {fullLoginId && (
+                                        <div className="mt-2 small text-muted">
+                                            Login: <strong className="text-success">{fullLoginId}</strong>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Right Side: Tabbed Forms */}
@@ -634,7 +840,7 @@ const StaffDetails = () => {
                                                             Upload Aadhaar Front
                                                             <input type="file" accept="image/*" className="d-none" onChange={(e) => {
                                                                 const file = getValidatedUploadFile(e);
-                                                                if (file) setUserData(prev => ({ ...prev, aadhaarFront: URL.createObjectURL(file) }));
+                                                                if (file) setUserData(prev => ({ ...prev, aadhaarFrontFile: file, aadhaarFront: URL.createObjectURL(file) }));
                                                             }} />
                                                         </label>
                                                     </div>
@@ -649,7 +855,7 @@ const StaffDetails = () => {
                                                             Upload Aadhaar Back
                                                             <input type="file" accept="image/*" className="d-none" onChange={(e) => {
                                                                 const file = getValidatedUploadFile(e);
-                                                                if (file) setUserData(prev => ({ ...prev, aadhaarBack: URL.createObjectURL(file) }));
+                                                                if (file) setUserData(prev => ({ ...prev, aadhaarBackFile: file, aadhaarBack: URL.createObjectURL(file) }));
                                                             }} />
                                                         </label>
                                                     </div>
@@ -664,7 +870,7 @@ const StaffDetails = () => {
                                                             Upload PAN Card
                                                             <input type="file" accept="image/*" className="d-none" onChange={(e) => {
                                                                 const file = getValidatedUploadFile(e);
-                                                                if (file) setUserData(prev => ({ ...prev, panCard: URL.createObjectURL(file) }));
+                                                                if (file) setUserData(prev => ({ ...prev, panCardFile: file, panCard: URL.createObjectURL(file) }));
                                                             }} />
                                                         </label>
                                                     </div>
@@ -684,7 +890,7 @@ const StaffDetails = () => {
                                                             Upload Signature
                                                             <input type="file" accept="image/*" className="d-none" onChange={(e) => {
                                                                 const file = getValidatedUploadFile(e);
-                                                                if (file) setUserData(prev => ({ ...prev, signature: URL.createObjectURL(file) }));
+                                                                if (file) setUserData(prev => ({ ...prev, signatureFile: file, signature: URL.createObjectURL(file) }));
                                                             }} />
                                                         </label>
                                                     </div>
@@ -702,8 +908,15 @@ const StaffDetails = () => {
                             </div>
 
                             <div className="d-flex justify-content-end mt-4 border-top pt-3 staff-details-save-row">
-                                <button type="button" className="btn btn-success px-4 fw-bold w-100 w-md-auto" onClick={handleSaveProfileDetails}>
-                                    <i className="bi bi-save me-2"></i>Save Details
+                                <button type="button" className="btn btn-success px-4 fw-bold w-100 w-md-auto" onClick={handleSaveProfileDetails} disabled={saving}>
+                                    {saving ? (
+                                        <>
+                                            <span className="spinner-border spinner-border-sm me-2" role="status" />
+                                            Saving...
+                                        </>
+                                    ) : (
+                                        <><i className="bi bi-save me-2"></i>Save Details</>
+                                    )}
                                 </button>
                             </div>
                         </div>
@@ -713,53 +926,146 @@ const StaffDetails = () => {
                 {/* Right Card: Update Password */}
                 <div className="col-12 col-lg-3">
                     <div className="card border-0 h-100 bg-white user-details-card" style={{ borderRadius: '12px' }}>
-                        <div className="card-body p-3 p-md-4 d-flex flex-column justify-content-between">
-                            <div>
-                                <h5 className="fw-bold text-brown mb-3 d-flex align-items-center">
-                                    <i className="bi bi-shield-lock-fill me-2"></i> Update Password
-                                </h5>
-                                <div className="mb-2">
-                                    <label className="form-label text-muted small fw-bold mb-1">Login ID</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={loginId}
-                                        onChange={(e) => {
-                                            setLoginId(e.target.value);
-                                            setUserData(prev => prev ? { ...prev, taxNo: e.target.value } : null);
-                                        }}
-                                    />
-                                </div>
-                                <div className="mb-2">
-                                    <label className="form-label text-muted small fw-bold mb-1">New Password</label>
-                                    <input
-                                        type="password"
-                                        className="form-control"
-                                        placeholder="Enter new password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        maxLength={10}
-                                    />
-                                    <div className="form-text text-muted small mt-1">Max 10 characters.</div>
-                                </div>
-                                <div className="mb-3">
-                                    <label className="form-label text-muted small fw-bold mb-1">Confirm Password</label>
-                                    <input
-                                        type="password"
-                                        className="form-control"
-                                        placeholder="Confirm new password"
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                        maxLength={10}
-                                    />
+                        <div className="card-body p-3 p-md-4 d-flex flex-column">
+                            <h5 className="fw-bold text-brown mb-3 d-flex align-items-center">
+                                <i className="bi bi-shield-lock-fill me-2"></i> Update Password
+                            </h5>
+                            <div className="mb-2">
+                                <label className="form-label text-muted small fw-bold mb-1">Staff Login ID</label>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    value={loginId}
+                                    onChange={(e) => setLoginId(e.target.value)}
+                                />
+                                <div className="form-text text-muted small mt-1">
+                                    Full login: <strong>{ownerLoginId ? `${ownerLoginId}+${loginId || "..."}` : loginId || "..."}</strong>
                                 </div>
                             </div>
+                            <div className="mb-2">
+                                <label className="form-label text-muted small fw-bold mb-1">New Password</label>
+                                <div className="input-group has-validation">
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        className={`form-control ${
+                                            passwordTouched.password && password
+                                                ? passwordValidation.password.failed
+                                                    ? "is-invalid"
+                                                    : "is-valid"
+                                                : ""
+                                        }`}
+                                        placeholder="Enter new password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value.slice(0, PASSWORD_MAX_LENGTH))}
+                                        onFocus={() => setShowRequirements(true)}
+                                        onBlur={() => {
+                                            setPasswordTouched((prev) => ({ ...prev, password: true }));
+                                            if (!password) setShowRequirements(false);
+                                        }}
+                                        maxLength={PASSWORD_MAX_LENGTH}
+                                        autoComplete="new-password"
+                                    />
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-secondary"
+                                        onClick={() => setShowPassword((v) => !v)}
+                                        tabIndex={-1}
+                                    >
+                                        <i className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
+                                    </button>
+                                </div>
+                                {passwordTouched.password ? (
+                                    <div className={`small mt-1 ${passwordValidation.password.failed ? "text-danger" : "text-success"}`}>
+                                        <i className={`bi ${passwordValidation.password.failed ? "bi-x-circle" : "bi-check-circle"} me-1`}></i>
+                                        {passwordValidation.password.message}
+                                    </div>
+                                ) : (
+                                    <div className="form-text text-muted small mt-1">
+                                        {PASSWORD_MIN_LENGTH}–{PASSWORD_MAX_LENGTH} chars, upper, lower, number, special
+                                    </div>
+                                )}
+                            </div>
+                            <div className="mb-2">
+                                <label className="form-label text-muted small fw-bold mb-1">Confirm Password</label>
+                                <div className="input-group has-validation">
+                                    <input
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        className={`form-control ${
+                                            passwordTouched.confirmPassword && confirmPassword
+                                                ? passwordValidation.confirmPassword.failed
+                                                    ? "is-invalid"
+                                                    : "is-valid"
+                                                : ""
+                                        }`}
+                                        placeholder="Confirm new password"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value.slice(0, PASSWORD_MAX_LENGTH))}
+                                        onBlur={() => setPasswordTouched((prev) => ({ ...prev, confirmPassword: true }))}
+                                        maxLength={PASSWORD_MAX_LENGTH}
+                                        autoComplete="new-password"
+                                    />
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-secondary"
+                                        onClick={() => setShowConfirmPassword((v) => !v)}
+                                        tabIndex={-1}
+                                    >
+                                        <i className={`bi ${showConfirmPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
+                                    </button>
+                                </div>
+                                {passwordTouched.confirmPassword ? (
+                                    <div className={`small mt-1 ${passwordValidation.confirmPassword.failed ? "text-danger" : "text-success"}`}>
+                                        <i className={`bi ${passwordValidation.confirmPassword.failed ? "bi-x-circle" : "bi-check-circle"} me-1`}></i>
+                                        {passwordValidation.confirmPassword.message}
+                                    </div>
+                                ) : null}
+                            </div>
+
+                            {(showRequirements || password.length > 0) && (
+                                <div className="border rounded p-2 mb-3 bg-light">
+                                    <div className="fw-semibold small mb-2">Password requirements</div>
+                                    <ul className="list-unstyled mb-0 small">
+                                        {passwordRules.checks.map((rule) => (
+                                            <li
+                                                key={rule.key}
+                                                className={`d-flex align-items-start gap-2 mb-1 ${
+                                                    password
+                                                        ? rule.ok
+                                                            ? "text-success"
+                                                            : "text-danger"
+                                                        : "text-muted"
+                                                }`}
+                                            >
+                                                <i
+                                                    className={`bi ${
+                                                        password
+                                                            ? rule.ok
+                                                                ? "bi-check-circle-fill"
+                                                                : "bi-x-circle-fill"
+                                                            : "bi-circle"
+                                                    } mt-1`}
+                                                ></i>
+                                                <span>{rule.label}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
                             <button
                                 type="button"
-                                className="btn btn-outline-danger w-100 fw-bold mt-1"
+                                className="btn btn-outline-danger w-100 fw-bold mt-auto"
                                 onClick={handlePasswordUpdateOnly}
+                                disabled={savingPassword || !passwordValidation.isValid}
                             >
-                                <i className="bi bi-key-fill me-2"></i> Update Password
+                                {savingPassword ? (
+                                    <>
+                                        <span className="spinner-border spinner-border-sm me-2" role="status" />
+                                        Updating...
+                                    </>
+                                ) : (
+                                    <><i className="bi bi-key-fill me-2"></i> Update Password</>
+                                )}
                             </button>
                         </div>
                     </div>
@@ -901,6 +1207,70 @@ const StaffDetails = () => {
                                         <label htmlFor="staff-delete" className="permission-label m-0">Delete Staff</label>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* User access */}
+                        <div className="border rounded p-2 bg-light bg-opacity-25">
+                            <div className="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-light-subtle staff-permission-section-head">
+                                <p className="fw-bold mb-1 small text-secondary d-flex align-items-center">
+                                    <i className="bi bi-people-fill me-2"></i> User access :
+                                </p>
+                                <div className="form-check form-switch mb-1 d-flex align-items-center gap-2 m-0 p-0">
+                                    <input id="user-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('user')} onChange={(e) => handleSectionSelectAll('user', e.target.checked)} />
+                                    <label htmlFor="user-all" className="permission-label m-0">Select all</label>
+                                </div>
+                            </div>
+                            <div className="row g-3">
+                                {["view", "create", "edit", "delete"].map((action) => (
+                                    <div key={action} className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                        <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                            <input
+                                                id={`user-${action}`}
+                                                className="form-check-input custom-switch m-0 ms-0"
+                                                type="checkbox"
+                                                role="switch"
+                                                checked={permissions.user?.[action] || false}
+                                                onChange={(e) => handlePermissionChange("user", action, e.target.checked)}
+                                            />
+                                            <label htmlFor={`user-${action}`} className="permission-label m-0">
+                                                {action === "view" ? "List Users" : `${action.charAt(0).toUpperCase()}${action.slice(1)} User`}
+                                            </label>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Money Lender access */}
+                        <div className="border rounded p-2 bg-light bg-opacity-25">
+                            <div className="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-light-subtle staff-permission-section-head">
+                                <p className="fw-bold mb-1 small text-secondary d-flex align-items-center">
+                                    <i className="bi bi-cash-stack me-2"></i> Money Lender access :
+                                </p>
+                                <div className="form-check form-switch mb-1 d-flex align-items-center gap-2 m-0 p-0">
+                                    <input id="moneyLender-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('moneyLender')} onChange={(e) => handleSectionSelectAll('moneyLender', e.target.checked)} />
+                                    <label htmlFor="moneyLender-all" className="permission-label m-0">Select all</label>
+                                </div>
+                            </div>
+                            <div className="row g-3">
+                                {["view", "create", "edit", "delete"].map((action) => (
+                                    <div key={action} className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                        <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                            <input
+                                                id={`moneyLender-${action}`}
+                                                className="form-check-input custom-switch m-0 ms-0"
+                                                type="checkbox"
+                                                role="switch"
+                                                checked={permissions.moneyLender?.[action] || false}
+                                                onChange={(e) => handlePermissionChange("moneyLender", action, e.target.checked)}
+                                            />
+                                            <label htmlFor={`moneyLender-${action}`} className="permission-label m-0">
+                                                {action === "view" ? "List Money Lenders" : `${action.charAt(0).toUpperCase()}${action.slice(1)} Money Lender`}
+                                            </label>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
 
@@ -1102,9 +1472,60 @@ const StaffDetails = () => {
                                         <label htmlFor="reports-profitLoss" className="permission-label m-0">List Profit & Loss</label>
                                     </div>
                                 </div>
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input id="reports-trialBalance" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={permissions.reports?.trialBalance || false} onChange={(e) => handlePermissionChange('reports', 'trialBalance', e.target.checked)} />
+                                        <label htmlFor="reports-trialBalance" className="permission-label m-0">List Trial Balance</label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
+                        {/* Settings */}
+                        <div className="border rounded p-2 bg-light bg-opacity-25">
+                            <div className="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-light-subtle staff-permission-section-head">
+                                <p className="fw-bold mb-1 small text-secondary d-flex align-items-center">
+                                    <i className="bi bi-gear-fill me-2"></i> Settings access :
+                                </p>
+                                <div className="form-check form-switch mb-1 d-flex align-items-center gap-2 m-0 p-0">
+                                    <input id="settings-all" className="form-check-input custom-switch m-0 ms-0" type="checkbox" role="switch" checked={isSectionFullySelected('settings')} onChange={(e) => handleSectionSelectAll('settings', e.target.checked)} />
+                                    <label htmlFor="settings-all" className="permission-label m-0">Select all</label>
+                                </div>
+                            </div>
+                            <div className="row g-3">
+                                <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+                                    <div className="form-check form-switch d-flex align-items-center gap-2 p-0 m-0">
+                                        <input
+                                            id="settings-manage"
+                                            className="form-check-input custom-switch m-0 ms-0"
+                                            type="checkbox"
+                                            role="switch"
+                                            checked={permissions.settings?.manage || false}
+                                            onChange={(e) => handlePermissionChange("settings", "manage", e.target.checked)}
+                                        />
+                                        <label htmlFor="settings-manage" className="permission-label m-0">Manage Rate / Purity / Backup</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div className="d-flex justify-content-end mt-3 pt-3 border-top">
+                        <button
+                            type="button"
+                            className="btn btn-success px-4 fw-bold"
+                            onClick={handleSavePermissions}
+                            disabled={savingPermissions}
+                        >
+                            {savingPermissions ? (
+                                <>
+                                    <span className="spinner-border spinner-border-sm me-2" role="status" />
+                                    Saving...
+                                </>
+                            ) : (
+                                <><i className="bi bi-shield-lock-fill me-2"></i>Save Permissions</>
+                            )}
+                        </button>
                     </div>
                 </div>
             </div>

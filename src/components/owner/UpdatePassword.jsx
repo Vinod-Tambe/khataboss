@@ -35,7 +35,8 @@ const UpdatePassword = () => {
       firstName: user?.own_first_name,
       middleName: user?.own_middle_name,
       lastName: user?.own_last_name,
-      loginId: user?.own_login_id,
+      // Staff: use staff_login_id only (not owner+staff) for personal-info checks
+      loginId: user?.role === "STAFF" ? user?.staff_login_id : user?.own_login_id,
       email: user?.own_email,
       mobile: user?.own_mobile_no,
     }),
@@ -114,6 +115,8 @@ const UpdatePassword = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
+
     setTouched({
       old_password: true,
       new_password: true,
@@ -125,8 +128,8 @@ const UpdatePassword = () => {
       return;
     }
 
+    setLoading(true);
     try {
-      setLoading(true);
       setServerError("");
       const res = await changePassword({
         old_password: formData.old_password,
@@ -218,7 +221,7 @@ const UpdatePassword = () => {
       <div className="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
         <h5 className="mb-0 fw-bold">
           <i className="bi bi-shield-lock me-2"></i>
-          Update Password
+          {user?.role === "STAFF" ? "Update Staff Password" : "Update Password"}
         </h5>
         <Link to="/profile" className="btn btn-outline-secondary btn-sm">
           <i className="bi bi-person me-1"></i>

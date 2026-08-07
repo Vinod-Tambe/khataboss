@@ -134,6 +134,8 @@ const FinanceCollectionModal = ({ show, onClose, firms = [], selectedFirmId, ini
                 }, 300);
             }
         }
+        // fetchUserFinances is stable for this modal open cycle
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [show, selectedFirmId, firms, initialUser]);
 
     // Focus User Search after Firm is selected

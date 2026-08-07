@@ -42,7 +42,10 @@ const OwnerProfile = () => {
       own_email: profile.own_email || "",
       own_mobile_no: profile.own_mobile_no || "",
       own_phone_no: profile.own_phone_no || "",
-      own_login_id: profile.own_login_id || "",
+      own_login_id:
+        profile.role === "STAFF"
+          ? profile.staff_login_id || profile.own_login_id || ""
+          : profile.own_login_id || "",
       own_address: profile.own_address || "",
       own_village: profile.own_village || "",
       own_city: profile.own_city || "",
@@ -94,6 +97,8 @@ const OwnerProfile = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
+
     if (!formData.own_first_name.trim() || !formData.own_last_name.trim()) {
       toast.error("First name and last name are required");
       return;
@@ -115,8 +120,8 @@ const OwnerProfile = () => {
       return;
     }
 
+    setLoading(true);
     try {
-      setLoading(true);
       const payload = new FormData();
       payload.append("own_first_name", formData.own_first_name.trim());
       payload.append("own_middle_name", formData.own_middle_name.trim());
@@ -157,7 +162,7 @@ const OwnerProfile = () => {
       <div className="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
         <h5 className="mb-0 fw-bold">
           <i className="bi bi-person-badge me-2"></i>
-          My Profile
+          {user?.role === "STAFF" ? "My Staff Profile" : "My Profile"}
         </h5>
         <Link to="/settings/update-password" className="btn btn-outline-primary btn-sm">
           <i className="bi bi-shield-lock me-1"></i>
@@ -214,14 +219,25 @@ const OwnerProfile = () => {
                   />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label">Login ID</label>
+                  <label className="form-label">
+                    {user?.role === "STAFF" ? "Staff Login ID" : "Login ID"}
+                  </label>
                   <input
                     type="text"
                     className="form-control border-dark"
-                    value={formData.own_login_id}
+                    value={
+                      user?.role === "STAFF"
+                        ? user?.staff_login_id || formData.own_login_id
+                        : formData.own_login_id
+                    }
                     disabled
                     readOnly
                   />
+                  {user?.role === "STAFF" ? (
+                    <div className="form-text small">
+                      Login with: <strong>{user?.login_id || `${user?.owner_login_id}+${user?.staff_login_id}`}</strong>
+                    </div>
+                  ) : null}
                 </div>
                 <div className="col-md-4">
                   <label className="form-label">Email <span className="text-danger">*</span></label>

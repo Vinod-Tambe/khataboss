@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import { Offcanvas } from "bootstrap";
@@ -36,11 +36,13 @@ import { FaBook, FaBookOpen, FaBalanceScale } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../store/slices/authSlice";
 import { setSelectedFirmId } from "../store/slices/firmSlice";
+import { filterMenuByPermissions } from "../utils/permissions";
 
 const Sidebar = () => {
   const [openSubmenus, setOpenSubmenus] = useState({});
   const dispatch = useDispatch();
   const { firms, selectedFirmId } = useSelector((state) => state.firm);
+  const user = useSelector((state) => state.auth.user);
 
   const handleLogout = (e) => {
     e.preventDefault();
@@ -89,115 +91,164 @@ const Sidebar = () => {
     }));
   };
 
-  const menuItems = [
-    { id: "home", label: "Home", icon: <FiHome />, path: "/home" },
-    { id: "daybook", label: "Daybook", icon: <FiBook />, path: "/daybook" },
+  const allMenuItems = useMemo(
+    () => [
+      { id: "home", label: "Home", icon: <FiHome />, path: "/home" },
+      {
+        id: "daybook",
+        label: "Daybook",
+        icon: <FiBook />,
+        path: "/daybook",
+        permission: "reports.daybook",
+      },
+      {
+        id: "accounts",
+        label: "Account",
+        icon: <FiDollarSign />,
+        anyOf: ["account.view", "account.create"],
+        subItems: [
+          { label: "Account List", path: "/account/list", icon: <FiList />, permission: "account.view" },
+          { label: "Add Account", path: "/account/add", icon: <FiPlusCircle />, permission: "account.create" },
+        ],
+      },
+      {
+        id: "users",
+        label: "User",
+        icon: <FiUsers />,
+        anyOf: ["user.view", "user.create"],
+        subItems: [
+          { label: "Add User", path: "/user/add", icon: <FiUserPlus />, permission: "user.create" },
+          { label: "All User", path: "/user/grid", icon: <FiList />, permission: "user.view" },
+          { label: "Auction User List", path: "/user/auction-list", icon: <FiAward />, permission: "loan.auction" },
+        ],
+      },
+      {
+        id: "finance",
+        label: "Finance",
+        icon: <FiTrendingUp />,
+        permission: "finance.view",
+        subItems: [
+          { label: "Active Finance List", path: "/finance/active-list", icon: <FiCheckCircle />, permission: "finance.view" },
+          { label: "Comp Finance List", path: "/finance/completed-list", icon: <FiCheckSquare />, permission: "finance.view" },
+          { label: "Close Finance List", path: "/finance/close-list", icon: <FiLock />, permission: "finance.view" },
+          { label: "Today Pending EMI", path: "/finance/today-pending-emi", icon: <FiClock />, permission: "finance.view" },
+          { label: "All Finance List", path: "/finance/all-list", icon: <FiList />, permission: "finance.view" },
+        ],
+      },
+      {
+        id: "loan",
+        label: "Loan",
+        icon: <FiClipboard />,
+        permission: "loan.view",
+        subItems: [
+          { label: "Active Loan List", path: "/loan/active-list", icon: <FiZap />, permission: "loan.view" },
+          { label: "Release Loan List", path: "/loan/release-list", icon: <FiArrowUpRight />, permission: "loan.release" },
+          { label: "Auction Loan List", path: "/loan/auction-list", icon: <FiAward />, permission: "loan.auction" },
+          { label: "Transfer Loan List", path: "/loan/transfer-list", icon: <FiRepeat />, permission: "loan.transfer" },
+          { label: "All Loan List", path: "/loan/all-list", icon: <FiList />, permission: "loan.view" },
+        ],
+      },
+      {
+        id: "money-lender",
+        label: "M Lender",
+        icon: <FiBriefcase />,
+        anyOf: ["moneyLender.view", "moneyLender.create"],
+        subItems: [
+          { label: "Add Money Lender", path: "/money-lender/add", icon: <FiPlusCircle />, permission: "moneyLender.create" },
+          { label: "Money Lender List", path: "/money-lender/list", icon: <FiList />, permission: "moneyLender.view" },
+        ],
+      },
+      {
+        id: "staff",
+        label: "Staff",
+        icon: <FiBriefcase />,
+        anyOf: ["staff.view", "staff.create"],
+        subItems: [
+          { label: "Add Staff", path: "/staff/add", icon: <FiUserPlus />, permission: "staff.create" },
+          { label: "Staff List", path: "/staff/grid", icon: <FiList />, permission: "staff.view" },
+        ],
+      },
+      {
+        id: "book",
+        label: "Book",
+        icon: <FaBook />,
+        path: "/book",
+        permission: "account.view",
+      },
+      {
+        id: "ledger",
+        label: "Ledger",
+        icon: <FiClipboard />,
+        permission: "account.view",
+        subItems: [
+          { label: "Loan Ledger", path: "/ledger/loan", icon: <FiFileText />, permission: "loan.view" },
+          { label: "Loan Item", path: "/ledger/loan-item", icon: <FiFileText />, permission: "loan.view" },
+        ],
+      },
+      {
+        id: "trial-balance",
+        label: "Trial B/L",
+        icon: <FaBalanceScale />,
+        path: "/trial-balance",
+        permission: "reports.trialBalance",
+      },
+      {
+        id: "balance-sheet",
+        label: "B/L Sheet",
+        icon: <FiBarChart2 />,
+        path: "/balance-sheet",
+        permission: "reports.balanceSheet",
+      },
+      {
+        id: "profit-loss",
+        label: "P/L Report",
+        icon: <FiTrendingUp />,
+        path: "/profit-loss",
+        permission: "reports.profitLoss",
+      },
+      {
+        id: "firm",
+        label: "Firm",
+        icon: <FiBriefcase />,
+        anyOf: ["firm.view", "firm.create"],
+        subItems: [
+          { label: "Add Firm", path: "/firm/add", icon: <FiPlusCircle />, permission: "firm.create" },
+          { label: "Firm List", path: "/firm/list", icon: <FiList />, permission: "firm.view" },
+        ],
+      },
+      // SMS: owner-only for now (no staff permission key)
+      { id: "sms", label: "SMS", icon: <FiMessageSquare />, path: "/sms", ownerOnly: true },
+      {
+        id: "logs",
+        label: "Logs",
+        icon: <FiFileText />,
+        path: "/logs",
+        permission: "reports.logs",
+      },
+      {
+        id: "settings",
+        label: "Settings",
+        icon: <FiSettings />,
+        subItems: [
+          { label: "Rate", path: "/rate", icon: <FiTrendingUp />, permission: "settings.manage" },
+          { label: "Purity", path: "/purity", icon: <FiAward />, permission: "settings.manage" },
+          { label: "Backup", path: "/backup", icon: <FiDatabase />, permission: "settings.manage" },
+          // Always allow self password update (no permission key)
+          { label: "Update Password", path: "/settings/update-password", icon: <FiLock /> },
+        ],
+      },
+      { id: "logout", label: "Sign Out", icon: <FiLogOut />, path: "/logout" },
+    ],
+    []
+  );
 
-    {
-      id: "accounts",
-      label: "Account",
-      icon: <FiDollarSign />,
-      subItems: [
-        { label: "Account List", path: "/account/list", icon: <FiList /> },
-        { label: "Add Account", path: "/account/add", icon: <FiPlusCircle /> },
-      ],
-    },
-
-    {
-      id: "users",
-      label: "User",
-      icon: <FiUsers />,
-      subItems: [
-        { label: "Add User", path: "/user/add", icon: <FiUserPlus /> },
-        { label: "All User", path: "/user/grid", icon: <FiList /> },
-        { label: "Auction User List", path: "/user/auction-list", icon: <FiAward /> },
-      ],
-    },
-    {
-      id: "finance",
-      label: "Finance",
-      icon: <FiTrendingUp />,
-      subItems: [
-        { label: "Active Finance List", path: "/finance/active-list", icon: <FiCheckCircle /> },
-        { label: "Comp Finance List", path: "/finance/completed-list", icon: <FiCheckSquare /> },
-        { label: "Close Finance List", path: "/finance/close-list", icon: <FiLock /> },
-        { label: "Today Pending EMI", path: "/finance/today-pending-emi", icon: <FiClock /> },
-        { label: "All Finance List", path: "/finance/all-list", icon: <FiList /> },
-      ],
-    },
-    {
-      id: "loan",
-      label: "Loan",
-      icon: <FiClipboard />,
-      subItems: [
-        { label: "Active Loan List", path: "/loan/active-list", icon: <FiZap /> },
-        { label: "Release Loan List", path: "/loan/release-list", icon: <FiArrowUpRight /> },
-        { label: "Auction Loan List", path: "/loan/auction-list", icon: <FiAward /> },
-        { label: "Transfer Loan List", path: "/loan/transfer-list", icon: <FiRepeat /> },
-        { label: "All Loan List", path: "/loan/all-list", icon: <FiList /> },
-      ],
-    },
-    {
-      id: "money-lender",
-      label: "M Lender",
-      icon: <FiBriefcase />,
-      subItems: [
-        { label: "Add Money Lender", path: "/money-lender/add", icon: <FiPlusCircle /> },
-        { label: "Money Lender List", path: "/money-lender/list", icon: <FiList /> },
-      ],
-    },
-    {
-      id: "staff",
-      label: "Staff",
-      icon: <FiBriefcase />,
-      subItems: [
-        { label: "Add Staff", path: "/staff/add", icon: <FiUserPlus /> },
-        { label: "Staff List", path: "/staff/grid", icon: <FiList /> },
-      ],
-    },
-
-    { id: "book", label: "Book", icon: <FaBook />, path: "/book" },
-
-    {
-      id: "ledger",
-      label: "Ledger",
-      icon: <FiClipboard />,
-      subItems: [
-        { label: "Loan Ledger", path: "/ledger/loan", icon: <FiFileText /> },
-        { label: "Loan Item", path: "/ledger/loan-item", icon: <FiFileText /> },
-      ],
-    },
-
-    { id: "trial-balance", label: "Trial B/L", icon: <FaBalanceScale />, path: "/trial-balance" },
-    { id: "balance-sheet", label: "B/L Sheet", icon: <FiBarChart2 />, path: "/balance-sheet" },
-    { id: "profit-loss", label: "P/L Report", icon: <FiTrendingUp />, path: "/profit-loss" },
-
-    {
-      id: "firm",
-      label: "Firm",
-      icon: <FiBriefcase />,
-      subItems: [
-        { label: "Add Firm", path: "/firm/add", icon: <FiPlusCircle /> },
-        { label: "Firm List", path: "/firm/list", icon: <FiList /> },
-      ],
-    },
-
-    { id: "sms", label: "SMS", icon: <FiMessageSquare />, path: "/sms" },
-    { id: "logs", label: "Logs", icon: <FiFileText />, path: "/logs" },
-    {
-      id: "settings",
-      label: "Settings",
-      icon: <FiSettings />,
-      subItems: [
-        { label: "Rate", path: "/rate", icon: <FiTrendingUp /> },
-        { label: "Purity", path: "/purity", icon: <FiAward /> },
-        { label: "Backup", path: "/backup", icon: <FiDatabase /> },
-        { label: "Update Password", path: "/settings/update-password", icon: <FiLock /> },
-      ],
-    },
-
-    { id: "logout", label: "Sign Out", icon: <FiLogOut />, path: "/logout" },
-  ];
+  const menuItems = useMemo(() => {
+    const role = user?.role;
+    const isOwnerUser = !role || role === "OWNER";
+    const filtered = filterMenuByPermissions(allMenuItems, user);
+    if (isOwnerUser) return filtered;
+    return filtered.filter((item) => !item.ownerOnly);
+  }, [allMenuItems, user]);
 
   const closeSidebarOnMobile = () => {
     if (window.innerWidth >= 992) return;
@@ -210,7 +261,6 @@ const Sidebar = () => {
   return (
     <div className="offcanvas offcanvas-start sidebar" id="sidebar" tabIndex={-1}>
       <div className="offcanvas-body p-0 d-flex flex-column">
-        {/* Fixed Logo/Header */}
         <div className="sidebar-profile sidebar-menu-border">
           <div className="sidebar-brand">
             <FaBookOpen size={36} />
@@ -226,7 +276,6 @@ const Sidebar = () => {
           ></button>
         </div>
 
-        {/* Scrollable Menu */}
         <div className="flex-grow-1 overflow-hidden d-flex flex-column">
           <select
             className="form-select sidebar-firm-select bg-secondary-subtle p-2 cursor-pointer border-secondary d-block d-lg-none"

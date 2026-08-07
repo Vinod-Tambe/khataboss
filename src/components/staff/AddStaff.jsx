@@ -1,15 +1,32 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import DocumentUploadCard from '../common/DocumentUploadCard';
 import moment from 'moment';
 import $ from 'jquery';
 import 'daterangepicker';
 import 'daterangepicker/daterangepicker.css';
+import { useNavigate } from 'react-router-dom';
 import useFormNavigation from '../../hooks/useFormNavigation';
 import { getValidatedUploadFile } from '../../utils/fileUpload';
+import { createStaff } from '../../api/staffApi';
+import { showToast } from '../common/ToastAlert';
+import {
+    getPasswordRuleChecks,
+    PASSWORD_MAX_LENGTH,
+    PASSWORD_MIN_LENGTH,
+} from '../../utils/passwordValidation';
 
 const AddStaff = () => {
+    const navigate = useNavigate();
+    const [submitting, setSubmitting] = useState(false);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [currentStep, setCurrentStep] = useState(1);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [showRequirements, setShowRequirements] = useState(false);
+    const [passwordTouched, setPasswordTouched] = useState({
+        password: false,
+        confirmPassword: false,
+    });
 
     // Form Navigation
     const formRef = useRef(null);
@@ -53,7 +70,9 @@ const AddStaff = () => {
     const [formData, setFormData] = useState({
         firstName: '', lastName: '', fatherName: '', motherName: '',
         mobileNo: '', emailId: '', gender: '', cast: '', maritalStatus: '',
+        occupation: '',
         dateOfBirth: new Date().toISOString().split('T')[0], panNo: '', gstin: '', taxNo: '', adhaarNo: '',
+        loginId: '', password: '', confirmPassword: '',
         bankName: '', bankAccNo: '', ifscCode: '',
         shopName: '', officeAddress: '', permanentAddress: '', currentAddress: '',
         village: '', wardNumber: '', tehsil: '', city: '', country: '',
@@ -62,9 +81,69 @@ const AddStaff = () => {
         signature: null,
     });
 
+    const personalInfo = useMemo(
+        () => ({
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            loginId: formData.loginId,
+            email: formData.emailId,
+            mobile: formData.mobileNo,
+        }),
+        [formData.firstName, formData.lastName, formData.loginId, formData.emailId, formData.mobileNo]
+    );
+
+    const passwordRules = useMemo(() => {
+        const result = getPasswordRuleChecks(formData.password, {
+            oldPassword: '',
+            personalInfo,
+        });
+        // Hide "different from old password" on create (no old password)
+        const checks = result.checks.filter((rule) => rule.key !== 'different');
+        const failed = checks.find((c) => !c.ok);
+        return {
+            checks,
+            isValid: checks.every((c) => c.ok),
+            message: failed ? failed.label : 'Strong password',
+        };
+    }, [formData.password, personalInfo]);
+
+    const passwordValidation = useMemo(() => {
+        const password = formData.password;
+        const confirmPassword = formData.confirmPassword;
+        const passwordFailed = !password || !passwordRules.isValid;
+        const passwordMsg = !password
+            ? 'Password is required'
+            : passwordRules.message;
+
+        let confirmMsg = '';
+        let confirmFailed = false;
+        if (!confirmPassword) {
+            confirmMsg = 'Confirm password is required';
+            confirmFailed = true;
+        } else if (confirmPassword !== password) {
+            confirmMsg = 'Confirm password does not match';
+            confirmFailed = true;
+        } else if (passwordRules.isValid) {
+            confirmMsg = 'Passwords match';
+        } else {
+            confirmMsg = 'Fix password rules first';
+            confirmFailed = true;
+        }
+
+        return {
+            password: { failed: passwordFailed, message: passwordMsg },
+            confirmPassword: { failed: confirmFailed, message: confirmMsg },
+            isValid: !passwordFailed && !confirmFailed,
+        };
+    }, [formData.password, formData.confirmPassword, passwordRules]);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        let nextValue = value;
+        if (name === 'password' || name === 'confirmPassword') {
+            nextValue = value.slice(0, PASSWORD_MAX_LENGTH);
+        }
+        setFormData(prev => ({ ...prev, [name]: nextValue }));
     };
 
     const handleFileSelect = (e, fieldName, setPreview) => {
@@ -225,10 +304,81 @@ const AddStaff = () => {
     const nextStep = () => { if (currentStep < 2) setCurrentStep(currentStep + 1); };
     const prevStep = () => { if (currentStep > 1) setCurrentStep(currentStep - 1); };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Form Data:', formData);
-        alert('Firm information submitted successfully!');
+        if (submitting) return;
+
+        if (!formData.firstName || !formData.lastName || !formData.mobileNo || !formData.emailId || !formData.gender) {
+            showToast('Please fill required personal fields.', 'error');
+            return;
+        }
+        if (!formData.loginId.trim()) {
+            showToast('Staff login ID is required.', 'error');
+            return;
+        }
+        if (formData.loginId.includes('+')) {
+            showToast('Enter staff login ID only (without owner prefix).', 'error');
+            return;
+        }
+        setPasswordTouched({ password: true, confirmPassword: true });
+        setShowRequirements(true);
+        if (!passwordValidation.isValid) {
+            showToast(
+                passwordValidation.password.failed
+                    ? passwordValidation.password.message
+                    : passwordValidation.confirmPassword.message,
+                'error'
+            );
+            return;
+        }
+
+        setSubmitting(true);
+        try {
+            const payload = new FormData();
+            payload.append('firstName', formData.firstName);
+            payload.append('lastName', formData.lastName);
+            payload.append('fatherName', formData.fatherName || '');
+            payload.append('motherName', formData.motherName || '');
+            payload.append('mobileNo', formData.mobileNo);
+            payload.append('emailId', formData.emailId);
+            payload.append('gender', formData.gender);
+            payload.append('cast', formData.cast || '');
+            payload.append('maritalStatus', formData.maritalStatus || '');
+            payload.append('occupation', formData.occupation || '');
+            payload.append('dateOfBirth', formData.dateOfBirth || '');
+            payload.append('gstin', formData.gstin || '');
+            payload.append('taxNo', formData.taxNo || '');
+            payload.append('panNo', formData.panNo || '');
+            payload.append('adhaarNo', formData.adhaarNo || '');
+            payload.append('loginId', formData.loginId.trim().toLowerCase());
+            payload.append('password', formData.password);
+            payload.append('confirm_password', formData.confirmPassword);
+            payload.append('permanentAddress', formData.permanentAddress || '');
+            payload.append('currentAddress', formData.currentAddress || '');
+            payload.append('village', formData.village || '');
+            payload.append('wardNumber', formData.wardNumber || '');
+            payload.append('tehsil', formData.tehsil || '');
+            payload.append('city', formData.city || '');
+            payload.append('country', formData.country || '');
+            payload.append('pincode', formData.pincode || '');
+            payload.append('state', formData.state || '');
+            payload.append('bankName', formData.bankName || '');
+            payload.append('bankAccNo', formData.bankAccNo || '');
+            payload.append('ifscCode', formData.ifscCode || '');
+            payload.append('otherInformation', formData.otherInformation || '');
+            if (formData.photo) payload.append('photo', formData.photo);
+            if (formData.adhaarFront) payload.append('adhaarFront', formData.adhaarFront);
+            if (formData.adhaarBack) payload.append('adhaarBack', formData.adhaarBack);
+            if (formData.panCard) payload.append('panCard', formData.panCard);
+            if (formData.signature) payload.append('signature', formData.signature);
+
+            const res = await createStaff(payload);
+            showToast(res.message || 'Staff created successfully.');
+            navigate(`/staff/staff-details/${res.data.staff_uuid}`);
+        } catch (err) {
+            showToast(err.message || 'Failed to create staff.', 'error');
+            setSubmitting(false);
+        }
     };
 
     // ─── STEP 1 ─────────────────────────────────────────────────────────────
@@ -285,7 +435,7 @@ const AddStaff = () => {
                 </div>
                 <div className="col-12 col-md-6 col-lg-4">
                     <label className="form-label">Occupation</label>
-                    <input type="text" name="Occupation" className="form-control border-dark" placeholder='Enter your occupation' onChange={handleChange} />
+                    <input type="text" name="occupation" className="form-control border-dark" placeholder='Enter your occupation' value={formData.occupation} onChange={handleChange} />
                 </div>
                 <div className="col-12 col-md-6 col-lg-4">
                     <label className="form-label">Date Of Birth</label>
@@ -316,17 +466,125 @@ const AddStaff = () => {
                     <input type="text" name="adhaarNo" placeholder='Enter your adhaar no.' className="form-control border-dark" value={formData.adhaarNo} onChange={handleChange} />
                 </div>
                 <div className="col-12 col-md-6 col-lg-4">
-                    <label className="form-label">Login ID</label>
-                    <input type="text" name="taxNo" placeholder='Enter your login ID' className="form-control border-dark" value={formData.taxNo} onChange={handleChange} />
+                    <label className="form-label">Staff Login ID <span className="text-danger">*</span></label>
+                    <input type="text" name="loginId" placeholder='e.g. dev' className="form-control border-dark" required value={formData.loginId} onChange={handleChange} />
+                    <div className="form-text small">Login will be <strong>owner+staff</strong> (e.g. admin+dev)</div>
                 </div>
                 <div className="col-12 col-md-6 col-lg-4">
-                    <label className="form-label">Password</label>
-                    <input type="text" name="panNo" placeholder='Enter your password' className="form-control border-dark" value={formData.panNo} onChange={handleChange} />
+                    <label className="form-label">Password <span className="text-danger">*</span></label>
+                    <div className="input-group has-validation">
+                        <input
+                            type={showPassword ? 'text' : 'password'}
+                            name="password"
+                            placeholder="Enter password"
+                            className={`form-control border-dark ${
+                                passwordTouched.password && formData.password
+                                    ? passwordValidation.password.failed
+                                        ? 'is-invalid'
+                                        : 'is-valid'
+                                    : ''
+                            }`}
+                            required
+                            value={formData.password}
+                            onChange={handleChange}
+                            onFocus={() => setShowRequirements(true)}
+                            onBlur={() => {
+                                setPasswordTouched((prev) => ({ ...prev, password: true }));
+                                if (!formData.password) setShowRequirements(false);
+                            }}
+                            maxLength={PASSWORD_MAX_LENGTH}
+                            autoComplete="new-password"
+                        />
+                        <button
+                            type="button"
+                            className="btn btn-outline-secondary border-dark"
+                            onClick={() => setShowPassword((v) => !v)}
+                            tabIndex={-1}
+                        >
+                            <i className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'}`}></i>
+                        </button>
+                    </div>
+                    {passwordTouched.password ? (
+                        <div className={`small mt-1 ${passwordValidation.password.failed ? 'text-danger' : 'text-success'}`}>
+                            <i className={`bi ${passwordValidation.password.failed ? 'bi-x-circle' : 'bi-check-circle'} me-1`}></i>
+                            {passwordValidation.password.message}
+                        </div>
+                    ) : (
+                        <div className="form-text small">
+                            {PASSWORD_MIN_LENGTH}–{PASSWORD_MAX_LENGTH} chars, upper, lower, number, special
+                        </div>
+                    )}
                 </div>
                 <div className="col-12 col-md-6 col-lg-4">
-                    <label className="form-label">Confirm Password</label>
-                    <input type="text" name="adhaarNo" placeholder='Repeate password' className="form-control border-dark" value={formData.adhaarNo} onChange={handleChange} />
+                    <label className="form-label">Confirm Password <span className="text-danger">*</span></label>
+                    <div className="input-group has-validation">
+                        <input
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            name="confirmPassword"
+                            placeholder="Repeat password"
+                            className={`form-control border-dark ${
+                                passwordTouched.confirmPassword && formData.confirmPassword
+                                    ? passwordValidation.confirmPassword.failed
+                                        ? 'is-invalid'
+                                        : 'is-valid'
+                                    : ''
+                            }`}
+                            required
+                            value={formData.confirmPassword}
+                            onChange={handleChange}
+                            onBlur={() => setPasswordTouched((prev) => ({ ...prev, confirmPassword: true }))}
+                            maxLength={PASSWORD_MAX_LENGTH}
+                            autoComplete="new-password"
+                        />
+                        <button
+                            type="button"
+                            className="btn btn-outline-secondary border-dark"
+                            onClick={() => setShowConfirmPassword((v) => !v)}
+                            tabIndex={-1}
+                        >
+                            <i className={`bi ${showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'}`}></i>
+                        </button>
+                    </div>
+                    {passwordTouched.confirmPassword ? (
+                        <div className={`small mt-1 ${passwordValidation.confirmPassword.failed ? 'text-danger' : 'text-success'}`}>
+                            <i className={`bi ${passwordValidation.confirmPassword.failed ? 'bi-x-circle' : 'bi-check-circle'} me-1`}></i>
+                            {passwordValidation.confirmPassword.message}
+                        </div>
+                    ) : null}
                 </div>
+
+                {(showRequirements || formData.password.length > 0) && (
+                    <div className="col-12">
+                        <div className="border rounded p-3 bg-light">
+                            <div className="fw-semibold small mb-2">Password requirements</div>
+                            <ul className="list-unstyled mb-0 small row">
+                                {passwordRules.checks.map((rule) => (
+                                    <li
+                                        key={rule.key}
+                                        className={`col-12 col-md-6 d-flex align-items-start gap-2 mb-1 ${
+                                            formData.password
+                                                ? rule.ok
+                                                    ? 'text-success'
+                                                    : 'text-danger'
+                                                : 'text-muted'
+                                        }`}
+                                    >
+                                        <i
+                                            className={`bi ${
+                                                formData.password
+                                                    ? rule.ok
+                                                        ? 'bi-check-circle-fill'
+                                                        : 'bi-x-circle-fill'
+                                                    : 'bi-circle'
+                                            } mt-1`}
+                                        ></i>
+                                        <span>{rule.label}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Document Upload Cards */}
@@ -513,8 +771,15 @@ const AddStaff = () => {
                     <hr className="my-3" />
                     {renderStep2()}
                     <div className="d-grid gap-2 col-12 mx-auto mt-5">
-                        <button type="submit" className="btn btn-primary btn-lg">
-                            SUBMIT <i className="bi bi-check-circle ms-2"></i>
+                        <button type="submit" className="btn btn-primary btn-lg" disabled={submitting || !passwordValidation.isValid}>
+                            {submitting ? (
+                                <>
+                                    <span className="spinner-border spinner-border-sm me-2" role="status" />
+                                    Submitting...
+                                </>
+                            ) : (
+                                <>SUBMIT <i className="bi bi-check-circle ms-2"></i></>
+                            )}
                         </button>
                     </div>
                 </div>
@@ -550,8 +815,16 @@ const AddStaff = () => {
                         <button
                             type="submit"
                             className="btn btn-success flex-grow-1 ms-auto"
+                            disabled={submitting || !passwordValidation.isValid}
                         >
-                            SUBMIT <i className="bi bi-check-circle ms-2"></i>
+                            {submitting ? (
+                                <>
+                                    <span className="spinner-border spinner-border-sm me-2" role="status" />
+                                    Submitting...
+                                </>
+                            ) : (
+                                <>SUBMIT <i className="bi bi-check-circle ms-2"></i></>
+                            )}
                         </button>
                     )}
                 </div>

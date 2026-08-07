@@ -263,7 +263,7 @@ const LoginForm = () => {
                         type="text"
                         ref={loginIdRef}
                         className="form-control input-box"
-                        placeholder="Login Id | Mobile No"
+                        placeholder="admin or admin+dev"
                         value={loginId}
                         onChange={(e) => setLoginId(e.target.value)}
                         onKeyDown={(e) => {

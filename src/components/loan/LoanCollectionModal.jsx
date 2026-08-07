@@ -186,6 +186,8 @@ const LoanCollectionModal = ({ show, onClose, firms = [], selectedFirmId, initia
                 }, 300);
             }
         }
+        // fetchUserLoans is stable for this modal open cycle
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [show, selectedFirmId, firms, resetForm, initialUser]);
 
     useEffect(() => {
