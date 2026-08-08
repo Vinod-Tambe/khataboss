@@ -8,7 +8,7 @@ import 'daterangepicker/daterangepicker.css';
 import { toast } from 'react-hot-toast';
 import { getFirmsDropdown } from '../../api/firmApi';
 import { getAccountsDropdown } from '../../api/accountApi';
-import { addGirvi } from '../../api/girviApi';
+import { addGirvi, uploadItemImage } from '../../api/girviApi';
 import { getPurities } from '../../api/purityApi';
 import { getRates } from '../../api/rateApi';
 import useFormNavigation from '../../hooks/useFormNavigation';
@@ -458,17 +458,32 @@ const AddLoan = () => {
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      const payload = {
-        ...formData,
-        girv_user_id: selectedUser.user_id,
-        girv_first_int: formData.girv_first_int ? 'Y' : 'N'
-      };
+      setIsSubmitting(true);
+      try {
+        // Upload item images first
+        const updatedItems = await Promise.all(
+          formData.items.map(async (item) => {
+            if (item.itemImage) {
+              const imageFormData = new FormData();
+              imageFormData.append('itemImage', item.itemImage);
+              const uploadRes = await uploadItemImage(imageFormData);
+              // uploadRes.data contains { path, filename, mimetype, size }
+              return { ...item, st_image: uploadRes.data, itemImage: undefined };
+            }
+            return item;
+          })
+        );
 
-      const res = await addGirvi(payload);
-      toast.success('Loan saved successfully!');
-      console.log('API Response:', res);
+        const payload = {
+          ...formData,
+          items: updatedItems,
+          girv_user_id: selectedUser.user_id,
+          girv_first_int: formData.girv_first_int ? 'Y' : 'N'
+        };
+
+        const res = await addGirvi(payload);
+        toast.success('Loan saved successfully!');
+        console.log('API Response:', res);
 
       navigate('/user/home/loan-info');
     } catch (error) {

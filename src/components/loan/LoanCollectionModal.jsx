@@ -702,6 +702,19 @@ const LoanCollectionModal = ({ show, onClose, firms = [], selectedFirmId, initia
                             </div>
                         </div>
                     </div>
+                    
+                    <div className="col-12">
+                        <label className="form-label fw-bold small text-muted mb-1">Other Information</label>
+                        <textarea
+                            className="form-control form-control-sm border-dark"
+                            id="dep_other_info"
+                            rows="1"
+                            value={formData.dep_other_info}
+                            onChange={handleInputChange}
+                            disabled={!loanInfo}
+                            placeholder="Enter any other information..."
+                        ></textarea>
+                    </div>
 
                     <div className="col-12 mt-3 mb-3">
                         <div className="d-flex flex-wrap justify-content-center gap-2">

@@ -380,6 +380,18 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                     />
                 </div>
 
+                {/* Other Information */}
+                <div className="col-md-12">
+                    <textarea
+                        rows="1"
+                        placeholder="Other Information"
+                        className="form-control form-control-sm border-dark-subtle mt-2"
+                        id="fm_other_info"
+                        value={formData.fm_other_info}
+                        onChange={handleInputChange}
+                    />
+                </div>
+
                 <div className="col-md-12 text-center mt-4">
                     <button
                         type="submit"

@@ -9,7 +9,7 @@ import useFormNavigation from '../../hooks/useFormNavigation';
 import { useParams } from 'react-router-dom';
 import { getFirmsDropdown } from '../../api/firmApi';
 import { getAccountsDropdown } from '../../api/accountApi';
-import { getGirviById, updateGirvi } from '../../api/girviApi';
+import { getGirviById, updateGirvi, uploadItemImage } from '../../api/girviApi';
 import { getPurities } from '../../api/purityApi';
 import { getRates } from '../../api/rateApi';
 import { toast } from 'react-hot-toast';
@@ -28,6 +28,26 @@ const UpdateLoan = () => {
   const [firmRates, setFirmRates] = useState([]);
   const { selectedFirmId, firms: reduxFirms } = useSelector((state) => state.firm);
   const { selectedUser } = useSelector((state) => state.user);
+
+  const backendUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:9000/' : 'https://khataboss.in/';
+  const resolveItemImage = (item) => {
+    if (!item) return null;
+    if (item.itemImage) return URL.createObjectURL(item.itemImage);
+    let path = null;
+    if (typeof item.st_image === 'string' && item.st_image.startsWith('{')) {
+      try { path = JSON.parse(item.st_image).path; } catch(e){}
+    } else if (typeof item.st_image === 'string') {
+      path = item.st_image;
+    } else {
+      path = item.st_image?.path;
+    }
+    path = path || item.st_image_url || item.image_url;
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+
+    const cleanPath = String(path).replace(/\\/g, '/').replace(/^\/+/, '');
+    return `${backendUrl}${cleanPath}`;
+  };
 
   const getEmptyItem = () => ({
     st_metal_type: 'GOLD',
@@ -174,6 +194,7 @@ const UpdateLoan = () => {
               st_rate: item.st_rate || '',
               st_fine_weight: item.st_fine_weight || '',
               st_valuation: item.st_valuation || item.st_final_valuation || '',
+              st_image: item.st_image || null,
               itemImage: null,
               imageName: '',
             })) : [getEmptyItem()],
@@ -540,8 +561,23 @@ const UpdateLoan = () => {
 
     setIsSubmitting(true);
     try {
+      // Upload item images first
+      const updatedItems = await Promise.all(
+        formData.items.map(async (item) => {
+          if (item.itemImage) {
+            const imageFormData = new FormData();
+            imageFormData.append('itemImage', item.itemImage);
+            const uploadRes = await uploadItemImage(imageFormData);
+            // uploadRes.data contains { path, filename, mimetype, size }
+            return { ...item, st_image: uploadRes.data, itemImage: undefined };
+          }
+          return item;
+        })
+      );
+
       const payload = {
         ...formData,
+        items: updatedItems,
         girv_user_id: selectedUser.user_id,
         girv_first_int: formData.girv_first_int ? 'Y' : 'N'
       };
@@ -898,33 +934,31 @@ const UpdateLoan = () => {
                         }
                       }}
                     />
-                    {item.itemImage || item.imageName ? (
-                      <>
+                    {(() => {
+                      const imgUrl = resolveItemImage(item);
+                      return imgUrl ? (
                         <label htmlFor={`itemImageInput-${index}`} style={{ cursor: 'pointer' }}>
                           <img
-                            src={item.itemImage ? URL.createObjectURL(item.itemImage) : '#'}
+                            src={imgUrl}
                             alt="Item preview"
                             style={{
                               maxWidth: '26px',
                               maxHeight: '26px',
                               objectFit: 'cover',
-                              cursor: 'pointer',
-                              border: '1px solid #ccc',
-                              borderRadius: '4px',
+                              borderRadius: '4px'
                             }}
-                            onError={(e) => { e.target.style.display = 'none'; }}
                           />
                         </label>
-                      </>
-                    ) : (
-                      <label
-                        htmlFor={`itemImageInput-${index}`}
-                        className="btn btn-sm btn-outline-info p-1 mb-0"
-                        style={{ cursor: 'pointer', minWidth: '40px' }}
-                      >
-                        <i className="bi bi-upload"></i>
-                      </label>
-                    )}
+                      ) : (
+                        <label
+                          htmlFor={`itemImageInput-${index}`}
+                          className="btn btn-sm btn-outline-info p-1 mb-0"
+                          style={{ cursor: 'pointer', minWidth: '40px' }}
+                        >
+                          <i className="bi bi-camera"></i>
+                        </label>
+                      );
+                    })()}
                   </td>
                   <td className="text-center px-1 py-1">
                     <div className="d-flex justify-content-center gap-1">

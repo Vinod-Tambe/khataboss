@@ -9,6 +9,19 @@ export const addGirvi = async (girviData) => {
   }
 };
 
+export const uploadItemImage = async (formData) => {
+  try {
+    const response = await axiosInstance.post("/girvi/upload-item-image", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
 export const updateGirvi = async (id, girviData) => {
   try {
     const response = await axiosInstance.put(`/girvi/${id}`, girviData);

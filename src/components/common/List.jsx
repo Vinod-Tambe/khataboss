@@ -114,7 +114,9 @@ const List = ({
     if (!tableRef.current || !data || !columns) return;
 
     if ($.fn.DataTable.isDataTable(tableRef.current)) {
-      $(tableRef.current).DataTable().destroy();
+      try {
+        $(tableRef.current).DataTable().clear().destroy(false);
+      } catch (err) {}
     }
 
     // Helper to safely convert value to number
@@ -182,7 +184,26 @@ const List = ({
     }
 
     try {
-      const dt = $(tableRef.current).DataTable({
+      // DEFENSIVE WORKAROUND: Forcefully align DOM columns to match DataTables config
+      // This prevents the dreaded "Incorrect column count" error when React and DataTables get out of sync
+      const $table = $(tableRef.current);
+      $table.find('tbody').empty(); // Clear any leftover DataTables empty-state colspan rows
+      
+      const expectedCount = dtColumns.length;
+      const $theadTr = $table.find('thead tr:first');
+      const $tfootTr = $table.find('tfoot tr:first');
+      
+      if ($theadTr.length) {
+        while ($theadTr.find('th').length < expectedCount) $theadTr.append('<th></th>');
+        while ($theadTr.find('th').length > expectedCount) $theadTr.find('th:last').remove();
+      }
+      if ($tfootTr.length) {
+        while ($tfootTr.find('th').length < expectedCount) $tfootTr.append('<th></th>');
+        while ($tfootTr.find('th').length > expectedCount) $tfootTr.find('th:last').remove();
+      }
+
+      const dt = $table.DataTable({
+        destroy: true,
         data: data,
         columns: dtColumns,
 
@@ -220,10 +241,10 @@ const List = ({
             columns.forEach((col, idx) => {
               if (!col.sum) return;
 
-              const total = api
-                .column(idx)
-                .data()
-                .reduce((a, b) => intVal(a) + intVal(b), 0);
+              const colData = api.column(idx).data();
+              if (!colData) return;
+              
+              const total = colData.reduce((a, b) => intVal(a) + intVal(b), 0);
 
               const formatted = total.toLocaleString("en-IN", {
                 minimumFractionDigits: 2,
@@ -417,7 +438,9 @@ const List = ({
       setTableInstance(dt);
 
       return () => {
-        dt?.destroy();
+        try {
+          dt?.clear().destroy(false);
+        } catch (err) {}
       };
     } catch (err) {
       console.error("Error initializing DataTable:", err);
@@ -563,7 +586,7 @@ const List = ({
                 </div>
               </div>
             )}
-            <div className="dt-container-fixed">
+            <div className="dt-container-fixed" key={`${columns?.length}-${title}`}>
               <table
                 ref={tableRef}
                 className="table table-hover table-bordered border-secondary mb-2 dataTable dtr-inline text-capitalize dynamic-data-table"
@@ -571,8 +594,8 @@ const List = ({
               >
                 <thead className="table-secondary border-bottom border-dark-subtle">
                   <tr>
-                    {columns?.map((col) => (
-                      <th key={col.key} style={{ position: col.key === columns[0]?.key ? "sticky" : "relative", left: col.key === columns[0]?.key ? 0 : "auto" }}>
+                    {columns?.map((col, index) => (
+                      <th key={`${col.key}-${index}`} style={{ position: col.key === columns[0]?.key ? "sticky" : "relative", left: col.key === columns[0]?.key ? 0 : "auto" }}>
                         <span className="title-text" style={{ display: "block", pointerEvents: "none" }}>
                           {col.title}
                         </span>

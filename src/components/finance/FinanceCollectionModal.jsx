@@ -573,6 +573,19 @@ const FinanceCollectionModal = ({ show, onClose, firms = [], selectedFirmId, ini
                             <div className="col-md-4">
                                 <input type="text" className="form-control form-control-sm border-dark" id="fm_card_amt" placeholder="Card Amount" value={formData.fm_card_amt} onChange={handleInputChange} disabled={!financeInfo} />
                             </div>
+
+                            {/* Other Information */}
+                            <div className="col-12">
+                                <textarea 
+                                    rows="1"
+                                    className="form-control form-control-sm border-dark mt-2" 
+                                    id="fm_other_info" 
+                                    placeholder="Other Information" 
+                                    value={formData.fm_other_info} 
+                                    onChange={handleInputChange} 
+                                    disabled={!financeInfo} 
+                                />
+                            </div>
                         </div>
                     </div>
 

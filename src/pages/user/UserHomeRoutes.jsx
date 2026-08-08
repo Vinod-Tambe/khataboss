@@ -202,10 +202,7 @@ const UserHomeRoutes = () => {
                     <i className="bi bi-arrow-repeat text-primary"></i>
                     Transfer Loan List
                   </Dropdown.Item>
-                  <Dropdown.Item as={Link} to="/user/home/close-loan" className="d-flex align-items-center gap-2">
-                    <i className="bi bi-lock text-danger"></i>
-                    Closed Loan List
-                  </Dropdown.Item>
+
                   <Dropdown.Item as={Link} to="/user/home/all-loan" className="d-flex align-items-center gap-2">
                     <i className="bi bi-list-ul text-secondary"></i>
                     All Loan List
@@ -303,10 +300,7 @@ const UserHomeRoutes = () => {
                   <i className="bi bi-arrow-repeat text-primary"></i>
                   Transfer Loan List
                 </Dropdown.Item>
-                <Dropdown.Item as={Link} to="/user/home/close-loan" className="d-flex align-items-center gap-2">
-                  <i className="bi bi-lock text-danger"></i>
-                  Closed Loan List
-                </Dropdown.Item>
+
                 <Dropdown.Item as={Link} to="/user/home/all-loan" className="d-flex align-items-center gap-2">
                   <i className="bi bi-list-ul text-secondary"></i>
                   All Loan List

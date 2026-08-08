@@ -31,6 +31,7 @@ import {
   FiZap,
   FiArrowUpRight,
   FiRepeat,
+  FiUserCheck,
 } from "react-icons/fi";
 import { FaBook, FaBookOpen, FaBalanceScale } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
@@ -161,7 +162,7 @@ const Sidebar = () => {
       {
         id: "staff",
         label: "Staff",
-        icon: <FiBriefcase />,
+        icon: <FiUserCheck />,
         anyOf: ["staff.view", "staff.create"],
         subItems: [
           { label: "Add Staff", path: "/staff/add", icon: <FiUserPlus />, permission: "staff.create" },

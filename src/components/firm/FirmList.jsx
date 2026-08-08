@@ -84,6 +84,7 @@ const FirmList = () => {
           onEdit={handleEdit}
           onDelete={handleDelete}
           onPrint={handlePrint}
+          hasEdit={true}
           hasDelete={true}
           hasPrint={true}
           showFooter={false}

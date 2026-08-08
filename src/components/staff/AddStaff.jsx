@@ -69,7 +69,7 @@ const AddStaff = () => {
 
     const [formData, setFormData] = useState({
         firstName: '', lastName: '', fatherName: '', motherName: '',
-        mobileNo: '', emailId: '', gender: '', cast: '', maritalStatus: '',
+        mobileNo: '', emailId: '', gender: 'Male', cast: '', maritalStatus: '',
         occupation: '',
         dateOfBirth: new Date().toISOString().split('T')[0], panNo: '', gstin: '', taxNo: '', adhaarNo: '',
         loginId: '', password: '', confirmPassword: '',

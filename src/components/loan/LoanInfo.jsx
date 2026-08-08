@@ -11,6 +11,7 @@ import moment from 'moment';
 import { toast } from 'react-toastify';
 import { formatTimePeriod } from '../../utils/formatTimePeriod';
 import { getStatusBadgeMeta } from '../../utils/listFormatters';
+import ImageModal from '../common/ImageModal';
 import '../../css/DataTable.css';
 
 const formatAmt = (value) =>
@@ -64,13 +65,13 @@ const calculateInterest = (principal, rate, months, method = 'simple', freq = 'm
   if (method === 'compound') {
     let n = 1;
     if (freq === 'monthly') n = 1;
-    else if (freq === 'quarterly') n = 1/3;
-    else if (freq === 'half_yearly') n = 1/6;
-    else if (freq === 'yearly') n = 1/12;
-    
+    else if (freq === 'quarterly') n = 1 / 3;
+    else if (freq === 'half_yearly') n = 1 / 6;
+    else if (freq === 'yearly') n = 1 / 12;
+
     let periods = months * n;
-    let rate_per_period = rate / n; 
-    
+    let rate_per_period = rate / n;
+
     const amount = principal * Math.pow((1 + rate_per_period / 100), periods);
     return parseFloat((amount - principal).toFixed(2));
   } else {
@@ -92,13 +93,13 @@ const LoanInformation = ({ data }) => (
       </div>
       <div className="col-md-3">
         <label className="form-label">Interest Method</label>
-        <input 
-          type="text" 
-          className="form-control border-dark" 
-          readOnly 
-          value={data?.girv_interest_method ? 
-            (data.girv_interest_method.toUpperCase() + (data.girv_interest_method === 'compound' && data.girv_compound_freq ? ` (${data.girv_compound_freq.toUpperCase()})` : '')) 
-            : 'SIMPLE'} 
+        <input
+          type="text"
+          className="form-control border-dark"
+          readOnly
+          value={data?.girv_interest_method ?
+            (data.girv_interest_method.toUpperCase() + (data.girv_interest_method === 'compound' && data.girv_compound_freq ? ` (${data.girv_compound_freq.toUpperCase()})` : ''))
+            : 'SIMPLE'}
         />
       </div>
       <div className="col-md-3">
@@ -157,7 +158,38 @@ const LoanInformation = ({ data }) => (
   </div>
 );
 
-const ItemTable = ({ data }) => (
+const backendUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:9000/' : 'https://khataboss.in/';
+const resolveItemImage = (imgData) => {
+  if (!imgData || imgData === '-') return null;
+  if (typeof imgData === 'string' && imgData.startsWith('blob:')) return imgData;
+  if (imgData.itemImage) return URL.createObjectURL(imgData.itemImage);
+
+  let path = null;
+  if (typeof imgData === 'string') {
+    if (imgData.startsWith('{')) {
+      try { path = JSON.parse(imgData).path; } catch (e) { }
+    } else {
+      path = imgData;
+    }
+  } else if (typeof imgData === 'object') {
+    if (typeof imgData.st_image === 'string' && imgData.st_image.startsWith('{')) {
+      try { path = JSON.parse(imgData.st_image).path; } catch (e) { }
+    } else if (typeof imgData.st_image === 'string') {
+      path = imgData.st_image;
+    } else {
+      path = imgData.st_image?.path || imgData.path || imgData.url;
+    }
+    path = path || imgData.st_image_url || imgData.image_url || imgData.user_image || imgData.ur_image;
+  }
+
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+
+  const cleanPath = String(path).replace(/\\/g, '/').replace(/^\/+/, '');
+  return `${backendUrl}${cleanPath}`;
+};
+
+const ItemTable = ({ data, onImageClick }) => (
   <div className="panel-section mt-2">
     <div className="section-header mb-2">Item Information</div>
     <div className="table-responsive">
@@ -174,30 +206,47 @@ const ItemTable = ({ data }) => (
             <th className='bg-pink border border-dark'>Purity/Tunch</th>
             <th className='bg-pink border border-dark'>FN WT</th>
             <th className='bg-pink border border-dark'>Valuation</th>
+            <th className='bg-pink border border-dark'>Image</th>
           </tr>
         </thead>
         <tbody>
-          {data && data.length > 0 ? data.map((item, idx) => (
-            <tr key={item.st_id || item.id || idx}>
-              <td>{String(item.st_metal_type || '-').toUpperCase()}</td>
-              <td>{item.st_item_name || '-'}</td>
-              <td>{item.st_quantity ?? '-'}</td>
-              <td>{item.st_gs_weight ?? '-'}</td>
-              <td>{item.st_gs_type || '-'}</td>
-              <td>{item.st_nt_weight ?? '-'}</td>
-              <td>{item.st_nt_type || '-'}</td>
-              <td>{item.st_purity ?? '-'}</td>
-              <td>{item.st_fine_weight ?? '-'}</td>
-              <td>{getItemValuation(item)}</td>
-            </tr>
-          )) : <tr><td colSpan="10">No items found</td></tr>}
+          {data && data.length > 0 ? data.map((item, idx) => {
+            const resolvedImg = resolveItemImage(item);
+            return (
+              <tr key={item.st_id || item.id || idx} className="align-middle">
+                <td>{String(item.st_metal_type || '-').toUpperCase()}</td>
+                <td>{item.st_item_name || '-'}</td>
+                <td>{item.st_quantity ?? '-'}</td>
+                <td>{item.st_gs_weight ?? '-'}</td>
+                <td>{item.st_gs_type || '-'}</td>
+                <td>{item.st_nt_weight ?? '-'}</td>
+                <td>{item.st_nt_type || '-'}</td>
+                <td>{item.st_purity ?? '-'}</td>
+                <td>{item.st_fine_weight ?? '-'}</td>
+                <td>{getItemValuation(item)}</td>
+                <td>
+                  {resolvedImg ? (
+                    <img
+                      src={resolvedImg}
+                      alt="Item"
+                      style={{ width: '25px', height: '25px', objectFit: 'cover', cursor: 'pointer' }}
+                      className="rounded shadow-sm border border-secondary"
+                      onClick={() => onImageClick && onImageClick(resolvedImg)}
+                    />
+                  ) : (
+                    <span className="text-muted">-</span>
+                  )}
+                </td>
+              </tr>
+            );
+          }) : <tr><td colSpan="11">No items found</td></tr>}
         </tbody>
       </table>
     </div>
   </div>
 );
 
-const PrincipalInfoTable = ({ data, isUnsecured, onShare }) => (
+const PrincipalInfoTable = ({ data, isUnsecured, onShare, onImageClick }) => (
   <div className="panel-section mt-2">
     <div className="section-header mb-2">Principal Information</div>
     <div className="table-responsive">
@@ -222,7 +271,7 @@ const PrincipalInfoTable = ({ data, isUnsecured, onShare }) => (
         </thead>
         <tbody>
           {data && data.length > 0 ? data.map((row, idx) => (
-            <tr key={idx}>
+            <tr key={idx} className="align-middle">
               <td>{row.status}</td>
               <td>{Number(row.principal || 0).toFixed(2)}</td>
               <td>{row.roi}</td>
@@ -243,7 +292,19 @@ const PrincipalInfoTable = ({ data, isUnsecured, onShare }) => (
                   <td>-</td>
                 )
               )}
-              <td>{row.userImg}</td>
+              <td>
+                {row.userImg && row.userImg !== '-' ? (
+                  <img
+                    src={row.userImg}
+                    alt="User"
+                    style={{ width: '25px', height: '25px', objectFit: 'cover', cursor: 'pointer' }}
+                    className="rounded shadow-sm border border-secondary"
+                    onClick={() => onImageClick && onImageClick(row.userImg)}
+                  />
+                ) : (
+                  <span className="text-muted">-</span>
+                )}
+              </td>
               <td>
                 <button
                   type="button"
@@ -416,6 +477,8 @@ const LoanMobileAccordionItem = ({
   badgeClassName = '',
   defaultOpen = false,
   onShare,
+  imageUrl,
+  onImageClick,
   children,
 }) => {
   const [open, setOpen] = useState(defaultOpen);
@@ -428,9 +491,22 @@ const LoanMobileAccordionItem = ({
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
       >
-        <div className="loan-mobile-accordion__main">
-          <p className="loan-mobile-card__title">{title}</p>
-          {subtitle ? <div className="loan-mobile-card__sub">{subtitle}</div> : null}
+        <div className="loan-mobile-accordion__main d-flex align-items-center gap-2">
+          {imageUrl && (
+            <img
+              src={imageUrl}
+              alt="Thumbnail"
+              style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onImageClick) onImageClick(imageUrl);
+              }}
+            />
+          )}
+          <div>
+            <p className="loan-mobile-card__title text-start">{title}</p>
+            {subtitle ? <p className="loan-mobile-card__subtitle text-start">{subtitle}</p> : null}
+          </div>
         </div>
         <div className="loan-mobile-accordion__meta">
           {badge ? (
@@ -494,6 +570,7 @@ const LoanMobileView = ({
   onSharePrincipal,
   onShareDeposit,
   onShareRelease,
+  onImageClick,
 }) => {
   const interestMethodLabel = loanInfoData?.girv_interest_method
     ? (
@@ -619,6 +696,8 @@ const LoanMobileView = ({
                   badge={formatAmt(getItemValuation(item))}
                   badgeClassName="loan-mobile-card__amount"
                   defaultOpen={loanItems.length === 1 || idx === 0}
+                  imageUrl={resolveItemImage(item)}
+                  onImageClick={onImageClick}
                 >
                   <div className="loan-mobile-card__grid is-3">
                     <div>
@@ -880,6 +959,7 @@ const LoanInfo = () => {
   const [loanDetails, setLoanDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [receiptState, setReceiptState] = useState({ show: false, type: 'principal', record: null });
+  const [previewImage, setPreviewImage] = useState(null);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -944,8 +1024,8 @@ const LoanInfo = () => {
   if (!loanDetails) return <div className="p-4 text-center">Loan not found.</div>;
 
   const hasTrans = (loanDetails?.additionalPrincipals && loanDetails.additionalPrincipals.length > 0) ||
-                   (loanDetails?.deposits && loanDetails.deposits.length > 0) ||
-                   (loanDetails?.releases && loanDetails.releases.length > 0);
+    (loanDetails?.deposits && loanDetails.deposits.length > 0) ||
+    (loanDetails?.releases && loanDetails.releases.length > 0);
   const isUpdateAllowed = loanDetails?.girv_status === 'ACTIVE' && !hasTrans;
 
   // Reconstruct original principal
@@ -997,6 +1077,8 @@ const LoanInfo = () => {
   const totalValuation = loanItems.reduce((sum, item) => sum + (parseFloat(getItemValuation(item)) || 0), 0);
   const overallProfitLoss = parseFloat((totalValuation - payableAmount).toFixed(2));
 
+  const resolvedUserImg = resolveItemImage(loanDetails?.user?.user_profile_img || loanDetails?.user?.ur_image || loanDetails?.user?.user_image) || '-';
+
   const principalDataRows = [];
 
   // Add Original Principal Row
@@ -1013,7 +1095,7 @@ const LoanInfo = () => {
     valuation: totalValuation, // Overall valuation
     profitLoss: overallProfitLoss, // Overall profit/loss
     status: loanDetails.girv_status || 'ACTIVE',
-    userImg: '-',
+    userImg: resolvedUserImg,
     cashAmt: parseFloat(loanDetails.girv_cash_amt) || 0,
     bankAmt: parseFloat(loanDetails.girv_bank_amt) || 0,
     onlineAmt: parseFloat(loanDetails.girv_online_amt) || 0,
@@ -1173,6 +1255,7 @@ const LoanInfo = () => {
         onSharePrincipal={(row) => openRecordReceipt('principal', row)}
         onShareDeposit={(row) => openRecordReceipt('deposit', row)}
         onShareRelease={(row) => openRecordReceipt('release', row)}
+        onImageClick={setPreviewImage}
       />
 
       {/* ========== Desktop view ========== */}
@@ -1204,13 +1287,14 @@ const LoanInfo = () => {
         <LoanInformation data={loanInfoData} />
 
         {showItems && (
-          <ItemTable data={loanItems} />
+          <ItemTable data={loanItems} onImageClick={setPreviewImage} />
         )}
 
         <PrincipalInfoTable
           data={principalDataRows}
           isUnsecured={isUnsecured}
           onShare={(row) => openRecordReceipt('principal', row)}
+          onImageClick={setPreviewImage}
         />
 
         <DepositInfoTable
@@ -1338,6 +1422,14 @@ const LoanInfo = () => {
         record={receiptState.record}
         loanDetails={loanDetails}
         customer={selectedUser}
+      />
+
+      {/* Image Preview Modal */}
+      <ImageModal
+        show={!!previewImage}
+        onHide={() => setPreviewImage(null)}
+        imageUrl={previewImage}
+        title="Image Preview"
       />
     </div>
   );
