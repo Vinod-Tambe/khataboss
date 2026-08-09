@@ -385,7 +385,7 @@ const AddUser = () => {
             if (formData.signature) data.append('signature', formData.signature);
 
             const result = await createUser(data);
-            toast.success(result.message || 'User information submitted successfully!');
+            toast.success(result.message || 'Customer information submitted successfully!');
 
             if (result.data) {
                 dispatch(setSelectedUser(result.data));
@@ -414,7 +414,7 @@ const AddUser = () => {
             if (isMobile) setCurrentStep(1);
 
         } catch (error) {
-            toast.error(error.message || 'Error creating user');
+            toast.error(error.message || 'Error creating customer');
         } finally {
             setLoading(false);
         }
@@ -700,7 +700,7 @@ const AddUser = () => {
         if (!isMobile) {
             return (
                 <div className="card p-4 shadow-sm">
-                    <h4 className="card-title text-center fw-bold pb-md-0">Add New User</h4>
+                    <h4 className="card-title text-center fw-bold pb-md-0">Add New Customer</h4>
                     {renderStep1()}
                     <hr className="my-3" />
                     {renderStep2()}

@@ -71,10 +71,10 @@ const UserList = () => {
   const handleDelete = async (rowData) => {
     try {
       await deleteUser(rowData.user_uuid);
-      toast.success('User deleted successfully');
+      toast.success('Customer deleted successfully');
       fetchUsers(); // Refresh list
     } catch (error) {
-      toast.error(error.message || 'Failed to delete user');
+      toast.error(error.message || 'Failed to delete customer');
     }
   };
 
@@ -93,7 +93,7 @@ const UserList = () => {
             <input
               type="text"
               className="form-control border-secondary"
-              placeholder="Search users (Backend)..."
+              placeholder="Search customers (Backend)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -103,7 +103,7 @@ const UserList = () => {
       <List
         data={userData}
         columns={columns}
-        title="All User List"
+        title="All Customer List"
         primaryKey="user_first_name"
         subtitleKey="user_add_date"
         onEdit={handleEdit}
@@ -115,7 +115,7 @@ const UserList = () => {
         hasPrint={true}
         hasView={true}
         loading={loading}
-        deleteConfirmMessage={(row) => `Are you sure you want to delete user: ${row?.user_first_name} ${row?.user_last_name}?`}
+        deleteConfirmMessage={(row) => `Are you sure you want to delete customer: ${row?.user_first_name} ${row?.user_last_name}?`}
       />
     </div>
   );

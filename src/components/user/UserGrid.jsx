@@ -43,14 +43,14 @@ const UserGrid = () => {
   }, [fetchUsers, debouncedSearchTerm]);
 
   const handleDelete = async (user) => {
-    const isConfirmed = await ConfirmAlert(`Are you sure you want to delete user: ${user.user_first_name} ${user.user_last_name}?`);
+    const isConfirmed = await ConfirmAlert(`Are you sure you want to delete customer: ${user.user_first_name} ${user.user_last_name}?`);
     if (isConfirmed) {
       try {
         await deleteUser(user.user_uuid);
-        toast.success('User deleted successfully');
+        toast.success('Customer deleted successfully');
         fetchUsers();
       } catch (error) {
-        toast.error(error.message || 'Failed to delete user');
+        toast.error(error.message || 'Failed to delete customer');
       }
     }
   };
@@ -70,7 +70,7 @@ const UserGrid = () => {
             <input
               type="text"
               className="form-control border border-secondary"
-              placeholder="Search User..."
+              placeholder="Search Customer..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -99,7 +99,7 @@ const UserGrid = () => {
         )}
         {userData.length === 0 ? (
           <div className="col-12 text-center py-5">
-            <h5 className="text-secondary">No users found for this firm.</h5>
+            <h5 className="text-secondary">No customers found for this firm.</h5>
           </div>
         ) : (
           userData.map((user) => (

@@ -357,7 +357,7 @@ const UpdateUser = () => {
             if (formData.signature) data.append('signature', formData.signature);
 
             const result = await updateUser(uuid, data);
-            toast.success(result.message || 'User updated successfully!');
+            toast.success(result.message || 'Customer updated successfully!');
 
             if (result.data) {
                 dispatch(setSelectedUser(result.data));
@@ -367,7 +367,7 @@ const UpdateUser = () => {
 
             navigate('/user/home');
         } catch (error) {
-            toast.error(error.message || 'Error updating user');
+            toast.error(error.message || 'Error updating customer');
         } finally {
             setLoading(false);
         }
@@ -555,7 +555,7 @@ const UpdateUser = () => {
 
     const renderContent = () => (
         <div className="card p-4 shadow-sm border-0">
-            <h4 className="card-title text-center fw-bold pb-md-0 mb-4">Update User Records</h4>
+            <h4 className="card-title text-center fw-bold pb-md-0 mb-4">Update Customer Records</h4>
             {!isMobile ? (
                 <>
                     {renderStep1()}
@@ -563,7 +563,7 @@ const UpdateUser = () => {
                     {renderStep2()}
                     <div className="d-grid gap-2 col-12 mx-auto mt-5">
                         <button type="submit" className="btn btn-primary btn-lg" disabled={loading}>
-                            {loading ? 'UPDATING...' : 'UPDATE USER RECORDS'} <i className="bi bi-check-circle ms-2"></i>
+                            {loading ? 'UPDATING...' : 'UPDATE CUSTOMER RECORDS'} <i className="bi bi-check-circle ms-2"></i>
                         </button>
                     </div>
                 </>
@@ -586,7 +586,7 @@ const UpdateUser = () => {
         </div>
     );
 
-    if (loading && !formData.firstName) return <div className="text-center p-5 fw-bold">Loading User Details...</div>;
+    if (loading && !formData.firstName) return <div className="text-center p-5 fw-bold">Loading Customer Details...</div>;
 
     return (
         <form ref={formRef} onSubmit={handleSubmit}>

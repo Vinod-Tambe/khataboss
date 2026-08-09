@@ -114,13 +114,13 @@ const Sidebar = () => {
       },
       {
         id: "users",
-        label: "User",
+        label: "Customer",
         icon: <FiUsers />,
         anyOf: ["user.view", "user.create"],
         subItems: [
-          { label: "Add User", path: "/user/add", icon: <FiUserPlus />, permission: "user.create" },
-          { label: "All User", path: "/user/grid", icon: <FiList />, permission: "user.view" },
-          { label: "Auction User List", path: "/user/auction-list", icon: <FiAward />, permission: "loan.auction" },
+          { label: "Add Customer", path: "/user/add", icon: <FiUserPlus />, permission: "user.create" },
+          { label: "All Customer", path: "/user/grid", icon: <FiList />, permission: "user.view" },
+          { label: "Auction Customer List", path: "/user/auction-list", icon: <FiAward />, permission: "loan.auction" },
         ],
       },
       {

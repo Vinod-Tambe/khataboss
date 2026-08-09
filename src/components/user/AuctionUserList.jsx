@@ -72,7 +72,7 @@ const AuctionUserList = () => {
             <input
               type="text"
               className="form-control border-secondary"
-              placeholder="Search auction users..."
+              placeholder="Search auction customers..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -82,7 +82,7 @@ const AuctionUserList = () => {
       <List
         data={filteredData}
         columns={columns}
-        title="Auction User List"
+        title="Auction Customer List"
         primaryKey="au_full_name"
         subtitleKey="au_mobile"
         hasEdit={false}

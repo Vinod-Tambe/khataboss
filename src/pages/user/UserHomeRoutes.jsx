@@ -63,9 +63,9 @@ const UserHomeRoutes = () => {
   if (!selectedUser) {
     return (
       <div className="card p-5 text-center shadow-sm">
-        <h3 className="text-danger">No active user selected.</h3>
-        <p className="text-muted">Please select a user from the User List/Grid first.</p>
-        <Link to="/user/list" className="btn btn-primary mt-3">Go to User List</Link>
+        <h3 className="text-danger">No active customer selected.</h3>
+        <p className="text-muted">Please select a customer from the Customer List/Grid first.</p>
+        <Link to="/user/list" className="btn btn-primary mt-3">Go to Customer List</Link>
       </div>
     );
   }
@@ -91,7 +91,7 @@ const UserHomeRoutes = () => {
     if (!user_uuid) return;
 
     const isConfirmed = await ConfirmAlert(
-      `Are you sure you want to update this user: ${user_first_name} ${user_last_name}?`
+      `Are you sure you want to update this customer: ${user_first_name} ${user_last_name}?`
     );
     if (isConfirmed) {
       navigate(`/user/edit/${user_uuid}`);
@@ -119,7 +119,7 @@ const UserHomeRoutes = () => {
               height="40"
               src={profileImg}
               role="button"
-              title="Update user"
+              title="Update customer"
               style={{ cursor: "pointer" }}
               onClick={handleProfileClick}
               onError={(e) => {
@@ -232,7 +232,7 @@ const UserHomeRoutes = () => {
                 height="40"
                 src={profileImg}
                 role="button"
-                title="Update user"
+                title="Update customer"
                 style={{ cursor: "pointer" }}
                 onClick={handleProfileClick}
                 onError={(e) => {
