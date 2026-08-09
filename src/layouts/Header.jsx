@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FiUser, FiMenu, FiBell, FiSun, FiMoon, FiBriefcase, FiLock, FiLogOut } from 'react-icons/fi';
+import { FiUser, FiMenu, FiBell, FiSun, FiMoon, FiMonitor, FiBriefcase, FiLock, FiLogOut } from 'react-icons/fi';
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../store/slices/authSlice";
@@ -9,6 +9,12 @@ import { useTheme } from "../context/ThemeContext";
 import HeaderSearch from "../components/common/HeaderSearch";
 import FinanceCollectionModal from "../components/finance/FinanceCollectionModal";
 import LoanCollectionModal from "../components/loan/LoanCollectionModal";
+
+const themeOptions = [
+  { id: "light", label: "Light", icon: FiSun },
+  { id: "dark", label: "Dark", icon: FiMoon },
+  { id: "system", label: "System", icon: FiMonitor },
+];
 
 const dummyNotifications = [
   {
@@ -37,13 +43,16 @@ const Header = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { firms, selectedFirmId } = useSelector((state) => state.firm);
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isThemeOpen, setIsThemeOpen] = useState(false);
   const [notificationFilter, setNotificationFilter] = useState("all");
   const [showFinancePayModal, setShowFinancePayModal] = useState(false);
   const [showLoanDepositModal, setShowLoanDepositModal] = useState(false);
   const [collectionUser, setCollectionUser] = useState(null);
   const notificationRef = useRef(null);
+  const themeRef = useRef(null);
+  const ThemeIcon = theme === "dark" ? FiMoon : theme === "system" ? FiMonitor : FiSun;
   const unreadNotifications = dummyNotifications.filter((notification) => !notification.read).length;
   const readNotifications = dummyNotifications.filter((notification) => notification.read).length;
   const filteredNotifications = dummyNotifications.filter((notification) => {
@@ -73,11 +82,15 @@ const Header = () => {
       if (notificationRef.current && !notificationRef.current.contains(event.target)) {
         setIsNotificationOpen(false);
       }
+      if (themeRef.current && !themeRef.current.contains(event.target)) {
+        setIsThemeOpen(false);
+      }
     };
 
     const handleEscape = (event) => {
       if (event.key === "Escape") {
         setIsNotificationOpen(false);
+        setIsThemeOpen(false);
       }
     };
 
@@ -100,7 +113,18 @@ const Header = () => {
   };
 
   const toggleNotifications = () => {
+    setIsThemeOpen(false);
     setIsNotificationOpen((prevState) => !prevState);
+  };
+
+  const toggleThemeMenu = () => {
+    setIsNotificationOpen(false);
+    setIsThemeOpen((prevState) => !prevState);
+  };
+
+  const handleThemeSelect = (nextTheme) => {
+    setTheme(nextTheme);
+    setIsThemeOpen(false);
   };
 
   const openFinancePay = (userRow) => {
@@ -285,14 +309,40 @@ const Header = () => {
               </li>
             </ul>
           </div>
-          <button
-            className="btn header-icon-btn theme-toggle-btn bg-warning-subtle"
-            type="button"
-            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-            onClick={toggleTheme}
-          >
-            {theme === 'dark' ? <FiSun size={20} /> : <FiMoon size={20} />}
-          </button>
+          <div className="theme-dropdown-wrapper" ref={themeRef}>
+            <button
+              className="btn header-icon-btn theme-toggle-btn bg-warning-subtle"
+              type="button"
+              aria-expanded={isThemeOpen}
+              aria-label="Open theme menu"
+              onClick={toggleThemeMenu}
+            >
+              <ThemeIcon size={20} />
+            </button>
+
+            {isThemeOpen && (
+              <div className="theme-dropdown-menu">
+                <div className="theme-dropdown-header">
+                  <h6 className="mb-1">Theme</h6>
+                  <p className="mb-0">Choose Light, Dark, or System</p>
+                </div>
+                <div className="theme-options">
+                  {themeOptions.map(({ id, label, icon: OptionIcon }) => (
+                    <button
+                      key={id}
+                      type="button"
+                      className={`theme-option ${theme === id ? "active" : ""}`}
+                      onClick={() => handleThemeSelect(id)}
+                      aria-pressed={theme === id}
+                    >
+                      <OptionIcon size={16} />
+                      <span>{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
           <button
             className="btn header-icon-btn logout-icon-btn bg-danger-subtle d-none d-md-inline-flex"
             type="button"

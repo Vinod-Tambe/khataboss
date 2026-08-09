@@ -4,6 +4,7 @@ import store from './store';
 import MainRoutes from './routes/MainRoutes';
 import './css/lightcolor.css';
 import './css/darkcolor.css';
+import './css/systemcolor.css';
 import './App.css';
 import './css/Layout.css';
 import './css/Common.css';

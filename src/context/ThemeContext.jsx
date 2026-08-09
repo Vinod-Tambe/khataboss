@@ -2,12 +2,15 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const ThemeContext = createContext();
 
+export const THEMES = ['light', 'dark', 'system'];
+
 const getInitialTheme = () => {
   if (typeof window === 'undefined') {
     return 'light';
   }
 
-  return localStorage.getItem('theme') || 'light';
+  const storedTheme = localStorage.getItem('theme');
+  return THEMES.includes(storedTheme) ? storedTheme : 'light';
 };
 
 export const ThemeProvider = ({ children }) => {
@@ -15,16 +18,21 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    document.documentElement.setAttribute('data-bs-theme', theme);
+    // Bootstrap only supports light | dark; System is a light brand theme
+    document.documentElement.setAttribute('data-bs-theme', theme === 'dark' ? 'dark' : 'light');
     localStorage.setItem('theme', theme);
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
+    setTheme((prevTheme) => {
+      const currentIndex = THEMES.indexOf(prevTheme);
+      const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % THEMES.length;
+      return THEMES[nextIndex];
+    });
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, themes: THEMES }}>
       {children}
     </ThemeContext.Provider>
   );

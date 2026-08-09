@@ -1,0 +1,437 @@
+[data-theme="system"] {
+  /* Base — light surfaces, vivid login-page brand accents */
+  --color-white: #ffffff;
+  --color-black: #1a1a1b;
+  --color-black-soft: #2d2433;
+  --color-navy: #4a0e4e;
+  --color-brown: #c2185b;
+  --color-maroon: #e60000;
+
+  /* Soft colorful wash (login energy, still light) */
+  --app-body-bg: #faf2f6;
+  --app-text: #1a1a1b;
+  --app-border: #f0d4e2;
+
+  /* Shared utilities — purple / magenta / red / gold (no green/teal) */
+  --btn-primary-text: #70016e;
+  --btn-primary-bg: #f8d6ef;
+  --bg-cust-primary: #fce4f3;
+  --bg-red-soft: #ffe3e6;
+  --bg-pink-soft: #fde7f3;
+  --bg-cust-info: #ede9fe;
+  --bg-green-soft: #fce4f3;
+  --text-red-soft: #fff1f0;
+  --text-green-soft: #a1005b;
+  --text-orange: #f59e0b;
+  --text-brown: #c2185b;
+  --btn-success-text: #a1005b;
+  --btn-success-bg: #fce4f3;
+  --btn-danger-text: #e60000;
+  --btn-danger-bg: #ffd6d6;
+  --btn-danger-border: #ff8a8a;
+  --btn-info-text: #6d28d9;
+  --btn-info-bg: #ede9fe;
+  --btn-info-border: #c4b5fd;
+  --btn-yellow-bg: rgba(255, 224, 130, 0.9);
+  --btn-warning-text: #b45309;
+  --btn-warning-bg: #ffe8a3;
+  --bg-dark: #2a1230;
+  --bg-secondary: #f7e9f1;
+
+  /* Common buttons */
+  --blue-btn-bg: #fce4f3;
+  --blue-btn-border: #f0a3d0;
+
+  /* Data tables */
+  --datatable-scrollbar: #d4a0bc;
+  --datatable-head-text: #a1005b;
+  --datatable-head-bg: #fce4f3;
+  --datatable-foot-bg: #ffe3e6;
+  --datatable-page-active-bg: #a1005b;
+  --datatable-row-bg-blue: #fff5fa;
+  --datatable-body-bg: #ffffff;
+  --datatable-body-text: #1a1a1b;
+
+  /* Status badges — saturated soft tints */
+  --status-badge-success-bg: #fce4f3;
+  --status-badge-success-text: #a1005b;
+  --status-badge-success-border: #f0a3d0;
+  --status-badge-danger-bg: #ffd6d6;
+  --status-badge-danger-text: #e60000;
+  --status-badge-danger-border: #ff8a8a;
+  --status-badge-warning-bg: #ffe8a3;
+  --status-badge-warning-text: #b45309;
+  --status-badge-warning-border: #ffc107;
+  --status-badge-info-bg: #ede9fe;
+  --status-badge-info-text: #6d28d9;
+  --status-badge-info-border: #c4b5fd;
+  --status-badge-primary-bg: #f8d6ef;
+  --status-badge-primary-text: #70016e;
+  --status-badge-primary-border: #f0a3d0;
+  --status-badge-secondary-bg: #f7e9f1;
+  --status-badge-secondary-text: #6b4a5c;
+  --status-badge-secondary-border: #e8bfd4;
+  --print-preview-wrapper-bg: #faf2f6;
+  --print-field-bg: #fff;
+  --print-field-border: #1a1a1b;
+  --print-field-text: #1a1a1b;
+  --print-info-text: #6d28d9;
+  --print-success-text: #a1005b;
+  --print-primary-text: #70016e;
+
+  /* Layout */
+  --layout-header-bg: #ffffff;
+  --layout-header-border: #f0d4e2;
+  --layout-muted-text: #9a6b86;
+  --layout-notification-header-border: #f0d4e2;
+  --layout-notification-header-bg: #fff5fa;
+  --layout-notification-title: #4a0e4e;
+  --layout-filter-bg: #fce4f3;
+  --layout-filter-text: #6b4a5c;
+  --layout-filter-hover-bg: #f8d0e8;
+  --layout-filter-active-bg: #a1005b;
+  --layout-filter-active-text: #ffffff;
+  --layout-item-border: #f5e0ec;
+  --layout-unread-bg: #fff0f7;
+  --layout-notification-dot: #e60000;
+  --layout-title-text: #4a0e4e;
+  --layout-message-text: #6b4a5c;
+  --layout-time-text: #9a6b86;
+  --success: #a1005b;
+  --success-alt: #6d28d9;
+  --layout-brand: #c2185b;
+  --light: #fff0f7;
+  --layout-sidebar-border: #f0d4e2;
+  --layout-sidebar-active-bg: rgba(194, 24, 91, 0.12);
+  --layout-sidebar-sub-active-bg: rgba(109, 40, 217, 0.12);
+  --layout-scrollbar-thumb: rgba(161, 0, 91, 0.35);
+
+  /* Login gradient language */
+  --login-page-bg: #faf2f6;
+  --login-panel-bg: #ffffff;
+  --login-gradient: linear-gradient(135deg, #4a0e4e, #a1005b, #e60000);
+  --login-gradient-reverse: linear-gradient(135deg, #e60000, #a1005b, #4a0e4e);
+  --login-input-bg: #f2f2f2;
+  --login-input-text: #1a1a1b;
+
+  /* Home */
+  --home-card-glass: rgba(255, 255, 255, 0.95);
+  --home-card-border: rgba(240, 163, 208, 0.55);
+  --home-card-bg: #ffffff;
+  --home-muted-text: #6b4a5c;
+  --home-tooltip-bg: #ffffff;
+  --home-tooltip-text: #4a0e4e;
+  --home-tooltip-border: #f0a3d0;
+  --home-track-bg: #f7e9f1;
+  --home-progress-gap-bg: #ffffff;
+  --home-progress-fill-text: #ffffff;
+  --home-purple-text: #a1005b;
+  --home-purple-bg: #fce4f3;
+  --home-orange-text: #e85d04;
+  --home-orange-bg: #ffe8d6;
+  --home-brown-bg: #fff1c2;
+
+  /* Modal */
+  --modal-overlay-bg: rgba(74, 14, 78, 0.4);
+  --modal-container-bg: #fffafc;
+  --modal-container-border: #f0a3d0;
+  --modal-heading: #70016e;
+  --modal-label: #c2185b;
+  --modal-input-border: #e8bfd4;
+  --modal-footer-border: #f0d4e2;
+  --modal-footer-bg: #fff5fa;
+  --modal-action-bg: #fce4f3;
+  --modal-action-text: #a1005b;
+  --modal-emi-wrapper-bg: #faf2f6;
+
+  /* Print helpers */
+  --print-bg-primary: #a1005b;
+  --print-text-success: #a1005b;
+  --print-bg-warning: #ffc107;
+  --print-border-subtle: #f0d4e2;
+
+  /* Theme toggle */
+  --theme-menu-bg: #ffffff;
+  --theme-menu-border: #f0a3d0;
+  --theme-option-bg: #fff5fa;
+  --theme-option-text: #4a0e4e;
+  --theme-option-active-bg: #a1005b;
+  --theme-option-active-text: #ffffff;
+}
+
+/* Soft multi-tone page wash like login energy */
+[data-theme="system"] body {
+  background:
+    radial-gradient(1200px 500px at 0% 0%, rgba(161, 0, 91, 0.1), transparent 55%),
+    radial-gradient(900px 480px at 100% 0%, rgba(230, 0, 0, 0.08), transparent 50%),
+    radial-gradient(800px 420px at 80% 100%, rgba(109, 40, 217, 0.08), transparent 55%),
+    var(--app-body-bg) !important;
+  color: var(--app-text);
+}
+
+[data-theme="system"] .layout-wrapper,
+[data-theme="system"] .content-area,
+[data-theme="system"] .main-content {
+  background-color: transparent;
+  color: var(--app-text);
+}
+
+/* Header — light with brand accent strip */
+[data-theme="system"] .header,
+[data-theme="system"] .admin-header {
+  background: linear-gradient(180deg, #ffffff 0%, #fff7fb 100%);
+  border-bottom-color: var(--layout-header-border);
+}
+
+[data-theme="system"] .logo-title,
+[data-theme="system"] .logo-title h1,
+[data-theme="system"] .sidebar-brand,
+[data-theme="system"] .sidebar-brand h1 {
+  color: #c2185b;
+  background: linear-gradient(135deg, #4a0e4e, #a1005b, #e60000);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+[data-theme="system"] .sidebar-brand svg {
+  color: #c2185b;
+  stroke: currentColor;
+  fill: none;
+  -webkit-text-fill-color: #c2185b;
+  background: none;
+}
+
+[data-theme="system"] .header-search__input-group .form-control {
+  background: #fff5fa;
+  border-color: #f0a3d0;
+}
+
+[data-theme="system"] .header-firm-select .input-group-text.bg-cust-primary {
+  background: linear-gradient(135deg, #4a0e4e, #a1005b) !important;
+  color: #ffffff !important;
+  border-color: #a1005b !important;
+}
+
+[data-theme="system"] .header-firm-select .form-select {
+  border-color: #f0a3d0;
+  background-color: #fff5fa;
+}
+
+/* Sidebar color accents */
+[data-theme="system"] .sidebar {
+  background: linear-gradient(180deg, #ffffff 0%, #fff7fb 100%);
+  border-right: 1px solid var(--layout-sidebar-border);
+}
+
+[data-theme="system"] .sidebar-menu > li:hover > a,
+[data-theme="system"] .sidebar-menu > li:hover > .submenu-toggle {
+  background: #fff0f7;
+  color: #a1005b;
+}
+
+[data-theme="system"] .sidebar-menu > li > a.active,
+[data-theme="system"] .sidebar-menu > li > .submenu-toggle.active {
+  background: linear-gradient(90deg, rgba(161, 0, 91, 0.14), rgba(230, 0, 0, 0.08));
+  color: #a1005b;
+  border-left-color: #e60000;
+}
+
+/* Submenu uses violet — distinct from magenta parent items */
+[data-theme="system"] .submenu li a {
+  color: #6d28d9;
+}
+
+[data-theme="system"] .submenu li a:hover {
+  background: #f3e8ff;
+  color: #5b21b6;
+}
+
+[data-theme="system"] .submenu li a.sub-active {
+  background: rgba(109, 40, 217, 0.12);
+  color: #5b21b6;
+  border-left-color: #7c3aed;
+}
+
+/* Cards — brighter borders & soft tinted shadows */
+[data-theme="system"] .info-card {
+  border-color: rgba(240, 163, 208, 0.55);
+  box-shadow: 0 10px 28px rgba(161, 0, 91, 0.1);
+}
+
+[data-theme="system"] .info-card:hover {
+  box-shadow: 0 18px 40px rgba(161, 0, 91, 0.16);
+}
+
+[data-theme="system"] .action-card {
+  border: 1px solid rgba(240, 163, 208, 0.45) !important;
+  box-shadow: 0 6px 18px rgba(161, 0, 91, 0.07);
+  background: linear-gradient(180deg, #ffffff 0%, #fff8fb 100%);
+}
+
+[data-theme="system"] .action-card:hover {
+  border-color: #f0a3d0 !important;
+  box-shadow: 0 12px 28px rgba(161, 0, 91, 0.14);
+  transform: translateY(-2px);
+}
+
+[data-theme="system"] .graph-card {
+  border: 1px solid rgba(240, 163, 208, 0.4);
+  box-shadow: 0 10px 28px rgba(74, 14, 78, 0.08);
+  background: linear-gradient(180deg, #ffffff 0%, #fff8fb 100%);
+}
+
+[data-theme="system"] .card {
+  border-color: rgba(240, 163, 208, 0.4);
+  box-shadow: 0 6px 18px rgba(161, 0, 91, 0.06);
+}
+
+/* Bootstrap subtle colors — match colorful login palette */
+[data-theme="system"] .bg-success-subtle {
+  background-color: #fce4f3 !important;
+  color: #a1005b !important;
+}
+
+[data-theme="system"] .text-success {
+  color: #a1005b !important;
+}
+
+[data-theme="system"] .bg-primary-subtle {
+  background-color: #f8d6ef !important;
+  color: #70016e !important;
+}
+
+[data-theme="system"] .text-primary {
+  color: #70016e !important;
+}
+
+[data-theme="system"] .bg-info-subtle {
+  background-color: #ede9fe !important;
+  color: #6d28d9 !important;
+}
+
+[data-theme="system"] .text-info {
+  color: #6d28d9 !important;
+}
+
+[data-theme="system"] .bg-warning-subtle {
+  background-color: #ffe8a3 !important;
+  color: #b45309 !important;
+}
+
+[data-theme="system"] .text-warning {
+  color: #d97706 !important;
+}
+
+[data-theme="system"] .bg-danger-subtle {
+  background-color: #ffd6d6 !important;
+  color: #e60000 !important;
+}
+
+[data-theme="system"] .text-danger {
+  color: #e60000 !important;
+}
+
+[data-theme="system"] .bg-secondary-subtle {
+  background-color: #f7e9f1 !important;
+  color: #6b4a5c !important;
+}
+
+[data-theme="system"] .text-secondary {
+  color: #8a5a72 !important;
+}
+
+[data-theme="system"] .bg-cust-primary {
+  background-color: var(--bg-cust-primary) !important;
+}
+
+/* Buttons / active states — login gradient */
+[data-theme="system"] .theme-option.active,
+[data-theme="system"] .btn-primary,
+[data-theme="system"] .nav-pills .nav-link.active,
+[data-theme="system"] .notification-filter-btn.active {
+  background: linear-gradient(135deg, #4a0e4e, #a1005b, #e60000);
+  color: #ffffff !important;
+  border-color: transparent;
+}
+
+[data-theme="system"] .btn-primary:hover,
+[data-theme="system"] .btn-primary:focus {
+  background: linear-gradient(135deg, #5a125e, #b10065, #ff1a1a);
+  border-color: transparent;
+  color: #ffffff;
+}
+
+[data-theme="system"] .btn-success {
+  background: linear-gradient(135deg, #4a0e4e, #a1005b);
+  border-color: #a1005b;
+  color: #ffffff;
+}
+
+[data-theme="system"] .btn-info {
+  background-color: #6d28d9;
+  border-color: #6d28d9;
+  color: #ffffff;
+}
+
+[data-theme="system"] .btn-warning {
+  background-color: #ffc107;
+  border-color: #ffc107;
+  color: #1a1a1b;
+}
+
+[data-theme="system"] .btn-danger {
+  background-color: #e60000;
+  border-color: #e60000;
+  color: #ffffff;
+}
+
+[data-theme="system"] .page-item.active .page-link {
+  background: linear-gradient(135deg, #4a0e4e, #a1005b, #e60000);
+  border-color: #a1005b;
+  color: #ffffff;
+}
+
+[data-theme="system"] .form-control:focus,
+[data-theme="system"] .form-select:focus {
+  border-color: #a1005b;
+  box-shadow: 0 0 0 0.2rem rgba(161, 0, 91, 0.2);
+}
+
+[data-theme="system"] .table thead th,
+[data-theme="system"] .dynamic-data-table thead th {
+  background: linear-gradient(135deg, #fce4f3, #ffe3e6) !important;
+  color: #a1005b !important;
+}
+
+[data-theme="system"] .table tfoot th,
+[data-theme="system"] .dynamic-data-table tfoot th {
+  background: #ffe3e6 !important;
+  color: #e60000 !important;
+}
+
+[data-theme="system"] .bottom-nav {
+  background: linear-gradient(180deg, #ffffff 0%, #fff7fb 100%);
+  border-top-color: var(--layout-header-border);
+}
+
+[data-theme="system"] .bottom-nav-item.active {
+  color: #a1005b;
+  background: rgba(161, 0, 91, 0.12);
+}
+
+/* Extra green utility overrides used across pages */
+[data-theme="system"] .text-green,
+[data-theme="system"] .text-success-emphasis {
+  color: #a1005b !important;
+}
+
+[data-theme="system"] .bg-success {
+  background-color: #a1005b !important;
+}
+
+[data-theme="system"] .form-switch .custom-switch:checked,
+[data-theme="system"] .form-check-input:checked {
+  background-color: #a1005b !important;
+  border-color: #a1005b !important;
+}
