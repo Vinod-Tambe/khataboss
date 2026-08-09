@@ -145,11 +145,12 @@ const UserGrid = () => {
 
                 <div className="card-footer bg-transparent border-dark d-flex align-items-center p-2 m-0 mt-auto">
                   <button
-                    style={{ width: "15%" }}
-                    className="btn me-2 p-1 m-0 bg-secondary-subtle border-secondary"
+                    style={{ minWidth: "75px" }}
+                    className="btn me-2 p-1 m-0 bg-secondary-subtle border-secondary text-truncate fw-bold"
+                    title={user.user_unique_code || user.user_id}
                     disabled
                   >
-                    {user.user_id}
+                    {user.user_unique_code || user.user_id}
                   </button>
                   <button className="btn me-2 bg-success-subtle border-secondary rounded-circle">
                     <i className="bi bi-whatsapp"></i>

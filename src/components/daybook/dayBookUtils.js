@@ -40,41 +40,86 @@ export const calculateDayBookSummary = (DayBookData = {}, opening_data = {}) => 
     total_open_cash_amt + total_open_bank_amt + total_open_online_amt + total_open_card_amt;
 
   const Finance_emi_deposit_data = DayBookData?.["FINANCE EMI DEPOSIT"] || {};
-  const total_today_cash_in_amt = parseFloat(Finance_emi_deposit_data.total_cash_amt || 0);
-  const total_today_bank_in_amt = parseFloat(Finance_emi_deposit_data.total_bank_amt || 0);
-  const total_today_online_in_amt = parseFloat(Finance_emi_deposit_data.total_online_amt || 0);
-  const total_today_card_in_amt = parseFloat(Finance_emi_deposit_data.total_card_amt || 0);
-  const total_today_disc_in_amt = parseFloat(Finance_emi_deposit_data.total_disc_amt || 0);
-  const total_today_in_amt = parseFloat(Finance_emi_deposit_data.total_amt || 0);
+  const Loan_deposit_data = DayBookData?.["LOAN DEPOSIT"] || {};
+  const Release_loan_data = DayBookData?.["RELEASE LOAN"] || {};
+  const Auction_loan_data = DayBookData?.["AUCTION LOAN"] || {};
+
+  const total_today_cash_in_amt =
+    parseFloat(Finance_emi_deposit_data.total_cash_amt || 0) +
+    parseFloat(Loan_deposit_data.total_cash_amt || 0) +
+    parseFloat(Release_loan_data.total_cash_amt || 0) +
+    parseFloat(Auction_loan_data.total_cash_amt || 0);
+
+  const total_today_bank_in_amt =
+    parseFloat(Finance_emi_deposit_data.total_bank_amt || 0) +
+    parseFloat(Loan_deposit_data.total_bank_amt || 0) +
+    parseFloat(Release_loan_data.total_bank_amt || 0) +
+    parseFloat(Auction_loan_data.total_bank_amt || 0);
+
+  const total_today_online_in_amt =
+    parseFloat(Finance_emi_deposit_data.total_online_amt || 0) +
+    parseFloat(Loan_deposit_data.total_online_amt || 0) +
+    parseFloat(Release_loan_data.total_online_amt || 0) +
+    parseFloat(Auction_loan_data.total_online_amt || 0);
+
+  const total_today_card_in_amt =
+    parseFloat(Finance_emi_deposit_data.total_card_amt || 0) +
+    parseFloat(Loan_deposit_data.total_card_amt || 0) +
+    parseFloat(Release_loan_data.total_card_amt || 0) +
+    parseFloat(Auction_loan_data.total_card_amt || 0);
+
+  const total_today_disc_in_amt =
+    parseFloat(Finance_emi_deposit_data.total_disc_amt || 0) +
+    parseFloat(Loan_deposit_data.total_disc_amt || 0) +
+    parseFloat(Release_loan_data.total_disc_amt || 0) +
+    parseFloat(Auction_loan_data.total_disc_amt || 0);
+
+  const total_today_in_amt =
+    parseFloat(Finance_emi_deposit_data.total_amt || 0) +
+    parseFloat(Loan_deposit_data.total_amt || 0) +
+    parseFloat(Release_loan_data.total_amt || 0) +
+    parseFloat(Auction_loan_data.total_amt || 0);
 
   const Finance_added_data = DayBookData?.["FINANCE ADDED"] || {};
   const Finance_emi_rollback_data = DayBookData?.["FINANCE EMI ROLLBACK"] || {};
   const Loan_added_data = DayBookData?.["LOAN ADDED"] || {};
+  const Additional_principal_data = DayBookData?.["ADDITIONAL LOAN PRINCIPAL"] || {};
 
   const total_today_cash_out_amt =
     parseFloat(Finance_added_data.total_cash_amt || 0) +
     parseFloat(Finance_emi_rollback_data.total_cash_amt || 0) +
-    parseFloat(Loan_added_data.total_cash_amt || 0);
+    parseFloat(Loan_added_data.total_cash_amt || 0) +
+    parseFloat(Additional_principal_data.total_cash_amt || 0);
+
   const total_today_bank_out_amt =
     parseFloat(Finance_added_data.total_bank_amt || 0) +
     parseFloat(Finance_emi_rollback_data.total_bank_amt || 0) +
-    parseFloat(Loan_added_data.total_bank_amt || 0);
+    parseFloat(Loan_added_data.total_bank_amt || 0) +
+    parseFloat(Additional_principal_data.total_bank_amt || 0);
+
   const total_today_online_out_amt =
     parseFloat(Finance_added_data.total_online_amt || 0) +
     parseFloat(Finance_emi_rollback_data.total_online_amt || 0) +
-    parseFloat(Loan_added_data.total_online_amt || 0);
+    parseFloat(Loan_added_data.total_online_amt || 0) +
+    parseFloat(Additional_principal_data.total_online_amt || 0);
+
   const total_today_card_out_amt =
     parseFloat(Finance_added_data.total_card_amt || 0) +
     parseFloat(Finance_emi_rollback_data.total_card_amt || 0) +
-    parseFloat(Loan_added_data.total_card_amt || 0);
+    parseFloat(Loan_added_data.total_card_amt || 0) +
+    parseFloat(Additional_principal_data.total_card_amt || 0);
+
   const total_today_disc_out_amt =
     parseFloat(Finance_added_data.total_disc_amt || 0) +
     parseFloat(Finance_emi_rollback_data.total_disc_amt || 0) +
-    parseFloat(Loan_added_data.total_disc_amt || 0);
+    parseFloat(Loan_added_data.total_disc_amt || 0) +
+    parseFloat(Additional_principal_data.total_disc_amt || 0);
+
   const total_today_out_amt =
     parseFloat(Finance_added_data.total_amt || 0) +
     parseFloat(Finance_emi_rollback_data.total_amt || 0) +
-    parseFloat(Loan_added_data.total_amt || 0);
+    parseFloat(Loan_added_data.total_amt || 0) +
+    parseFloat(Additional_principal_data.total_amt || 0);
 
   const total_today_cash_amt = total_today_cash_in_amt - total_today_cash_out_amt;
   const total_today_bank_amt = total_today_bank_in_amt - total_today_bank_out_amt;
@@ -164,13 +209,33 @@ export const DAYBOOK_SECTIONS = [
     amtTone: "cr",
   },
   {
+    title: "ADDITIONAL LOAN PRINCIPAL",
+    colorClass: "bg-pink",
+    amtTone: "cr",
+  },
+  {
+    title: "LOAN DEPOSIT",
+    colorClass: "bg-blue",
+    amtTone: "dr",
+  },
+  {
+    title: "RELEASE LOAN",
+    colorClass: "bg-cust-info",
+    amtTone: "dr",
+  },
+  {
+    title: "AUCTION LOAN",
+    colorClass: "bg-warning",
+    amtTone: "dr",
+  },
+  {
     title: "FINANCE EMI DEPOSIT",
     colorClass: "bg-red",
     amtTone: "dr",
   },
   {
     title: "FINANCE EMI ROLLBACK",
-    colorClass: "bg-cust-info",
+    colorClass: "bg-secondary",
     amtTone: "cr",
   },
 ];

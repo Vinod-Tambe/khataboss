@@ -163,7 +163,7 @@ const StaffGrid = () => {
                       navigate(`/staff/staff-details/${staff.staff_uuid}`);
                     }}
                   >
-                    {staff.staff_id}
+                    {staff.staff_unique_code || staff.staff_id}
                   </button>
                   <button
                     type="button"

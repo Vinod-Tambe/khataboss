@@ -16,6 +16,29 @@
   background-color: #e8eaf6 !important;
 }
 
+span.badge.status-badge.loan-info-header-badge,
+.badge.status-badge.loan-info-header-badge,
+.loan-info-header-badge {
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  min-width: auto !important;
+  width: auto !important;
+  max-width: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+span.badge.status-badge.loan-info-header-badge h5,
+span.badge.status-badge.loan-info-header-badge h6,
+span.badge.status-badge.loan-info-header-badge *,
+.loan-info-header-badge h5,
+.loan-info-header-badge h6,
+.loan-info-header-badge * {
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  margin-bottom: 0 !important;
+}
+
 /* ========== Loan Information — mobile app shell ========== */
 @media (max-width: 767.98px) {
   .active-loan-panel {

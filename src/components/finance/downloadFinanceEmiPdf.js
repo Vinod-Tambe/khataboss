@@ -32,7 +32,7 @@ const getMeta = ({ initialFinance, financeData, totals }) => {
   return {
     customerName,
     firmName,
-    finId: String(initialFinance?.fin_id ?? "N/A"),
+    finId: String(initialFinance?.fin_unique_code || initialFinance?.fin_id || "N/A"),
     prinAmt: formatAmt(financeData?.fin_prin_amt ?? initialFinance?.fin_prin_amt),
     emiAmt: formatAmt(financeData?.fin_emi_amt ?? initialFinance?.fin_emi_amt),
     cashAmt: formatAmt(financeData?.fin_cash_amt),

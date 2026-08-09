@@ -20,7 +20,7 @@ const buildReceiptRows = ({ historyData, initialFinance }) => {
 
   const rows = [
     ["Name", customerName],
-    ["Reg No", String(initialFinance?.fin_id || "N/A")],
+    ["Reg No / Fin Code", String(initialFinance?.fin_unique_code || initialFinance?.fin_id || "N/A")],
     [
       "Payment Date",
       historyData.fm_trans_date
@@ -139,7 +139,7 @@ export const getHistoryReceiptShareText = ({ historyData, initialFinance }) => {
     "Payment History Receipt",
     `Firm: ${firmName}`,
     `Name: ${customerName}`,
-    `Reg No: ${initialFinance?.fin_id || "N/A"}`,
+    `Reg No / Fin Code: ${initialFinance?.fin_unique_code || initialFinance?.fin_id || "N/A"}`,
     `Date: ${historyData?.fm_trans_date ? moment(historyData.fm_trans_date).format("DD-MMM-YY") : "-"}`,
     `Type: ${historyData?.fm_trans_type || "-"}`,
     `Trans Amt: ${formatAmt(historyData?.fm_trans_amt)}`,

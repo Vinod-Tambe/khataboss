@@ -6,6 +6,7 @@ import PaymentForm from './PaymentForm'
 import CommonModal from '../common/CommonModal'
 import { getFinanceDetails } from '../../api/financeApi'
 import { toast } from 'react-toastify'
+import { getStatusBadgeMeta } from '../../utils/listFormatters'
 import '../../css/Finance.css'
 
 const Finance = () => {
@@ -77,24 +78,39 @@ const Finance = () => {
             <div className="row g-3 finance-page">
                 {view === 'info' ? (
                     <div className="col-md-12 py-2 py-md-3 px-2 px-md-3">
-                        <div className="finance-page__header d-flex justify-content-between align-items-start mb-1 px-1 px-md-2">
+                        <div className="finance-page__header d-flex justify-content-between align-items-center mb-2 px-1 px-md-2">
                             <div>
                                 <h5 className="finance-page__title text-primary fw-bold mb-0">Finance Information</h5>
                                 {(customerName || initialFinance?.fin_id) && (
-                                    <p className="finance-page__subtitle d-md-none">
+                                    <p className="finance-page__subtitle d-md-none mb-0">
                                         {customerName && <span>{customerName}</span>}
-                                        {customerName && initialFinance?.fin_id ? ' · ' : ''}
-                                        {initialFinance?.fin_id ? `Fin #${initialFinance.fin_id}` : ''}
+                                        {customerName && (financeData?.fin_unique_code || initialFinance?.fin_unique_code || initialFinance?.fin_id) ? ' · ' : ''}
+                                        {financeData?.fin_unique_code || initialFinance?.fin_unique_code || (initialFinance?.fin_id ? `Fin #${initialFinance.fin_id}` : '')}
                                     </p>
                                 )}
                             </div>
+                            <div className="d-flex align-items-stretch gap-2" style={{ height: '36px' }}>
+                                <span className="badge bg-primary-subtle border border-primary text-primary fw-bold fs-6 px-3 d-inline-flex align-items-center">
+                                    {financeData?.fin_unique_code || initialFinance?.fin_unique_code || (initialFinance?.fin_id ? `FIN-${initialFinance.fin_id}` : '')}
+                                </span>
+                                {(() => {
+                                    const finStatus = financeData?.fin_status || initialFinance?.fin_status || 'ACTIVE';
+                                    const { label, icon, className } = getStatusBadgeMeta(finStatus);
+                                    return (
+                                        <span className={`${className} loan-info-header-badge shadow-sm px-3 d-inline-flex align-items-center`}>
+                                            <i className={`bi ${icon} me-2 fs-6`}></i>
+                                            <h6 className="mb-0 fw-bold fs-6">{label}</h6>
+                                        </span>
+                                    );
+                                })()}
+                            </div>
                         </div>
-                            <FinanceInfo
-                                data={financeData?.finance_trans || []}
-                                onPayment={handlePayment}
-                                onRollback={handleRollback}
-                                onClose={handleClosePayment}
-                                onHistory={handleHistory}
+                        <FinanceInfo
+                            data={financeData?.finance_trans || []}
+                            onPayment={handlePayment}
+                            onRollback={handleRollback}
+                            onClose={handleClosePayment}
+                            onHistory={handleHistory}
                             isLoading={loading}
                             financeData={financeData}
                             initialFinance={initialFinance}
@@ -102,20 +118,35 @@ const Finance = () => {
                     </div>
                 ) : (
                     <div className="col-md-12 py-2 py-md-3 px-2 px-md-3">
-                        <div className="finance-page__header d-flex justify-content-between align-items-start mb-2 gap-2 px-1 px-md-0">
+                        <div className="finance-page__header d-flex justify-content-between align-items-center mb-2 gap-2 px-1 px-md-0">
                             <div>
                                 <h5 className="finance-page__title text-primary fw-bold mb-0">Finance History</h5>
                                 {(customerName || initialFinance?.fin_id) && (
-                                    <p className="finance-page__subtitle d-md-none">
+                                    <p className="finance-page__subtitle d-md-none mb-0">
                                         {customerName && <span>{customerName}</span>}
-                                        {customerName && initialFinance?.fin_id ? ' · ' : ''}
-                                        {initialFinance?.fin_id ? `Fin #${initialFinance.fin_id}` : ''}
+                                        {customerName && (financeData?.fin_unique_code || initialFinance?.fin_unique_code || initialFinance?.fin_id) ? ' · ' : ''}
+                                        {financeData?.fin_unique_code || initialFinance?.fin_unique_code || (initialFinance?.fin_id ? `Fin #${initialFinance.fin_id}` : '')}
                                     </p>
                                 )}
                             </div>
-                            <button className="btn btn-sm btn-outline-secondary px-3 finance-page__back" onClick={handleBackToInfo}>
-                                <i className="bi bi-arrow-left me-1"></i> Back
-                            </button>
+                            <div className="d-flex align-items-stretch gap-2" style={{ height: '36px' }}>
+                                <span className="badge bg-primary-subtle border border-primary text-primary fw-bold fs-6 px-3 d-inline-flex align-items-center">
+                                    {financeData?.fin_unique_code || initialFinance?.fin_unique_code || (initialFinance?.fin_id ? `FIN-${initialFinance.fin_id}` : '')}
+                                </span>
+                                {(() => {
+                                    const finStatus = financeData?.fin_status || initialFinance?.fin_status || 'ACTIVE';
+                                    const { label, icon, className } = getStatusBadgeMeta(finStatus);
+                                    return (
+                                        <span className={`${className} loan-info-header-badge shadow-sm px-3 d-inline-flex align-items-center`}>
+                                            <i className={`bi ${icon} me-2 fs-6`}></i>
+                                            <h6 className="mb-0 fw-bold fs-6">{label}</h6>
+                                        </span>
+                                    );
+                                })()}
+                                <button className="btn btn-sm btn-outline-secondary px-3 finance-page__back d-inline-flex align-items-center justify-content-center" onClick={handleBackToInfo}>
+                                    <i className="bi bi-arrow-left me-1 fs-6"></i> Back
+                                </button>
+                            </div>
                         </div>
                         <FinanceHistory
                             data={financeData?.finance_money_trans || []}

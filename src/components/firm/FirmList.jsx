@@ -28,7 +28,13 @@ const FirmList = () => {
   }, []);
 
   const columns = [
-    { key: "firm_id", title: "ID", orderable: true, searchable: true },
+    { 
+      key: "firm_unique_code", 
+      title: "Unique Code", 
+      orderable: true, 
+      searchable: true,
+      render: (data, type, row) => row?.firm_unique_code || row?.firm_id
+    },
     { key: "firm_name", title: "Firm Name", orderable: true, searchable: true },
     { key: "firm_owner", title: "Owner Name", orderable: true, searchable: true },
     { key: "firm_gstin_no", title: "GST Number", orderable: true, searchable: true },

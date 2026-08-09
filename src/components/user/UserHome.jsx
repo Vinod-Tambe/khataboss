@@ -70,7 +70,7 @@ const UserHome = () => {
           return {
             ...f,
             id: f.fin_id,
-            finNo: `Fin-${f.fin_id}`,
+            finNo: f.fin_unique_code || `Fin-${f.fin_id}`,
             principal: formatAmt(f.fin_prin_amt),
             emi: formatAmt(f.fin_emi_amt),
             finalAmt: formatAmt(f.fin_final_amt),
@@ -103,7 +103,7 @@ const UserHome = () => {
           return {
             ...l,
             id: l.girv_id,
-            loanNo: `Loan-${l.girv_id}`,
+            loanNo: l.girv_unique_code || l.girv_loan_no || `Loan-${l.girv_id}`,
             principal: formatAmt(l.girv_prin_amt),
             finalAmt: formatAmt(l.girv_final_amt),
             roi: l.girv_roi != null && l.girv_roi !== "" ? `${l.girv_roi}%${roiType ? ` ${roiType}` : ""}` : "-",
@@ -126,16 +126,18 @@ const UserHome = () => {
         // Set Transaction List (last 5)
         const dynamicTransactions = (latestTransactions || []).slice(0, LAST_N).map(t => {
           const fmTrans = t.financeMoneyTransactions?.[0];
-          const finId = fmTrans?.fm_fin_id;
+          const finId = t.fin_id || fmTrans?.fm_fin_id;
           return {
             id: t.jrnl_id,
-            transNo: `TR-${t.jrnl_id}`,
+            transNo: t.transNo || `TR-${t.jrnl_id}`,
             amount: `₹${(t.jrnl_amt || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
             type: t.jrnl_panel,
             category: t.jrnl_panel,
             date: moment(t.jrnl_date).format("DD-MM-YYYY"),
-            finId: finId ? `Fin-${finId}` : null,
+            finCode: t.fin_code,
             originalFinId: finId || null,
+            girvCode: t.girv_code,
+            originalGirvId: t.girv_id || null,
             otherInfo: t.jrnl_other_info || "",
             status: "Active"
           };
@@ -232,22 +234,23 @@ const UserHome = () => {
   ];
 
   const getTransactionLink = (row) => {
-    const isLoan = row.category === "Girvi" || row.category === "Loan";
-    if (isLoan) {
-      const match = (row.otherInfo || "").match(/Girvi No\s*-\s*(\d+)/i);
-      const loanId = match ? parseInt(match[1], 10) : null;
-      const loanSuffix = loanId ? " (Loan-" + loanId + ")" : "";
+    if (row.originalGirvId || row.girvCode) {
+      const labelRef = row.girvCode || (row.originalGirvId ? `LN-${row.originalGirvId}` : '');
       return {
-        label: row.category + loanSuffix,
-        onClick: loanId ? () => handleViewLoan(loanId) : undefined,
+        label: labelRef ? `${row.category} (${labelRef})` : row.category,
+        onClick: row.originalGirvId || row.girvCode ? () => handleViewLoan(row.girvCode || row.originalGirvId) : undefined,
       };
     }
-    const finSuffix = row.originalFinId ? " (Fin-" + row.originalFinId + ")" : "";
+    if (row.originalFinId || row.finCode) {
+      const labelRef = row.finCode || (row.originalFinId ? `FIN-${row.originalFinId}` : '');
+      return {
+        label: labelRef ? `${row.category} (${labelRef})` : row.category,
+        onClick: row.originalFinId || row.finCode ? () => handleViewFinance(row.finCode || row.originalFinId) : undefined,
+      };
+    }
     return {
-      label: row.category + finSuffix,
-      onClick: row.originalFinId
-        ? () => handleViewFinance(row.originalFinId)
-        : undefined,
+      label: row.category,
+      onClick: undefined,
     };
   };
 

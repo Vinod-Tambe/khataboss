@@ -81,9 +81,10 @@ const ListLoan = ({ status = "ALL", global = false }) => {
   const columns = useMemo(() => {
     const cols = [
       {
-        key: "girv_id",
+        key: "girv_unique_code",
         title: "Loan No",
-        render: (data) => `${data}.`,
+        searchable: true,
+        render: (data, type, row) => row?.girv_unique_code || row?.girv_loan_no || `${row?.girv_id || data}`,
       },
     ];
 

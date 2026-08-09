@@ -43,7 +43,13 @@ const UserList = () => {
   }, [fetchUsers, debouncedSearchTerm]);
 
   const columns = [
-    { key: "user_id", title: "ID", orderable: true, searchable: true },
+    { 
+      key: "user_unique_code", 
+      title: "Unique Code", 
+      orderable: true, 
+      searchable: true,
+      render: (data, type, row) => row?.user_unique_code || row?.user_id
+    },
     { key: "user_first_name", title: "First Name", orderable: true, searchable: true },
     { key: "user_last_name", title: "Last Name", orderable: true, searchable: true },
     { key: "user_father_name", title: "Father Name", orderable: true, searchable: true },

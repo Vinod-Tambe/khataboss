@@ -426,7 +426,7 @@ const FinanceCollectionModal = ({ show, onClose, firms = [], selectedFirmId, ini
                                         onMouseEnter={() => setActiveResultIndex(index)}
                                     >
                                         <div className={index === activeResultIndex ? 'text-white fw-bold' : 'fw-bold'}>{user.user_first_name} {user.user_last_name}</div>
-                                        <div className={`small ${index === activeResultIndex ? 'text-white-50' : 'text-muted'}`}>{user.user_mobile_no} | ID: {user.user_id}</div>
+                                        <div className={`small ${index === activeResultIndex ? 'text-white-50' : 'text-muted'}`}>{user.user_unique_code ? `${user.user_unique_code} | ` : ''}{user.user_mobile_no} | ID: {user.user_id}</div>
                                     </button>
                                 ))}
                             </div>
@@ -454,7 +454,7 @@ const FinanceCollectionModal = ({ show, onClose, firms = [], selectedFirmId, ini
                                 </option>
                                 {userFinances.map((fin) => (
                                     <option key={fin.fin_id} value={fin.fin_id}>
-                                        {fin.fin_id} — ₹{Number(fin.fin_prin_amt || 0).toLocaleString()} ({fin.fin_status || 'ACTIVE'})
+                                        {fin.fin_unique_code || `Finance #${fin.fin_id}`} — ₹{Number(fin.fin_prin_amt || 0).toLocaleString()} ({fin.fin_status || 'ACTIVE'})
                                     </option>
                                 ))}
                             </select>

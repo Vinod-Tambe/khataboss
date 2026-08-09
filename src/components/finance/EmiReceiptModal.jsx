@@ -85,7 +85,7 @@ const EmiReceiptModal = ({ show, onHide, emiData, initialFinance }) => {
         ? `${initialFinance.user.user_first_name} ${initialFinance.user.user_last_name || ''}`
         : 'N/A';
 
-    const regNo = initialFinance?.fin_id || 'N/A';
+    const regNo = initialFinance?.fin_unique_code || initialFinance?.fin_id || 'N/A';
     const firmName = initialFinance?.firm?.firm_name || 'TAHLKA FINANCE & COMPANY';
     const depositAmt = initialFinance?.fin_prin_amt || 0;
     const remAmt = emiData.ft_pending_amt || 0;
@@ -119,8 +119,8 @@ const EmiReceiptModal = ({ show, onHide, emiData, initialFinance }) => {
                                     <td className="text-dark">{customerName}</td>
                                 </tr>
                                 <tr>
-                                    <th className="fw-bold text-dark">Reg No :</th>
-                                    <td className="text-dark">{regNo}</td>
+                                    <th className="fw-bold text-dark">Reg No / Unique Code :</th>
+                                    <td className="fw-bold text-dark">{regNo}</td>
                                 </tr>
                                 <tr>
                                     <th className="fw-bold text-dark">Payment Date :</th>

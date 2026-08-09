@@ -27,7 +27,7 @@ const getProfileImgUrl = (user) => {
 };
 
 const HeaderSearch = ({
-  placeholder = "Search mobile, email, ID, name, city, address...",
+  placeholder = "Search mobile, unique code, name, city...",
   className = "",
   onOpenFinancePay,
   onOpenLoanDeposit,
@@ -180,7 +180,17 @@ const HeaderSearch = ({
           autoComplete="off"
           aria-label="Search customers"
         />
-        <button className="btn btn-outline-secondary border-dark" type="button" aria-label="Search">
+        <button
+          className="btn btn-outline-secondary border-dark"
+          type="button"
+          aria-label="Search"
+          onClick={() => {
+            if (query.trim()) {
+              setOpen(true);
+              runSearch(query.trim());
+            }
+          }}
+        >
           <i className="bi bi-search" aria-hidden="true"></i>
         </button>
       </div>
@@ -230,13 +240,15 @@ const HeaderSearch = ({
                         ></i>
                       </span>
                       <span className="header-search__meta">
-                        <span className="header-search__title-row" title={[name, user.user_mobile_no, user.user_id != null ? `ID: ${user.user_id}` : ""].filter(Boolean).join(" · ")}>
+                        <span className="header-search__title-row" title={[name, user.user_mobile_no, user.user_unique_code || (user.user_id != null ? `ID: ${user.user_id}` : "")].filter(Boolean).join(" · ")}>
                           <span className="header-search__name">{name}</span>
+                          {user.user_unique_code ? (
+                            <span className="header-search__sub">· Code: {user.user_unique_code}</span>
+                          ) : user.user_id != null ? (
+                            <span className="header-search__sub">· ID: {user.user_id}</span>
+                          ) : null}
                           {user.user_mobile_no ? (
                             <span className="header-search__sub">· {user.user_mobile_no}</span>
-                          ) : null}
-                          {user.user_id != null ? (
-                            <span className="header-search__sub">· ID: {user.user_id}</span>
                           ) : null}
                         </span>
                         {email ? (

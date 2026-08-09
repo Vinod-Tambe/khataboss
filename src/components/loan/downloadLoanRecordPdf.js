@@ -50,7 +50,7 @@ export const buildLoanRecordReceiptRows = ({ type, record, loanDetails, customer
   const customerName = getCustomerName(customer, loanDetails);
   const firmName = loanDetails?.firm?.firm_name || "TAHLKA FINANCE & COMPANY";
   const packetNo = loanDetails?.girv_packet_no || "-";
-  const loanId = loanDetails?.girv_id || "N/A";
+  const loanId = loanDetails?.girv_unique_code || loanDetails?.girv_loan_no || loanDetails?.girv_id || "N/A";
 
   const common = [
     ["Firm", firmName],

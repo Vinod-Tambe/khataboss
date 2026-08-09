@@ -73,6 +73,7 @@ const UserHomeRoutes = () => {
   const {
     user_id,
     user_uuid,
+    user_unique_code,
     user_first_name,
     user_last_name,
     user_mobile_no,
@@ -214,7 +215,7 @@ const UserHomeRoutes = () => {
             <li className="nav-item">
               <span className="input-group-text fw-bold border border-secondary d-inline-flex align-items-center gap-1">
                 <i className="bi bi-credit-card-2-front"></i>
-                {user_id}
+                {user_unique_code || user_id}
               </span>
             </li>
           </ul>
@@ -247,7 +248,7 @@ const UserHomeRoutes = () => {
             <Dropdown align="end">
               <Dropdown.Toggle variant="outline-secondary" size="sm" className="d-inline-flex align-items-center gap-1">
                 <i className="bi bi-list"></i>
-                {user_id}
+                {user_unique_code || user_id}
               </Dropdown.Toggle>
               <Dropdown.Menu>
                 <Dropdown.Item as={Link} to="/user/home/add-loan" className="d-flex align-items-center gap-2">

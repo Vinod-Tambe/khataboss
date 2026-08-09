@@ -180,19 +180,11 @@ const Daybook = () => {
     [daybookResponse]
   );
 
-  useEffect(() => {
-    if (!availablePanels.length) {
-      setSelectedPanel("");
-      return;
-    }
-    const stillValid = availablePanels.some((p) => p.title === selectedPanel);
-    if (!stillValid) {
-      setSelectedPanel(availablePanels[0].title);
-    }
+  const displayedPanels = useMemo(() => {
+    if (!selectedPanel) return availablePanels;
+    const match = availablePanels.filter((p) => p.title === selectedPanel);
+    return match.length > 0 ? match : availablePanels;
   }, [availablePanels, selectedPanel]);
-
-  const activePanel =
-    availablePanels.find((p) => p.title === selectedPanel) || availablePanels[0] || null;
 
   const pdfOptions = {
     panels: availablePanels,
@@ -285,12 +277,23 @@ const Daybook = () => {
         <div className="col-md-3 d-none d-md-block no-print">
           <select
             className="form-select border-dark text-center"
-            defaultValue="Select Panel"
+            value={selectedPanel}
+            onChange={(e) => setSelectedPanel(e.target.value)}
             aria-label="Select panel"
+            disabled={!availablePanels.length}
           >
-            <option disabled value="Select Panel">Select Panel</option>
-            <option value="CR">Add New Finance</option>
-            <option value="DR">Release Finance</option>
+            {!availablePanels.length ? (
+              <option value="">Select Panel</option>
+            ) : (
+              <>
+                <option value="">All Panels</option>
+                {availablePanels.map((panel) => (
+                  <option key={panel.title} value={panel.title}>
+                    {panel.title} ({panel.count})
+                  </option>
+                ))}
+              </>
+            )}
           </select>
         </div>
 
@@ -310,7 +313,7 @@ const Daybook = () => {
         <div className="col-6 d-md-none no-print">
           <select
             className="form-select form-select-sm border-dark text-center daybook-filter-control"
-            value={activePanel?.title || ""}
+            value={selectedPanel}
             onChange={(e) => setSelectedPanel(e.target.value)}
             aria-label="Select panel"
             disabled={!availablePanels.length}
@@ -318,11 +321,14 @@ const Daybook = () => {
             {!availablePanels.length ? (
               <option value="">Select Panel</option>
             ) : (
-              availablePanels.map((panel) => (
-                <option key={panel.title} value={panel.title}>
-                  {panel.title} ({panel.count})
-                </option>
-              ))
+              <>
+                <option value="">All Panels</option>
+                {availablePanels.map((panel) => (
+                  <option key={panel.title} value={panel.title}>
+                    {panel.title} ({panel.count})
+                  </option>
+                ))}
+              </>
             )}
           </select>
         </div>
@@ -389,8 +395,8 @@ const Daybook = () => {
         <>
           {/* Screen desktop tables */}
           <div className="daybook-desktop-screen d-none d-md-block no-print">
-            {availablePanels.length > 0 ? (
-              availablePanels.map((panel) => (
+            {displayedPanels.length > 0 ? (
+              displayedPanels.map((panel) => (
                 <DayBookTable
                   key={panel.title}
                   title={panel.title}

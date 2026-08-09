@@ -94,9 +94,10 @@ const ListFinance = ({ status = "ALL", global = false }) => {
   const columns = useMemo(() => {
     const cols = [
       {
-        key: "fin_id",
+        key: "fin_unique_code",
         title: "Fin No",
-        render: (data) => `${data}.`,
+        searchable: true,
+        render: (data, type, row) => row?.fin_unique_code || `${row?.fin_id || data}`,
       },
     ];
 

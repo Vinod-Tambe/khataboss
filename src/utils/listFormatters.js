@@ -18,55 +18,68 @@ export const getStatusBadgeMeta = (status) => {
   const value = String(status || "-").toUpperCase();
   let tone = "secondary";
   let label = status || "-";
+  let icon = "bi-info-circle-fill";
 
   switch (value) {
     case "ACTIVE":
       tone = "success";
       label = "Active";
+      icon = "bi-check-circle-fill";
       break;
     case "PAID":
       tone = "success";
       label = "Paid";
+      icon = "bi-check2-all";
       break;
     case "COMPLETED":
       tone = "success";
       label = "Completed";
+      icon = "bi-check-circle-fill";
       break;
     case "CLOSED":
       tone = "danger";
       label = "Closed";
+      icon = "bi-x-circle-fill";
       break;
     case "RELEASED":
       tone = "danger";
       label = "Released";
+      icon = "bi-unlock-fill";
       break;
     case "AUCTION":
       tone = "warning";
       label = "Auction";
+      icon = "bi-gavel";
       break;
     case "TRANSFERRED":
       tone = "info";
       label = "Transferred";
+      icon = "bi-arrow-right-left";
       break;
     case "INACTIVE":
       tone = "secondary";
       label = "Inactive";
+      icon = "bi-pause-circle-fill";
       break;
     case "PARTIAL":
       tone = "warning";
       label = "Partial";
+      icon = "bi-pie-chart-fill";
       break;
     case "DUE":
       tone = "warning";
       label = "Due";
+      icon = "bi-exclamation-triangle-fill";
       break;
     case "ADDED":
       tone = "primary";
       label = "Added";
+      icon = "bi-plus-circle-fill";
       break;
     case "RECEIVED":
       tone = "success";
       label = "Received";
+      icon = "bi-box-arrow-in-down";
       break;
     default:
       break;
@@ -74,13 +87,14 @@ export const getStatusBadgeMeta = (status) => {
 
   return {
     label,
-    className: `badge status-badge status-badge--${tone} bg-${tone}-subtle text-${tone}`,
+    icon,
+    className: `badge status-badge status-badge--${tone} bg-${tone}-subtle text-${tone} border border-${tone} fw-bold`,
   };
 };
 
 export const statusBadgeHtml = (status) => {
-  const { label, className } = getStatusBadgeMeta(status);
-  return `<span class="${className}">${label}</span>`;
+  const { label, icon, className } = getStatusBadgeMeta(status);
+  return `<span class="${className}"><i class="bi ${icon} me-1"></i>${label}</span>`;
 };
 
 /** End date for active/auction loans = today; otherwise "-". */

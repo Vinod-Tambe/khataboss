@@ -24,20 +24,20 @@ const statusBadgeClass = (status = '', solid = false) => {
   const s = String(status).toUpperCase();
 
   if (solid) {
-    if (s === 'RELEASED' || s === 'CLOSED') return 'bg-danger';
-    if (s === 'AUCTION') return 'bg-warning text-dark';
-    if (s === 'TRANSFERRED') return 'bg-secondary';
-    if (s === 'ADDED') return 'bg-primary';
-    if (s === 'RECEIVED' || s === 'ACTIVE' || s === 'PAID' || s === 'COMPLETED') return 'bg-success';
-    return 'bg-secondary';
+    if (s === 'RELEASED' || s === 'CLOSED') return 'bg-danger text-white fw-bold';
+    if (s === 'AUCTION') return 'bg-warning text-dark fw-bold';
+    if (s === 'TRANSFERRED') return 'bg-info text-white fw-bold';
+    if (s === 'ADDED') return 'bg-primary text-white fw-bold';
+    if (s === 'RECEIVED' || s === 'ACTIVE' || s === 'PAID' || s === 'COMPLETED') return 'bg-success text-white fw-bold';
+    return 'bg-secondary text-white fw-bold';
   }
 
-  if (s === 'RELEASED' || s === 'CLOSED') return 'bg-danger-subtle text-danger';
-  if (s === 'AUCTION') return 'bg-warning-subtle text-warning';
-  if (s === 'RECEIVED' || s === 'ACTIVE' || s === 'PAID' || s === 'COMPLETED') return 'bg-success-subtle text-success';
-  if (s === 'ADDED') return 'bg-primary-subtle text-primary';
-  if (s === 'TRANSFERRED') return 'bg-secondary-subtle text-secondary';
-  return 'bg-warning-subtle text-warning';
+  if (s === 'RELEASED' || s === 'CLOSED') return 'bg-danger-subtle text-danger border border-danger fw-bold';
+  if (s === 'AUCTION') return 'bg-warning-subtle text-dark border border-warning fw-bold';
+  if (s === 'RECEIVED' || s === 'ACTIVE' || s === 'PAID' || s === 'COMPLETED') return 'bg-success-subtle text-success border border-success fw-bold';
+  if (s === 'ADDED') return 'bg-primary-subtle text-primary border border-primary fw-bold';
+  if (s === 'TRANSFERRED') return 'bg-info-subtle text-info border border-info fw-bold';
+  return 'bg-secondary-subtle text-secondary border border-secondary fw-bold';
 };
 
 /** Resolve items from common API response shapes */
@@ -107,7 +107,7 @@ const LoanInformation = ({ data }) => (
         <input type="text" className="form-control border-dark" readOnly value={data?.firm?.firm_name || ''} />
       </div>
       <div className="col-md-3">
-        <label className="form-label">Loan / Packet No</label>
+        <label className="form-label">Packet No</label>
         <input type="text" className="form-control border-dark" readOnly value={data?.girv_packet_no || '-'} />
       </div>
       <div className="col-md-3">
@@ -587,7 +587,7 @@ const LoanMobileView = ({
 
   const overviewCards = [
     { label: 'Firm', value: loanInfoData?.firm?.firm_name || '-' },
-    { label: 'Loan No', value: loanInfoData?.girv_id || '-' },
+    { label: 'Loan Code', value: loanInfoData?.girv_unique_code || loanInfoData?.girv_loan_no || loanInfoData?.girv_id || '-' },
     { label: 'Packet No', value: loanInfoData?.girv_packet_no || '-' },
     { label: 'Locker No', value: loanInfoData?.girv_locker_no || '-' },
     {
@@ -619,17 +619,27 @@ const LoanMobileView = ({
     <div className="d-md-none loan-mobile">
       <div className="loan-mobile-header">
         <div>
-          <h5 className="loan-mobile-header__title">Loan Information</h5>
+          <h5 className="loan-mobile-header__title d-flex align-items-center gap-2">
+            Loan Information
+            <span className="badge bg-primary-subtle border border-primary text-primary fw-bold fs-6 px-2 py-1">
+              {loanInfoData?.girv_unique_code || loanInfoData?.girv_loan_no || (loanInfoData?.girv_id ? `LN-${loanInfoData.girv_id}` : '')}
+            </span>
+          </h5>
           <p className="loan-mobile-header__sub">
             {customerName ? <span className="d-block fw-semibold">{customerName}</span> : null}
-            {loanInfoData?.girv_packet_no ? `Packet #${loanInfoData.girv_packet_no}` : `Loan #${loanInfoData?.girv_id || '-'}`}
+            {loanInfoData?.girv_unique_code || (loanInfoData?.girv_packet_no ? `Packet #${loanInfoData.girv_packet_no}` : `Loan #${loanInfoData?.girv_id || '-'}`)}
             {loanInfoData?.firm?.firm_name ? ` · ${loanInfoData.firm.firm_name}` : ''}
           </p>
         </div>
         <div className="loan-mobile-header__actions">
           {(() => {
-            const { label, className } = getStatusBadgeMeta(loanDetails.girv_status);
-            return <span className={`${className} loan-mobile-header__badge`}>{label}</span>;
+            const { label, icon, className } = getStatusBadgeMeta(loanDetails.girv_status);
+            return (
+              <span className={`${className} loan-info-header-badge loan-mobile-header__badge d-inline-flex align-items-center`}>
+                <i className={`bi ${icon} me-2 fs-6`}></i>
+                <h6 className="mb-0 fw-bold fs-6">{label}</h6>
+              </span>
+            );
           })()}
           <button type="button" className="btn btn-outline-secondary" onClick={onBack} aria-label="Back">
             <i className="bi bi-arrow-left"></i>
@@ -1260,26 +1270,30 @@ const LoanInfo = () => {
 
       {/* ========== Desktop view ========== */}
       <div className="d-none d-md-block">
-        <div className="row">
+        <div className="row align-items-center mb-2">
           <div className="col-4">
-            <h6 className="mt-2 fw-bold text-brown d-flex align-items-center">
-              LOAN DETAILS PANEL
-            </h6>
+            <h5 className="fw-bold text-primary mb-0">LOAN DETAILS PANEL</h5>
           </div>
           <div className="col-8">
-            <div className="d-flex justify-content-end align-items-center w-100">
-              <div className="top-actions mb-2 d-flex align-items-center gap-2">
-                {(() => {
-                  const { label, className } = getStatusBadgeMeta(loanDetails.girv_status);
-                  return <span className={`${className} shadow-sm`}>{label}</span>;
-                })()}
-                <button className="btn btn-outline-danger btn-sm d-flex align-items-center gap-1 shadow-sm" onClick={() => navigate(-1)} title="Back">
-                  <i className="bi bi-arrow-left-circle"></i>
-                </button>
-                <button className="btn btn-outline-success btn-sm d-flex align-items-center gap-1 shadow-sm" title="Next">
-                  <i className="bi bi-arrow-right-circle"></i>
-                </button>
-              </div>
+            <div className="d-flex justify-content-end align-items-stretch gap-2" style={{ height: '36px' }}>
+              <span className="badge bg-primary-subtle border border-primary text-primary fw-bold fs-6 px-3 d-inline-flex align-items-center">
+                {loanDetails.girv_unique_code || loanDetails.girv_loan_no || (loanDetails.girv_id ? `LN-${loanDetails.girv_id}` : '')}
+              </span>
+              {(() => {
+                const { label, icon, className } = getStatusBadgeMeta(loanDetails.girv_status);
+                return (
+                  <span className={`${className} loan-info-header-badge shadow-sm px-3 d-inline-flex align-items-center`}>
+                    <i className={`bi ${icon} me-2 fs-6`}></i>
+                    <h6 className="mb-0 fw-bold fs-6">{label}</h6>
+                  </span>
+                );
+              })()}
+              <button className="btn btn-outline-danger btn-sm shadow-sm px-3 d-inline-flex align-items-center justify-content-center" onClick={() => navigate(-1)} title="Back">
+                <i className="bi bi-arrow-left-circle fs-6"></i>
+              </button>
+              <button className="btn btn-outline-success btn-sm shadow-sm px-3 d-inline-flex align-items-center justify-content-center" title="Next">
+                <i className="bi bi-arrow-right-circle fs-6"></i>
+              </button>
             </div>
           </div>
         </div>

@@ -20,7 +20,7 @@ const buildReceiptRows = ({ emiData, initialFinance }) => {
 
   return [
     ["Name", customerName],
-    ["Reg No", String(initialFinance?.fin_id || "N/A")],
+    ["Reg No / Fin Code", String(initialFinance?.fin_unique_code || initialFinance?.fin_id || "N/A")],
     [
       "Payment Date",
       emiData.ft_payment_date
@@ -139,7 +139,7 @@ export const getEmiReceiptShareText = ({ emiData, initialFinance }) => {
     "Finance Payment Receipt",
     `Firm: ${firmName}`,
     `Name: ${customerName}`,
-    `Reg No: ${initialFinance?.fin_id || "N/A"}`,
+    `Reg No / Fin Code: ${initialFinance?.fin_unique_code || initialFinance?.fin_id || "N/A"}`,
     `EMI No: ${
       emiData?.ft_emi_no == null || emiData?.ft_emi_no === ""
         ? "-"

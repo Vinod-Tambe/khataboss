@@ -31,6 +31,13 @@ const MoneyLenderList = () => {
   }, []);
 
   const columns = [
+    {
+      key: "ml_unique_code",
+      title: "Unique Code",
+      orderable: true,
+      searchable: true,
+      render: (data, type, row) => row?.ml_unique_code || row?.ml_id
+    },
     { key: "ml_name", title: "Name", orderable: true, searchable: true },
     { key: "ml_phone", title: "Phone", orderable: false, searchable: true },
     { key: "ml_gender", title: "Gender", orderable: true, searchable: true },

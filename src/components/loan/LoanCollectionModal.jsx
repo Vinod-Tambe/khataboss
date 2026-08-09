@@ -509,7 +509,7 @@ const LoanCollectionModal = ({ show, onClose, firms = [], selectedFirmId, initia
                                         onMouseEnter={() => setActiveResultIndex(index)}
                                     >
                                         <div className={index === activeResultIndex ? 'text-white fw-bold' : 'fw-bold'}>{user.user_first_name} {user.user_last_name}</div>
-                                        <div className={`small ${index === activeResultIndex ? 'text-white-50' : 'text-muted'}`}>{user.user_mobile_no} | ID: {user.user_id}</div>
+                                        <div className={`small ${index === activeResultIndex ? 'text-white-50' : 'text-muted'}`}>{user.user_unique_code ? `${user.user_unique_code} | ` : ''}{user.user_mobile_no} | ID: {user.user_id}</div>
                                     </button>
                                 ))}
                             </div>
@@ -536,7 +536,7 @@ const LoanCollectionModal = ({ show, onClose, firms = [], selectedFirmId, initia
                                 </option>
                                 {userLoans.map((loan) => (
                                     <option key={loan.girv_id} value={loan.girv_id}>
-                                        {loan.girv_id} — ₹{Number(loan.girv_prin_amt || 0).toLocaleString()} ({loan.girv_status || 'ACTIVE'})
+                                        {loan.girv_unique_code || loan.girv_loan_no || `Loan #${loan.girv_id}`} — ₹{Number(loan.girv_prin_amt || 0).toLocaleString()} ({loan.girv_status || 'ACTIVE'})
                                     </option>
                                 ))}
                             </select>

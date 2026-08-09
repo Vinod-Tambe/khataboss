@@ -286,7 +286,7 @@ export const buildLoanInvoiceData = (loanDetails, customer = null) => {
     },
     meta: {
       statementDate: today.format('DD-MM-YYYY'),
-      loanRef: loanDetails.girv_uuid || loanDetails.girv_id || '-',
+      loanRef: loanDetails.girv_unique_code || loanDetails.girv_loan_no || loanDetails.girv_uuid || loanDetails.girv_id || '-',
       packetNo: loanDetails.girv_packet_no || '-',
       lockerNo: loanDetails.girv_locker_no || '-',
       generatedOn: today.format('DD MMM YYYY, hh:mm A'),
@@ -294,7 +294,7 @@ export const buildLoanInvoiceData = (loanDetails, customer = null) => {
     status: (loanDetails.girv_status || 'ACTIVE').toUpperCase(),
     isUnsecured,
     loan: {
-      loanNumber: loanDetails.girv_packet_no || loanDetails.girv_id || '-',
+      loanNumber: loanDetails.girv_unique_code || loanDetails.girv_loan_no || loanDetails.girv_packet_no || loanDetails.girv_id || '-',
       startDate: formatDate(loanDetails.girv_start_date),
       roi: `${roi}% ${loanDetails.girv_roi_type ? loanDetails.girv_roi_type.toUpperCase() : ''}`.trim(),
       roiType: loanDetails.girv_roi_type ? loanDetails.girv_roi_type.toUpperCase() : '-',
