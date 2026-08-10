@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import moment from 'moment';
@@ -13,6 +13,7 @@ import { getPurities } from '../../api/purityApi';
 import { getRates } from '../../api/rateApi';
 import useFormNavigation from '../../hooks/useFormNavigation';
 import { validateUploadFile } from '../../utils/fileUpload';
+import { calculateFirstMonthInterest } from '../../utils/loanInterest';
 
 const AddLoan = () => {
   const navigate = useNavigate();
@@ -81,6 +82,24 @@ const AddLoan = () => {
 
     girv_pay_info: '',
   });
+
+  const firstMonthPreview = useMemo(
+    () =>
+      calculateFirstMonthInterest(
+        formData.girv_prin_amt,
+        formData.girv_roi,
+        formData.girv_interest_method,
+        formData.girv_compound_freq,
+        formData.girv_roi_type
+      ),
+    [
+      formData.girv_prin_amt,
+      formData.girv_roi,
+      formData.girv_interest_method,
+      formData.girv_compound_freq,
+      formData.girv_roi_type,
+    ]
+  );
 
   const girv_start_dateRef = useRef(null);
 
@@ -458,6 +477,11 @@ const AddLoan = () => {
       return;
     }
 
+    if (formData.girv_first_int && !formData.girv_first_int_dr_acc_id) {
+      toast.error('Please select Interest Payment Account (DR) for First Month Interest.');
+      return;
+    }
+
       setIsSubmitting(true);
       try {
         // Upload item images first
@@ -648,14 +672,21 @@ const AddLoan = () => {
           <select name="girv_roi_type" className="form-select border-dark" value={formData.girv_roi_type} onChange={handleChange} required>
             <option value="" disabled>Select option</option>
             <option value="monthly">Monthly</option>
-            <option value="annual">Annual</option>
+            <option value="annually">Annual</option>
           </select>
         </div>
 
         <div className="col-12 col-md-6 col-lg-3 d-flex align-items-center">
           <div className="form-check mt-4">
             <input type="checkbox" name="girv_first_int" className="form-check-input" id="firstMonthInt" checked={formData.girv_first_int} onChange={handleChange} />
-            <label className="form-check-label fw-medium" htmlFor="firstMonthInt">First Month Interest</label>
+            <label className="form-check-label fw-medium" htmlFor="firstMonthInt">
+              First Month Interest
+              {formData.girv_first_int && firstMonthPreview > 0 ? (
+                <span className="text-success ms-1">
+                  (₹{firstMonthPreview.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
+                </span>
+              ) : null}
+            </label>
           </div>
         </div>
         <div className="col-12 col-md-6 col-lg-3">

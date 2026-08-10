@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import moment from 'moment';
@@ -14,6 +14,7 @@ import { getPurities } from '../../api/purityApi';
 import { getRates } from '../../api/rateApi';
 import { toast } from 'react-hot-toast';
 import { validateUploadFile } from '../../utils/fileUpload';
+import { calculateFirstMonthInterest, normalizeRoiType } from '../../utils/loanInterest';
 
 const UpdateLoan = () => {
   const { id } = useParams();
@@ -105,6 +106,24 @@ const UpdateLoan = () => {
     girv_pay_info: '',
   });
 
+  const firstMonthPreview = useMemo(
+    () =>
+      calculateFirstMonthInterest(
+        formData.girv_prin_amt,
+        formData.girv_roi,
+        formData.girv_interest_method,
+        formData.girv_compound_freq,
+        formData.girv_roi_type
+      ),
+    [
+      formData.girv_prin_amt,
+      formData.girv_roi,
+      formData.girv_interest_method,
+      formData.girv_compound_freq,
+      formData.girv_roi_type,
+    ]
+  );
+
   const girv_start_dateRef = useRef(null);
 
   // Form Navigation
@@ -170,7 +189,7 @@ const UpdateLoan = () => {
             girv_start_date: d.girv_start_date ? moment(d.girv_start_date).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD'),
             girv_interest_method: d.girv_interest_method || 'simple',
             girv_compound_freq: d.girv_compound_freq || 'monthly',
-            girv_roi_type: d.girv_roi_type || 'monthly',
+            girv_roi_type: normalizeRoiType(d.girv_roi_type || 'monthly'),
             girv_packet_no: d.girv_packet_no || '',
             girv_locker_no: d.girv_locker_no || '',
             girv_process_per: d.girv_process_per || '',
@@ -559,6 +578,11 @@ const UpdateLoan = () => {
       return;
     }
 
+    if (formData.girv_first_int && !formData.girv_first_int_dr_acc_id) {
+      toast.error('Please select Interest Payment Account (DR) for First Month Interest.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       // Upload item images first
@@ -751,21 +775,28 @@ const UpdateLoan = () => {
           <select name="girv_roi_type" className="form-select border-dark" value={formData.girv_roi_type} disabled={hasTransactions} onChange={handleChange} required>
             <option value="" disabled>Select option</option>
             <option value="monthly">Monthly</option>
-            <option value="annual">Annual</option>
+            <option value="annually">Annual</option>
           </select>
         </div>
 
         <div className="col-12 col-md-6 col-lg-3 d-flex align-items-center">
           <div className="form-check mt-4">
-            <input type="checkbox" name="girv_first_int" className="form-check-input" id="firstMonthInt" checked={formData.girv_first_int} onChange={handleChange} />
-            <label className="form-check-label fw-medium" htmlFor="firstMonthInt">First Month Interest</label>
+            <input type="checkbox" name="girv_first_int" className="form-check-input" id="firstMonthInt" checked={formData.girv_first_int} disabled={hasTransactions} onChange={handleChange} />
+            <label className="form-check-label fw-medium" htmlFor="firstMonthInt">
+              First Month Interest
+              {formData.girv_first_int && firstMonthPreview > 0 ? (
+                <span className="text-success ms-1">
+                  (₹{firstMonthPreview.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
+                </span>
+              ) : null}
+            </label>
           </div>
         </div>
         <div className="col-12 col-md-6 col-lg-3">
           {formData.girv_first_int && (
             <>
               <label className="form-label fw-medium">Interest Payment Account (DR)</label>
-              <select name="girv_first_int_dr_acc_id" className="form-select border-dark" value={formData.girv_first_int_dr_acc_id || ''} onChange={handleChange} required>
+              <select name="girv_first_int_dr_acc_id" className="form-select border-dark" value={formData.girv_first_int_dr_acc_id || ''} disabled={hasTransactions} onChange={handleChange} required>
                 <option value="" disabled>Select account</option>
                 {accounts.map(acc => (
                   <option key={acc.acc_id} value={acc.acc_id}>{acc.acc_name}</option>
@@ -1176,14 +1207,14 @@ const UpdateLoan = () => {
       {currentStep < totalSteps ? (
         <button type="button" className="btn btn-primary ms-auto" onClick={handleNext}>Next</button>
       ) : (
-        <button type="submit" className="btn btn-primary btn-lg px-5 ms-auto" disabled={isSubmitting || hasTransactions}>
+        <button type="submit" className="btn btn-primary btn-lg px-5 ms-auto" disabled={isSubmitting}>
           {isSubmitting ? (
             <>
               <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
               Updating...
             </>
           ) : (
-            'Update Loan'
+            hasTransactions ? 'Update Details' : 'Update Loan'
           )}
         </button>
       )}

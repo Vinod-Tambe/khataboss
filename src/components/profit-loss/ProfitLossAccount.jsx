@@ -1,9 +1,9 @@
 import React from "react";
 import AccountTable from "./AccountTable";
-import { getAccountById } from "./profitLossData";
 
-const ProfitLossAccount = () => {
-  const account = getAccountById("profit-loss");
+const ProfitLossAccount = ({ account }) => {
+  if (!account) return null;
+
   return (
     <AccountTable
       title={account.title}

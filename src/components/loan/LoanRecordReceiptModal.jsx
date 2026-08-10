@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import CommonModal from '../common/CommonModal';
+import { toast } from 'react-toastify';
 import '../../css/Modal.css';
 import '../../css/ActiveLoanPanel.css';
 import {
@@ -10,6 +11,10 @@ import {
   getLoanRecordTitle,
   buildLoanRecordReceiptRows,
 } from './downloadLoanRecordPdf';
+import {
+  tryDispatchReceipt,
+  LOAN_RECEIPT_TEMPLATE_BY_TYPE,
+} from '../../utils/dispatchWhatsAppReceipt';
 
 const LoanRecordReceiptModal = ({
   show,
@@ -64,9 +69,40 @@ const LoanRecordReceiptModal = ({
     setSharing(true);
     const shareText = getLoanRecordShareText(options);
     const fileName = getLoanRecordFileName(options);
+    const firmId = loanDetails?.girv_firm_id || loanDetails?.firm?.firm_id;
+    const toPhone = customer?.user_mobile_no;
+    const toEmail = customer?.user_email_id;
+    const customerName = customer?.user_first_name
+      ? `${customer.user_first_name} ${customer.user_last_name || ''}`.trim()
+      : 'Customer';
+    const loanNo = loanDetails?.girv_loan_no || loanDetails?.girv_id || 'N/A';
+    const templateKey = LOAN_RECEIPT_TEMPLATE_BY_TYPE[type] || 'loan_created';
 
     try {
       const blob = await getLoanRecordPdfBlob(options);
+
+      if (firmId && (toPhone || toEmail)) {
+        const dispatch = await tryDispatchReceipt({
+          firmId,
+          templateKey,
+          toPhone,
+          toEmail,
+          vars: {
+            1: customerName,
+            2: String(loanNo),
+            3: String(record?.amount || record?.rel_payable_amt || record?.dep_amt || ''),
+            4: record?.date || record?.rel_trans_date || record?.dep_date || '',
+          },
+          pdfBlob: blob,
+          fileName,
+        });
+        if (dispatch.dispatched) {
+          toast.success('Receipt sent via WhatsApp / email');
+          setSharing(false);
+          return;
+        }
+      }
+
       const file = new File([blob], fileName, { type: 'application/pdf' });
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {

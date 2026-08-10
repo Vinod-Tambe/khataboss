@@ -13,66 +13,23 @@ import { getGirvisDropdown, getGirviById } from '../../api/girviApi';
 import { addDeposit } from '../../api/depositApi';
 import { getAccountsDropdown } from '../../api/accountApi';
 import { setSelectedUser } from '../../store/slices/userSlice';
-
-const calculateInterest = (principal, rate, months, method = 'simple', freq = 'monthly') => {
-    if (!principal || !rate || !months) return 0;
-    if (method === 'compound') {
-        let n = 1;
-        if (freq === 'monthly') n = 1;
-        else if (freq === 'quarterly') n = 1 / 3;
-        else if (freq === 'half_yearly') n = 1 / 6;
-        else if (freq === 'yearly') n = 1 / 12;
-
-        const periods = months * n;
-        const ratePerPeriod = rate / n;
-        const amount = principal * Math.pow((1 + ratePerPeriod / 100), periods);
-        return parseFloat((amount - principal).toFixed(2));
-    }
-    return parseFloat((principal * rate * months / 100).toFixed(2));
-};
+import { getLoanInterestSummary } from '../../utils/loanInterest';
 
 const getLoanPendingSummary = (data) => {
-    const totalAdditionalPrincipal = data.additionalPrincipals?.reduce((sum, ap) => sum + (parseFloat(ap.ap_prin_amt) || 0), 0) || 0;
-    const totalReleasesPrincipal = data.releases?.reduce((sum, rel) => sum + (parseFloat(rel.rel_prin_amt) || 0), 0) || 0;
-    const totalDepositsPrincipal = data.deposits?.reduce((sum, dep) => sum + (parseFloat(dep.dep_prin_amt) || 0), 0) || 0;
-    const currentTotalPrincipal = parseFloat(data.girv_prin_amt) || 0;
-    const originalPrincipal = Math.max(0, currentTotalPrincipal + totalReleasesPrincipal + totalDepositsPrincipal - totalAdditionalPrincipal);
-
-    const roi = parseFloat(data.girv_roi) || 0;
-    const startDate = moment(data.girv_start_date);
-    const today = moment();
-    const origMonths = Math.max(1, today.diff(startDate, 'months', true));
-    const interestMethod = data.girv_interest_method || 'simple';
-    const compoundFreq = data.girv_compound_freq || 'monthly';
-
-    const origInterest = calculateInterest(originalPrincipal, roi, origMonths, interestMethod, compoundFreq);
-    let additionalInterestTotal = 0;
-    if (data.additionalPrincipals?.length) {
-        data.additionalPrincipals.forEach((ap) => {
-            const apPrin = parseFloat(ap.ap_prin_amt) || 0;
-            const apRoi = parseFloat(ap.ap_roi) || 0;
-            const apMonths = Math.max(1, today.diff(moment(ap.ap_trans_date), 'months', true));
-            additionalInterestTotal += calculateInterest(apPrin, apRoi, apMonths, interestMethod, compoundFreq);
-        });
-    }
-
-    const totalInterest = origInterest + additionalInterestTotal;
-    const totalReleasesInterest = data.releases?.reduce((sum, rel) => sum + (parseFloat(rel.rel_int_amt) || 0), 0) || 0;
-    const totalDepositsInterest = data.deposits?.reduce((sum, dep) => sum + (parseFloat(dep.dep_int_amt) || 0), 0) || 0;
-    const pendingInterest = Math.max(0, totalInterest - totalDepositsInterest - totalReleasesInterest);
-    const pendingPrincipal = currentTotalPrincipal;
+    const summary = getLoanInterestSummary(data);
     const totalDeposits = (data.deposits || []).reduce(
         (sum, dep) => sum + (parseFloat(dep.dep_prin_amt) || 0) + (parseFloat(dep.dep_int_amt) || 0),
         0
     );
 
     return {
-        principal: pendingPrincipal,
-        pendingPrincipal,
-        pendingInterest,
-        pending: pendingPrincipal + pendingInterest,
+        principal: summary.pendingPrincipal,
+        pendingPrincipal: summary.pendingPrincipal,
+        pendingInterest: summary.pendingInterest,
+        pending: summary.pending,
         totalDeposits,
-        totalInterest,
+        totalInterest: summary.totalInterest,
+        firstMonthInterest: summary.firstMonthInterest,
     };
 };
 

@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState, useMemo } from "react";
+import { useSelector } from "react-redux";
 import $ from "jquery";
 import moment from "moment";
 import "daterangepicker";
@@ -7,21 +8,26 @@ import CapitalAccount from "./CapitalAccount";
 import ProfitLossAccount from "./ProfitLossAccount";
 import TradingAccount from "./TradingAccount";
 import ProfitLossMobileList from "./ProfitLossMobileList";
-import { PROFIT_LOSS_ACCOUNTS } from "./profitLossData";
+import { buildProfitLossAccounts, getAccountById } from "./profitLossData";
 import {
   downloadProfitLossPdf,
   getProfitLossPdfBlob,
   getProfitLossShareText,
 } from "./downloadProfitLossPdf";
+import { getFirmsDropdown } from "../../api/firmApi";
+import { getProfitLossEntries } from "../../api/profitLossApi";
 import "../../css/ProfitLoss.css";
 
-const COMPANY_NAME =
-  "TAHLKA FINANCE & COMPANY, MAHESH SHARMA WARD NO 18, RAJGARH CHURU";
-
 const ProfitLoss = () => {
+  const { selectedFirmId } = useSelector((state) => state.firm);
   const dateRef = useRef(null);
   const mobileDateRef = useRef(null);
-  const [selectedFirm, setSelectedFirm] = useState("Ram");
+  const [firms, setFirms] = useState([]);
+  const [selectedFirm, setSelectedFirm] = useState(
+    selectedFirmId === "all" ? "" : selectedFirmId
+  );
+  const [accounts, setAccounts] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const { fyStart, fyEnd } = useMemo(() => {
     const currentYear = moment().year();
@@ -40,28 +46,72 @@ const ProfitLoss = () => {
     endDate: fyEnd.format("YYYY-MM-DD"),
   });
 
+  useEffect(() => {
+    setSelectedFirm(selectedFirmId === "all" ? "" : selectedFirmId);
+  }, [selectedFirmId]);
+
   const assessmentYear = useMemo(() => {
-    const startYear = moment(dateRange.startDate).year();
     const endYear = moment(dateRange.endDate).year();
-    return `${startYear} - ${endYear}`;
-  }, [dateRange]);
+    return `${endYear} - ${endYear + 1}`;
+  }, [dateRange.endDate]);
 
   const formattedStart = moment(dateRange.startDate).format("DD-MM-YYYY");
   const formattedEnd = moment(dateRange.endDate).format("DD-MM-YYYY");
 
+  const selectedFirmData = firms.find(
+    (f) => String(f.firm_id) === String(selectedFirm)
+  );
+  const firmDisplayName = selectedFirm
+    ? selectedFirmData?.firm_name || "Selected Firm"
+    : "All Firms";
+  const companyName = selectedFirmData
+    ? [selectedFirmData.firm_name, selectedFirmData.firm_address]
+        .filter(Boolean)
+        .join(", ")
+    : firmDisplayName;
+
   const pdfOptions = {
-    accounts: PROFIT_LOSS_ACCOUNTS,
-    firmName: selectedFirm,
-    companyName: COMPANY_NAME,
+    accounts,
+    firmName: firmDisplayName,
+    companyName,
     periodStart: formattedStart,
     periodEnd: formattedEnd,
     assessmentYear,
   };
 
-  useEffect(() => {
-    const inputs = [dateRef.current, mobileDateRef.current].filter(Boolean);
-    if (!inputs.length) return;
+  const fetchFirms = async () => {
+    try {
+      const response = await getFirmsDropdown();
+      if (response.success) {
+        setFirms(response.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching firms:", error);
+    }
+  };
 
+  const fetchProfitLoss = async (filters) => {
+    setLoading(true);
+    try {
+      const response = await getProfitLossEntries(filters);
+      if (response.success) {
+        setAccounts(buildProfitLossAccounts(response.data));
+      } else {
+        setAccounts([]);
+      }
+    } catch (error) {
+      console.error("Error fetching profit & loss:", error);
+      setAccounts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchFirms();
+  }, []);
+
+  useEffect(() => {
     const pickerOptions = {
       startDate: fyStart,
       endDate: fyEnd,
@@ -82,38 +132,53 @@ const ProfitLoss = () => {
       },
     };
 
-    const onApply = (start, end) => {
-      const label = `${start.format("DD-MM-YYYY")} - ${end.format("DD-MM-YYYY")}`;
-      inputs.forEach((el) => $(el).val(label));
-      setDateRange({
-        startDate: start.format("YYYY-MM-DD"),
-        endDate: end.format("YYYY-MM-DD"),
+    const defaultLabel = `${fyStart.format("DD-MM-YYYY")} - ${fyEnd.format("DD-MM-YYYY")}`;
+
+    const bindPicker = (inputEl) => {
+      if (!inputEl) return () => {};
+      $(inputEl).daterangepicker(pickerOptions, (start, end) => {
+        const label = `${start.format("DD-MM-YYYY")} - ${end.format("DD-MM-YYYY")}`;
+        $(dateRef.current).val(label);
+        $(mobileDateRef.current).val(label);
+        setDateRange({
+          startDate: start.format("YYYY-MM-DD"),
+          endDate: end.format("YYYY-MM-DD"),
+        });
       });
+      $(inputEl).val(defaultLabel);
+      return () => {
+        $(inputEl).data("daterangepicker")?.remove();
+      };
     };
 
-    inputs.forEach((el) => {
-      $(el).daterangepicker(pickerOptions, onApply);
-      $(el).val(
-        `${fyStart.format("DD-MM-YYYY")} - ${fyEnd.format("DD-MM-YYYY")}`
-      );
-    });
-
+    const cleanupDesktop = bindPicker(dateRef.current);
+    const cleanupMobile = bindPicker(mobileDateRef.current);
     return () => {
-      inputs.forEach((el) => {
-        $(el).data("daterangepicker")?.remove();
-      });
+      cleanupDesktop();
+      cleanupMobile();
     };
   }, [fyStart, fyEnd]);
 
+  useEffect(() => {
+    fetchProfitLoss({
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate,
+      firmId: selectedFirm,
+    });
+  }, [dateRange, selectedFirm]);
+
   const handlePrint = () => {
+    if (loading) return;
     window.print();
   };
 
   const handleDownloadPdf = () => {
+    if (loading || !accounts.length) return;
     downloadProfitLossPdf(pdfOptions);
   };
 
   const handleWhatsAppShare = async () => {
+    if (loading || !accounts.length) return;
     const shareText = getProfitLossShareText(pdfOptions);
     const fileName =
       `Profit_Loss_${formattedStart}_to_${formattedEnd}.pdf`.replace(
@@ -143,6 +208,10 @@ const ProfitLoss = () => {
       "noopener,noreferrer"
     );
   };
+
+  const tradingAccount = getAccountById(accounts, "trading");
+  const profitLossAccount = getAccountById(accounts, "profit-loss");
+  const capitalAccount = getAccountById(accounts, "capital");
 
   return (
     <div className="card p-3 pt-1 shadow-sm profit-loss-page">
@@ -178,11 +247,12 @@ const ProfitLoss = () => {
             onChange={(e) => setSelectedFirm(e.target.value)}
             aria-label="Select firm"
           >
-            <option disabled value="">
-              Select Firm
-            </option>
-            <option value="Ram">Ram</option>
-            <option value="Sham">Sham</option>
+            <option value="">All Firms</option>
+            {firms.map((firm) => (
+              <option key={firm.firm_id} value={firm.firm_id}>
+                {firm.firm_name}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -202,33 +272,49 @@ const ProfitLoss = () => {
             </p>
             <p>
               <strong className="text-primary-emphasis fw-bold">
-                {COMPANY_NAME}
+                {companyName}
               </strong>
             </p>
             <p className="pb-0 mb-1 d-none profit-loss-print-firm">
               <strong className="text-info-emphasis fw-bold">FIRM:</strong>{" "}
-              {selectedFirm}
+              {firmDisplayName}
             </p>
           </div>
-
+          <div className="profit-loss-period-mobile d-md-none no-print">
+            <i className="bi bi-calendar3" aria-hidden="true" />
+            <span className="profit-loss-period-mobile__label">Period:</span>
+            <span className="profit-loss-period-mobile__dates">
+              {formattedStart} To {formattedEnd}
+            </span>
+          </div>
         </div>
 
         <div className="col-12 mt-2">
-          <div className="d-none d-md-block profit-loss-desktop-tables">
-            <div className="mb-2">
-              <TradingAccount />
+          {loading ? (
+            <div className="text-center p-5 no-print">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
             </div>
-            <div className="mb-2">
-              <ProfitLossAccount />
-            </div>
-            <div className="mb-2">
-              <CapitalAccount />
-            </div>
-          </div>
+          ) : (
+            <>
+              <div className="d-none d-md-block profit-loss-desktop-tables">
+                <div className="mb-2">
+                  <TradingAccount account={tradingAccount} />
+                </div>
+                <div className="mb-2">
+                  <ProfitLossAccount account={profitLossAccount} />
+                </div>
+                <div className="mb-2">
+                  <CapitalAccount account={capitalAccount} />
+                </div>
+              </div>
 
-          <div className="d-md-none no-print">
-            <ProfitLossMobileList accounts={PROFIT_LOSS_ACCOUNTS} />
-          </div>
+              <div className="d-md-none no-print">
+                <ProfitLossMobileList accounts={accounts} />
+              </div>
+            </>
+          )}
 
           <div className="text-center mt-3 mb-2 profit-loss-actions-wrap no-print">
             <div className="profit-loss-actions d-flex justify-content-center align-items-center gap-2">
@@ -236,6 +322,7 @@ const ProfitLoss = () => {
                 type="button"
                 className="btn profit-loss-action-btn profit-loss-action-print"
                 onClick={handlePrint}
+                disabled={loading || !accounts.length}
                 title="Print"
                 aria-label="Print"
               >
@@ -245,6 +332,7 @@ const ProfitLoss = () => {
                 type="button"
                 className="btn profit-loss-action-btn profit-loss-action-pdf"
                 onClick={handleDownloadPdf}
+                disabled={loading || !accounts.length}
                 title="Download PDF"
                 aria-label="Download PDF"
               >
@@ -254,6 +342,7 @@ const ProfitLoss = () => {
                 type="button"
                 className="btn profit-loss-action-btn profit-loss-action-whatsapp"
                 onClick={handleWhatsAppShare}
+                disabled={loading || !accounts.length}
                 title="WhatsApp Share"
                 aria-label="WhatsApp Share"
               >

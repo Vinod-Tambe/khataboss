@@ -1191,23 +1191,23 @@
   }
 
   /* Create mode: form only */
-  .sms-page.mobile-mode-create .sms-workspace {
+  .sms-page.mobile-mode-edit .sms-workspace {
     display: block;
   }
 
-  .sms-page.mobile-mode-create .sms-form-card {
+  .sms-page.mobile-mode-edit .sms-form-card {
     display: block;
   }
 
-  .sms-page.mobile-mode-create .sms-preview-panel {
+  .sms-page.mobile-mode-edit .sms-preview-panel {
     display: none;
   }
 
-  .sms-page.mobile-mode-create .sms-list-card {
+  .sms-page.mobile-mode-edit .sms-list-card {
     display: none;
   }
 
-  .sms-page.mobile-mode-create .sms-mobile-channel-field {
+  .sms-page.mobile-mode-edit .sms-mobile-channel-field {
     display: block;
   }
 
@@ -1469,4 +1469,303 @@
 [data-theme="dark"] .sms-sample-chip code {
   background: rgba(74, 222, 128, 0.15);
   color: #4ade80;
+}
+
+/* WhatsApp settings + attachments */
+.sms-page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.btn-sms-wa-settings {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #fff !important;
+  border: 1px solid #25d366 !important;
+  color: #128c7e !important;
+  font-weight: 600;
+  border-radius: 0.65rem;
+  padding: 0.55rem 1rem;
+  white-space: nowrap;
+}
+
+.btn-sms-wa-settings:hover,
+.btn-sms-wa-settings:focus {
+  background: rgba(37, 211, 102, 0.1) !important;
+  color: #075e54 !important;
+}
+
+.sms-attach-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.sms-attach-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--sms-muted);
+}
+
+.sms-attach-list {
+  margin: 0.5rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+  color: var(--sms-muted);
+}
+
+.sms-preview-attach {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.4rem;
+  background: rgba(0, 0, 0, 0.06);
+  font-size: 0.72rem;
+  color: #374151;
+}
+
+.sms-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1080;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.sms-modal {
+  width: min(640px, 100%);
+  max-height: min(90vh, 820px);
+  overflow: auto;
+  background: var(--sms-card-bg, #fff);
+  border-radius: 1rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--sms-border);
+}
+
+.sms-modal-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--sms-border);
+}
+
+.sms-modal-head h4 {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+}
+
+.sms-modal-head p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--sms-muted);
+}
+
+.sms-modal-close {
+  border: none;
+  background: transparent;
+  color: var(--sms-muted);
+  padding: 0.25rem;
+  border-radius: 0.4rem;
+}
+
+.sms-modal-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--sms-text);
+}
+
+.sms-modal-body {
+  padding: 1rem 1.25rem;
+}
+
+.sms-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.9rem 1.25rem 1.15rem;
+  border-top: 1px solid var(--sms-border);
+}
+
+.sms-wa-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.sms-wa-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.sms-wa-status-pill.status-connected {
+  background: rgba(34, 197, 94, 0.15);
+  color: #15803d;
+}
+
+.sms-wa-status-pill.status-pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: #b45309;
+}
+
+.sms-wa-status-pill.status-disconnected,
+.sms-wa-status-pill.status-error {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+}
+
+.sms-wa-qr-box {
+  margin-top: 1rem;
+  padding: 0.85rem;
+  border: 1px dashed var(--sms-border);
+  border-radius: 0.75rem;
+  text-align: center;
+}
+
+.sms-wa-qr-img {
+  max-width: 220px;
+  width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+}
+
+.sms-wa-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+  counter-reset: wa-step;
+}
+
+.sms-wa-steps li {
+  counter-increment: wa-step;
+  flex: 1 1 140px;
+  font-size: 0.78rem;
+  color: var(--sms-muted);
+  background: #f3f4f6;
+  border-radius: 0.55rem;
+  padding: 0.45rem 0.55rem;
+}
+
+.sms-wa-steps li::before {
+  content: counter(wa-step) ". ";
+  font-weight: 700;
+}
+
+.sms-wa-steps li.active {
+  background: rgba(37, 211, 102, 0.14);
+  color: #075e54;
+  font-weight: 600;
+}
+
+.sms-wa-steps li.done {
+  background: rgba(34, 197, 94, 0.12);
+  color: #15803d;
+}
+
+.sms-wa-phone-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+.sms-wa-phone-prefix {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  border: 1px solid var(--sms-border);
+  border-right: 0;
+  border-radius: 0.5rem 0 0 0.5rem;
+  background: #f8faf9;
+  color: var(--sms-muted);
+  font-weight: 600;
+}
+
+.sms-wa-phone-row .form-control {
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.sms-wa-connected-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  border-radius: 0.75rem;
+  background: rgba(34, 197, 94, 0.1);
+  color: #166534;
+}
+
+.sms-wa-connected-box p {
+  margin: 0.2rem 0 0;
+  font-size: 0.875rem;
+  color: #15803d;
+}
+
+.sms-wa-warn {
+  font-size: 0.82rem;
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.12);
+  border-radius: 0.5rem;
+  padding: 0.55rem 0.7rem;
+}
+
+.sms-wa-warn code {
+  font-size: 0.78rem;
+}
+
+.sms-form-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 280px;
+  padding: 2rem 1.5rem;
+}
+
+.sms-form-empty-icon {
+  color: var(--sms-muted);
+  margin-bottom: 0.75rem;
+}
+
+.sms-form-empty h4 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.sms-mobile-mode-tab:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 767.98px) {
+  .sms-page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-sms-wa-settings {
+    width: 100%;
+    justify-content: center;
+  }
 }

@@ -29,7 +29,8 @@ const formatEmiNo = (value) => {
 const statusBadgeClass = (status) => {
     if (status === 'PAID') return 'bg-success-subtle text-success';
     if (status === 'PARTIAL') return 'bg-warning-subtle text-warning';
-    return 'bg-danger-subtle text-danger';
+    if (status === 'DUE') return 'bg-danger-subtle text-danger';
+    return 'bg-secondary-subtle text-secondary';
 };
 
 const EmiExportActions = ({ disabled, onPrint, onPdf, onWhatsApp }) => (
@@ -69,12 +70,20 @@ const EmiExportActions = ({ disabled, onPrint, onPdf, onWhatsApp }) => (
     </div>
 );
 
-const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onHistory, isLoading, financeData, initialFinance }) => {
+const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, onHistory, isLoading, financeData, initialFinance }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
     const [selectedEmiData, setSelectedEmiData] = useState(null);
+
+    const fineSummary = financeData?.fine_summary;
+    const showFineColumn = Boolean(fineSummary?.enabled);
+    const showPaidFineBtn =
+        Boolean(fineSummary?.enabled) ||
+        (parseFloat(fineSummary?.collectAmt) || 0) > 0 ||
+        (parseFloat(fineSummary?.pendingCollect) || 0) > 0 ||
+        (parseFloat(fineSummary?.pendingFine) || 0) > 0;
 
     const handlePrintPreview = (row) => {
         setSelectedEmiData(row);
@@ -96,9 +105,12 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onHistory, isL
             acc.emiAmt += (parseFloat(current.ft_emi_amt) || 0);
             acc.paidAmt += (parseFloat(current.ft_paid_amt) || 0);
             acc.pendingAmt += (parseFloat(current.ft_pending_amt) || 0);
+            acc.fineAmt += (parseFloat(current.ft_fine_amt) || 0);
             return acc;
-        }, { emiAmt: 0, paidAmt: 0, pendingAmt: 0 });
+        }, { emiAmt: 0, paidAmt: 0, pendingAmt: 0, fineAmt: 0 });
     }, [filteredData]);
+
+    const pendingFineTotal = parseFloat(fineSummary?.pendingTotal) || 0;
 
     const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
     const paginatedData = useMemo(() => {
@@ -256,6 +268,29 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onHistory, isL
                     </>
                 )}
 
+                {showPaidFineBtn && fineSummary && (
+                    <div className="alert alert-warning border py-2 mb-3 small">
+                        {showFineColumn && (
+                            <div className="fw-semibold">{fineSummary.label}</div>
+                        )}
+                        <div>
+                            {showFineColumn && (
+                                <>
+                                    Overdue EMIs: {fineSummary.overdueCount || 0}
+                                    {' · '}Total fine: ₹{formatAmt(fineSummary.totalFine)}
+                                    {' · '}Pending fine: ₹{formatAmt(fineSummary.pendingFine)}
+                                </>
+                            )}
+                            {(parseFloat(fineSummary.collectAmt) || 0) > 0 && (
+                                <>
+                                    {showFineColumn ? ' · ' : ''}
+                                    Collect pending: ₹{formatAmt(fineSummary.pendingCollect)}
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 <div className="finance-mobile-actions">
                     <button
                         className="btn btn-success"
@@ -266,6 +301,17 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onHistory, isL
                         <i className="bi bi-wallet2"></i>
                         <span>Pay</span>
                     </button>
+                    {showPaidFineBtn && (
+                        <button
+                            className="btn btn-outline-danger"
+                            onClick={onPaidFine}
+                            disabled={pendingFineTotal <= 0 || financeData?.fin_status === 'CLOSED'}
+                            title={pendingFineTotal <= 0 ? 'No pending fine/collect' : 'Pay fine / collect amount'}
+                        >
+                            <i className="bi bi-exclamation-octagon"></i>
+                            <span>Paid Fine</span>
+                        </button>
+                    )}
                     <button
                         className="btn btn-warning"
                         onClick={onRollback}
@@ -323,6 +369,14 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onHistory, isL
                                         <span className="finance-mobile-emi__cell-label">Pending</span>
                                         <span className="finance-mobile-emi__cell-value is-pending">{formatAmt(item.ft_pending_amt)}</span>
                                     </div>
+                                    {showFineColumn && (
+                                        <div className="finance-mobile-emi__cell">
+                                            <span className="finance-mobile-emi__cell-label">Fine</span>
+                                            <span className="finance-mobile-emi__cell-value text-danger">
+                                                {formatAmt(item.ft_fine_amt)}
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="finance-mobile-emi__footer">
@@ -413,6 +467,16 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onHistory, isL
                             >
                                 <i className="bi bi-wallet2 me-1"></i> Payment
                             </button>
+                            {showPaidFineBtn && (
+                                <button
+                                    className="btn btn-sm btn-outline-danger px-3"
+                                    onClick={onPaidFine}
+                                    disabled={pendingFineTotal <= 0 || financeData?.fin_status === 'CLOSED'}
+                                    title={pendingFineTotal <= 0 ? 'No pending fine/collect' : 'Pay fine / collect amount'}
+                                >
+                                    <i className="bi bi-exclamation-octagon me-1"></i> Paid Fine
+                                </button>
+                            )}
                             <button
                                 className="btn btn-sm btn-warning px-3 text-dark"
                                 onClick={onRollback}
@@ -473,6 +537,31 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onHistory, isL
                                 <span className="text-danger small fw-bold me-2">Pen Amt:</span>
                                 <span className="fw-bold text-danger">{formatAmt(totals.pendingAmt)}</span>
                             </div>
+                            {showPaidFineBtn && (
+                                <>
+                                    {showFineColumn && (
+                                        <div className="col-auto px-3 py-2 border-start border-end">
+                                            <span className="text-muted small me-2">{fineSummary.label}:</span>
+                                            <span className="fw-bold text-danger">{formatAmt(fineSummary.totalFine)}</span>
+                                        </div>
+                                    )}
+                                    <div className="col-auto px-3 py-2">
+                                        {showFineColumn && (
+                                            <>
+                                                <span className="text-muted small me-2">Fine Pending:</span>
+                                                <span className="fw-bold text-danger">{formatAmt(fineSummary.pendingFine)}</span>
+                                            </>
+                                        )}
+                                        {(parseFloat(fineSummary.collectAmt) || 0) > 0 && (
+                                            <>
+                                                {showFineColumn && <span className="text-muted small mx-2">|</span>}
+                                                <span className="text-muted small me-2">Collect:</span>
+                                                <span className="fw-bold text-primary">{formatAmt(fineSummary.pendingCollect)}</span>
+                                            </>
+                                        )}
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}
@@ -487,6 +576,7 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onHistory, isL
                                 <th className="fw-semibold border">Due Date</th>
                                 <th className="fw-semibold border">Paid Amt</th>
                                 <th className="fw-semibold border">Pending Amt</th>
+                                {showFineColumn && <th className="fw-semibold border">Fine</th>}
                                 <th className="fw-semibold text-center border">Status</th>
                                 <th className="fw-semibold text-center border">Actions</th>
                             </tr>
@@ -501,6 +591,9 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onHistory, isL
                                         <td>{item.ft_due_date ? moment(item.ft_due_date).format('DD-MM-YYYY') : '-'}</td>
                                         <td className="text-success">{formatAmt(item.ft_paid_amt)}</td>
                                         <td className="text-danger">{formatAmt(item.ft_pending_amt)}</td>
+                                        {showFineColumn && (
+                                            <td className="text-danger fw-medium">{formatAmt(item.ft_fine_amt)}</td>
+                                        )}
                                         <td className="text-center">
                                             <span
                                                 className={`badge rounded-pill ${statusBadgeClass(item.ft_emi_status)}`}
@@ -522,7 +615,7 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onHistory, isL
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="8" className="text-center py-4 text-muted">No records found</td>
+                                    <td colSpan={showFineColumn ? 9 : 8} className="text-center py-4 text-muted">No records found</td>
                                 </tr>
                             )}
                         </tbody>
@@ -534,6 +627,9 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onHistory, isL
                                     <th></th>
                                     <th className="text-success">{formatAmt(totals.paidAmt)}</th>
                                     <th className="text-danger">{formatAmt(totals.pendingAmt)}</th>
+                                    {showFineColumn && (
+                                        <th className="text-danger">{formatAmt(totals.fineAmt)}</th>
+                                    )}
                                     <th colSpan="2"></th>
                                 </tr>
                             </tfoot>

@@ -5,6 +5,7 @@ import PrintPreviewHeader from '../common/PrintPreviewHeader';
 import TradingAccount from './TradingAccount';
 import ProfitLossAccount from './ProfitLossAccount';
 import CapitalAccount from './CapitalAccount';
+import { getAccountById } from './profitLossData';
 import '../../css/ProfitLoss.css';
 
 const ProfitLossPrintPreview = ({
@@ -15,9 +16,13 @@ const ProfitLossPrintPreview = ({
   periodStart,
   periodEnd,
   assessmentYear,
+  accounts = [],
 }) => {
   const formattedStart = moment(periodStart).format('DD-MM-YYYY');
   const formattedEnd = moment(periodEnd).format('DD-MM-YYYY');
+  const tradingAccount = getAccountById(accounts, 'trading');
+  const profitLossAccount = getAccountById(accounts, 'profit-loss');
+  const capitalAccount = getAccountById(accounts, 'capital');
 
   return (
     <PrintPreviewModal
@@ -45,13 +50,13 @@ const ProfitLossPrintPreview = ({
       </PrintPreviewHeader>
 
       <div className="mb-2">
-        <TradingAccount />
+        <TradingAccount account={tradingAccount} />
       </div>
       <div className="mb-2">
-        <ProfitLossAccount />
+        <ProfitLossAccount account={profitLossAccount} />
       </div>
       <div className="mb-2">
-        <CapitalAccount />
+        <CapitalAccount account={capitalAccount} />
       </div>
     </PrintPreviewModal>
   );

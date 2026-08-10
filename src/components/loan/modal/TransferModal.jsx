@@ -260,6 +260,8 @@ const TransferModal = ({ isOpen, onClose, isTab, loanDetails, pendingPrincipal, 
       const payload = {
         ...formData,
         transfer_to: isMoneyLenderTransfer ? 'money_lender' : 'firm',
+        transfer_int_amt: intAmt,
+        source_prin_amt: prinAmt,
       };
       if (isUserTransfer) {
         payload.targetMoneyLenderId = '';

@@ -61,8 +61,8 @@ const BalanceSheetMobileList = ({
     );
   }
 
-  const showProfit = diffBalance > 0;
-  const showLoss = diffBalance < 0;
+  const showDiffLiab = diffBalance > 0;
+  const showDiffAsset = diffBalance < 0;
 
   return (
     <div className="balance-sheet-mobile-wrap">
@@ -70,16 +70,16 @@ const BalanceSheetMobileList = ({
         title="Liabilities"
         items={liabilityList}
         balancedTotal={balancedTotal}
-        netLabel={showProfit ? "NET PROFIT" : null}
-        netAmount={showProfit ? diffBalance : 0}
+        netLabel={showDiffLiab ? "DIFFERENCE" : null}
+        netAmount={showDiffLiab ? diffBalance : 0}
         netTone="is-profit"
       />
       <Section
         title="Assets"
         items={assetList}
         balancedTotal={balancedTotal}
-        netLabel={showLoss ? "NET LOSS" : null}
-        netAmount={showLoss ? Math.abs(diffBalance) : 0}
+        netLabel={showDiffAsset ? "DIFFERENCE" : null}
+        netAmount={showDiffAsset ? Math.abs(diffBalance) : 0}
         netTone="is-loss"
       />
 
@@ -89,7 +89,7 @@ const BalanceSheetMobileList = ({
         <TotalRow label="Total Assets" value={formatCurrency(totalAssets)} />
         {diffBalance !== 0 && (
           <TotalRow
-            label={diffBalance > 0 ? "Net Profit" : "Net Loss"}
+            label="Difference"
             value={formatCurrency(Math.abs(diffBalance))}
             tone={diffBalance > 0 ? "balance-sheet-amt-profit" : "balance-sheet-amt-loss"}
           />

@@ -11,6 +11,11 @@ import moment from 'moment';
 import { toast } from 'react-toastify';
 import { formatTimePeriod } from '../../utils/formatTimePeriod';
 import { getStatusBadgeMeta } from '../../utils/listFormatters';
+import {
+  calculateInterest,
+  getLoanInterestSummary,
+  getTenureMonths,
+} from '../../utils/loanInterest';
 import ImageModal from '../common/ImageModal';
 import '../../css/DataTable.css';
 
@@ -60,25 +65,6 @@ const getItemValuation = (item = {}) =>
   item.st_final_valuation ?? item.st_valuation ?? item.valuation ?? 0;
 
 // Interest Calculation Helper
-const calculateInterest = (principal, rate, months, method = 'simple', freq = 'monthly') => {
-  if (!principal || !rate || !months) return 0;
-  if (method === 'compound') {
-    let n = 1;
-    if (freq === 'monthly') n = 1;
-    else if (freq === 'quarterly') n = 1 / 3;
-    else if (freq === 'half_yearly') n = 1 / 6;
-    else if (freq === 'yearly') n = 1 / 12;
-
-    let periods = months * n;
-    let rate_per_period = rate / n;
-
-    const amount = principal * Math.pow((1 + rate_per_period / 100), periods);
-    return parseFloat((amount - principal).toFixed(2));
-  } else {
-    return parseFloat((principal * rate * months / 100).toFixed(2));
-  }
-};
-
 // Reusable Components
 const LoanInformation = ({ data }) => (
   <div className="panel-section">
@@ -151,6 +137,9 @@ const LoanInformation = ({ data }) => (
           <input className="form-check-input" type="checkbox" id="firstMonthInt" disabled checked={data?.girv_first_int === 'Y'} />
           <label className="form-check-label fw-bold text-primary" style={{ fontSize: '0.8rem' }} htmlFor="firstMonthInt">
             FIRST MONTH INT
+            {data?.girv_first_int === 'Y' && data?.firstMonthInterest > 0
+              ? ` (₹${formatAmt(data.firstMonthInterest)})`
+              : ''}
           </label>
         </div>
       </div>
@@ -611,7 +600,10 @@ const LoanMobileView = ({
     },
     {
       label: 'First Month Int',
-      value: loanInfoData?.girv_first_int === 'Y' ? 'Yes' : 'No',
+      value:
+        loanInfoData?.girv_first_int === 'Y'
+          ? `Yes${loanInfoData?.firstMonthInterest > 0 ? ` (₹${formatAmt(loanInfoData.firstMonthInterest)})` : ''}`
+          : 'No',
     },
   ];
 
@@ -1038,49 +1030,32 @@ const LoanInfo = () => {
     (loanDetails?.releases && loanDetails.releases.length > 0);
   const isUpdateAllowed = loanDetails?.girv_status === 'ACTIVE' && !hasTrans;
 
-  // Reconstruct original principal
-  const totalAdditionalPrincipal = loanDetails.additionalPrincipals?.reduce((sum, ap) => sum + (parseFloat(ap.ap_prin_amt) || 0), 0) || 0;
-  const totalReleasesPrincipal = loanDetails.releases?.reduce((sum, rel) => sum + (parseFloat(rel.rel_prin_amt) || 0), 0) || 0;
-  const totalDepositsPrincipal = loanDetails.deposits?.reduce((sum, dep) => sum + (parseFloat(dep.dep_prin_amt) || 0), 0) || 0;
+  const totalAdditionalPrincipal =
+    loanDetails.additionalPrincipals?.reduce(
+      (sum, ap) => sum + (parseFloat(ap.ap_prin_amt) || 0),
+      0
+    ) || 0;
 
-  // Note: girv_prin_amt in db includes all additional principals, but is reduced by deposits and releases
-  const currentTotalPrincipal = parseFloat(loanDetails.girv_prin_amt) || 0;
-  const originalPrincipal = Math.max(0, currentTotalPrincipal + totalReleasesPrincipal + totalDepositsPrincipal - totalAdditionalPrincipal);
-
-  const roi = parseFloat(loanDetails.girv_roi) || 0;
   const startDate = moment(loanDetails.girv_start_date);
   const today = moment();
+  const interestSummary = getLoanInterestSummary(loanDetails, today);
+  const {
+    originalPrincipal,
+    currentTotalPrincipal,
+    origInterest,
+    additionalInterestTotal,
+    firstMonthInterest,
+    pendingInterest,
+    pendingPrincipal,
+    totalInterest,
+    roi,
+    roiType,
+    interestMethod,
+    compoundFreq,
+  } = interestSummary;
 
-  // Time period in months for original principal
-  const origMonths = Math.max(1, today.diff(startDate, 'months', true));
-
-  const interestMethod = loanDetails.girv_interest_method || 'simple';
-  const compoundFreq = loanDetails.girv_compound_freq || 'monthly';
-
-  // Calculate Interest for original principal
-  const origInterest = calculateInterest(originalPrincipal, roi, origMonths, interestMethod, compoundFreq);
-
-  let totalInterest = origInterest;
-
-  // Pre-calculate additional interest to get overall payable amount for Profit/Loss
-  let additionalInterestTotal = 0;
-  if (loanDetails.additionalPrincipals && loanDetails.additionalPrincipals.length > 0) {
-    loanDetails.additionalPrincipals.forEach(ap => {
-      const apPrin = parseFloat(ap.ap_prin_amt) || 0;
-      const apRoi = parseFloat(ap.ap_roi) || 0;
-      const apStartDate = moment(ap.ap_trans_date);
-      const apMonths = Math.max(1, today.diff(apStartDate, 'months', true));
-      additionalInterestTotal += calculateInterest(apPrin, apRoi, apMonths, interestMethod, compoundFreq);
-    });
-  }
-
-  const payableAmount = currentTotalPrincipal + origInterest + additionalInterestTotal;
-
-  // Calculate pending amounts
-  const totalReleasesInterest = loanDetails.releases?.reduce((sum, rel) => sum + (parseFloat(rel.rel_int_amt) || 0), 0) || 0;
-  const totalDepositsInterest = loanDetails.deposits?.reduce((sum, dep) => sum + (parseFloat(dep.dep_int_amt) || 0), 0) || 0;
-  const pendingInterest = Math.max(0, totalInterest - totalDepositsInterest - totalReleasesInterest);
-  const pendingPrincipal = currentTotalPrincipal;
+  const payableAmount =
+    currentTotalPrincipal + origInterest + additionalInterestTotal - firstMonthInterest;
 
   // Calculate Valuation
   const loanItems = getLoanItems(loanDetails);
@@ -1123,14 +1098,12 @@ const LoanInfo = () => {
       const apPrin = parseFloat(ap.ap_prin_amt) || 0;
       const apRoi = parseFloat(ap.ap_roi) || 0;
       const apStartDate = moment(ap.ap_trans_date);
-      const apMonths = Math.max(1, today.diff(apStartDate, 'months', true));
-      const apInterest = calculateInterest(apPrin, apRoi, apMonths, interestMethod, compoundFreq);
+      const apMonths = getTenureMonths(ap.ap_trans_date, today);
+      const apInterest = calculateInterest(apPrin, apRoi, apMonths, interestMethod, compoundFreq, roiType);
       const cashAmt = parseFloat(ap.ap_cash_amt) || 0;
       const bankAmt = parseFloat(ap.ap_bank_amt) || 0;
       const onlineAmt = parseFloat(ap.ap_online_amt) || 0;
       const cardAmt = parseFloat(ap.ap_card_amt) || 0;
-
-      totalInterest += apInterest;
 
       principalDataRows.push({
         principal: apPrin,
@@ -1225,7 +1198,9 @@ const LoanInfo = () => {
   const loanInfoData = {
     ...loanDetails,
     girv_prin_amt: originalPrincipal, // Show original principal in the top panel
-    payableAmount
+    payableAmount,
+    firstMonthInterest,
+    pendingInterest,
   };
 
   const isUnsecured = String(loanDetails.girv_type || '').toLowerCase() === 'unsecured';

@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import UserHome from "../../components/user/UserHome";
 import AddLoan from "../../components/loan/AddLoan";
 import AddFinance from "../../components/finance/AddFinance";
+import UpdateFinance from "../../components/finance/UpdateFinance";
 import ListFinance from "../../components/finance/ListFinance";
 import UpdateLoan from "../../components/loan/UpdateLoan";
 import Dropdown from "react-bootstrap/Dropdown";
@@ -323,6 +324,7 @@ const UserHomeRoutes = () => {
           <Route path="/add-loan" element={<AddLoan />} />
           <Route path="/edit-loan/:id" element={<UpdateLoan />} />
           <Route path="/add-finance" element={<AddFinance />} />
+          <Route path="/edit-finance/:id" element={<UpdateFinance />} />
           <Route path="/active-finance" element={<ListFinance status="ACTIVE" />} />
           <Route path="/completed-finance" element={<ListFinance status="COMPLETED" />} />
           <Route path="/close-finance" element={<ListFinance status="CLOSED" />} />

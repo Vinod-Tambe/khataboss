@@ -86,7 +86,7 @@ const buildDocDefinition = ({ data = {}, firmName, periodStart, periodEnd }) => 
     if (diffBalance !== 0) {
       if (diffBalance > 0) {
         body.push([
-          { text: 'NET PROFIT', style: 'profitCell' },
+          { text: 'DIFFERENCE', style: 'profitCell' },
           {
             text: formatCurrency(diffBalance),
             style: 'profitCell',
@@ -99,7 +99,7 @@ const buildDocDefinition = ({ data = {}, firmName, periodStart, periodEnd }) => 
         body.push([
           emptyCell(),
           emptyCell(),
-          { text: 'NET LOSS', style: 'lossCell' },
+          { text: 'DIFFERENCE', style: 'lossCell' },
           {
             text: formatCurrency(Math.abs(diffBalance)),
             style: 'lossCell',

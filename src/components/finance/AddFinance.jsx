@@ -58,7 +58,8 @@ const AddFinance = () => {
     fin_other_info: '',
   });
 
-  const isEmiInvalid = formData.fin_emi_amt && parseFloat(formData.fin_emi_amt) % 1 !== 0;
+  // Allow 2-decimal EMIs; last EMI absorbs rounding on backend
+  const isEmiInvalid = false;
 
   const [firms, setFirms] = useState([]);
   const [accounts, setAccounts] = useState([]);
@@ -72,12 +73,14 @@ const AddFinance = () => {
   useFormNavigation(formRef);
 
   // Finance Calculator Hook
-  const { fin_emi_amt, fin_final_amt } = useAddFinanceCalculator({
-    fin_prin_amt: formData.fin_prin_amt,
-    fin_no_of_emi: formData.fin_no_of_emi,
-    fin_freq_type: formData.fin_freq_type,
-    fin_proccess_amt: formData.fin_proccess_amt,
-  });
+  const { fin_emi_amt, fin_final_amt, fin_receivable_amt, fin_interest_amt } =
+    useAddFinanceCalculator({
+      fin_prin_amt: formData.fin_prin_amt,
+      fin_no_of_emi: formData.fin_no_of_emi,
+      fin_freq_type: formData.fin_freq_type,
+      fin_proccess_amt: formData.fin_proccess_amt,
+      fin_roi: formData.fin_roi,
+    });
 
   // Sync calculated values to formData
   useEffect(() => {
@@ -181,7 +184,13 @@ const AddFinance = () => {
           if (onlineAcc) updates.fin_online_acc_id = onlineAcc.acc_id;
         }
         if (!prev.fin_dr_acc_id) {
-          const drAcc = accounts.find(a => a.acc_name === "Finance Dr Account" || a.acc_name === "Loan Account");
+          const drAcc = accounts.find(
+            (a) =>
+              a.acc_name === "Unsecured Loans" ||
+              a.acc_name === "Loans & Advances" ||
+              a.acc_name === "Finance Dr Account" ||
+              a.acc_name === "Loan Account"
+          );
           if (drAcc) updates.fin_dr_acc_id = drAcc.acc_id;
         }
         return Object.keys(updates).length > 0 ? { ...prev, ...updates } : prev;
@@ -275,19 +284,43 @@ const AddFinance = () => {
 
     setLoading(true);
     try {
-      // Validate payment sum
-      const total = parseFloat(formData.fin_final_amt || 0);
+      // Validate disbursement channels = prin − process fee
+      const disbursed = parseFloat(formData.fin_final_amt || 0);
+      const prin = parseFloat(formData.fin_prin_amt || 0);
+      const processFee = parseFloat(formData.fin_proccess_amt || 0);
       const cash = parseFloat(formData.fin_cash_amt || 0);
       const bank = parseFloat(formData.fin_bank_amt || 0);
       const online = parseFloat(formData.fin_online_amt || 0);
       const card = parseFloat(formData.fin_card_amt || 0);
-
       const sumPayments = cash + bank + online + card;
 
-      if (Math.abs(total - sumPayments) > 0.01) {
-        toast.error(`Total payment (${sumPayments.toFixed(2)}) must equal Total Finance Amount (${total.toFixed(2)})`);
+      if (processFee > prin) {
+        toast.error("Process fee cannot exceed principal");
         setLoading(false);
         return;
+      }
+      if (Math.abs(disbursed - sumPayments) > 0.01) {
+        toast.error(
+          `Payment channels (${sumPayments.toFixed(2)}) must equal Disbursement Amount (${disbursed.toFixed(2)})`
+        );
+        setLoading(false);
+        return;
+      }
+
+      const fineAmt = parseFloat(formData.fin_fine_amt || 0) || 0;
+      const fineEmiNo = parseInt(formData.fin_fine_emi_no || 0, 10) || 0;
+      const noOfEmi = parseInt(formData.fin_no_of_emi || 0, 10) || 0;
+      if (fineAmt > 0 || fineEmiNo > 0) {
+        if (!(fineAmt > 0 && fineEmiNo > 0)) {
+          toast.error("Both Fine Amount and Fine EMI No are required when fine is set");
+          setLoading(false);
+          return;
+        }
+        if (fineEmiNo > noOfEmi) {
+          toast.error(`Fine EMI No (${fineEmiNo}) cannot exceed total EMIs (${noOfEmi})`);
+          setLoading(false);
+          return;
+        }
       }
 
       console.log('Sending Finance Data:', formData);
@@ -442,6 +475,7 @@ const AddFinance = () => {
             value={formData.fin_fine_amt}
             onChange={handleChange}
           />
+          <div className="form-text">Optional. Fee charged per Fine EMI No overdue EMIs.</div>
         </div>
 
         <div className="col-12 col-md-4 col-lg-3">
@@ -450,11 +484,12 @@ const AddFinance = () => {
             type="text"
             inputMode="numeric"
             name="fin_fine_emi_no"
-            placeholder="e.g. 3"
+            placeholder="e.g. 2"
             className="form-control border-dark"
             value={formData.fin_fine_emi_no}
             onChange={handleChange}
           />
+          <div className="form-text">Must be ≤ total EMI count (e.g. ₹20 every 2 overdue EMIs).</div>
         </div>
 
         <div className="col-12 col-md-4 col-lg-3">
@@ -475,8 +510,28 @@ const AddFinance = () => {
         </div>
 
 
+        <div className="col-12 col-md-4 col-lg-3">
+          <label className="form-label fw-medium">Interest (from ROI)</label>
+          <input
+            type="text"
+            className="form-control border-dark"
+            value={fin_interest_amt}
+            readOnly
+          />
+        </div>
+
+        <div className="col-12 col-md-4 col-lg-3">
+          <label className="form-label fw-medium">Total Receivable</label>
+          <input
+            type="text"
+            className="form-control border-dark"
+            value={fin_receivable_amt}
+            readOnly
+          />
+        </div>
+
         <div className="col-12 col-md-4 col-lg-3 ms-auto">
-          <label className="form-label fw-medium">Total Finance Amount</label>
+          <label className="form-label fw-medium">Disbursement Amount</label>
           <input
             type="text"
             name="fin_final_amt"
@@ -485,6 +540,7 @@ const AddFinance = () => {
             value={formData.fin_final_amt}
             readOnly
           />
+          <small className="text-muted">Principal − process fee (cash out)</small>
         </div>
       </div>
     </>

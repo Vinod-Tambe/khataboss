@@ -93,14 +93,15 @@ const BalanceSheetReport = ({ balanceSheetData, isPrint = false }) => {
                   <td className="bs-cell bs-cell-asset">{'\u00A0'}</td>
                 </tr>
 
+                {/* Residual only — P&L is already closed into BS from backend as Profit & Loss A/c */}
                 {diffBalance !== 0 && (
                   <tr>
                     {diffBalance > 0 ? (
                       <>
-                        <td className="bs-cell bs-cell-liab text-start fw-bold text-success pe-2">
-                          NET PROFIT
+                        <td className="bs-cell bs-cell-liab text-start fw-bold text-warning pe-2">
+                          DIFFERENCE
                         </td>
-                        <td className="bs-cell bs-cell-liab text-end fw-bold text-success pe-2">
+                        <td className="bs-cell bs-cell-liab text-end fw-bold text-warning pe-2">
                           {formatCurrency(diffBalance)}
                         </td>
                         <td className="bs-cell bs-cell-asset">{'\u00A0'}</td>
@@ -110,10 +111,10 @@ const BalanceSheetReport = ({ balanceSheetData, isPrint = false }) => {
                       <>
                         <td className="bs-cell bs-cell-liab">{'\u00A0'}</td>
                         <td className="bs-cell bs-cell-liab">{'\u00A0'}</td>
-                        <td className="bs-cell bs-cell-asset text-start fw-bold text-danger pe-2">
-                          NET LOSS
+                        <td className="bs-cell bs-cell-asset text-start fw-bold text-warning pe-2">
+                          DIFFERENCE
                         </td>
-                        <td className="bs-cell bs-cell-asset text-end fw-bold text-danger pe-2">
+                        <td className="bs-cell bs-cell-asset text-end fw-bold text-warning pe-2">
                           {formatCurrency(Math.abs(diffBalance))}
                         </td>
                       </>

@@ -1,5 +1,10 @@
 import moment from 'moment';
 import { formatTimePeriod } from '../../../utils/formatTimePeriod';
+import {
+  calculateInterest,
+  getLoanInterestSummary,
+  getTenureMonths,
+} from '../../../utils/loanInterest';
 
 const formatMoney = (value) => {
   const num = Number(value) || 0;
@@ -10,23 +15,6 @@ const formatDate = (value, fallback = '-') => {
   if (!value) return fallback;
   const m = moment(value);
   return m.isValid() ? m.format('DD-MM-YYYY') : fallback;
-};
-
-const calculateInterest = (principal, rate, months, method = 'simple', freq = 'monthly') => {
-  if (!principal || !rate || !months) return 0;
-  if (method === 'compound') {
-    let n = 1;
-    if (freq === 'monthly') n = 1;
-    else if (freq === 'quarterly') n = 1 / 3;
-    else if (freq === 'half_yearly') n = 1 / 6;
-    else if (freq === 'yearly') n = 1 / 12;
-
-    const periods = months * n;
-    const ratePerPeriod = rate / n;
-    const amount = principal * Math.pow(1 + ratePerPeriod / 100, periods);
-    return parseFloat((amount - principal).toFixed(2));
-  }
-  return parseFloat(((principal * rate * months) / 100).toFixed(2));
 };
 
 const getPaymentMode = (record, prefixes) => {
@@ -58,9 +46,6 @@ export const buildLoanInvoiceData = (loanDetails, customer = null) => {
   const firm = loanDetails.firm || {};
   const today = moment();
   const startDate = moment(loanDetails.girv_start_date);
-  const roi = parseFloat(loanDetails.girv_roi) || 0;
-  const interestMethod = loanDetails.girv_interest_method || 'simple';
-  const compoundFreq = loanDetails.girv_compound_freq || 'monthly';
   const isUnsecured = loanDetails.girv_type === 'unsecured';
 
   const additionalPrincipals = loanDetails.additionalPrincipals || [];
@@ -68,33 +53,27 @@ export const buildLoanInvoiceData = (loanDetails, customer = null) => {
   const releases = loanDetails.releases || [];
   const items = loanDetails.items || [];
 
-  const totalAdditionalPrincipal = additionalPrincipals.reduce((sum, ap) => sum + (parseFloat(ap.ap_prin_amt) || 0), 0);
-  const totalReleasesPrincipal = releases.reduce((sum, rel) => sum + (parseFloat(rel.rel_prin_amt) || 0), 0);
-  const totalDepositsPrincipal = deposits.reduce((sum, dep) => sum + (parseFloat(dep.dep_prin_amt) || 0), 0);
-  const totalDepositsInterest = deposits.reduce((sum, dep) => sum + (parseFloat(dep.dep_int_amt) || 0), 0);
-  const totalReleasesInterest = releases.reduce((sum, rel) => sum + (parseFloat(rel.rel_int_amt) || 0), 0);
+  const interestSummary = getLoanInterestSummary(loanDetails, today);
+  const {
+    originalPrincipal,
+    currentTotalPrincipal,
+    totalDepositsPrincipal,
+    totalReleasesPrincipal,
+    origInterest,
+    additionalInterestTotal,
+    totalInterest,
+    firstMonthInterest,
+    totalDepositsInterest,
+    totalReleasesInterest,
+    pendingInterest,
+    roi,
+    roiType,
+    interestMethod,
+    compoundFreq,
+  } = interestSummary;
 
-  const currentTotalPrincipal = parseFloat(loanDetails.girv_prin_amt) || 0;
-  const originalPrincipal = Math.max(
-    0,
-    currentTotalPrincipal + totalReleasesPrincipal + totalDepositsPrincipal - totalAdditionalPrincipal
-  );
-
-  const origMonths = Math.max(1, today.diff(startDate, 'months', true));
-  const origInterest = calculateInterest(originalPrincipal, roi, origMonths, interestMethod, compoundFreq);
-
-  let totalInterest = origInterest;
-  let additionalInterestTotal = 0;
-
-  additionalPrincipals.forEach((ap) => {
-    const apPrin = parseFloat(ap.ap_prin_amt) || 0;
-    const apRoi = parseFloat(ap.ap_roi) || 0;
-    const apMonths = Math.max(1, today.diff(moment(ap.ap_trans_date), 'months', true));
-    additionalInterestTotal += calculateInterest(apPrin, apRoi, apMonths, interestMethod, compoundFreq);
-  });
-  totalInterest += additionalInterestTotal;
-
-  const payableAmount = currentTotalPrincipal + origInterest + additionalInterestTotal;
+  const payableAmount =
+    currentTotalPrincipal + origInterest + additionalInterestTotal - firstMonthInterest;
   const totalValuation = items.reduce((sum, item) => sum + (parseFloat(item.st_final_valuation) || 0), 0);
   const profitLoss = parseFloat((totalValuation - payableAmount).toFixed(2));
   const totalWeight = items.reduce((sum, item) => sum + (parseFloat(item.st_nt_weight) || parseFloat(item.st_gs_weight) || 0), 0);
@@ -122,12 +101,35 @@ export const buildLoanInvoiceData = (loanDetails, customer = null) => {
     principalSigned: originalPrincipal,
   });
 
+  if (firstMonthInterest > 0) {
+    rawTransactions.push({
+      sortDate: startDate.valueOf() + 1,
+      date: formatDate(loanDetails.girv_start_date),
+      type: 'First Month Interest',
+      description: 'Prepaid first month interest',
+      paymentMode: '-',
+      principal: 0,
+      interest: firstMonthInterest,
+      discount: 0,
+      extra: 0,
+      balance: runningBalance,
+      principalSigned: 0,
+    });
+  }
+
   additionalPrincipals.forEach((ap, idx) => {
     const apPrin = parseFloat(ap.ap_prin_amt) || 0;
     const apRoi = parseFloat(ap.ap_roi) || 0;
     const apDate = moment(ap.ap_trans_date);
-    const apMonths = Math.max(1, today.diff(apDate, 'months', true));
-    const apInterest = calculateInterest(apPrin, apRoi, apMonths, interestMethod, compoundFreq);
+    const apMonths = getTenureMonths(ap.ap_trans_date, today);
+    const apInterest = calculateInterest(
+      apPrin,
+      apRoi,
+      apMonths,
+      interestMethod,
+      compoundFreq,
+      roiType
+    );
     runningBalance += apPrin;
 
     rawTransactions.push({
@@ -214,7 +216,7 @@ export const buildLoanInvoiceData = (loanDetails, customer = null) => {
       description: loanDetails.girv_other_info || 'Loan transferred to another firm',
       paymentMode: '-',
       principal: currentTotalPrincipal,
-      interest: Math.max(0, totalInterest - totalDepositsInterest - totalReleasesInterest),
+      interest: pendingInterest,
       discount: 0,
       extra: 0,
       balance: 0,
@@ -337,9 +339,12 @@ export const buildLoanInvoiceData = (loanDetails, customer = null) => {
           ? 0
           : currentTotalPrincipal
       ),
-      totalInterestDue: formatMoney(Math.max(0, totalInterest - totalDepositsInterest - totalReleasesInterest)),
+      totalInterestDue: formatMoney(pendingInterest),
       totalInterest: formatMoney(totalInterest),
-      totalInterestPaid: formatMoney(totalDepositsInterest + totalReleasesInterest),
+      totalInterestPaid: formatMoney(
+        totalDepositsInterest + totalReleasesInterest + firstMonthInterest
+      ),
+      firstMonthInterest: formatMoney(firstMonthInterest),
       totalPayable: formatMoney(
         loanDetails.girv_status === 'RELEASED' || loanDetails.girv_status === 'TRANSFERRED'
           ? 0

@@ -57,7 +57,19 @@ const PhoneShell = ({ children, screenClassName = "", channelLabel }) => (
   </div>
 );
 
-const WhatsAppPreview = ({ body, firmName }) => (
+const AttachmentChip = ({ attachments = [], hasAttachment }) => {
+  const list = Array.isArray(attachments) ? attachments : [];
+  if (!list.length && !hasAttachment) return null;
+  const label = list[0]?.originalName || list[0]?.filename || "Attachment ready";
+  return (
+    <div className="sms-preview-attach">
+      <FiPaperclip size={12} />
+      <span>{label}{list.length > 1 ? ` +${list.length - 1}` : ""}</span>
+    </div>
+  );
+};
+
+const WhatsAppPreview = ({ body, firmName, attachments, hasAttachment }) => (
   <PhoneShell channelLabel="WhatsApp preview">
     <div className="wa-header">
       <FiArrowLeft size={14} />
@@ -74,6 +86,7 @@ const WhatsAppPreview = ({ body, firmName }) => (
       <div className="wa-date-chip">Today</div>
       <div className="wa-bubble">
         <PreviewHtml body={body} emptyText="Start typing to preview your WhatsApp message…" />
+        <AttachmentChip attachments={attachments} hasAttachment={hasAttachment} />
         <span className="wa-time">9:15 AM ✓✓</span>
       </div>
     </div>
@@ -111,7 +124,7 @@ const SmsPreview = ({ body, firmName }) => (
   </PhoneShell>
 );
 
-const EmailPreview = ({ body, subject, firmName }) => (
+const EmailPreview = ({ body, subject, firmName, attachments, hasAttachment }) => (
   <PhoneShell screenClassName="email-preview" channelLabel="Email preview">
     <div className="email-header">
       <div className="email-toolbar">
@@ -137,18 +150,34 @@ const EmailPreview = ({ body, subject, firmName }) => (
     </div>
     <div className="email-body">
       <PreviewHtml body={body} emptyText="Start typing to preview your email…" />
+      <AttachmentChip attachments={attachments} hasAttachment={hasAttachment} />
     </div>
   </PhoneShell>
 );
 
-const TemplatePreview = ({ channel, body, subject, firmName }) => {
+const TemplatePreview = ({ channel, body, subject, firmName, attachments, hasAttachment }) => {
   if (channel === "sms") {
     return <SmsPreview body={body} firmName={firmName} />;
   }
   if (channel === "email") {
-    return <EmailPreview body={body} subject={subject} firmName={firmName} />;
+    return (
+      <EmailPreview
+        body={body}
+        subject={subject}
+        firmName={firmName}
+        attachments={attachments}
+        hasAttachment={hasAttachment}
+      />
+    );
   }
-  return <WhatsAppPreview body={body} firmName={firmName} />;
+  return (
+    <WhatsAppPreview
+      body={body}
+      firmName={firmName}
+      attachments={attachments}
+      hasAttachment={hasAttachment}
+    />
+  );
 };
 
 export default TemplatePreview;

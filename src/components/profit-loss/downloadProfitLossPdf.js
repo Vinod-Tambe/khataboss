@@ -1,10 +1,6 @@
 import pdfMake from "pdfmake/build/pdfmake";
 import * as pdfFonts from "pdfmake/build/vfs_fonts";
-import {
-  formatCurrency,
-  PROFIT_LOSS_ACCOUNTS,
-  sumAmounts,
-} from "./profitLossData";
+import { formatCurrency, sumAmounts } from "./profitLossData";
 
 pdfMake.vfs = pdfFonts.vfs || pdfFonts.default?.vfs || pdfFonts;
 
@@ -132,7 +128,7 @@ const buildAccountTable = (account) => {
 };
 
 const buildDocDefinition = ({
-  accounts = PROFIT_LOSS_ACCOUNTS,
+  accounts = [],
   firmName,
   companyName,
   periodStart,
@@ -210,7 +206,7 @@ export const getProfitLossShareText = ({
   periodStart,
   periodEnd,
   assessmentYear,
-  accounts = PROFIT_LOSS_ACCOUNTS,
+  accounts = [],
 }) => {
   const lines = [
     "Profit & Loss Report",

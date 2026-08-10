@@ -41,31 +41,33 @@ const DayBookSummary = ({ DayBookData,opening_data }) => {
     let total_close_online_amt = 0;
     let total_close_disc_amt = 0;
     let total_close_amt = 0;
-    // CALCULATE IN AMOUNT (FINANCE EMI DEPOSIT + LOAN DEPOSIT + RELEASE LOAN + AUCTION LOAN)
+    // CALCULATE IN AMOUNT (FINANCE EMI DEPOSIT + LOAN DEPOSIT + RELEASE LOAN + AUCTION LOAN + TRANSFER LOAN OUT)
     const Finance_emi_deposit_data = DayBookData?.['FINANCE EMI DEPOSIT'] || {};
     const Loan_deposit_data = DayBookData?.['LOAN DEPOSIT'] || {};
     const Release_loan_data = DayBookData?.['RELEASE LOAN'] || {};
     const Auction_loan_data = DayBookData?.['AUCTION LOAN'] || {};
+    const Transfer_loan_out_data = DayBookData?.['TRANSFER LOAN OUT'] || {};
 
-    total_today_cash_in_amt = parseFloat(Finance_emi_deposit_data.total_cash_amt || 0) + parseFloat(Loan_deposit_data.total_cash_amt || 0) + parseFloat(Release_loan_data.total_cash_amt || 0) + parseFloat(Auction_loan_data.total_cash_amt || 0);
-    total_today_bank_in_amt = parseFloat(Finance_emi_deposit_data.total_bank_amt || 0) + parseFloat(Loan_deposit_data.total_bank_amt || 0) + parseFloat(Release_loan_data.total_bank_amt || 0) + parseFloat(Auction_loan_data.total_bank_amt || 0);
-    total_today_online_in_amt = parseFloat(Finance_emi_deposit_data.total_online_amt || 0) + parseFloat(Loan_deposit_data.total_online_amt || 0) + parseFloat(Release_loan_data.total_online_amt || 0) + parseFloat(Auction_loan_data.total_online_amt || 0);
-    total_today_card_in_amt = parseFloat(Finance_emi_deposit_data.total_card_amt || 0) + parseFloat(Loan_deposit_data.total_card_amt || 0) + parseFloat(Release_loan_data.total_card_amt || 0) + parseFloat(Auction_loan_data.total_card_amt || 0);
-    total_today_disc_in_amt = parseFloat(Finance_emi_deposit_data.total_disc_amt || 0) + parseFloat(Loan_deposit_data.total_disc_amt || 0) + parseFloat(Release_loan_data.total_disc_amt || 0) + parseFloat(Auction_loan_data.total_disc_amt || 0);
-    total_today_in_amt = parseFloat(Finance_emi_deposit_data.total_amt || 0) + parseFloat(Loan_deposit_data.total_amt || 0) + parseFloat(Release_loan_data.total_amt || 0) + parseFloat(Auction_loan_data.total_amt || 0);
+    total_today_cash_in_amt = parseFloat(Finance_emi_deposit_data.total_cash_amt || 0) + parseFloat(Loan_deposit_data.total_cash_amt || 0) + parseFloat(Release_loan_data.total_cash_amt || 0) + parseFloat(Auction_loan_data.total_cash_amt || 0) + parseFloat(Transfer_loan_out_data.total_cash_amt || 0);
+    total_today_bank_in_amt = parseFloat(Finance_emi_deposit_data.total_bank_amt || 0) + parseFloat(Loan_deposit_data.total_bank_amt || 0) + parseFloat(Release_loan_data.total_bank_amt || 0) + parseFloat(Auction_loan_data.total_bank_amt || 0) + parseFloat(Transfer_loan_out_data.total_bank_amt || 0);
+    total_today_online_in_amt = parseFloat(Finance_emi_deposit_data.total_online_amt || 0) + parseFloat(Loan_deposit_data.total_online_amt || 0) + parseFloat(Release_loan_data.total_online_amt || 0) + parseFloat(Auction_loan_data.total_online_amt || 0) + parseFloat(Transfer_loan_out_data.total_online_amt || 0);
+    total_today_card_in_amt = parseFloat(Finance_emi_deposit_data.total_card_amt || 0) + parseFloat(Loan_deposit_data.total_card_amt || 0) + parseFloat(Release_loan_data.total_card_amt || 0) + parseFloat(Auction_loan_data.total_card_amt || 0) + parseFloat(Transfer_loan_out_data.total_card_amt || 0);
+    total_today_disc_in_amt = parseFloat(Finance_emi_deposit_data.total_disc_amt || 0) + parseFloat(Loan_deposit_data.total_disc_amt || 0) + parseFloat(Release_loan_data.total_disc_amt || 0) + parseFloat(Auction_loan_data.total_disc_amt || 0) + parseFloat(Transfer_loan_out_data.total_disc_amt || 0);
+    total_today_in_amt = parseFloat(Finance_emi_deposit_data.total_amt || 0) + parseFloat(Loan_deposit_data.total_amt || 0) + parseFloat(Release_loan_data.total_amt || 0) + parseFloat(Auction_loan_data.total_amt || 0) + parseFloat(Transfer_loan_out_data.total_amt || 0);
 
-    // CALCULATE OUT AMOUNT (FINANCE ADDED + LOAN ADDED + ADDITIONAL LOAN PRINCIPAL + FINANCE EMI ROLLBACK)
+    // CALCULATE OUT AMOUNT (FINANCE ADDED + LOAN ADDED + ADDITIONAL LOAN PRINCIPAL + FINANCE EMI ROLLBACK + TRANSFER LOAN IN)
     const Finance_added_data = DayBookData?.['FINANCE ADDED'] || {};
     const Finance_emi_rollback_data = DayBookData?.['FINANCE EMI ROLLBACK'] || {};
     const Loan_added_data = DayBookData?.['LOAN ADDED'] || {};
     const Additional_principal_data = DayBookData?.['ADDITIONAL LOAN PRINCIPAL'] || {};
+    const Transfer_loan_in_data = DayBookData?.['TRANSFER LOAN IN'] || {};
 
-    total_today_cash_out_amt = parseFloat(Finance_added_data.total_cash_amt || 0) + parseFloat(Finance_emi_rollback_data.total_cash_amt || 0) + parseFloat(Loan_added_data.total_cash_amt || 0) + parseFloat(Additional_principal_data.total_cash_amt || 0);
-    total_today_bank_out_amt = parseFloat(Finance_added_data.total_bank_amt || 0) + parseFloat(Finance_emi_rollback_data.total_bank_amt || 0) + parseFloat(Loan_added_data.total_bank_amt || 0) + parseFloat(Additional_principal_data.total_bank_amt || 0);
-    total_today_online_out_amt = parseFloat(Finance_added_data.total_online_amt || 0) + parseFloat(Finance_emi_rollback_data.total_online_amt || 0) + parseFloat(Loan_added_data.total_online_amt || 0) + parseFloat(Additional_principal_data.total_online_amt || 0);
-    total_today_card_out_amt = parseFloat(Finance_added_data.total_card_amt || 0) + parseFloat(Finance_emi_rollback_data.total_card_amt || 0) + parseFloat(Loan_added_data.total_card_amt || 0) + parseFloat(Additional_principal_data.total_card_amt || 0);
-    total_today_disc_out_amt = parseFloat(Finance_added_data.total_disc_amt || 0) + parseFloat(Finance_emi_rollback_data.total_disc_amt || 0) + parseFloat(Loan_added_data.total_disc_amt || 0) + parseFloat(Additional_principal_data.total_disc_amt || 0);
-    total_today_out_amt = parseFloat(Finance_added_data.total_amt || 0) + parseFloat(Finance_emi_rollback_data.total_amt || 0) + parseFloat(Loan_added_data.total_amt || 0) + parseFloat(Additional_principal_data.total_amt || 0);
+    total_today_cash_out_amt = parseFloat(Finance_added_data.total_cash_amt || 0) + parseFloat(Finance_emi_rollback_data.total_cash_amt || 0) + parseFloat(Loan_added_data.total_cash_amt || 0) + parseFloat(Additional_principal_data.total_cash_amt || 0) + parseFloat(Transfer_loan_in_data.total_cash_amt || 0);
+    total_today_bank_out_amt = parseFloat(Finance_added_data.total_bank_amt || 0) + parseFloat(Finance_emi_rollback_data.total_bank_amt || 0) + parseFloat(Loan_added_data.total_bank_amt || 0) + parseFloat(Additional_principal_data.total_bank_amt || 0) + parseFloat(Transfer_loan_in_data.total_bank_amt || 0);
+    total_today_online_out_amt = parseFloat(Finance_added_data.total_online_amt || 0) + parseFloat(Finance_emi_rollback_data.total_online_amt || 0) + parseFloat(Loan_added_data.total_online_amt || 0) + parseFloat(Additional_principal_data.total_online_amt || 0) + parseFloat(Transfer_loan_in_data.total_online_amt || 0);
+    total_today_card_out_amt = parseFloat(Finance_added_data.total_card_amt || 0) + parseFloat(Finance_emi_rollback_data.total_card_amt || 0) + parseFloat(Loan_added_data.total_card_amt || 0) + parseFloat(Additional_principal_data.total_card_amt || 0) + parseFloat(Transfer_loan_in_data.total_card_amt || 0);
+    total_today_disc_out_amt = parseFloat(Finance_added_data.total_disc_amt || 0) + parseFloat(Finance_emi_rollback_data.total_disc_amt || 0) + parseFloat(Loan_added_data.total_disc_amt || 0) + parseFloat(Additional_principal_data.total_disc_amt || 0) + parseFloat(Transfer_loan_in_data.total_disc_amt || 0);
+    total_today_out_amt = parseFloat(Finance_added_data.total_amt || 0) + parseFloat(Finance_emi_rollback_data.total_amt || 0) + parseFloat(Loan_added_data.total_amt || 0) + parseFloat(Additional_principal_data.total_amt || 0) + parseFloat(Transfer_loan_in_data.total_amt || 0);
 
     // Calculate TODAY TOTAL (in - out)
     total_today_cash_amt = total_today_cash_in_amt - total_today_cash_out_amt;

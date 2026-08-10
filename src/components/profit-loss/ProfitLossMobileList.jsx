@@ -1,9 +1,5 @@
 import React from "react";
-import {
-  formatCurrency,
-  PROFIT_LOSS_ACCOUNTS,
-  sumAmounts,
-} from "./profitLossData";
+import { formatCurrency, sumAmounts } from "./profitLossData";
 
 const findResultLine = (expenditure = [], revenue = []) => {
   const all = [...expenditure, ...revenue];
@@ -105,7 +101,7 @@ const AccountSection = ({ title, expenditure, revenue }) => {
   );
 };
 
-const ProfitLossMobileList = ({ accounts = PROFIT_LOSS_ACCOUNTS }) => {
+const ProfitLossMobileList = ({ accounts = [] }) => {
   if (!accounts.length) {
     return (
       <div className="profit-loss-mobile-wrap text-center text-muted py-4">

@@ -1,27 +1,39 @@
-const useAddFinanceCalculator = ({ fin_prin_amt,
-    fin_no_of_emi,
-    fin_freq_type = "MONTHLY",
-    fin_proccess_amt = 0 }) => {
-    fin_prin_amt = parseFloat(fin_prin_amt) || 0;
-    fin_no_of_emi = parseFloat(fin_no_of_emi) || 0;
-    fin_proccess_amt = parseFloat(fin_proccess_amt) || 0;
+/**
+ * Finance amounts (aligned with proper ledger):
+ * - receivable = principal + flat interest (ROI % of principal for tenure)
+ * - disbursed (fin_final_amt) = principal − process fee  (cash out)
+ * - EMI = receivable / n  (schedule total = receivable = DR loan)
+ */
+const useAddFinanceCalculator = ({
+  fin_prin_amt,
+  fin_no_of_emi,
+  fin_freq_type = "MONTHLY",
+  fin_proccess_amt = 0,
+  fin_roi = 0,
+}) => {
+  const prin = parseFloat(fin_prin_amt) || 0;
+  const n = parseInt(fin_no_of_emi, 10) || 0;
+  const processAmt = parseFloat(fin_proccess_amt) || 0;
+  const roi = parseFloat(fin_roi) || 0;
 
-    let adjustedNoOfEmi = fin_no_of_emi;
-    // Note: WEEKLY and MONTHLY might need specific logic depending on the requirements,
-    // but based on previous logic, only quarterly/yearly had adjustments.
-    // Assuming fin_no_of_emi is the count of intervals.
+  void fin_freq_type;
 
-    let emi = 0;
-    if (fin_prin_amt > 0 && adjustedNoOfEmi > 0) {
-        emi = fin_prin_amt / adjustedNoOfEmi;
-    }
+  const interestAmt =
+    prin > 0 && roi > 0 ? parseFloat(((prin * roi) / 100).toFixed(2)) : 0;
+  const receivable = parseFloat((prin + interestAmt).toFixed(2));
+  const disbursed = parseFloat(Math.max(0, prin - processAmt).toFixed(2));
 
-    const finalAmount = emi * adjustedNoOfEmi - fin_proccess_amt;
+  let emi = 0;
+  if (receivable > 0 && n > 0) {
+    emi = receivable / n;
+  }
 
-    return {
-        fin_emi_amt: emi > 0 ? emi.toFixed(2) : "0.00",
-        fin_final_amt: finalAmount > 0 ? finalAmount.toFixed(2) : "0.00",
-    };
+  return {
+    fin_emi_amt: emi > 0 ? emi.toFixed(2) : "0.00",
+    fin_final_amt: disbursed > 0 ? disbursed.toFixed(2) : "0.00",
+    fin_interest_amt: interestAmt.toFixed(2),
+    fin_receivable_amt: receivable > 0 ? receivable.toFixed(2) : "0.00",
+  };
 };
 
 export default useAddFinanceCalculator;

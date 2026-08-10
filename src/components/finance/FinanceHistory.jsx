@@ -20,7 +20,8 @@ const formatAmt = (value) =>
 const typeBadgeClass = (type = '') => {
     const t = String(type).toUpperCase();
     if (t.includes('ROLLBACK')) return 'bg-danger-subtle text-danger';
-    if (t.includes('PAID') || t.includes('PAYMENT')) return 'bg-success-subtle text-success';
+    if (t.includes('FINE')) return 'bg-warning-subtle text-warning';
+    if (t.includes('PAID') || t.includes('PAYMENT') || t.includes('CLOSE')) return 'bg-success-subtle text-success';
     return 'bg-primary-subtle text-primary';
 };
 

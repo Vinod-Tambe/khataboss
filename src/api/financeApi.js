@@ -16,6 +16,21 @@ export const createFinance = async (financeData) => {
 };
 
 /**
+ * Update an existing finance record
+ * @param {number|string} id - Finance ID
+ * @param {object} financeData - Fields to update
+ */
+export const updateFinance = async (id, financeData) => {
+  try {
+    const response = await axiosInstance.put(`/finance/${id}`, financeData);
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.error || error.response?.data?.message || error.message;
+    throw new Error(message);
+  }
+};
+
+/**
  * Get all finance records
  * @param {number|string} firmId - Optional firm ID to filter by
  * @returns {Promise} - Response object with list of finances

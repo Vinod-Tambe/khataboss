@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import FinanceInfo from './FinanceInfo'
 import FinanceHistory from './FinanceHistory'
 import PaymentForm from './PaymentForm'
@@ -11,6 +11,7 @@ import '../../css/Finance.css'
 
 const Finance = () => {
     const location = useLocation();
+    const navigate = useNavigate();
     const initialFinance = location.state?.finance;
 
     const [view, setView] = useState('info'); // 'info' or 'history'
@@ -49,6 +50,11 @@ const Finance = () => {
 
     const handleClosePayment = () => {
         setModalConfig({ title: 'Close Finance', type: 'CLOSE' });
+        setShowModal(true);
+    };
+
+    const handlePaidFine = () => {
+        setModalConfig({ title: 'Paid Fine / Collect', type: 'FINE' });
         setShowModal(true);
     };
 
@@ -103,6 +109,19 @@ const Finance = () => {
                                         </span>
                                     );
                                 })()}
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-primary px-3 d-inline-flex align-items-center"
+                                    onClick={() =>
+                                        navigate(
+                                            `/user/home/edit-finance/${financeData?.fin_id || initialFinance?.fin_id}`,
+                                            { state: { finance: financeData || initialFinance } }
+                                        )
+                                    }
+                                    title="Update finance"
+                                >
+                                    <i className="bi bi-pencil-square me-1"></i> Edit
+                                </button>
                             </div>
                         </div>
                         <FinanceInfo
@@ -110,6 +129,7 @@ const Finance = () => {
                             onPayment={handlePayment}
                             onRollback={handleRollback}
                             onClose={handleClosePayment}
+                            onPaidFine={handlePaidFine}
                             onHistory={handleHistory}
                             isLoading={loading}
                             financeData={financeData}

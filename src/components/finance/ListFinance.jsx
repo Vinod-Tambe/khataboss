@@ -60,7 +60,7 @@ const ListFinance = ({ status = "ALL", global = false }) => {
   };
 
   const handleEdit = (rowData) => {
-    navigate("/user/home/finance", { state: { finance: rowData } });
+    navigate(`/user/home/edit-finance/${rowData.fin_id}`, { state: { finance: rowData } });
   };
 
   const handleDelete = async (rowData) => {

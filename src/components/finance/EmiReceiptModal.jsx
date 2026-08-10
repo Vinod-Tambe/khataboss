@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import CommonModal from '../common/CommonModal';
 import moment from 'moment';
+import { toast } from 'react-toastify';
 import '../../css/Modal.css';
 import '../../css/Finance.css';
 import {
@@ -9,6 +10,7 @@ import {
     getEmiReceiptShareText,
     getEmiReceiptFileName,
 } from './downloadEmiReceiptPdf';
+import { tryDispatchReceipt } from '../../utils/dispatchWhatsAppReceipt';
 
 const EmiReceiptModal = ({ show, onHide, emiData, initialFinance }) => {
     const [sharing, setSharing] = useState(false);
@@ -52,9 +54,42 @@ const EmiReceiptModal = ({ show, onHide, emiData, initialFinance }) => {
         setSharing(true);
         const shareText = getEmiReceiptShareText(receiptOptions);
         const fileName = getEmiReceiptFileName(emiData);
+        const firmId = initialFinance?.fin_firm_id || initialFinance?.firm?.firm_id;
+        const toPhone = initialFinance?.user?.user_mobile_no;
+        const toEmail = initialFinance?.user?.user_email_id;
+        const customerName = initialFinance?.user?.user_first_name
+            ? `${initialFinance.user.user_first_name} ${initialFinance.user.user_last_name || ''}`.trim()
+            : 'Customer';
+        const regNo = initialFinance?.fin_unique_code || initialFinance?.fin_id || 'N/A';
+        const payDate = emiData.ft_payment_date
+            ? moment(emiData.ft_payment_date).format('DD-MMM-YY')
+            : moment().format('DD-MMM-YY');
 
         try {
             const blob = await getEmiReceiptPdfBlob(receiptOptions);
+
+            if (firmId && (toPhone || toEmail)) {
+                const dispatch = await tryDispatchReceipt({
+                    firmId,
+                    templateKey: 'finance_collection_receipt',
+                    toPhone,
+                    toEmail,
+                    vars: {
+                        1: customerName,
+                        2: String(regNo),
+                        3: String(emiData.ft_paid_amt || 0),
+                        4: payDate,
+                    },
+                    pdfBlob: blob,
+                    fileName,
+                });
+                if (dispatch.dispatched) {
+                    toast.success('Receipt sent via WhatsApp / email');
+                    setSharing(false);
+                    return;
+                }
+            }
+
             const file = new File([blob], fileName, { type: 'application/pdf' });
 
             if (navigator.canShare && navigator.canShare({ files: [file] })) {

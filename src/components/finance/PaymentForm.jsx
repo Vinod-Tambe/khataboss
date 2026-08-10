@@ -9,6 +9,8 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
     const [transType, setTransType] = useState(initialType);
     const [accounts, setAccounts] = useState([]);
     const [submitting, setSubmitting] = useState(false);
+    const [finePortion, setFinePortion] = useState('');
+    const [collectPortion, setCollectPortion] = useState('');
 
     const [formData, setFormData] = useState({
         fm_trans_date: new Date().toISOString().split('T')[0],
@@ -80,7 +82,6 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
 
     const handleInputChange = (e) => {
         const { id, value } = e.target;
-        // Only sanitize if it's an amount field
         let finalValue = value;
         if (id.includes('_amt')) {
             finalValue = value.replace(/[^0-9.]/g, '');
@@ -102,7 +103,6 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
         }));
     };
 
-
     const totals = useMemo(() => {
         if (!finance?.finance_trans) return { pending: 0, paid: 0 };
         return finance.finance_trans.reduce((acc, emi) => {
@@ -111,6 +111,15 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
             return acc;
         }, { pending: 0, paid: 0 });
     }, [finance?.finance_trans]);
+
+    const fineSummary = finance?.fine_summary || {};
+    const pendingFine = parseFloat(fineSummary.pendingFine) || 0;
+    const pendingCollect = parseFloat(fineSummary.pendingCollect) || 0;
+    const pendingFineTotal = parseFloat(
+        (fineSummary.pendingTotal != null
+            ? fineSummary.pendingTotal
+            : pendingFine + pendingCollect).toFixed(2)
+    );
 
     useEffect(() => {
         if (transType === 'CLOSE' && totals.pending > 0) {
@@ -124,6 +133,22 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
         }
     }, [transType, totals.pending]);
 
+    useEffect(() => {
+        if (transType !== 'FINE') return;
+        const fine = pendingFine;
+        const collect = pendingCollect;
+        setFinePortion(fine > 0 ? String(fine) : '0');
+        setCollectPortion(collect > 0 ? String(collect) : '0');
+        const total = parseFloat((fine + collect).toFixed(2));
+        setFormData(prev => ({
+            ...prev,
+            fm_cash_amt: total > 0 ? total : 0,
+            fm_bank_amt: 0,
+            fm_online_amt: 0,
+            fm_card_amt: 0
+        }));
+    }, [transType, pendingFine, pendingCollect]);
+
     const totalDistributed = useMemo(() => {
         return (parseFloat(formData.fm_cash_amt) || 0) +
             (parseFloat(formData.fm_bank_amt) || 0) +
@@ -131,10 +156,50 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
             (parseFloat(formData.fm_card_amt) || 0);
     }, [formData.fm_cash_amt, formData.fm_bank_amt, formData.fm_online_amt, formData.fm_card_amt]);
 
+    const finePartsSum = useMemo(() => {
+        if (transType !== 'FINE') return 0;
+        return parseFloat(
+            ((parseFloat(finePortion) || 0) + (parseFloat(collectPortion) || 0)).toFixed(2)
+        );
+    }, [transType, finePortion, collectPortion]);
+
     const isOverLimit = useMemo(() => {
+        if (transType === 'FINE') {
+            return totalDistributed > pendingFineTotal + 0.01;
+        }
         const max = (transType === 'PAID' || transType === 'CLOSE') ? totals.pending : totals.paid;
         return totalDistributed > max + 0.01;
-    }, [totalDistributed, transType, totals]);
+    }, [totalDistributed, transType, totals, pendingFineTotal]);
+
+    const handleFinePortionChange = (e) => {
+        const val = e.target.value.replace(/[^0-9.]/g, '');
+        setFinePortion(val);
+        const fine = parseFloat(val) || 0;
+        const collect = parseFloat(collectPortion) || 0;
+        const total = parseFloat((fine + collect).toFixed(2));
+        setFormData(prev => ({
+            ...prev,
+            fm_cash_amt: total,
+            fm_bank_amt: 0,
+            fm_online_amt: 0,
+            fm_card_amt: 0
+        }));
+    };
+
+    const handleCollectPortionChange = (e) => {
+        const val = e.target.value.replace(/[^0-9.]/g, '');
+        setCollectPortion(val);
+        const fine = parseFloat(finePortion) || 0;
+        const collect = parseFloat(val) || 0;
+        const total = parseFloat((fine + collect).toFixed(2));
+        setFormData(prev => ({
+            ...prev,
+            fm_cash_amt: total,
+            fm_bank_amt: 0,
+            fm_online_amt: 0,
+            fm_card_amt: 0
+        }));
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -145,9 +210,15 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
             return;
         }
 
-        // Limit Validation
         if ((transType === 'PAID' || transType === 'CLOSE') && transAmt > totals.pending + 0.01) {
             toast.error(`Maximum payable amount is ${totals.pending.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+            return;
+        }
+
+        if (transType === 'CLOSE' && Math.abs(transAmt - totals.pending) > 0.01) {
+            toast.error(
+              `Close must collect full pending amount (${totals.pending.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`
+            );
             return;
         }
 
@@ -156,8 +227,27 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
             return;
         }
 
+        if (transType === 'FINE') {
+            const fine = parseFloat(finePortion) || 0;
+            const collect = parseFloat(collectPortion) || 0;
+            if (fine > pendingFine + 0.01) {
+                toast.error(`Fine cannot exceed pending fine (${pendingFine.toFixed(2)})`);
+                return;
+            }
+            if (collect > pendingCollect + 0.01) {
+                toast.error(`Collect cannot exceed pending collect (${pendingCollect.toFixed(2)})`);
+                return;
+            }
+            if (Math.abs(fine + collect - transAmt) > 0.01) {
+                toast.error("Fine + Collect must equal total payment amount");
+                return;
+            }
+            if (transAmt > pendingFineTotal + 0.01) {
+                toast.error(`Maximum fine/collect amount is ${pendingFineTotal.toFixed(2)}`);
+                return;
+            }
+        }
 
-        // Selected Account Validations
         if (parseFloat(formData.fm_cash_amt) > 0 && !formData.fm_cash_acc_id) {
             toast.error("Please select a Cash Account for the cash payment.");
             return;
@@ -183,10 +273,21 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                 fm_fin_id: finance.fin_id,
                 fm_trans_type: transType
             };
+            if (transType === 'FINE') {
+                payload.fm_fine_amt = parseFloat(finePortion) || 0;
+                payload.fm_collect_amt = parseFloat(collectPortion) || 0;
+            }
             await createFinancePayment(payload);
-            toast.success(`${transType === 'ROLLBACK' ? 'Rollback' : transType === 'CLOSE' ? 'Close Payment' : 'Payment'} processed successfully`);
+            const okMsg =
+                transType === 'ROLLBACK'
+                    ? 'Rollback'
+                    : transType === 'CLOSE'
+                        ? 'Close Payment'
+                        : transType === 'FINE'
+                            ? 'Fine / Collect Payment'
+                            : 'Payment';
+            toast.success(`${okMsg} processed successfully`);
 
-            // Wait a bit so user can see toast before modal closes
             setTimeout(() => {
                 if (onSuccess) onSuccess();
             }, 1500);
@@ -198,9 +299,84 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
         }
     };
 
+    const formBg =
+        transType === 'PAID' || transType === 'FINE'
+            ? 'bg-green'
+            : 'bg-red';
+
+    const maxHint =
+        transType === 'FINE'
+            ? pendingFineTotal
+            : (transType === 'PAID' || transType === 'CLOSE')
+                ? totals.pending
+                : totals.paid;
+
+    const submitLabel =
+        transType === 'PAID'
+            ? 'Submit Payment'
+            : transType === 'CLOSE'
+                ? 'Submit Close Payment'
+                : transType === 'FINE'
+                    ? 'Submit Fine Payment'
+                    : 'Confirm Rollback';
+
     return (
-        <form onSubmit={handleSubmit} className={`p-4 ${transType === 'PAID' ? 'bg-green' : 'bg-red'} rounded shadow-sm border`}>
+        <form onSubmit={handleSubmit} className={`p-4 ${formBg} rounded shadow-sm border`}>
             <div className="row g-3">
+                {transType === 'FINE' && (
+                    <>
+                        <div className="col-12">
+                            <div className="alert alert-light border mb-0 py-2">
+                                <div className="small text-muted">
+                                    {fineSummary.label || 'Fine / Collect'}
+                                    {fineSummary.overdueCount != null && (
+                                        <> · Overdue EMIs: <strong>{fineSummary.overdueCount}</strong></>
+                                    )}
+                                    {fineSummary.totalFine != null && (
+                                        <> · Total fine: <strong>₹{Number(fineSummary.totalFine).toFixed(2)}</strong></>
+                                    )}
+                                </div>
+                                <div className="small mt-1">
+                                    Pending fine: <strong className="text-danger">₹{pendingFine.toFixed(2)}</strong>
+                                    {' · '}
+                                    Pending collect: <strong className="text-primary">₹{pendingCollect.toFixed(2)}</strong>
+                                    {' · '}
+                                    Payable: <strong>₹{pendingFineTotal.toFixed(2)}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-4">
+                            <label className="form-label text-muted fw-bold mb-0">Fine Amount</label>
+                            <input
+                                type="text"
+                                className="form-control form-control-sm fw-bold border-dark-subtle"
+                                value={finePortion}
+                                onChange={handleFinePortionChange}
+                                placeholder="0.00"
+                            />
+                        </div>
+                        <div className="col-md-4">
+                            <label className="form-label text-muted fw-bold mb-0">Collect Amount (Extra)</label>
+                            <input
+                                type="text"
+                                className="form-control form-control-sm fw-bold border-dark-subtle"
+                                value={collectPortion}
+                                onChange={handleCollectPortionChange}
+                                placeholder="0.00"
+                            />
+                        </div>
+                        <div className="col-md-4">
+                            <label className="form-label text-muted fw-bold mb-0">Parts Total</label>
+                            <input
+                                type="text"
+                                className="form-control form-control-sm fw-bold border-dark-subtle"
+                                value={finePartsSum || ''}
+                                readOnly
+                            />
+                        </div>
+                    </>
+                )}
+
                 <div className="col-md-4">
                     <label className="form-label text-muted fw-bold mb-0">Total Amount</label>
                     <input
@@ -210,13 +386,14 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                         placeholder="Enter Total Amount"
                         value={totalDistributed || ''}
                         onChange={handleTotalChange}
+                        readOnly={transType === 'FINE'}
                     />
                 </div>
                 <div className="col-md-4 pt-4">
                     {isOverLimit && (
                         <div className="text-danger extra-small fw-bold  animate__animated animate__shakeX">
                             <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                            You Paid maximum -   {(transType === 'PAID' || transType === 'CLOSE') ? totals.pending.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : totals.paid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            You Paid maximum -   {maxHint.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                     )}
                 </div>
@@ -404,7 +581,7 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                                 Processing...
                             </>
                         ) : (
-                            transType === 'PAID' ? 'Submit Payment' : transType === 'CLOSE' ? 'Submit Close Payment' : 'Confirm Rollback'
+                            submitLabel
                         )}
                     </button>
                 </div>

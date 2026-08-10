@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import moment from "moment";
 import { useSelector } from "react-redux";
 import {
@@ -7,12 +7,16 @@ import {
   FiList,
   FiMail,
   FiMessageSquare,
-  FiPlus,
+  FiPaperclip,
+  FiSettings,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import List from "../common/List";
 import MessageBodyEditor, { stripHtml } from "./MessageBodyEditor";
 import TemplatePreview from "./TemplatePreview";
+import WhatsAppSettingsModal from "./WhatsAppSettingsModal";
+import EmailSettingsModal from "./EmailSettingsModal";
+import { getMessageTemplates, updateMessageTemplate } from "../../api/smsApi";
 import "../../css/Sms.css";
 
 const CHANNELS = [
@@ -25,58 +29,11 @@ const CATEGORIES = ["Marketing", "Transactional", "Customer Care", "OTP"];
 const LANGUAGES = ["English (US)", "English (UK)", "Hindi"];
 
 const VARIABLES = [
-  { key: "{{1}}", label: "{{1}} User Name" },
-  { key: "{{2}}", label: "{{2}} Code" },
-  { key: "{{3}}", label: "{{3}} Rating" },
-];
-
-const STORAGE_KEY = "khataboss_sms_templates";
-
-const DEFAULT_TEMPLATES = [
-  {
-    id: "tpl-1",
-    channel: "whatsapp",
-    name: "welcome_message_v1",
-    category: "Marketing",
-    language: "English (US)",
-    subject: "",
-    body: "Hello {{1}},\n\nWelcome to Acme Corp! Your unique code is: {{2}}.\n\nWe appreciate what you rate in {{3}}.",
-    status: "Active",
-    updatedAt: "2026-07-12T09:15:00",
-  },
-  {
-    id: "tpl-2",
-    channel: "whatsapp",
-    name: "order_confirmation",
-    category: "Transactional",
-    language: "English (US)",
-    subject: "",
-    body: "Hi {{1}}, your order has been confirmed. Tracking code: {{2}}.",
-    status: "Active",
-    updatedAt: "2026-07-11T14:30:00",
-  },
-  {
-    id: "tpl-3",
-    channel: "sms",
-    name: "otp_login",
-    category: "OTP",
-    language: "English (US)",
-    subject: "",
-    body: "Hello {{1}}, your login OTP is {{2}}. Do not share it with anyone.",
-    status: "Active",
-    updatedAt: "2026-07-10T11:00:00",
-  },
-  {
-    id: "tpl-4",
-    channel: "email",
-    name: "welcome_email",
-    category: "Marketing",
-    language: "English (US)",
-    subject: "Welcome to Acme Corp",
-    body: "Hello {{1}},\n\nWelcome to Acme Corp! Your unique code is: {{2}}.\n\nWe appreciate what you rate in {{3}}.",
-    status: "Active",
-    updatedAt: "2026-07-09T16:45:00",
-  },
+  { key: "{{1}}", label: "{{1}} Name" },
+  { key: "{{2}}", label: "{{2}} Code / Ref / Login" },
+  { key: "{{3}}", label: "{{3}} Amount / Password" },
+  { key: "{{4}}", label: "{{4}} Date / Extra" },
+  { key: "{{firm_name}}", label: "{{firm_name}}" },
 ];
 
 const getInitialForm = (channel = "whatsapp") => ({
@@ -86,18 +43,8 @@ const getInitialForm = (channel = "whatsapp") => ({
   subject: "",
   body: "",
   channel,
+  hasAttachment: false,
 });
-
-const loadTemplates = () => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULT_TEMPLATES;
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length ? parsed : DEFAULT_TEMPLATES;
-  } catch {
-    return DEFAULT_TEMPLATES;
-  }
-};
 
 const channelTitle = (channel) => {
   if (channel === "sms") return "Text SMS";
@@ -107,40 +54,80 @@ const channelTitle = (channel) => {
 
 const SmsPage = () => {
   const { firms, selectedFirmId } = useSelector((state) => state.firm);
-  const firmName =
-    (selectedFirmId !== "all"
-      ? firms?.find((f) => String(f.firm_id) === String(selectedFirmId))?.firm_name
-      : firms?.[0]?.firm_name) || "Acme Corp";
+
+  const activeFirm = useMemo(() => {
+    if (!firms?.length) return null;
+    if (selectedFirmId && selectedFirmId !== "all") {
+      return firms.find((f) => String(f.firm_id) === String(selectedFirmId)) || firms[0];
+    }
+    return firms[0];
+  }, [firms, selectedFirmId]);
+
+  const firmId = activeFirm?.firm_id;
+  const firmName = activeFirm?.firm_name || "Your Firm";
 
   const [activeChannel, setActiveChannel] = useState("whatsapp");
-  const [templates, setTemplates] = useState(loadTemplates);
+  const [templates, setTemplates] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState(getInitialForm("whatsapp"));
+  const [existingAttachments, setExistingAttachments] = useState([]);
+  const [newFiles, setNewFiles] = useState([]);
   const [openSelect, setOpenSelect] = useState(null);
-  const [mobileMode, setMobileMode] = useState("list"); // list | create | preview (mobile only)
+  const [mobileMode, setMobileMode] = useState("list");
+  const [waModalOpen, setWaModalOpen] = useState(false);
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+
+  const loadTemplates = useCallback(async () => {
+    if (!firmId) {
+      setTemplates([]);
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await getMessageTemplates({ firmId, channel: activeChannel });
+      setTemplates(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      toast.error(err.message || "Failed to load templates");
+      setTemplates([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [firmId, activeChannel]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(templates));
-  }, [templates]);
+    loadTemplates();
+  }, [loadTemplates]);
 
   const filteredTemplates = useMemo(() => {
-    return templates
-      .filter((t) => t.channel === activeChannel)
-      .sort((a, b) => moment(b.updatedAt).valueOf() - moment(a.updatedAt).valueOf());
-  }, [templates, activeChannel]);
+    return [...templates].sort(
+      (a, b) => moment(b.updatedAt).valueOf() - moment(a.updatedAt).valueOf()
+    );
+  }, [templates]);
 
   const bodyLength = stripHtml(formData.body).length;
   const smsParts = Math.max(1, Math.ceil(bodyLength / 160));
+  const previewAttachments = [
+    ...existingAttachments,
+    ...newFiles.map((f) => ({ originalName: f.name, filename: f.name })),
+  ];
 
   const handleChannelChange = (channel) => {
     setActiveChannel(channel);
     setEditingId(null);
     setFormData(getInitialForm(channel));
+    setExistingAttachments([]);
+    setNewFiles([]);
+    setMobileMode("list");
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
   const handleBodyChange = (html) => {
@@ -149,7 +136,7 @@ const SmsPage = () => {
 
   const handleDiscard = () => {
     if (editingId) {
-      const existing = templates.find((t) => t.id === editingId);
+      const existing = templates.find((t) => t.id === editingId || t.uuid === editingId);
       if (existing) {
         setFormData({
           name: existing.name,
@@ -158,16 +145,22 @@ const SmsPage = () => {
           subject: existing.subject || "",
           body: existing.body,
           channel: existing.channel,
+          hasAttachment: Boolean(existing.hasAttachment),
         });
+        setExistingAttachments(existing.attachments || []);
+        setNewFiles([]);
         return;
       }
     }
     setFormData(getInitialForm(activeChannel));
     setEditingId(null);
+    setExistingAttachments([]);
+    setNewFiles([]);
+    setMobileMode("list");
   };
 
   const handleEdit = (row) => {
-    setEditingId(row.id);
+    setEditingId(row.id || row.uuid);
     setActiveChannel(row.channel);
     setFormData({
       name: row.name,
@@ -176,25 +169,22 @@ const SmsPage = () => {
       subject: row.subject || "",
       body: row.body,
       channel: row.channel,
+      hasAttachment: Boolean(row.hasAttachment),
     });
-    setMobileMode("create");
+    setExistingAttachments(row.attachments || []);
+    setNewFiles([]);
+    setMobileMode("edit");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleDelete = (row) => {
-    setTemplates((prev) => prev.filter((t) => t.id !== row.id));
-    if (editingId === row.id) {
-      setEditingId(null);
-      setFormData(getInitialForm(activeChannel));
-    }
-    toast.success("Template deleted");
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const name = formData.name.trim().toLowerCase().replace(/\s+/g, "_");
-    if (!name) {
-      toast.error("Template name is required");
+    if (!firmId) {
+      toast.error("Create or select a firm first");
+      return;
+    }
+    if (!editingId) {
+      toast.error("Select a template from the list to edit");
       return;
     }
     if (!stripHtml(formData.body).trim()) {
@@ -206,40 +196,36 @@ const SmsPage = () => {
       return;
     }
 
-    const duplicate = templates.some(
-      (t) =>
-        t.channel === activeChannel &&
-        t.name === name &&
-        t.id !== editingId
+    const fd = new FormData();
+    fd.append("firmId", String(firmId));
+    fd.append("channel", activeChannel);
+    fd.append("name", formData.name.trim().toLowerCase().replace(/\s+/g, "_"));
+    fd.append("category", formData.category);
+    fd.append("language", formData.language);
+    fd.append("subject", activeChannel === "email" ? formData.subject.trim() : "");
+    fd.append("body", formData.body);
+    fd.append(
+      "hasAttachment",
+      String(formData.hasAttachment || newFiles.length > 0 || existingAttachments.length > 0)
     );
-    if (duplicate) {
-      toast.error("A template with this name already exists");
-      return;
+    fd.append("variables", JSON.stringify(VARIABLES));
+    newFiles.forEach((file) => fd.append("attachments", file));
+
+    setSaving(true);
+    try {
+      await updateMessageTemplate(editingId, fd);
+      toast.success("Template updated");
+      setEditingId(null);
+      setFormData(getInitialForm(activeChannel));
+      setExistingAttachments([]);
+      setNewFiles([]);
+      setMobileMode("list");
+      await loadTemplates();
+    } catch (err) {
+      toast.error(err.message || "Failed to update template");
+    } finally {
+      setSaving(false);
     }
-
-    const payload = {
-      id: editingId || `tpl-${Date.now()}`,
-      channel: activeChannel,
-      name,
-      category: formData.category,
-      language: formData.language,
-      subject: activeChannel === "email" ? formData.subject.trim() : "",
-      body: formData.body,
-      status: "Active",
-      updatedAt: new Date().toISOString(),
-    };
-
-    setTemplates((prev) => {
-      if (editingId) {
-        return prev.map((t) => (t.id === editingId ? payload : t));
-      }
-      return [payload, ...prev];
-    });
-
-    toast.success(editingId ? "Template updated" : "Template saved");
-    setEditingId(null);
-    setFormData(getInitialForm(activeChannel));
-    setMobileMode("list");
   };
 
   const renderChannelTabs = (extraClass = "") => (
@@ -279,6 +265,17 @@ const SmsPage = () => {
       },
     },
     {
+      title: "Attachment",
+      key: "hasAttachment",
+      orderable: false,
+      searchable: false,
+      render: (val, _type, row) => {
+        const count = Array.isArray(row?.attachments) ? row.attachments.length : 0;
+        if (!val && !count) return "—";
+        return count ? `Yes (${count})` : "Optional";
+      },
+    },
+    {
       key: "updatedAt",
       title: "Last Updated",
       orderable: true,
@@ -302,15 +299,47 @@ const SmsPage = () => {
         <div>
           <h2 className="sms-page-title">Message Templates</h2>
           <p className="sms-page-subtitle">
-            Create WhatsApp, SMS, and Email templates with a live phone preview.
+            System templates for WhatsApp, SMS, and Email
+            {firmName ? ` — ${firmName}` : ""}. Edit message content only; names are fixed for
+            triggers.
+            {selectedFirmId === "all" && firms?.length > 1
+              ? " Pick a firm from the top filter to switch."
+              : ""}
           </p>
+        </div>
+        <div className="sms-page-header-actions">
+          {activeChannel === "whatsapp" ? (
+            <button
+              type="button"
+              className="btn btn-sms-wa-settings"
+              onClick={() => setWaModalOpen(true)}
+              disabled={!firmId}
+            >
+              <FiSettings size={16} />
+              <span>WhatsApp Settings</span>
+            </button>
+          ) : null}
+          {activeChannel === "email" ? (
+            <button
+              type="button"
+              className="btn btn-sms-wa-settings"
+              onClick={() => setEmailModalOpen(true)}
+            >
+              <FiSettings size={16} />
+              <span>Email Settings</span>
+            </button>
+          ) : null}
         </div>
       </div>
 
-      {/* Desktop: channel tabs always visible */}
+      {!firmId ? (
+        <div className="alert alert-warning">
+          Create a firm first to manage message templates. Existing workflows are unaffected.
+        </div>
+      ) : null}
+
       {renderChannelTabs("sms-tabs-desktop")}
 
-      {/* Mobile top: List | Create Template | Preview */}
       <div className="sms-mobile-mode-tabs" role="tablist" aria-label="Mobile sections">
         <button
           type="button"
@@ -325,12 +354,13 @@ const SmsPage = () => {
         <button
           type="button"
           role="tab"
-          aria-selected={mobileMode === "create"}
-          className={`sms-mobile-mode-tab ${mobileMode === "create" ? "active" : ""}`}
-          onClick={() => setMobileMode("create")}
+          aria-selected={mobileMode === "edit"}
+          className={`sms-mobile-mode-tab ${mobileMode === "edit" ? "active" : ""}`}
+          onClick={() => editingId && setMobileMode("edit")}
+          disabled={!editingId}
         >
-          {editingId ? <FiEdit3 size={16} /> : <FiPlus size={16} />}
-          <span>{editingId ? "Edit" : "Create"}</span>
+          <FiEdit3 size={16} />
+          <span>Edit</span>
         </button>
         <button
           type="button"
@@ -344,58 +374,39 @@ const SmsPage = () => {
         </button>
       </div>
 
-      {/* Mobile: channel tabs for List + Preview */}
       {renderChannelTabs("sms-tabs-mobile-channels")}
 
       <div className="sms-workspace">
         <div className="sms-workspace-body">
+          {editingId ? (
           <div className="sms-form-card">
             <div className="sms-form-card-head">
               <div>
                 <h4>
-                  {editingId ? (
-                    <>
-                      <FiEdit3 size={16} className="me-1" />
-                      Edit {channelTitle(activeChannel)} Template
-                    </>
-                  ) : (
-                    <>Create {channelTitle(activeChannel)} Template</>
-                  )}
+                  <FiEdit3 size={16} className="me-1" />
+                  Edit {channelTitle(activeChannel)} Template
                 </h4>
                 <p className="sms-form-hint">
-                  Use variable chips in the editor. Preview updates instantly on the right.
+                  Template key is fixed for system triggers. You can edit subject, body, and
+                  attachments only.
                 </p>
               </div>
-              {editingId ? <span className="sms-edit-badge">Editing</span> : null}
+              <span className="sms-edit-badge">Editing</span>
             </div>
 
             <form noValidate onSubmit={handleSubmit}>
               <div className="row g-3">
-                <div className="col-12 sms-mobile-channel-field">
-                  <label className="form-label">Channel</label>
-                  <select
-                    className="form-select"
-                    value={activeChannel}
-                    onChange={(e) => handleChannelChange(e.target.value)}
-                  >
-                    {CHANNELS.map((ch) => (
-                      <option key={ch.id} value={ch.id}>
-                        {ch.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
                 <div className="col-12 col-md-4">
-                  <label className="form-label">Template Name</label>
+                  <label className="form-label">Template Key</label>
                   <input
                     type="text"
                     name="name"
                     className="form-control"
-                    placeholder="e.g. welcome_message_v2"
                     value={formData.name}
-                    onChange={handleChange}
+                    readOnly
+                    disabled
                   />
-                  <small className="sms-field-hint">Saved as lowercase with underscores</small>
+                  <small className="sms-field-hint">Used by loan, finance, staff & customer triggers</small>
                 </div>
                 <div className="col-12 col-md-4">
                   <label className="form-label">Category</label>
@@ -470,23 +481,68 @@ const SmsPage = () => {
                       {bodyLength > 160 ? <span>· {smsParts} SMS parts</span> : <span>· 1 SMS part</span>}
                     </div>
                   ) : (
-                    <div className="sms-char-count">
-                      {bodyLength} characters
-                    </div>
+                    <div className="sms-char-count">{bodyLength} characters</div>
                   )}
                 </div>
+
+                {activeChannel !== "sms" ? (
+                  <div className="col-12">
+                    <label className="form-label">
+                      <FiPaperclip size={14} className="me-1" />
+                      Attachments {activeChannel === "email" ? "(PDF / image)" : "(optional)"}
+                    </label>
+                    <div className="sms-attach-row">
+                      <label className="sms-attach-check">
+                        <input
+                          type="checkbox"
+                          name="hasAttachment"
+                          checked={formData.hasAttachment}
+                          onChange={handleChange}
+                        />
+                        <span>This message may include an attachment when sent</span>
+                      </label>
+                      <input
+                        type="file"
+                        className="form-control"
+                        multiple
+                        accept="image/*,.pdf,.doc,.docx,.txt"
+                        onChange={(e) => setNewFiles(Array.from(e.target.files || []))}
+                      />
+                    </div>
+                    {existingAttachments.length || newFiles.length ? (
+                      <ul className="sms-attach-list">
+                        {existingAttachments.map((a, idx) => (
+                          <li key={`ex-${idx}`}>{a.originalName || a.filename}</li>
+                        ))}
+                        {newFiles.map((f, idx) => (
+                          <li key={`new-${idx}`}>{f.name} (new)</li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
 
               <div className="sms-form-actions">
                 <button type="button" className="btn btn-sms-discard" onClick={handleDiscard}>
-                  Discard
+                  Cancel
                 </button>
-                <button type="submit" className="btn btn-sms-save">
-                  {editingId ? "Update Template" : "Create Template"}
+                <button type="submit" className="btn btn-sms-save" disabled={saving || !firmId}>
+                  {saving ? "Saving…" : "Update Template"}
                 </button>
               </div>
             </form>
           </div>
+          ) : (
+            <div className="sms-form-card sms-form-empty">
+              <FiEdit3 size={28} className="sms-form-empty-icon" />
+              <h4>Select a template to edit</h4>
+              <p className="sms-form-hint mb-0">
+                Templates are created automatically when a firm is added. Click the edit button on
+                any row below to update message content.
+              </p>
+            </div>
+          )}
 
           <aside className="sms-preview-panel">
             <div className="sms-preview-panel-head">
@@ -503,6 +559,8 @@ const SmsPage = () => {
                 body={formData.body}
                 subject={formData.subject}
                 firmName={firmName}
+                attachments={previewAttachments}
+                hasAttachment={formData.hasAttachment || previewAttachments.length > 0}
               />
             </div>
           </aside>
@@ -513,20 +571,25 @@ const SmsPage = () => {
         <List
           data={filteredTemplates}
           columns={columns}
-          title={`Saved ${channelTitle(activeChannel)} Templates`}
+          title={`${channelTitle(activeChannel)} Templates${loading ? " (loading…)" : ""}`}
           primaryKey="name"
           subtitleKey="updatedAt"
-          onDelete={handleDelete}
-          hasDelete={true}
+          hasDelete={false}
           hasEdit={true}
           onEdit={handleEdit}
           showFooter={false}
           showSearch={false}
-          deleteConfirmMessage={(row) =>
-            `Are you sure you want to delete template "${row?.name}"?`
-          }
         />
       </div>
+
+      <WhatsAppSettingsModal
+        open={waModalOpen}
+        onClose={() => setWaModalOpen(false)}
+        firmId={firmId}
+        firmName={firmName}
+      />
+
+      <EmailSettingsModal open={emailModalOpen} onClose={() => setEmailModalOpen(false)} />
     </div>
   );
 };
