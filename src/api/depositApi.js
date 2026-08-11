@@ -8,3 +8,12 @@ export const addDeposit = async (payload) => {
     throw error.response?.data || error;
   }
 };
+
+export const deleteDeposit = async (dep_id) => {
+  try {
+    const response = await axiosInstance.delete(`/deposit/${dep_id}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};

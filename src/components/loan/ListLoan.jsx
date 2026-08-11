@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { getGirvis } from "../../api/girviApi";
+import { getGirvis, deleteGirvi } from "../../api/girviApi";
 import { toast } from "react-toastify";
 import List from "../common/List";
 import { setSelectedUser } from "../../store/slices/userSlice";
+import usePermissions from "../../hooks/usePermissions";
 import {
   formatListAmt,
   formatListDate,
@@ -18,6 +19,8 @@ const ListLoan = ({ status = "ALL", global = false }) => {
   const dispatch = useDispatch();
   const { selectedUser } = useSelector((state) => state.user);
   const { selectedFirm } = useSelector((state) => state.firm);
+  const { can } = usePermissions();
+  const canDeleteLoan = can("loan.delete");
   const [loans, setLoans] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -56,8 +59,22 @@ const ListLoan = ({ status = "ALL", global = false }) => {
     navigate("/user/home/loan-info", { state: { loan: rowData } });
   };
 
-  const handleDelete = async () => {
-    toast.error("Delete not implemented");
+  const handleDelete = async (rowData) => {
+    if (!rowData?.girv_id) return;
+    const loanRef = rowData.girv_unique_code || rowData.girv_loan_no || `LN-${rowData.girv_id}`;
+    const confirmed = window.confirm(
+      `Delete loan ${loanRef}? This is only allowed for ACTIVE loans with no deposits, releases, or additional principal.`
+    );
+    if (!confirmed) return;
+
+    try {
+      await deleteGirvi(rowData.girv_id);
+      toast.success("Loan deleted successfully");
+      fetchLoans();
+    } catch (error) {
+      console.error("Error deleting loan:", error);
+      toast.error(error?.error || error?.message || "Failed to delete loan");
+    }
   };
 
   const handleCustomerHome = (rowData) => {
@@ -286,10 +303,11 @@ const ListLoan = ({ status = "ALL", global = false }) => {
           onEdit={handleEdit}
           onCustomerHome={global ? handleCustomerHome : undefined}
           hasView={true}
-          hasDelete={false}
+          hasDelete={canDeleteLoan ? (row) => row.girv_status === "ACTIVE" : false}
           hasEdit={(row) => row.girv_status === "ACTIVE"}
           isLoading={loading}
           showFooter={true}
+          deleteConfirmMessage="Are you sure you want to delete this loan? Only clean ACTIVE loans can be deleted."
         />
       </div>
     </div>

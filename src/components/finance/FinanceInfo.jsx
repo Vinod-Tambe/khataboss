@@ -126,9 +126,12 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, on
         }, { emiAmt: 0, paidAmt: 0, pendingAmt: 0, fineAmt: 0 });
     }, [filteredData]);
 
+    const pendingFineTotal = parseFloat(fineSummary?.pendingTotal) || 0;
+
     const canCloseFinance =
         totals.pendingAmt > 0 &&
-        (!interestSummary?.interest_separate || pendingInterestAmt <= 0);
+        (!interestSummary?.interest_separate || pendingInterestAmt <= 0) &&
+        pendingFineTotal <= 0.01;
 
     const rollbackSummary = financeData?.rollback_summary || {};
     const canRollback =
@@ -136,8 +139,6 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, on
         Boolean(rollbackSummary.can_rollback_interest) ||
         Boolean(rollbackSummary.can_rollback_fine) ||
         totals.paidAmt > 0;
-
-    const pendingFineTotal = parseFloat(fineSummary?.pendingTotal) || 0;
 
     const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
     const paginatedData = useMemo(() => {
@@ -397,7 +398,9 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, on
                             financeData?.fin_status === 'CLOSED'
                                 ? 'Finance is already closed'
                                 : !canCloseFinance
-                                    ? 'Pay all EMIs and pending interest before closing'
+                                    ? pendingFineTotal > 0.01
+                                        ? 'Pay all EMIs, pending interest, and fine/collect before closing'
+                                        : 'Pay all EMIs and pending interest before closing'
                                     : 'Close this finance'
                         }
                     >
@@ -582,7 +585,9 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, on
                                     financeData?.fin_status === 'CLOSED'
                                         ? 'Finance is already closed'
                                         : !canCloseFinance
-                                            ? 'Pay all EMIs and pending interest before closing'
+                                            ? pendingFineTotal > 0.01
+                                                ? 'Pay all EMIs, pending interest, and fine/collect before closing'
+                                                : 'Pay all EMIs and pending interest before closing'
                                             : 'Close this finance'
                                 }
                             >

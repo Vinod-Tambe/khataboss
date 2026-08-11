@@ -205,6 +205,8 @@ const ReleaseModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pen
   let validationError = "";
   if (payableAmt <= 0) {
     validationError = "Payable Amount must be greater than 0";
+  } else if (totalDueAmount !== undefined && (payableAmt - totalDueAmount) > 0.01) {
+    validationError = `Payable Amount (${payableAmt.toFixed(2)}) cannot exceed Total Due (${totalDueAmount.toFixed(2)})`;
   } else if (!loanDetails?.girv_id) {
     validationError = "Loan details missing";
   } else if (Math.abs(payableAmt - totalPayment) > 0.01) {

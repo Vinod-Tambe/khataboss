@@ -16,7 +16,7 @@ import { setSelectedUser } from '../../store/slices/userSlice';
 import { getLoanInterestSummary } from '../../utils/loanInterest';
 
 const getLoanPendingSummary = (data) => {
-    const summary = getLoanInterestSummary(data);
+    const summary = data?.interest_summary || getLoanInterestSummary(data);
     const totalDeposits = (data.deposits || []).reduce(
         (sum, dep) => sum + (parseFloat(dep.dep_prin_amt) || 0) + (parseFloat(dep.dep_int_amt) || 0),
         0

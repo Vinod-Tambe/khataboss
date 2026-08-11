@@ -6,7 +6,10 @@ import DepositModal from './modal/DepositModal';
 import TransactionModal from './modal/TransactionModal';
 import LoanRecordReceiptModal from './LoanRecordReceiptModal';
 import { downloadLoanInvoicePdf } from './invoice/downloadLoanInvoicePdf';
-import { getGirviById } from '../../api/girviApi';
+import { getGirviById, deleteGirvi } from '../../api/girviApi';
+import { deleteRelease } from '../../api/releaseApi';
+import { deleteDeposit } from '../../api/depositApi';
+import { deleteAdditionalPrincipal } from '../../api/addPrincipalApi';
 import moment from 'moment';
 import { toast } from 'react-toastify';
 import { formatTimePeriod } from '../../utils/formatTimePeriod';
@@ -239,7 +242,15 @@ const ItemTable = ({ data, onImageClick }) => (
   </div>
 );
 
-const PrincipalInfoTable = ({ data, isUnsecured, onShare, onImageClick }) => (
+const PrincipalInfoTable = ({
+  data,
+  isUnsecured,
+  onShare,
+  onImageClick,
+  onDeletePrincipal,
+  canDeletePrincipal,
+  deletingApId,
+}) => (
   <div className="panel-section mt-2">
     <div className="section-header mb-2">Principal Information</div>
     <div className="table-responsive">
@@ -260,11 +271,14 @@ const PrincipalInfoTable = ({ data, isUnsecured, onShare, onImageClick }) => (
             {!isUnsecured && <th className='bg-blue text-brown border border-dark'>Profit/Loss</th>}
             <th className='bg-blue text-brown border border-dark'>User Image</th>
             <th className='bg-blue text-brown border border-dark'>Share</th>
+            {canDeletePrincipal ? (
+              <th className='bg-blue text-brown border border-dark'>Action</th>
+            ) : null}
           </tr>
         </thead>
         <tbody>
           {data && data.length > 0 ? data.map((row, idx) => (
-            <tr key={idx} className="align-middle">
+            <tr key={row.apId || idx} className="align-middle">
               <td>{row.status}</td>
               <td>{Number(row.principal || 0).toFixed(2)}</td>
               <td>{row.roi}</td>
@@ -308,15 +322,42 @@ const PrincipalInfoTable = ({ data, isUnsecured, onShare, onImageClick }) => (
                   <i className="bi bi-share-fill fs-6"></i>
                 </button>
               </td>
+              {canDeletePrincipal ? (
+                <td>
+                  {row.apId ? (
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={() => onDeletePrincipal?.(row)}
+                      disabled={deletingApId === row.apId}
+                      title="Delete additional principal"
+                    >
+                      {deletingApId === row.apId ? (
+                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                      ) : (
+                        <i className="bi bi-trash" aria-hidden="true"></i>
+                      )}
+                    </button>
+                  ) : (
+                    '-'
+                  )}
+                </td>
+              ) : null}
             </tr>
-          )) : <tr><td colSpan={isUnsecured ? "13" : "15"}>No data available</td></tr>}
+          )) : <tr><td colSpan={isUnsecured ? (canDeletePrincipal ? "14" : "13") : (canDeletePrincipal ? "16" : "15")}>No data available</td></tr>}
         </tbody>
       </table>
     </div>
   </div>
 );
 
-const DepositInfoTable = ({ data, onShare }) => (
+const DepositInfoTable = ({
+  data,
+  onShare,
+  onDeleteDeposit,
+  canDeleteDeposit,
+  deletingDepositId,
+}) => (
   data && data.length > 0 ? (
     <div className="panel-section mt-2">
       <div className="section-header mb-2">Deposit Information</div>
@@ -332,11 +373,14 @@ const DepositInfoTable = ({ data, onShare }) => (
               <th className='table-success text-brown border border-dark'>Extra Amount</th>
               <th className='table-success text-brown border border-dark'>Total Received</th>
               <th className='table-success text-brown border border-dark'>Share</th>
+              {canDeleteDeposit ? (
+                <th className='table-success text-brown border border-dark'>Action</th>
+              ) : null}
             </tr>
           </thead>
           <tbody>
             {data.map((row, idx) => (
-              <tr key={idx}>
+              <tr key={row.depId || idx}>
                 <td>{row.status}</td>
                 <td>{row.date}</td>
                 <td className="text-success fw-bold">{Number(row.principal || 0).toFixed(2)}</td>
@@ -356,6 +400,27 @@ const DepositInfoTable = ({ data, onShare }) => (
                     </button>
                   )}
                 </td>
+                {canDeleteDeposit ? (
+                  <td>
+                    {row.depId && !row.isFirstMonthInterest ? (
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() => onDeleteDeposit?.(row)}
+                        disabled={deletingDepositId === row.depId}
+                        title="Delete this deposit"
+                      >
+                        {deletingDepositId === row.depId ? (
+                          <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        ) : (
+                          <i className="bi bi-trash" aria-hidden="true"></i>
+                        )}
+                      </button>
+                    ) : (
+                      '-'
+                    )}
+                  </td>
+                ) : null}
               </tr>
             ))}
           </tbody>
@@ -365,7 +430,7 @@ const DepositInfoTable = ({ data, onShare }) => (
   ) : null
 );
 
-const ReleaseInfoTable = ({ data }) => (
+const ReleaseInfoTable = ({ data, onDeleteRelease, canDeleteRelease, deletingReleaseId }) => (
   data && data.length > 0 ? (
     <div className="panel-section mt-2">
       <div className="section-header mb-2 text-dark">Release Information</div>
@@ -380,11 +445,14 @@ const ReleaseInfoTable = ({ data }) => (
               <th className='table-danger text-brown border border-dark'>Discount Amount</th>
               <th className='table-danger text-brown border border-dark'>Extra Amount</th>
               <th className='table-danger text-brown border border-dark'>Total Received</th>
+              {canDeleteRelease ? (
+                <th className='table-danger text-brown border border-dark'>Action</th>
+              ) : null}
             </tr>
           </thead>
           <tbody>
             {data.map((row, idx) => (
-              <tr key={idx}>
+              <tr key={row.relId || idx}>
                 <td>{row.status}</td>
                 <td>{row.date}</td>
                 <td className="text-danger fw-bold">{Number(row.principal || 0).toFixed(2)}</td>
@@ -392,6 +460,23 @@ const ReleaseInfoTable = ({ data }) => (
                 <td className="text-danger fw-bold">{Number(row.discount || 0).toFixed(2)}</td>
                 <td className="text-danger fw-bold">{Number(row.extraAmt || 0).toFixed(2)}</td>
                 <td className="text-danger fw-bold">{Number(row.total || 0).toFixed(2)}</td>
+                {canDeleteRelease ? (
+                  <td>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={() => onDeleteRelease?.(row)}
+                      disabled={deletingReleaseId === row.relId}
+                      title="Delete this release"
+                    >
+                      {deletingReleaseId === row.relId ? (
+                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                      ) : (
+                        <i className="bi bi-trash" aria-hidden="true"></i>
+                      )}
+                    </button>
+                  </td>
+                ) : null}
               </tr>
             ))}
           </tbody>
@@ -402,18 +487,31 @@ const ReleaseInfoTable = ({ data }) => (
 );
 
 
-const ActionFooter = ({ onUpdateClick, onDepositClick, onTransactionClick, onInvoiceClick, onLogsClick, showLogs, isReleased, isAuction, isUpdateAllowed, isInvoiceDownloading }) => (
+const ActionFooter = ({
+  onUpdateClick,
+  onDepositClick,
+  onTransactionClick,
+  onInvoiceClick,
+  onLogsClick,
+  onDeleteClick,
+  showLogs,
+  canTransact,
+  canDeleteLoan,
+  isUpdateAllowed,
+  isInvoiceDownloading,
+  isDeletingLoan,
+}) => (
   <div className="action-footer mt-4">
     <div className="d-flex flex-wrap gap-2 justify-content-center">
       <button className="btn btn-sm text-nowrap blue-btn" onClick={onDepositClick}>
         <i className="bi bi-file-text text-primary me-1"></i> FORM 8
       </button>
-      {isUpdateAllowed && !isAuction && (
+      {isUpdateAllowed && (
         <button className="btn btn-sm text-nowrap blue-btn" onClick={onUpdateClick}>
           <i className="bi bi-pencil text-info me-1"></i> Update
         </button>
       )}
-      {!isReleased && !isAuction && (
+      {canTransact && (
         <>
           <button className="btn btn-sm text-nowrap blue-btn" onClick={onDepositClick}>
             <i className="bi bi-box-arrow-in-down text-success me-1"></i> Deposit
@@ -440,9 +538,17 @@ const ActionFooter = ({ onUpdateClick, onDepositClick, onTransactionClick, onInv
       <button className="btn btn-sm text-nowrap blue-btn">
         <i className="bi bi-envelope text-warning me-1"></i> Alert
       </button>
-      <button className="btn btn-sm text-nowrap blue-btn">
-        <i className="bi bi-trash text-danger me-1"></i> Delete
-      </button>
+      {canDeleteLoan && (
+        <button
+          type="button"
+          className="btn btn-sm text-nowrap blue-btn"
+          onClick={onDeleteClick}
+          disabled={isDeletingLoan}
+          title="Delete loan"
+        >
+          <i className={`bi ${isDeletingLoan ? 'bi-hourglass-split' : 'bi-trash'} text-danger`} aria-hidden="true"></i>
+        </button>
+      )}
     </div>
   </div>
 );
@@ -553,8 +659,7 @@ const LoanMobileView = ({
   originalPrincipal,
   totalAdditionalPrincipal,
   isUnsecured,
-  isReleased,
-  isAuction,
+  canTransact,
   isUpdateAllowed,
   isInvoiceDownloading,
   customerName = '',
@@ -568,6 +673,18 @@ const LoanMobileView = ({
   onSharePrincipal,
   onShareDeposit,
   onShareRelease,
+  onDeleteRelease,
+  canDeleteRelease,
+  deletingReleaseId,
+  onDeleteDeposit,
+  canDeleteDeposit,
+  deletingDepositId,
+  onDeletePrincipal,
+  canDeletePrincipal,
+  deletingApId,
+  onDeleteClick,
+  canDeleteLoan,
+  isDeletingLoan,
   onImageClick,
 }) => {
   const interestMethodLabel = loanInfoData?.girv_interest_method
@@ -787,6 +904,23 @@ const LoanMobileView = ({
                   ]}
                 />
               )}
+              {canDeletePrincipal && row.apId && (
+                <div className="text-center mt-2">
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-danger"
+                    onClick={() => onDeletePrincipal?.(row)}
+                    disabled={deletingApId === row.apId}
+                    title="Delete additional principal"
+                  >
+                    {deletingApId === row.apId ? (
+                      <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    ) : (
+                      <i className="bi bi-trash" aria-hidden="true"></i>
+                    )}
+                  </button>
+                </div>
+              )}
             </LoanMobileAccordionItem>
           ))
         ) : (
@@ -828,6 +962,23 @@ const LoanMobileView = ({
                     { label: 'Card', value: formatAmt(row.cardAmt), className: 'text-warning' },
                   ]}
                 />
+                {canDeleteDeposit && row.depId && !row.isFirstMonthInterest && (
+                  <div className="text-center mt-2">
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={() => onDeleteDeposit?.(row)}
+                      disabled={deletingDepositId === row.depId}
+                      title="Delete this deposit"
+                    >
+                      {deletingDepositId === row.depId ? (
+                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                      ) : (
+                        <i className="bi bi-trash" aria-hidden="true"></i>
+                      )}
+                    </button>
+                  </div>
+                )}
               </LoanMobileAccordionItem>
             ))}
           </div>
@@ -868,6 +1019,23 @@ const LoanMobileView = ({
                     { label: 'Card', value: formatAmt(row.cardAmt), className: 'text-danger' },
                   ]}
                 />
+                {canDeleteRelease && (
+                  <div className="text-center mt-2">
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={() => onDeleteRelease?.(row)}
+                      disabled={deletingReleaseId === row.relId}
+                      title="Delete this release"
+                    >
+                      {deletingReleaseId === row.relId ? (
+                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                      ) : (
+                        <i className="bi bi-trash" aria-hidden="true"></i>
+                      )}
+                    </button>
+                  </div>
+                )}
               </LoanMobileAccordionItem>
             ))}
           </div>
@@ -929,12 +1097,12 @@ const LoanMobileView = ({
         <button type="button" className="btn loan-mobile-action-btn" onClick={onDepositClick}>
           <i className="bi bi-file-text text-primary"></i> Form 8
         </button>
-        {isUpdateAllowed && !isAuction && (
+        {isUpdateAllowed && (
           <button type="button" className="btn loan-mobile-action-btn" onClick={onUpdateClick}>
             <i className="bi bi-pencil text-info"></i> Update
           </button>
         )}
-        {!isReleased && !isAuction && (
+        {canTransact && (
           <>
             <button type="button" className="btn loan-mobile-action-btn" onClick={onDepositClick}>
               <i className="bi bi-box-arrow-in-down text-success"></i> Deposit
@@ -962,9 +1130,17 @@ const LoanMobileView = ({
         <button type="button" className="btn loan-mobile-action-btn">
           <i className="bi bi-envelope text-warning"></i> Alert
         </button>
-        <button type="button" className="btn loan-mobile-action-btn">
-          <i className="bi bi-trash text-danger"></i> Delete
-        </button>
+        {canDeleteLoan && (
+          <button
+            type="button"
+            className="btn loan-mobile-action-btn"
+            onClick={onDeleteClick}
+            disabled={isDeletingLoan}
+            title="Delete loan"
+          >
+            <i className={`bi ${isDeletingLoan ? 'bi-hourglass-split' : 'bi-trash'} text-danger`} aria-hidden="true"></i>
+          </button>
+        )}
       </div>
     </div>
   );
@@ -978,12 +1154,20 @@ const LoanInfo = () => {
   const [loading, setLoading] = useState(true);
   const [receiptState, setReceiptState] = useState({ show: false, type: 'principal', record: null });
   const [previewImage, setPreviewImage] = useState(null);
+  const [deletingReleaseId, setDeletingReleaseId] = useState(null);
+  const [deletingDepositId, setDeletingDepositId] = useState(null);
+  const [deletingApId, setDeletingApId] = useState(null);
+  const [isDeletingLoan, setIsDeletingLoan] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
   const { selectedUser } = useSelector((state) => state.user);
   const { can } = usePermissions();
   const canViewLogs = can('loan.loanLogs') || can('reports.logs');
+  const canDeleteRelease = can('loan.release');
+  const canDeleteDeposit = can('loan.deposit');
+  const canDeletePrincipal = can('loan.addPrincipal');
+  const canDeleteLoan = can('loan.delete');
 
   const customerName = selectedUser?.user_first_name
     ? `${selectedUser.user_first_name} ${selectedUser.user_last_name || ''}`.trim()
@@ -1036,6 +1220,87 @@ const LoanInfo = () => {
     }
   }, [location.state, navigate]);
 
+  const handleDeleteRelease = async (row) => {
+    if (!row?.relId || deletingReleaseId) return;
+    const confirmed = window.confirm(
+      `Delete release from ${row.date} (₹${Number(row.total || 0).toFixed(2)})? This will restore principal and delete the journal entry.`
+    );
+    if (!confirmed) return;
+
+    setDeletingReleaseId(row.relId);
+    try {
+      await deleteRelease(row.relId);
+      toast.success('Release deleted successfully');
+      await fetchLoan();
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.error || err?.message || 'Failed to delete release');
+    } finally {
+      setDeletingReleaseId(null);
+    }
+  };
+
+  const handleDeleteDeposit = async (row) => {
+    if (!row?.depId || deletingDepositId) return;
+    const confirmed = window.confirm(
+      `Delete deposit from ${row.date} (₹${Number(row.total || 0).toFixed(2)})? This will restore principal and delete the journal entry.`
+    );
+    if (!confirmed) return;
+
+    setDeletingDepositId(row.depId);
+    try {
+      await deleteDeposit(row.depId);
+      toast.success('Deposit deleted successfully');
+      await fetchLoan();
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.error || err?.message || 'Failed to delete deposit');
+    } finally {
+      setDeletingDepositId(null);
+    }
+  };
+
+  const handleDeletePrincipal = async (row) => {
+    if (!row?.apId || deletingApId) return;
+    const confirmed = window.confirm(
+      `Delete additional principal from ${row.startDate} (₹${Number(row.principal || 0).toFixed(2)})? This will reduce loan principal and delete the journal entry.`
+    );
+    if (!confirmed) return;
+
+    setDeletingApId(row.apId);
+    try {
+      await deleteAdditionalPrincipal(row.apId);
+      toast.success('Additional principal deleted successfully');
+      await fetchLoan();
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.error || err?.message || 'Failed to delete additional principal');
+    } finally {
+      setDeletingApId(null);
+    }
+  };
+
+  const handleDeleteLoan = async () => {
+    if (!loanDetails?.girv_id || isDeletingLoan) return;
+    const loanRef = loanDetails.girv_unique_code || loanDetails.girv_loan_no || `LN-${loanDetails.girv_id}`;
+    const confirmed = window.confirm(
+      `Delete loan ${loanRef}? This removes the loan and its creation journal entries. Only allowed when there are no deposits, releases, or additional principal.`
+    );
+    if (!confirmed) return;
+
+    setIsDeletingLoan(true);
+    try {
+      await deleteGirvi(loanDetails.girv_id);
+      toast.success('Loan deleted successfully');
+      navigate('/user/home/active-loan');
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.error || err?.message || 'Failed to delete loan');
+    } finally {
+      setIsDeletingLoan(false);
+    }
+  };
+
   useEffect(() => {
     fetchLoan();
   }, [fetchLoan]);
@@ -1056,7 +1321,8 @@ const LoanInfo = () => {
 
   const startDate = moment(loanDetails.girv_start_date);
   const today = moment();
-  const interestSummary = getLoanInterestSummary(loanDetails, today);
+  const serverSummary = loanDetails.interest_summary;
+  const interestSummary = serverSummary || getLoanInterestSummary(loanDetails, today);
   const {
     originalPrincipal,
     currentTotalPrincipal,
@@ -1072,8 +1338,9 @@ const LoanInfo = () => {
     compoundFreq,
   } = interestSummary;
 
-  const payableAmount =
-    currentTotalPrincipal + origInterest + additionalInterestTotal - firstMonthInterest;
+  const payableAmount = serverSummary?.totalDueAmount ?? (
+    currentTotalPrincipal + origInterest + additionalInterestTotal - firstMonthInterest
+  );
 
   // Calculate Valuation
   const loanItems = getLoanItems(loanDetails);
@@ -1124,6 +1391,7 @@ const LoanInfo = () => {
       const cardAmt = parseFloat(ap.ap_card_amt) || 0;
 
       principalDataRows.push({
+        apId: ap.ap_id,
         principal: apPrin,
         roi: apRoi,
         sInterest: apInterest,
@@ -1162,6 +1430,7 @@ const LoanInfo = () => {
       const cardAmt = parseFloat(dep.dep_card_amt) || 0;
 
       depositDataRows.push({
+        depId: dep.dep_id,
         principal: depPrin,
         sInterest: depInt,
         discount: depDisc,
@@ -1200,7 +1469,7 @@ const LoanInfo = () => {
   // Process Releases Rows
   const releaseDataRows = [];
   if (loanDetails.releases && loanDetails.releases.length > 0) {
-    loanDetails.releases.forEach(rel => {
+    loanDetails.releases.forEach((rel, idx) => {
       const relPrin = parseFloat(rel.rel_prin_amt) || 0;
       const relInt = parseFloat(rel.rel_int_amt) || 0;
       const relDisc = parseFloat(rel.rel_disc_amt) || 0;
@@ -1213,13 +1482,17 @@ const LoanInfo = () => {
       const cardAmt = parseFloat(rel.rel_card_amt) || 0;
 
       releaseDataRows.push({
+        relId: rel.rel_id,
         principal: relPrin,
         sInterest: relInt,
         discount: relDisc,
         extraAmt: relExtra,
         total: relTotal,
         date: relDate.format('DD-MM-YYYY'),
-        status: 'RELEASED',
+        status:
+          idx === loanDetails.releases.length - 1 && loanDetails.girv_status === 'RELEASED'
+            ? 'FULL RELEASE'
+            : 'RELEASE PAYMENT',
         cashAmt,
         bankAmt,
         onlineAmt,
@@ -1241,8 +1514,9 @@ const LoanInfo = () => {
   };
 
   const isUnsecured = String(loanDetails.girv_type || '').toLowerCase() === 'unsecured';
-  const isReleased = String(loanDetails.girv_status || '').toUpperCase() === 'RELEASED';
-  const isAuction = String(loanDetails.girv_status || '').toUpperCase() === 'AUCTION';
+  const isActive = String(loanDetails.girv_status || '').toUpperCase() === 'ACTIVE';
+  const canTransact = isActive;
+  const canDeleteLoanAllowed = isActive && !hasTrans && canDeleteLoan;
   const loanRefNo = loanDetails.girv_unique_code || loanDetails.girv_loan_no || `LN-${loanDetails.girv_id}`;
   const openLogsModal = () => {
     if (canViewLogs) setShowLogsModal(true);
@@ -1269,8 +1543,7 @@ const LoanInfo = () => {
         originalPrincipal={originalPrincipal}
         totalAdditionalPrincipal={totalAdditionalPrincipal}
         isUnsecured={isUnsecured}
-        isReleased={isReleased}
-        isAuction={isAuction}
+        canTransact={canTransact}
         isUpdateAllowed={isUpdateAllowed}
         isInvoiceDownloading={isInvoiceDownloading}
         customerName={customerName}
@@ -1284,6 +1557,18 @@ const LoanInfo = () => {
         onSharePrincipal={(row) => openRecordReceipt('principal', row)}
         onShareDeposit={(row) => openRecordReceipt('deposit', row)}
         onShareRelease={(row) => openRecordReceipt('release', row)}
+        onDeleteRelease={handleDeleteRelease}
+        canDeleteRelease={canDeleteRelease && canTransact}
+        deletingReleaseId={deletingReleaseId}
+        onDeleteDeposit={handleDeleteDeposit}
+        canDeleteDeposit={canDeleteDeposit && canTransact}
+        deletingDepositId={deletingDepositId}
+        onDeletePrincipal={handleDeletePrincipal}
+        canDeletePrincipal={canDeletePrincipal && canTransact}
+        deletingApId={deletingApId}
+        onDeleteClick={handleDeleteLoan}
+        canDeleteLoan={canDeleteLoanAllowed}
+        isDeletingLoan={isDeletingLoan}
         onImageClick={setPreviewImage}
       />
 
@@ -1328,14 +1613,25 @@ const LoanInfo = () => {
           isUnsecured={isUnsecured}
           onShare={(row) => openRecordReceipt('principal', row)}
           onImageClick={setPreviewImage}
+          onDeletePrincipal={handleDeletePrincipal}
+          canDeletePrincipal={canDeletePrincipal && canTransact}
+          deletingApId={deletingApId}
         />
 
         <DepositInfoTable
           data={depositDataRows}
           onShare={(row) => openRecordReceipt('deposit', row)}
+          onDeleteDeposit={handleDeleteDeposit}
+          canDeleteDeposit={canDeleteDeposit && canTransact}
+          deletingDepositId={deletingDepositId}
         />
 
-        <ReleaseInfoTable data={releaseDataRows} />
+        <ReleaseInfoTable
+          data={releaseDataRows}
+          onDeleteRelease={handleDeleteRelease}
+          canDeleteRelease={canDeleteRelease && canTransact}
+          deletingReleaseId={deletingReleaseId}
+        />
 
         <div className="panel-section mt-2">
           <div className="section-header mb-2">{isUnsecured ? 'Total Summary' : 'Final Valuation'}</div>
@@ -1429,9 +1725,11 @@ const LoanInfo = () => {
           onLogsClick={openLogsModal}
           showLogs={canViewLogs}
           isInvoiceDownloading={isInvoiceDownloading}
-          isReleased={isReleased}
-          isAuction={isAuction}
+          canTransact={canTransact}
           isUpdateAllowed={isUpdateAllowed}
+          onDeleteClick={handleDeleteLoan}
+          canDeleteLoan={canDeleteLoanAllowed}
+          isDeletingLoan={isDeletingLoan}
         />
       </div>
 
