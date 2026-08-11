@@ -482,32 +482,32 @@ const AddLoan = () => {
       return;
     }
 
-      setIsSubmitting(true);
-      try {
-        // Upload item images first
-        const updatedItems = await Promise.all(
-          formData.items.map(async (item) => {
-            if (item.itemImage) {
-              const imageFormData = new FormData();
-              imageFormData.append('itemImage', item.itemImage);
-              const uploadRes = await uploadItemImage(imageFormData);
-              // uploadRes.data contains { path, filename, mimetype, size }
-              return { ...item, st_image: uploadRes.data, itemImage: undefined };
-            }
-            return item;
-          })
-        );
+    setIsSubmitting(true);
+    try {
+      // Upload item images first
+      const updatedItems = await Promise.all(
+        formData.items.map(async (item) => {
+          if (item.itemImage) {
+            const imageFormData = new FormData();
+            imageFormData.append('itemImage', item.itemImage);
+            const uploadRes = await uploadItemImage(imageFormData);
+            // uploadRes.data contains { path, filename, mimetype, size }
+            return { ...item, st_image: uploadRes.data, itemImage: undefined };
+          }
+          return item;
+        })
+      );
 
-        const payload = {
-          ...formData,
-          items: updatedItems,
-          girv_user_id: selectedUser.user_id,
-          girv_first_int: formData.girv_first_int ? 'Y' : 'N'
-        };
+      const payload = {
+        ...formData,
+        items: updatedItems,
+        girv_user_id: selectedUser.user_id,
+        girv_first_int: formData.girv_first_int ? 'Y' : 'N'
+      };
 
-        const res = await addGirvi(payload);
-        toast.success('Loan saved successfully!');
-        console.log('API Response:', res);
+      const res = await addGirvi(payload);
+      toast.success('Loan saved successfully!');
+      console.log('API Response:', res);
 
       navigate('/user/home/loan-info');
     } catch (error) {

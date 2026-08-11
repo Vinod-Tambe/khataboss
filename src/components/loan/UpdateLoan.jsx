@@ -231,6 +231,7 @@ const UpdateLoan = () => {
             girv_card_info: d.girv_card_info || '',
             girv_pay_info: d.girv_pay_info || '',
             girv_firm_id: d.girv_firm_id || '',
+            girv_user_id: d.girv_user_id || '',
           }));
 
           // also update the date picker
@@ -251,14 +252,16 @@ const UpdateLoan = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [id]);
 
-  // Sync firm ID with Header selection
+  // Sync firm ID with Header selection (only if not already set by fetched loan data)
   useEffect(() => {
-    if (selectedFirmId === 'all') {
-      if (reduxFirms.length > 0 && !formData.girv_firm_id) {
-        setFormData(prev => ({ ...prev, girv_firm_id: reduxFirms[0].firm_id }));
+    if (!formData.girv_firm_id) {
+      if (selectedFirmId === 'all') {
+        if (reduxFirms.length > 0) {
+          setFormData(prev => ({ ...prev, girv_firm_id: reduxFirms[0].firm_id }));
+        }
+      } else if (selectedFirmId) {
+        setFormData(prev => ({ ...prev, girv_firm_id: selectedFirmId }));
       }
-    } else if (selectedFirmId && selectedFirmId !== formData.girv_firm_id) {
-      setFormData(prev => ({ ...prev, girv_firm_id: selectedFirmId }));
     }
   }, [selectedFirmId, reduxFirms, formData.girv_firm_id]);
 
@@ -602,7 +605,7 @@ const UpdateLoan = () => {
       const payload = {
         ...formData,
         items: updatedItems,
-        girv_user_id: selectedUser.user_id,
+        girv_user_id: formData.girv_user_id || selectedUser?.user_id,
         girv_first_int: formData.girv_first_int ? 'Y' : 'N'
       };
 

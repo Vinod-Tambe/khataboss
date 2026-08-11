@@ -31,11 +31,12 @@ export const calculateInterest = (
   if (!p || !monthlyRate || !m) return 0;
 
   if (method === 'compound') {
+    const f = String(freq || 'monthly').toLowerCase();
     let n = 1;
-    if (freq === 'monthly') n = 1;
-    else if (freq === 'quarterly') n = 1 / 3;
-    else if (freq === 'half_yearly') n = 1 / 6;
-    else if (freq === 'yearly') n = 1 / 12;
+    if (f.includes('quarter')) n = 1 / 3;
+    else if (f.includes('half')) n = 1 / 6;
+    else if (f.includes('year') || f.includes('annual')) n = 1 / 12;
+    else n = 1;
 
     const periods = m * n;
     const ratePerPeriod = monthlyRate / n;
@@ -59,7 +60,7 @@ export const getTenureMonths = (startDate, endDate = moment()) => {
   const start = moment(startDate);
   const end = moment(endDate);
   if (!start.isValid() || !end.isValid()) return 1;
-  return Math.max(1, end.diff(start, 'months', true));
+  return Math.max(1, end.diff(start, 'months'));
 };
 
 export const isFirstMonthInterestEnabled = (loan) =>
