@@ -414,7 +414,14 @@ const AddAccount = () => {
 
         <div className="d-grid d-md-block text-center mt-5">
           <button type="submit" className="btn btn-primary btn-lg px-5" disabled={loading}>
-            {loading ? 'Saving...' : 'Save Account'}
+            {loading ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Saving...
+              </>
+            ) : (
+              'Save Account'
+            )}
           </button>
         </div>
       </form>

@@ -6,13 +6,12 @@ import '../../css/ActiveLoanPanel.css';
 import {
   downloadLoanRecordPdf,
   getLoanRecordPdfBlob,
-  getLoanRecordShareText,
   getLoanRecordFileName,
   getLoanRecordTitle,
   buildLoanRecordReceiptRows,
 } from './downloadLoanRecordPdf';
 import {
-  tryDispatchReceipt,
+  sendWhatsAppPdfOnly,
   LOAN_RECEIPT_TEMPLATE_BY_TYPE,
 } from '../../utils/dispatchWhatsAppReceipt';
 
@@ -67,7 +66,6 @@ const LoanRecordReceiptModal = ({
 
   const handleWhatsAppShare = async () => {
     setSharing(true);
-    const shareText = getLoanRecordShareText(options);
     const fileName = getLoanRecordFileName(options);
     const firmId = loanDetails?.girv_firm_id || loanDetails?.firm?.firm_id;
     const toPhone = customer?.user_mobile_no;
@@ -80,51 +78,27 @@ const LoanRecordReceiptModal = ({
 
     try {
       const blob = await getLoanRecordPdfBlob(options);
-
-      if (firmId && (toPhone || toEmail)) {
-        const dispatch = await tryDispatchReceipt({
-          firmId,
-          templateKey,
-          toPhone,
-          toEmail,
-          vars: {
-            1: customerName,
-            2: String(loanNo),
-            3: String(record?.amount || record?.rel_payable_amt || record?.dep_amt || ''),
-            4: record?.date || record?.rel_trans_date || record?.dep_date || '',
-          },
-          pdfBlob: blob,
-          fileName,
-        });
-        if (dispatch.dispatched) {
-          toast.success('Receipt sent via WhatsApp / email');
-          setSharing(false);
-          return;
-        }
-      }
-
-      const file = new File([blob], fileName, { type: 'application/pdf' });
-
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title,
-          text: shareText,
-        });
-        setSharing(false);
-        return;
-      }
+      const { message } = await sendWhatsAppPdfOnly({
+        firmId,
+        toPhone,
+        toEmail,
+        templateKey,
+        vars: {
+          1: customerName,
+          2: String(loanNo),
+          3: String(record?.amount || record?.rel_payable_amt || record?.dep_amt || ''),
+          4: record?.date || record?.rel_trans_date || record?.dep_date || '',
+        },
+        pdfBlob: blob,
+        fileName,
+      });
+      toast.success(message);
     } catch (error) {
       console.error('WhatsApp share failed:', error);
+      toast.error(error.message || 'Failed to send WhatsApp message.');
     } finally {
       setSharing(false);
     }
-
-    window.open(
-      `https://wa.me/?text=${encodeURIComponent(shareText)}`,
-      '_blank',
-      'noopener,noreferrer'
-    );
   };
 
   return (

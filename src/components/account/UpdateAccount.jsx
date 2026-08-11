@@ -423,7 +423,14 @@ const UpdateAccount = () => {
 
         <div className="d-grid d-md-block text-center mt-5">
           <button type="submit" className="btn btn-primary btn-lg px-5" disabled={loading}>
-            {loading ? 'Updating...' : 'Update Account'}
+            {loading ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Updating...
+              </>
+            ) : (
+              'Update Account'
+            )}
           </button>
           <button type="button" className="btn btn-outline-secondary btn-lg px-5 ms-md-3 mt-3 mt-md-0" onClick={() => navigate('/account/list')}>
             Cancel

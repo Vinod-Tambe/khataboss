@@ -13,7 +13,21 @@
 }
 
 .active-loan-panel .bg-cust-info {
-  background-color: #e8eaf6 !important;
+  background-color: var(--bg-cust-info, #e8eaf6) !important;
+}
+
+.active-loan-panel .loan-summary-tile {
+  overflow: hidden;
+}
+
+.active-loan-panel .loan-summary-tile__label {
+  background-color: var(--bg-cust-info, #e8eaf6);
+  color: var(--text-brown, brown);
+}
+
+.active-loan-panel .loan-summary-tile__value {
+  background-color: var(--bs-body-bg, #fff);
+  color: var(--bs-body-color, #212529);
 }
 
 span.badge.status-badge.loan-info-header-badge,
@@ -551,8 +565,8 @@ span.badge.status-badge.loan-info-header-badge *,
     font-size: 0.68rem;
     font-weight: 700;
     padding: 6px 10px;
-    background: #e8eaf6;
-    color: #5c4b8a;
+    background: var(--bg-cust-info, #e8eaf6);
+    color: var(--text-brown, #5c4b8a);
     border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   }
 
@@ -659,6 +673,39 @@ span.badge.status-badge.loan-info-header-badge *,
 [data-theme="dark"] .active-loan-panel .bg-pink {
   background-color: rgb(58 32 48) !important;
   color: #f9a8d4 !important;
+}
+
+[data-theme="dark"] .active-loan-panel .bg-blue {
+  background-color: rgba(13, 110, 253, 0.18) !important;
+  color: var(--text-brown, #fcd34d) !important;
+}
+
+[data-theme="dark"] .active-loan-panel .bg-cust-info,
+[data-theme="dark"] .active-loan-panel .loan-summary-tile__label {
+  background-color: var(--bg-cust-info, #1f3336) !important;
+  color: var(--text-brown, #fcd34d) !important;
+}
+
+[data-theme="dark"] .active-loan-panel .loan-summary-tile {
+  border-color: var(--app-border, rgba(255, 255, 255, 0.12)) !important;
+}
+
+[data-theme="dark"] .active-loan-panel .loan-summary-tile__label {
+  border-bottom-color: var(--app-border, rgba(255, 255, 255, 0.12)) !important;
+}
+
+[data-theme="dark"] .active-loan-panel .loan-summary-tile__value {
+  background-color: var(--datatable-body-bg, rgba(255, 255, 255, 0.04));
+  color: var(--datatable-body-text, #e5e7eb);
+}
+
+[data-theme="dark"] .active-loan-panel .section-header,
+[data-theme="dark"] .loan-mobile-section-title {
+  color: var(--bs-primary, #6ea8fe);
+}
+
+[data-theme="dark"] .active-loan-panel .loan-summary-tile__value.text-primary {
+  color: #6ea8fe !important;
 }
 
 [data-theme="dark"] .loan-mobile-empty {

@@ -795,7 +795,7 @@ const UpdateLoan = () => {
         <div className="col-12 col-md-6 col-lg-3">
           {formData.girv_first_int && (
             <>
-              <label className="form-label fw-medium">Interest Payment Account (DR)</label>
+              <label className="form-label fw-medium">Interest Payment Account (DR) <span className="text-danger">*</span></label>
               <select name="girv_first_int_dr_acc_id" className="form-select border-dark" value={formData.girv_first_int_dr_acc_id || ''} disabled={hasTransactions} onChange={handleChange} required>
                 <option value="" disabled>Select account</option>
                 {accounts.map(acc => (
@@ -826,7 +826,7 @@ const UpdateLoan = () => {
                 <th className="text-center fw-bold px-1" style={{ width: '7%', minWidth: '60px' }}>PURITY <span className="text-danger">*</span></th>
                 <th className="text-center fw-bold px-1" style={{ width: '8%', minWidth: '60px' }}>RATE <span className="text-danger">*</span></th>
                 <th className="text-center fw-bold px-1" style={{ width: '8%', minWidth: '50px' }}>FINE WT</th>
-                <th className="text-center fw-bold px-1" style={{ width: '15%', minWidth: '100px' }}>VALUATION</th>
+                <th className="text-center fw-bold px-1" style={{ width: '15%', minWidth: '100px' }}>VALUATION <span className="text-danger">*</span></th>
                 <th className="text-center fw-bold px-1" style={{ width: '6%', minWidth: '45px' }}>IMAGE</th>
                 <th className="text-center fw-bold px-1" style={{ width: '6%', minWidth: '45px' }}>ACTION</th>
               </tr>
@@ -1262,7 +1262,16 @@ const UpdateLoan = () => {
             {formData.girv_type === 'secured' && itemInformation}
             {paymentDetails}
             <div className="d-grid d-md-block text-center mt-5">
-              <button type="submit" className="btn btn-primary btn-lg px-5">Update Loan</button>
+              <button type="submit" className="btn btn-primary btn-lg px-5" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Updating...
+                  </>
+                ) : (
+                  hasTransactions ? 'Update Details' : 'Update Loan'
+                )}
+              </button>
             </div>
           </>
         )}

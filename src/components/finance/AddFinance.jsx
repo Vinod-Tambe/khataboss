@@ -24,7 +24,7 @@ const AddFinance = () => {
     fin_no_of_emi: '',
     fin_start_date: moment().format('YYYY-MM-DD'),
     fin_firm_id: '',
-    fin_freq: '',
+    fin_freq: '1',
     fin_freq_type: 'MONTHLY',
     fin_roi: '',
     fin_collec_amt: '',
@@ -58,9 +58,6 @@ const AddFinance = () => {
     fin_other_info: '',
   });
 
-  // Allow 2-decimal EMIs; last EMI absorbs rounding on backend
-  const isEmiInvalid = false;
-
   const [firms, setFirms] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const { selectedUser } = useSelector((state) => state.user);
@@ -73,7 +70,7 @@ const AddFinance = () => {
   useFormNavigation(formRef);
 
   // Finance Calculator Hook
-  const { fin_emi_amt, fin_final_amt, fin_receivable_amt, fin_interest_amt } =
+  const { fin_emi_amt, fin_final_amt, fin_receivable_amt, fin_interest_amt, isEmiInvalid, emiError } =
     useAddFinanceCalculator({
       fin_prin_amt: formData.fin_prin_amt,
       fin_no_of_emi: formData.fin_no_of_emi,
@@ -81,6 +78,9 @@ const AddFinance = () => {
       fin_proccess_amt: formData.fin_proccess_amt,
       fin_roi: formData.fin_roi,
     });
+
+  const hasEmiInputs =
+    (parseFloat(formData.fin_prin_amt) || 0) > 0 && (parseInt(formData.fin_no_of_emi, 10) || 0) > 0;
 
   // Sync calculated values to formData
   useEffect(() => {
@@ -211,7 +211,7 @@ const AddFinance = () => {
     ];
 
     if (numericFields.includes(name)) {
-      const integerFields = ['fin_no_of_emi', 'fin_fine_emi_no'];
+      const integerFields = ['fin_no_of_emi', 'fin_fine_emi_no', 'fin_freq'];
       let sanitizedValue;
 
       if (integerFields.includes(name)) {
@@ -257,6 +257,15 @@ const AddFinance = () => {
         alert('Please fill required fields: Principal Amount, Start Date');
         return;
       }
+      const noOfEmi = parseInt(formData.fin_no_of_emi || 0, 10) || 0;
+      if (!(noOfEmi > 0)) {
+        alert('Please enter No Of EMI (must be greater than 0)');
+        return;
+      }
+      if (isEmiInvalid) {
+        alert(emiError || 'Per EMI amount must be a whole number.');
+        return;
+      }
     }
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
@@ -279,6 +288,20 @@ const AddFinance = () => {
     }
     if (!formData.fin_prin_amt || !formData.fin_start_date) {
       toast.error('Please fill required fields (Principal, Date)');
+      return;
+    }
+    const noOfEmi = parseInt(formData.fin_no_of_emi || 0, 10) || 0;
+    if (!(noOfEmi > 0)) {
+      toast.error('No Of EMI must be greater than 0');
+      return;
+    }
+    if (isEmiInvalid) {
+      toast.error(emiError || 'Per EMI amount must be a whole number.');
+      return;
+    }
+    const freq = parseInt(String(formData.fin_freq || '').trim() || '1', 10);
+    if (!(freq > 0)) {
+      toast.error('Frequency must be greater than 0');
       return;
     }
 
@@ -309,7 +332,6 @@ const AddFinance = () => {
 
       const fineAmt = parseFloat(formData.fin_fine_amt || 0) || 0;
       const fineEmiNo = parseInt(formData.fin_fine_emi_no || 0, 10) || 0;
-      const noOfEmi = parseInt(formData.fin_no_of_emi || 0, 10) || 0;
       if (fineAmt > 0 || fineEmiNo > 0) {
         if (!(fineAmt > 0 && fineEmiNo > 0)) {
           toast.error("Both Fine Amount and Fine EMI No are required when fine is set");
@@ -356,7 +378,7 @@ const AddFinance = () => {
         </div>
 
         <div className="col-12 col-md-4 col-lg-3">
-          <label className="form-label fw-medium">No Of EMI</label>
+          <label className="form-label fw-medium">No Of EMI <span className="text-danger">*</span></label>
           <input
             type="text"
             inputMode="numeric"
@@ -380,7 +402,7 @@ const AddFinance = () => {
         </div>
 
         <div className="col-12 col-md-4 col-lg-3">
-          <label className="form-label fw-medium">Firm Name</label>
+          <label className="form-label fw-medium">Firm Name <span className="text-danger">*</span></label>
           <select
             name="fin_firm_id"
             className="form-select border-dark"
@@ -413,11 +435,11 @@ const AddFinance = () => {
         </div>
 
         <div className="col-12 col-md-4 col-lg-3">
-          <label className="form-label fw-medium">Frequency</label>
+          <label className="form-label fw-medium">Frequency <span className="text-danger">*</span></label>
           <input
             type="text"
             name="fin_freq"
-            placeholder="1 , 2 ,3"
+            placeholder="1"
             className="form-control border-dark"
             value={formData.fin_freq}
             onChange={handleChange}
@@ -497,14 +519,22 @@ const AddFinance = () => {
           <input
             type="text"
             name="fin_emi_amt"
-            placeholder="0.00"
+            placeholder="0"
             className={`form-control border-dark ${isEmiInvalid ? 'is-invalid' : ''}`}
-            value={formData.fin_emi_amt}
+            value={fin_emi_amt}
             readOnly
           />
+          {!isEmiInvalid && hasEmiInputs && (
+            <div className="form-text">
+              Principal (₹{formData.fin_prin_amt || 0}) ÷ {formData.fin_no_of_emi} EMIs
+              {parseFloat(fin_interest_amt) > 0 && (
+                <> — interest ₹{fin_interest_amt} collected separately</>
+              )}
+            </div>
+          )}
           {isEmiInvalid && (
             <div className="invalid-feedback d-block fw-bold" style={{ fontSize: '0.8rem' }}>
-              EMI Amount must be a whole number.
+              {emiError}
             </div>
           )}
         </div>
@@ -761,14 +791,28 @@ const AddFinance = () => {
         </button>
       ) : (
         <button type="submit" className="btn btn-primary btn-lg px-5" disabled={loading || isEmiInvalid}>
-          {loading ? 'Saving...' : 'Save Finance'}
+          {loading ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Saving...
+            </>
+          ) : (
+            'Save Finance'
+          )}
         </button>
       )}
     </div>
   ) : (
     <div className="d-grid d-md-block text-center mt-5">
       <button type="submit" className="btn btn-primary btn-lg px-5" disabled={loading || isEmiInvalid}>
-        {loading ? 'Saving...' : 'Save Finance'}
+        {loading ? (
+          <>
+            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            Saving...
+          </>
+        ) : (
+          'Save Finance'
+        )}
       </button>
     </div>
   );

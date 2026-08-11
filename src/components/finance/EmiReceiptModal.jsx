@@ -7,10 +7,14 @@ import '../../css/Finance.css';
 import {
     downloadEmiReceiptPdf,
     getEmiReceiptPdfBlob,
-    getEmiReceiptShareText,
     getEmiReceiptFileName,
 } from './downloadEmiReceiptPdf';
-import { tryDispatchReceipt } from '../../utils/dispatchWhatsAppReceipt';
+import {
+    sendWhatsAppPdfOnly,
+    getFinanceDispatchContext,
+    buildFinanceReceiptVars,
+    FINANCE_RECEIPT_TEMPLATE,
+} from '../../utils/dispatchWhatsAppReceipt';
 
 const EmiReceiptModal = ({ show, onHide, emiData, initialFinance }) => {
     const [sharing, setSharing] = useState(false);
@@ -52,66 +56,30 @@ const EmiReceiptModal = ({ show, onHide, emiData, initialFinance }) => {
     const handleWhatsAppShare = async () => {
         if (!emiData) return;
         setSharing(true);
-        const shareText = getEmiReceiptShareText(receiptOptions);
         const fileName = getEmiReceiptFileName(emiData);
-        const firmId = initialFinance?.fin_firm_id || initialFinance?.firm?.firm_id;
-        const toPhone = initialFinance?.user?.user_mobile_no;
-        const toEmail = initialFinance?.user?.user_email_id;
-        const customerName = initialFinance?.user?.user_first_name
-            ? `${initialFinance.user.user_first_name} ${initialFinance.user.user_last_name || ''}`.trim()
-            : 'Customer';
-        const regNo = initialFinance?.fin_unique_code || initialFinance?.fin_id || 'N/A';
+        const ctx = getFinanceDispatchContext(initialFinance);
         const payDate = emiData.ft_payment_date
             ? moment(emiData.ft_payment_date).format('DD-MMM-YY')
             : moment().format('DD-MMM-YY');
 
         try {
             const blob = await getEmiReceiptPdfBlob(receiptOptions);
-
-            if (firmId && (toPhone || toEmail)) {
-                const dispatch = await tryDispatchReceipt({
-                    firmId,
-                    templateKey: 'finance_collection_receipt',
-                    toPhone,
-                    toEmail,
-                    vars: {
-                        1: customerName,
-                        2: String(regNo),
-                        3: String(emiData.ft_paid_amt || 0),
-                        4: payDate,
-                    },
-                    pdfBlob: blob,
-                    fileName,
-                });
-                if (dispatch.dispatched) {
-                    toast.success('Receipt sent via WhatsApp / email');
-                    setSharing(false);
-                    return;
-                }
-            }
-
-            const file = new File([blob], fileName, { type: 'application/pdf' });
-
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                    files: [file],
-                    title: 'Finance Payment Receipt',
-                    text: shareText,
-                });
-                setSharing(false);
-                return;
-            }
+            const { message } = await sendWhatsAppPdfOnly({
+                firmId: ctx.firmId,
+                toPhone: ctx.toPhone,
+                toEmail: ctx.toEmail,
+                templateKey: FINANCE_RECEIPT_TEMPLATE,
+                vars: buildFinanceReceiptVars(initialFinance, emiData.ft_paid_amt || 0, payDate),
+                pdfBlob: blob,
+                fileName,
+            });
+            toast.success(message);
         } catch (error) {
             console.error('WhatsApp share failed:', error);
+            toast.error(error.message || 'Failed to send WhatsApp message.');
         } finally {
             setSharing(false);
         }
-
-        window.open(
-            `https://wa.me/?text=${encodeURIComponent(shareText)}`,
-            '_blank',
-            'noopener,noreferrer'
-        );
     };
 
     if (!emiData) return null;

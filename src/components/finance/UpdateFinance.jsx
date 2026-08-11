@@ -28,7 +28,7 @@ const UpdateFinance = () => {
     fin_no_of_emi: '',
     fin_start_date: moment().format('YYYY-MM-DD'),
     fin_firm_id: '',
-    fin_freq: '',
+    fin_freq: '1',
     fin_freq_type: 'MONTHLY',
     fin_roi: '',
     fin_collec_amt: '',
@@ -66,13 +66,16 @@ const UpdateFinance = () => {
   const lockFinancial = hasPayments || isClosed;
   const lockAllExceptNotes = isClosed;
 
-  const { fin_emi_amt, fin_final_amt, fin_interest_amt } = useAddFinanceCalculator({
+  const { fin_emi_amt, fin_final_amt, fin_interest_amt, fin_receivable_amt, isEmiInvalid, emiError } = useAddFinanceCalculator({
     fin_prin_amt: formData.fin_prin_amt,
     fin_no_of_emi: formData.fin_no_of_emi,
     fin_freq_type: formData.fin_freq_type,
     fin_proccess_amt: formData.fin_proccess_amt,
     fin_roi: formData.fin_roi,
   });
+
+  const hasEmiInputs =
+    (parseFloat(formData.fin_prin_amt) || 0) > 0 && (parseInt(formData.fin_no_of_emi, 10) || 0) > 0;
 
   useEffect(() => {
     if (lockFinancial) return;
@@ -106,7 +109,7 @@ const UpdateFinance = () => {
           fin_no_of_emi: d.fin_no_of_emi != null ? String(d.fin_no_of_emi) : '',
           fin_start_date: d.fin_start_date || moment().format('YYYY-MM-DD'),
           fin_firm_id: d.fin_firm_id != null ? String(d.fin_firm_id) : '',
-          fin_freq: d.fin_freq || '',
+          fin_freq: d.fin_freq != null && String(d.fin_freq).trim() !== '' ? String(d.fin_freq) : '1',
           fin_freq_type: d.fin_freq_type || 'MONTHLY',
           fin_roi: d.fin_roi != null ? String(d.fin_roi) : '',
           fin_collec_amt: d.fin_collec_amt != null ? String(d.fin_collec_amt) : '',
@@ -196,7 +199,7 @@ const UpdateFinance = () => {
       'fin_online_amt', 'fin_card_amt', 'fin_fine_emi_no', 'fin_freq',
     ];
     if (numericFields.includes(name)) {
-      const integerFields = ['fin_no_of_emi', 'fin_fine_emi_no'];
+      const integerFields = ['fin_no_of_emi', 'fin_fine_emi_no', 'fin_freq'];
       let sanitizedValue = integerFields.includes(name)
         ? value.replace(/[^0-9]/g, '')
         : value.replace(/[^0-9.]/g, '');
@@ -218,6 +221,8 @@ const UpdateFinance = () => {
     }
     return 'No payments yet — full financial update allowed (EMI schedule + journal will rebuild).';
   }, [isClosed, hasPayments]);
+
+  const blockFinancialSave = !lockFinancial && isEmiInvalid;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -268,6 +273,20 @@ const UpdateFinance = () => {
           toast.error('Please select User / Customer');
           return;
         }
+      }
+      const noOfEmi = parseInt(formData.fin_no_of_emi || 0, 10) || 0;
+      if (!(noOfEmi > 0)) {
+        toast.error('No Of EMI must be greater than 0');
+        return;
+      }
+      if (isEmiInvalid) {
+        toast.error(emiError || 'Per EMI amount must be a whole number.');
+        return;
+      }
+      const freq = parseInt(String(formData.fin_freq || '').trim() || '1', 10);
+      if (!(freq > 0)) {
+        toast.error('Frequency must be greater than 0');
+        return;
       }
       const disbursed = parseFloat(formData.fin_final_amt || 0);
       const cash = parseFloat(formData.fin_cash_amt || 0);
@@ -333,7 +352,7 @@ const UpdateFinance = () => {
         <h5 className="text-muted px-2">Finance Information</h5>
         <div className="row g-3 px-2">
           <div className="col-12 col-md-4 col-lg-3">
-            <label className="form-label fw-medium">Principal Amount</label>
+            <label className="form-label fw-medium">Principal Amount <span className="text-danger">*</span></label>
             <input
               type="text"
               name="fin_prin_amt"
@@ -344,7 +363,7 @@ const UpdateFinance = () => {
             />
           </div>
           <div className="col-12 col-md-4 col-lg-3">
-            <label className="form-label fw-medium">No Of EMI</label>
+            <label className="form-label fw-medium">No Of EMI <span className="text-danger">*</span></label>
             <input
               type="text"
               name="fin_no_of_emi"
@@ -355,7 +374,7 @@ const UpdateFinance = () => {
             />
           </div>
           <div className="col-12 col-md-4 col-lg-3">
-            <label className="form-label fw-medium">Start Date</label>
+            <label className="form-label fw-medium">Start Date <span className="text-danger">*</span></label>
             <input
               type="text"
               name="fin_start_date"
@@ -371,7 +390,7 @@ const UpdateFinance = () => {
             />
           </div>
           <div className="col-12 col-md-4 col-lg-3">
-            <label className="form-label fw-medium">Firm Name</label>
+            <label className="form-label fw-medium">Firm Name <span className="text-danger">*</span></label>
             <select
               name="fin_firm_id"
               className="form-select border-dark"
@@ -403,10 +422,11 @@ const UpdateFinance = () => {
             </select>
           </div>
           <div className="col-12 col-md-4 col-lg-3">
-            <label className="form-label fw-medium">Frequency</label>
+            <label className="form-label fw-medium">Frequency <span className="text-danger">*</span></label>
             <input
               type="text"
               name="fin_freq"
+              placeholder="1"
               className="form-control border-dark"
               value={formData.fin_freq}
               onChange={handleChange}
@@ -475,15 +495,34 @@ const UpdateFinance = () => {
             <label className="form-label fw-medium">Per EMI Amount</label>
             <input
               type="text"
-              className="form-control border-dark"
+              className={`form-control border-dark ${blockFinancialSave ? 'is-invalid' : ''}`}
               value={lockFinancial ? formData.fin_emi_amt : fin_emi_amt}
               readOnly
             />
+            {blockFinancialSave && (
+              <div className="invalid-feedback d-block fw-bold" style={{ fontSize: '0.8rem' }}>
+                {emiError}
+              </div>
+            )}
+            {!lockFinancial && !isEmiInvalid && hasEmiInputs && (
+              <div className="form-text">
+                Principal (₹{formData.fin_prin_amt || 0}) ÷ {formData.fin_no_of_emi} EMIs
+                {parseFloat(fin_interest_amt) > 0 && (
+                  <> — interest ₹{fin_interest_amt} collected separately</>
+                )}
+              </div>
+            )}
           </div>
           <div className="col-12 col-md-4 col-lg-3">
             <label className="form-label fw-medium">Interest (from ROI)</label>
             <input type="text" className="form-control border-dark" value={fin_interest_amt} readOnly />
           </div>
+          {!lockFinancial && (
+            <div className="col-12 col-md-4 col-lg-3">
+              <label className="form-label fw-medium">Total Receivable</label>
+              <input type="text" className="form-control border-dark" value={fin_receivable_amt} readOnly />
+            </div>
+          )}
           <div className="col-12 col-md-4 col-lg-3">
             <label className="form-label fw-medium">Disbursement Amount</label>
             <input
@@ -689,8 +728,15 @@ const UpdateFinance = () => {
           <button type="button" className="btn btn-outline-secondary me-2" onClick={() => navigate(-1)}>
             Cancel
           </button>
-          <button type="submit" className="btn btn-primary btn-lg px-5" disabled={loading}>
-            {loading ? 'Updating...' : 'Update Finance'}
+          <button type="submit" className="btn btn-primary btn-lg px-5" disabled={loading || blockFinancialSave}>
+            {loading ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Updating...
+              </>
+            ) : (
+              'Update Finance'
+            )}
           </button>
         </div>
       </form>

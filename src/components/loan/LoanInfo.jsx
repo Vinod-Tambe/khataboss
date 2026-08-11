@@ -17,6 +17,8 @@ import {
   getTenureMonths,
 } from '../../utils/loanInterest';
 import ImageModal from '../common/ImageModal';
+import EntityLogsModal from '../logs/EntityLogsModal';
+import usePermissions from '../../hooks/usePermissions';
 import '../../css/DataTable.css';
 
 const formatAmt = (value) =>
@@ -33,12 +35,14 @@ const statusBadgeClass = (status = '', solid = false) => {
     if (s === 'AUCTION') return 'bg-warning text-dark fw-bold';
     if (s === 'TRANSFERRED') return 'bg-info text-white fw-bold';
     if (s === 'ADDED') return 'bg-primary text-white fw-bold';
+    if (s === 'FIRST MONTH INT PAID') return 'bg-primary text-white fw-bold';
     if (s === 'RECEIVED' || s === 'ACTIVE' || s === 'PAID' || s === 'COMPLETED') return 'bg-success text-white fw-bold';
     return 'bg-secondary text-white fw-bold';
   }
 
   if (s === 'RELEASED' || s === 'CLOSED') return 'bg-danger-subtle text-danger border border-danger fw-bold';
   if (s === 'AUCTION') return 'bg-warning-subtle text-dark border border-warning fw-bold';
+  if (s === 'FIRST MONTH INT PAID') return 'bg-primary-subtle text-primary border border-primary fw-bold';
   if (s === 'RECEIVED' || s === 'ACTIVE' || s === 'PAID' || s === 'COMPLETED') return 'bg-success-subtle text-success border border-success fw-bold';
   if (s === 'ADDED') return 'bg-primary-subtle text-primary border border-primary fw-bold';
   if (s === 'TRANSFERRED') return 'bg-info-subtle text-info border border-info fw-bold';
@@ -341,14 +345,16 @@ const DepositInfoTable = ({ data, onShare }) => (
                 <td className="text-success fw-bold">{Number(row.extraAmt || 0).toFixed(2)}</td>
                 <td className="text-success fw-bold">{Number(row.total || 0).toFixed(2)}</td>
                 <td>
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-link text-warning p-0"
-                    title="Share Receipt"
-                    onClick={() => onShare?.(row)}
-                  >
-                    <i className="bi bi-share-fill fs-6"></i>
-                  </button>
+                  {!row.isFirstMonthInterest && (
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-link text-warning p-0"
+                      title="Share Receipt"
+                      onClick={() => onShare?.(row)}
+                    >
+                      <i className="bi bi-share-fill fs-6"></i>
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
@@ -396,7 +402,7 @@ const ReleaseInfoTable = ({ data }) => (
 );
 
 
-const ActionFooter = ({ onUpdateClick, onDepositClick, onTransactionClick, onInvoiceClick, isReleased, isAuction, isUpdateAllowed, isInvoiceDownloading }) => (
+const ActionFooter = ({ onUpdateClick, onDepositClick, onTransactionClick, onInvoiceClick, onLogsClick, showLogs, isReleased, isAuction, isUpdateAllowed, isInvoiceDownloading }) => (
   <div className="action-footer mt-4">
     <div className="d-flex flex-wrap gap-2 justify-content-center">
       <button className="btn btn-sm text-nowrap blue-btn" onClick={onDepositClick}>
@@ -417,7 +423,7 @@ const ActionFooter = ({ onUpdateClick, onDepositClick, onTransactionClick, onInv
           </button>
         </>
       )}
-      <button className="btn btn-sm text-nowrap blue-btn">
+      <button className="btn btn-sm text-nowrap blue-btn" onClick={onLogsClick} disabled={!showLogs}>
         <i className="bi bi-journal-text text-info me-1"></i> Logs
       </button>
       <button className="btn btn-sm text-nowrap blue-btn">
@@ -539,6 +545,7 @@ const LoanMobileView = ({
   depositDataRows,
   releaseDataRows,
   totalInterest,
+  firstMonthInterest,
   payableAmount,
   totalValuation,
   profitLoss,
@@ -556,6 +563,8 @@ const LoanMobileView = ({
   onDepositClick,
   onTransactionClick,
   onInvoiceClick,
+  onLogsClick,
+  showLogs,
   onSharePrincipal,
   onShareDeposit,
   onShareRelease,
@@ -792,15 +801,15 @@ const LoanMobileView = ({
             {depositDataRows.map((row, idx) => (
               <LoanMobileAccordionItem
                 key={idx}
-                title={`Deposit · ${formatAmt(row.total)}`}
+                title={row.isFirstMonthInterest ? `1st Month Int · ${formatAmt(row.total)}` : `Deposit · ${formatAmt(row.total)}`}
                 subtitle={row.date}
                 badge={row.status}
                 badgeClassName={statusBadgeClass(row.status)}
                 defaultOpen={false}
-                onShare={() => onShareDeposit?.(row)}
+                onShare={row.isFirstMonthInterest ? undefined : () => onShareDeposit?.(row)}
               >
                 <LoanMobileDetailRows
-                  title="Deposit Amount"
+                  title={row.isFirstMonthInterest ? 'First Month Interest' : 'Deposit Amount'}
                   rows={[
                     { label: 'Principal', value: formatAmt(row.principal), className: 'text-success' },
                     { label: 'Interest', value: formatAmt(row.sInterest), className: 'text-success' },
@@ -890,6 +899,12 @@ const LoanMobileView = ({
           <span className="loan-mobile-summary__label">Total Interest</span>
           <span className="loan-mobile-summary__value">{formatAmt(totalInterest)}</span>
         </div>
+        {firstMonthInterest > 0 && (
+          <div className="loan-mobile-summary__tile">
+            <span className="loan-mobile-summary__label">1st Month Int Paid</span>
+            <span className="loan-mobile-summary__value text-primary">{formatAmt(firstMonthInterest)}</span>
+          </div>
+        )}
         <div className="loan-mobile-summary__tile">
           <span className="loan-mobile-summary__label">Total Amount</span>
           <span className="loan-mobile-summary__value">{formatAmt(payableAmount)}</span>
@@ -929,7 +944,7 @@ const LoanMobileView = ({
             </button>
           </>
         )}
-        <button type="button" className="btn loan-mobile-action-btn">
+        <button type="button" className="btn loan-mobile-action-btn" onClick={onLogsClick} disabled={!showLogs}>
           <i className="bi bi-journal-text text-info"></i> Logs
         </button>
         <button type="button" className="btn loan-mobile-action-btn">
@@ -957,6 +972,7 @@ const LoanMobileView = ({
 
 const LoanInfo = () => {
   const [activeModal, setActiveModal] = useState(null);
+  const [showLogsModal, setShowLogsModal] = useState(false);
   const [isInvoiceDownloading, setIsInvoiceDownloading] = useState(false);
   const [loanDetails, setLoanDetails] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -966,6 +982,8 @@ const LoanInfo = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { selectedUser } = useSelector((state) => state.user);
+  const { can } = usePermissions();
+  const canViewLogs = can('loan.loanLogs') || can('reports.logs');
 
   const customerName = selectedUser?.user_first_name
     ? `${selectedUser.user_first_name} ${selectedUser.user_last_name || ''}`.trim()
@@ -1073,7 +1091,7 @@ const LoanInfo = () => {
     sInterest: origInterest,
     discount: 0,
     extraAmt: 0,
-    total: originalPrincipal + origInterest,
+    total: originalPrincipal + origInterest - firstMonthInterest,
     startDate: startDate.format('DD-MM-YYYY'),
     endDate: today.format('DD-MM-YYYY'),
     timePeriod: formatTimePeriod(startDate, today),
@@ -1160,6 +1178,25 @@ const LoanInfo = () => {
     });
   }
 
+  // Prepaid first-month interest (journal at loan create — not a girvi_deposit row)
+  if (firstMonthInterest > 0 && loanDetails.girv_first_int === 'Y') {
+    depositDataRows.unshift({
+      principal: 0,
+      sInterest: firstMonthInterest,
+      discount: 0,
+      extraAmt: 0,
+      total: firstMonthInterest,
+      date: startDate.format('DD-MM-YYYY'),
+      status: 'FIRST MONTH INT PAID',
+      isFirstMonthInterest: true,
+      cashAmt: 0,
+      bankAmt: 0,
+      onlineAmt: 0,
+      cardAmt: 0,
+      transAmt: firstMonthInterest,
+    });
+  }
+
   // Process Releases Rows
   const releaseDataRows = [];
   if (loanDetails.releases && loanDetails.releases.length > 0) {
@@ -1206,6 +1243,10 @@ const LoanInfo = () => {
   const isUnsecured = String(loanDetails.girv_type || '').toLowerCase() === 'unsecured';
   const isReleased = String(loanDetails.girv_status || '').toUpperCase() === 'RELEASED';
   const isAuction = String(loanDetails.girv_status || '').toUpperCase() === 'AUCTION';
+  const loanRefNo = loanDetails.girv_unique_code || loanDetails.girv_loan_no || `LN-${loanDetails.girv_id}`;
+  const openLogsModal = () => {
+    if (canViewLogs) setShowLogsModal(true);
+  };
   // Show items for secured loans, or whenever API returned item rows
   const showItems = !isUnsecured || loanItems.length > 0;
 
@@ -1220,6 +1261,7 @@ const LoanInfo = () => {
         depositDataRows={depositDataRows}
         releaseDataRows={releaseDataRows}
         totalInterest={totalInterest}
+        firstMonthInterest={firstMonthInterest}
         payableAmount={payableAmount}
         totalValuation={totalValuation}
         profitLoss={profitLoss}
@@ -1237,6 +1279,8 @@ const LoanInfo = () => {
         onDepositClick={() => setActiveModal('deposit')}
         onTransactionClick={() => setActiveModal('transaction')}
         onInvoiceClick={handleInvoiceDownload}
+        onLogsClick={openLogsModal}
+        showLogs={canViewLogs}
         onSharePrincipal={(row) => openRecordReceipt('principal', row)}
         onShareDeposit={(row) => openRecordReceipt('deposit', row)}
         onShareRelease={(row) => openRecordReceipt('release', row)}
@@ -1325,11 +1369,11 @@ const LoanInfo = () => {
             </div>
           )}
 
-          <div className="row g-2 text-center mx-0">
+          <div className="row g-2 text-center mx-0 loan-summary-grid">
             <div className="col">
-              <div className="border border-dark h-100">
-                <div className="bg-cust-info text-brown fw-bold p-1 border-bottom border-dark">Total Principal</div>
-                <div className="p-2 fw-bold">
+              <div className="loan-summary-tile border border-dark h-100">
+                <div className="loan-summary-tile__label bg-cust-info text-brown fw-bold p-1 border-bottom border-dark">Total Principal</div>
+                <div className="loan-summary-tile__value p-2 fw-bold">
                   {loanDetails.girv_status === 'RELEASED'
                     ? (originalPrincipal + totalAdditionalPrincipal).toFixed(2)
                     : currentTotalPrincipal.toFixed(2)}
@@ -1337,29 +1381,37 @@ const LoanInfo = () => {
               </div>
             </div>
             <div className="col">
-              <div className="border border-dark h-100">
-                <div className="bg-cust-info text-brown fw-bold p-1 border-bottom border-dark">Total Interest</div>
-                <div className="p-2 fw-bold">{totalInterest.toFixed(2)}</div>
+              <div className="loan-summary-tile border border-dark h-100">
+                <div className="loan-summary-tile__label bg-cust-info text-brown fw-bold p-1 border-bottom border-dark">Total Interest</div>
+                <div className="loan-summary-tile__value p-2 fw-bold">{totalInterest.toFixed(2)}</div>
               </div>
             </div>
+            {firstMonthInterest > 0 && (
+              <div className="col">
+                <div className="loan-summary-tile border border-dark h-100">
+                  <div className="loan-summary-tile__label bg-cust-info text-brown fw-bold p-1 border-bottom border-dark">1st Month Int Paid</div>
+                  <div className="loan-summary-tile__value p-2 fw-bold text-primary">{firstMonthInterest.toFixed(2)}</div>
+                </div>
+              </div>
+            )}
             <div className="col">
-              <div className="border border-dark h-100">
-                <div className="bg-cust-info text-brown fw-bold p-1 border-bottom border-dark">Total Amount</div>
-                <div className="p-2 fw-bold">{payableAmount.toFixed(2)}</div>
+              <div className="loan-summary-tile border border-dark h-100">
+                <div className="loan-summary-tile__label bg-cust-info text-brown fw-bold p-1 border-bottom border-dark">Total Amount</div>
+                <div className="loan-summary-tile__value p-2 fw-bold">{payableAmount.toFixed(2)}</div>
               </div>
             </div>
             {!isUnsecured && (
               <>
                 <div className="col">
-                  <div className="border border-dark h-100">
-                    <div className="bg-cust-info text-brown fw-bold p-1 border-bottom border-dark">Valuation</div>
-                    <div className="p-2 fw-bold">{totalValuation.toFixed(2)}</div>
+                  <div className="loan-summary-tile border border-dark h-100">
+                    <div className="loan-summary-tile__label bg-cust-info text-brown fw-bold p-1 border-bottom border-dark">Valuation</div>
+                    <div className="loan-summary-tile__value p-2 fw-bold">{totalValuation.toFixed(2)}</div>
                   </div>
                 </div>
                 <div className="col">
-                  <div className="border border-dark h-100">
-                    <div className="bg-cust-info text-brown fw-bold p-1 border-bottom border-dark">Profit/Loss</div>
-                    <div className={`p-2 fw-bold ${profitLoss >= 0 ? 'text-success' : 'text-danger'}`}>
+                  <div className="loan-summary-tile border border-dark h-100">
+                    <div className="loan-summary-tile__label bg-cust-info text-brown fw-bold p-1 border-bottom border-dark">Profit/Loss</div>
+                    <div className={`loan-summary-tile__value p-2 fw-bold ${profitLoss >= 0 ? 'text-success' : 'text-danger'}`}>
                       {profitLoss >= 0 ? `+${profitLoss.toFixed(2)}` : profitLoss.toFixed(2)}
                     </div>
                   </div>
@@ -1374,6 +1426,8 @@ const LoanInfo = () => {
           onDepositClick={() => setActiveModal('deposit')}
           onTransactionClick={() => setActiveModal('transaction')}
           onInvoiceClick={handleInvoiceDownload}
+          onLogsClick={openLogsModal}
+          showLogs={canViewLogs}
           isInvoiceDownloading={isInvoiceDownloading}
           isReleased={isReleased}
           isAuction={isAuction}
@@ -1411,6 +1465,16 @@ const LoanInfo = () => {
         record={receiptState.record}
         loanDetails={loanDetails}
         customer={selectedUser}
+      />
+
+      <EntityLogsModal
+        show={showLogsModal}
+        onHide={() => setShowLogsModal(false)}
+        firmId={loanDetails.girv_firm_id}
+        entityType="girvi"
+        entityId={loanDetails.girv_id}
+        refNo={loanRefNo}
+        title="Loan Activity Logs"
       />
 
       {/* Image Preview Modal */}

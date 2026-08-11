@@ -1,15 +1,22 @@
 import React, { useState, useMemo } from 'react';
 import List from '../common/List';
 import moment from 'moment';
+import { toast } from 'react-toastify';
 import HistoryReceiptModal from './HistoryReceiptModal';
 import {
     downloadFinanceHistoryPdf,
     getFinanceHistoryPdfBlob,
-    getFinanceHistoryShareText,
     getFinanceHistoryFileName,
     printFinanceHistorySchedule,
 } from './downloadFinanceHistoryPdf';
+import {
+    sendWhatsAppPdfOnly,
+    getFinanceDispatchContext,
+    buildFinanceReceiptVars,
+    FINANCE_RECEIPT_TEMPLATE,
+} from '../../utils/dispatchWhatsAppReceipt';
 import '../../css/Finance.css';
+import { formatFinanceTransTypeLabel, formatFinanceTransDetail } from '../../utils/financeHistoryFormat';
 
 const formatAmt = (value) =>
     Number(value || 0).toLocaleString(undefined, {
@@ -21,11 +28,12 @@ const typeBadgeClass = (type = '') => {
     const t = String(type).toUpperCase();
     if (t.includes('ROLLBACK')) return 'bg-danger-subtle text-danger';
     if (t.includes('FINE')) return 'bg-warning-subtle text-warning';
+    if (t.includes('INTEREST')) return 'bg-warning-subtle text-dark';
     if (t.includes('PAID') || t.includes('PAYMENT') || t.includes('CLOSE')) return 'bg-success-subtle text-success';
     return 'bg-primary-subtle text-primary';
 };
 
-const HistoryExportActions = ({ disabled, onPrint, onPdf, onWhatsApp }) => (
+const HistoryExportActions = ({ disabled, onPrint, onPdf, onWhatsApp, whatsAppLoading }) => (
     <div className="text-center mt-3 mb-2 finance-info-actions-wrap no-print">
         <div className="finance-info-actions d-flex justify-content-center align-items-center gap-2">
             <button
@@ -52,11 +60,11 @@ const HistoryExportActions = ({ disabled, onPrint, onPdf, onWhatsApp }) => (
                 type="button"
                 className="btn finance-info-action-btn finance-info-action-whatsapp"
                 onClick={onWhatsApp}
-                disabled={disabled}
+                disabled={disabled || whatsAppLoading}
                 title="WhatsApp share all history"
                 aria-label="WhatsApp share all history"
             >
-                <i className="bi bi-whatsapp"></i>
+                <i className={`bi ${whatsAppLoading ? 'bi-hourglass-split' : 'bi-whatsapp'}`}></i>
             </button>
         </div>
     </div>
@@ -68,6 +76,7 @@ const FinanceHistory = ({ data = [], isLoading, financeData, initialFinance }) =
     const [rowsPerPage] = useState(10);
     const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
     const [selectedHistoryData, setSelectedHistoryData] = useState(null);
+    const [sharingWhatsApp, setSharingWhatsApp] = useState(false);
 
     const handlePrintPreview = (row) => {
         setSelectedHistoryData(row);
@@ -139,31 +148,33 @@ const FinanceHistory = ({ data = [], isLoading, financeData, initialFinance }) =
     };
 
     const handleWhatsAppAll = async () => {
-        if (!filteredData.length) return;
-        const shareText = getFinanceHistoryShareText(scheduleOptions);
+        if (!filteredData.length || sharingWhatsApp) return;
         const fileName = getFinanceHistoryFileName(initialFinance);
+        const ctx = getFinanceDispatchContext(initialFinance);
 
+        setSharingWhatsApp(true);
         try {
             const blob = await getFinanceHistoryPdfBlob(scheduleOptions);
-            const file = new File([blob], fileName, { type: 'application/pdf' });
-
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                    files: [file],
-                    title: 'Finance History',
-                    text: shareText,
-                });
-                return;
-            }
+            const { message } = await sendWhatsAppPdfOnly({
+                firmId: ctx.firmId,
+                toPhone: ctx.toPhone,
+                toEmail: ctx.toEmail,
+                templateKey: FINANCE_RECEIPT_TEMPLATE,
+                vars: buildFinanceReceiptVars(
+                    initialFinance,
+                    totals.transAmt ?? 0,
+                    moment().format('DD-MMM-YY')
+                ),
+                pdfBlob: blob,
+                fileName,
+            });
+            toast.success(message);
         } catch (error) {
             console.error('WhatsApp share failed:', error);
+            toast.error(error.message || 'Failed to send WhatsApp message.');
+        } finally {
+            setSharingWhatsApp(false);
         }
-
-        window.open(
-            `https://wa.me/?text=${encodeURIComponent(shareText)}`,
-            '_blank',
-            'noopener,noreferrer'
-        );
     };
 
     const columns = [
@@ -180,7 +191,8 @@ const FinanceHistory = ({ data = [], isLoading, financeData, initialFinance }) =
         { key: 'fm_bank_amt', title: 'Bank', orderable: true, searchable: true, sum: true },
         { key: 'fm_online_amt', title: 'Online', orderable: true, searchable: true, sum: true },
         { key: 'fm_card_amt', title: 'Card', orderable: true, searchable: true, sum: true },
-        { key: 'fm_trans_type', title: 'Trans Type', orderable: true, searchable: true },
+        { key: 'fm_trans_type', title: 'Trans Type', orderable: true, searchable: true, render: (val, type, row) => formatFinanceTransTypeLabel(row) },
+        { key: 'fm_pay_info', title: 'Details', orderable: false, searchable: true, render: (val, type, row) => formatFinanceTransDetail(row) || '—' },
         { key: 'fm_other_info', title: 'Other', orderable: true, searchable: true },
         {
             key: 'action',
@@ -282,9 +294,15 @@ const FinanceHistory = ({ data = [], isLoading, financeData, initialFinance }) =
                                         </div>
                                     </div>
                                     <span className={`badge rounded-pill finance-mobile-emi__badge ${typeBadgeClass(item.fm_trans_type)}`}>
-                                        {item.fm_trans_type || '-'}
+                                        {formatFinanceTransTypeLabel(item)}
                                     </span>
                                 </div>
+
+                                {formatFinanceTransDetail(item) ? (
+                                    <div className="finance-history-other text-muted small mb-2">
+                                        {formatFinanceTransDetail(item)}
+                                    </div>
+                                ) : null}
 
                                 <div className="finance-mobile-emi__grid finance-history-grid">
                                     <div className="finance-mobile-emi__cell">
@@ -365,6 +383,7 @@ const FinanceHistory = ({ data = [], isLoading, financeData, initialFinance }) =
                     onPrint={handlePrintAll}
                     onPdf={handleDownloadAllPdf}
                     onWhatsApp={handleWhatsAppAll}
+                    whatsAppLoading={sharingWhatsApp}
                 />
             </div>
 
@@ -388,6 +407,7 @@ const FinanceHistory = ({ data = [], isLoading, financeData, initialFinance }) =
                     onPrint={handlePrintAll}
                     onPdf={handleDownloadAllPdf}
                     onWhatsApp={handleWhatsAppAll}
+                    whatsAppLoading={sharingWhatsApp}
                 />
             </div>
 

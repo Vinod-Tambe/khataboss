@@ -1,8 +1,14 @@
+import {
+  isWholeNumberEmi,
+  formatWholeEmiDisplay,
+  WHOLE_EMI_ERROR,
+} from '../utils/financeEmiValidation';
+
 /**
  * Finance amounts (aligned with proper ledger):
- * - receivable = principal + flat interest (ROI % of principal for tenure)
+ * - EMI = principal / n (whole number — interest collected separately)
+ * - receivable = principal + flat interest (display / total customer owes)
  * - disbursed (fin_final_amt) = principal − process fee  (cash out)
- * - EMI = receivable / n  (schedule total = receivable = DR loan)
  */
 const useAddFinanceCalculator = ({
   fin_prin_amt,
@@ -23,16 +29,18 @@ const useAddFinanceCalculator = ({
   const receivable = parseFloat((prin + interestAmt).toFixed(2));
   const disbursed = parseFloat(Math.max(0, prin - processAmt).toFixed(2));
 
-  let emi = 0;
-  if (receivable > 0 && n > 0) {
-    emi = receivable / n;
-  }
+  const hasEmiInputs = prin > 0 && n > 0;
+  const isEmiInvalid = hasEmiInputs && !isWholeNumberEmi(prin, n);
 
   return {
-    fin_emi_amt: emi > 0 ? emi.toFixed(2) : "0.00",
-    fin_final_amt: disbursed > 0 ? disbursed.toFixed(2) : "0.00",
+    fin_emi_amt: hasEmiInputs
+      ? formatWholeEmiDisplay(prin, n, !isEmiInvalid)
+      : '0',
+    fin_final_amt: disbursed > 0 ? disbursed.toFixed(2) : '0.00',
     fin_interest_amt: interestAmt.toFixed(2),
-    fin_receivable_amt: receivable > 0 ? receivable.toFixed(2) : "0.00",
+    fin_receivable_amt: receivable > 0 ? receivable.toFixed(2) : '0.00',
+    isEmiInvalid,
+    emiError: isEmiInvalid ? WHOLE_EMI_ERROR : null,
   };
 };
 

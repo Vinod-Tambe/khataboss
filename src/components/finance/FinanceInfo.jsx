@@ -1,14 +1,21 @@
 import React, { useState, useMemo } from 'react';
 import moment from 'moment';
+import { toast } from 'react-toastify';
 import EmiReceiptModal from './EmiReceiptModal';
 import {
     downloadFinanceEmiPdf,
     getFinanceEmiPdfBlob,
-    getFinanceEmiShareText,
     getFinanceEmiFileName,
     printFinanceEmiSchedule,
 } from './downloadFinanceEmiPdf';
+import {
+    sendWhatsAppPdfOnly,
+    getFinanceDispatchContext,
+    buildFinanceReceiptVars,
+    FINANCE_RECEIPT_TEMPLATE,
+} from '../../utils/dispatchWhatsAppReceipt';
 import '../../css/Finance.css';
+import { buildFinanceInterestSummary } from '../../utils/financeInterest';
 
 const formatAmt = (value) =>
     Number(value || 0).toLocaleString(undefined, {
@@ -33,7 +40,7 @@ const statusBadgeClass = (status) => {
     return 'bg-secondary-subtle text-secondary';
 };
 
-const EmiExportActions = ({ disabled, onPrint, onPdf, onWhatsApp }) => (
+const EmiExportActions = ({ disabled, onPrint, onPdf, onWhatsApp, whatsAppLoading }) => (
     <div className="text-center mt-3 mb-2 finance-info-actions-wrap no-print">
         <div className="finance-info-actions d-flex justify-content-center align-items-center gap-2">
             <button
@@ -60,24 +67,33 @@ const EmiExportActions = ({ disabled, onPrint, onPdf, onWhatsApp }) => (
                 type="button"
                 className="btn finance-info-action-btn finance-info-action-whatsapp"
                 onClick={onWhatsApp}
-                disabled={disabled}
+                disabled={disabled || whatsAppLoading}
                 title="WhatsApp share all EMIs"
                 aria-label="WhatsApp share all EMIs"
             >
-                <i className="bi bi-whatsapp"></i>
+                <i className={`bi ${whatsAppLoading ? 'bi-hourglass-split' : 'bi-whatsapp'}`}></i>
             </button>
         </div>
     </div>
 );
 
-const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, onHistory, isLoading, financeData, initialFinance }) => {
+const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, onPayInterest, onHistory, isLoading, financeData, initialFinance }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
     const [selectedEmiData, setSelectedEmiData] = useState(null);
+    const [sharingWhatsApp, setSharingWhatsApp] = useState(false);
 
     const fineSummary = financeData?.fine_summary;
+    const interestSummary = useMemo(
+        () => financeData?.interest_summary || (financeData ? buildFinanceInterestSummary(financeData) : null),
+        [financeData]
+    );
+    const showInterest = (interestSummary?.interest_amt || 0) > 0;
+    const pendingInterestAmt = parseFloat(interestSummary?.pending_interest) || 0;
+    const showInterestPayBtn =
+        Boolean(interestSummary?.interest_separate) && pendingInterestAmt > 0;
     const showFineColumn = Boolean(fineSummary?.enabled);
     const showPaidFineBtn =
         Boolean(fineSummary?.enabled) ||
@@ -109,6 +125,17 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, on
             return acc;
         }, { emiAmt: 0, paidAmt: 0, pendingAmt: 0, fineAmt: 0 });
     }, [filteredData]);
+
+    const canCloseFinance =
+        totals.pendingAmt > 0 &&
+        (!interestSummary?.interest_separate || pendingInterestAmt <= 0);
+
+    const rollbackSummary = financeData?.rollback_summary || {};
+    const canRollback =
+        Boolean(rollbackSummary.can_rollback_emi) ||
+        Boolean(rollbackSummary.can_rollback_interest) ||
+        Boolean(rollbackSummary.can_rollback_fine) ||
+        totals.paidAmt > 0;
 
     const pendingFineTotal = parseFloat(fineSummary?.pendingTotal) || 0;
 
@@ -156,31 +183,33 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, on
     };
 
     const handleWhatsAppAll = async () => {
-        if (!filteredData.length) return;
-        const shareText = getFinanceEmiShareText(scheduleOptions);
+        if (!filteredData.length || sharingWhatsApp) return;
         const fileName = getFinanceEmiFileName(initialFinance);
+        const ctx = getFinanceDispatchContext(initialFinance);
 
+        setSharingWhatsApp(true);
         try {
             const blob = await getFinanceEmiPdfBlob(scheduleOptions);
-            const file = new File([blob], fileName, { type: 'application/pdf' });
-
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                    files: [file],
-                    title: 'Finance EMI Schedule',
-                    text: shareText,
-                });
-                return;
-            }
+            const { message } = await sendWhatsAppPdfOnly({
+                firmId: ctx.firmId,
+                toPhone: ctx.toPhone,
+                toEmail: ctx.toEmail,
+                templateKey: FINANCE_RECEIPT_TEMPLATE,
+                vars: buildFinanceReceiptVars(
+                    initialFinance,
+                    totals.pendingAmt ?? totals.paidAmt ?? 0,
+                    moment().format('DD-MMM-YY')
+                ),
+                pdfBlob: blob,
+                fileName,
+            });
+            toast.success(message);
         } catch (error) {
             console.error('WhatsApp share failed:', error);
+            toast.error(error.message || 'Failed to send WhatsApp message.');
+        } finally {
+            setSharingWhatsApp(false);
         }
-
-        window.open(
-            `https://wa.me/?text=${encodeURIComponent(shareText)}`,
-            '_blank',
-            'noopener,noreferrer'
-        );
     };
 
     if (isLoading) {
@@ -244,6 +273,30 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, on
                                 <span className="finance-mobile-stat__label">Principal</span>
                                 <span className="finance-mobile-stat__value text-primary">{formatAmt(financeData.fin_prin_amt)}</span>
                             </div>
+                            {showInterest && (
+                                <>
+                                    <div className="finance-mobile-stat">
+                                        <span className="finance-mobile-stat__label">ROI</span>
+                                        <span className="finance-mobile-stat__value">{interestSummary.roi_display}</span>
+                                    </div>
+                                    <div className="finance-mobile-stat">
+                                        <span className="finance-mobile-stat__label">Int Amt</span>
+                                        <span className="finance-mobile-stat__value text-warning">{formatAmt(interestSummary.interest_amt)}</span>
+                                    </div>
+                                    {interestSummary.interest_separate && (
+                                        <>
+                                            <div className="finance-mobile-stat">
+                                                <span className="finance-mobile-stat__label">Int Paid</span>
+                                                <span className="finance-mobile-stat__value text-success">{formatAmt(interestSummary.interest_paid)}</span>
+                                            </div>
+                                            <div className="finance-mobile-stat">
+                                                <span className="finance-mobile-stat__label">Int Pending</span>
+                                                <span className="finance-mobile-stat__value text-danger">{formatAmt(interestSummary.pending_interest)}</span>
+                                            </div>
+                                        </>
+                                    )}
+                                </>
+                            )}
                             <div className="finance-mobile-stat">
                                 <span className="finance-mobile-stat__label">EMI Amt</span>
                                 <span className="finance-mobile-stat__value">{formatAmt(financeData.fin_emi_amt)}</span>
@@ -301,6 +354,17 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, on
                         <i className="bi bi-wallet2"></i>
                         <span>Pay</span>
                     </button>
+                    {showInterestPayBtn && (
+                        <button
+                            className="btn btn-outline-warning"
+                            onClick={onPayInterest}
+                            disabled={financeData?.fin_status === 'CLOSED'}
+                            title="Pay pending interest separately"
+                        >
+                            <i className="bi bi-percent"></i>
+                            <span>Pay Interest</span>
+                        </button>
+                    )}
                     {showPaidFineBtn && (
                         <button
                             className="btn btn-outline-danger"
@@ -315,8 +379,12 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, on
                     <button
                         className="btn btn-warning"
                         onClick={onRollback}
-                        disabled={totals.paidAmt <= 0 || financeData?.fin_status === 'CLOSED'}
-                        title={financeData?.fin_status === 'CLOSED' ? 'Cannot rollback a closed finance' : totals.paidAmt <= 0 ? 'No payment records to rollback' : 'Rollback a payment'}
+                        disabled={!canRollback}
+                        title={
+                            !canRollback
+                                ? 'No payment records to rollback'
+                                : 'Rollback EMI, interest, or fine payment'
+                        }
                     >
                         <i className="bi bi-arrow-counterclockwise"></i>
                         <span>Rollback</span>
@@ -324,8 +392,14 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, on
                     <button
                         className="btn btn-danger"
                         onClick={onClose}
-                        disabled={totals.pendingAmt <= 0 || financeData.fin_status === 'CLOSED'}
-                        title={totals.pendingAmt <= 0 ? 'All installments are paid' : 'Close this finance'}
+                        disabled={!canCloseFinance || financeData?.fin_status === 'CLOSED'}
+                        title={
+                            financeData?.fin_status === 'CLOSED'
+                                ? 'Finance is already closed'
+                                : !canCloseFinance
+                                    ? 'Pay all EMIs and pending interest before closing'
+                                    : 'Close this finance'
+                        }
                     >
                         <i className="bi bi-x-circle"></i>
                         <span>Close</span>
@@ -433,6 +507,7 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, on
                     onPrint={handlePrintAll}
                     onPdf={handleDownloadAllPdf}
                     onWhatsApp={handleWhatsAppAll}
+                    whatsAppLoading={sharingWhatsApp}
                 />
             </div>
 
@@ -467,6 +542,16 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, on
                             >
                                 <i className="bi bi-wallet2 me-1"></i> Payment
                             </button>
+                            {showInterestPayBtn && (
+                                <button
+                                    className="btn btn-sm btn-outline-warning px-3"
+                                    onClick={onPayInterest}
+                                    disabled={financeData?.fin_status === 'CLOSED'}
+                                    title="Pay pending interest separately"
+                                >
+                                    <i className="bi bi-percent me-1"></i> Pay Interest
+                                </button>
+                            )}
                             {showPaidFineBtn && (
                                 <button
                                     className="btn btn-sm btn-outline-danger px-3"
@@ -480,16 +565,26 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, on
                             <button
                                 className="btn btn-sm btn-warning px-3 text-dark"
                                 onClick={onRollback}
-                                disabled={totals.paidAmt <= 0 || financeData?.fin_status === 'CLOSED'}
-                                title={financeData?.fin_status === 'CLOSED' ? 'Cannot rollback a closed finance' : totals.paidAmt <= 0 ? 'No payment records to rollback' : 'Rollback a payment'}
+                                disabled={!canRollback}
+                                title={
+                                    !canRollback
+                                        ? 'No payment records to rollback'
+                                        : 'Rollback EMI, interest, or fine payment'
+                                }
                             >
                                 <i className="bi bi-arrow-counterclockwise me-1"></i> Rollback
                             </button>
                             <button
                                 className="btn btn-sm btn-danger px-3"
                                 onClick={onClose}
-                                disabled={totals.pendingAmt <= 0 || financeData.fin_status === 'CLOSED'}
-                                title={totals.pendingAmt <= 0 ? 'All installments are paid' : 'Close this finance'}
+                                disabled={!canCloseFinance || financeData?.fin_status === 'CLOSED'}
+                                title={
+                                    financeData?.fin_status === 'CLOSED'
+                                        ? 'Finance is already closed'
+                                        : !canCloseFinance
+                                            ? 'Pay all EMIs and pending interest before closing'
+                                            : 'Close this finance'
+                                }
                             >
                                 <i className="bi bi-x-circle me-1"></i> Close
                             </button>
@@ -509,6 +604,30 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, on
                                 <span className="text-muted small me-2">Prin Amt:</span>
                                 <span className="fw-bold text-primary">{formatAmt(financeData.fin_prin_amt)}</span>
                             </div>
+                            {showInterest && (
+                                <>
+                                    <div className="col-auto px-3 py-2 border-end">
+                                        <span className="text-muted small me-2">ROI:</span>
+                                        <span className="fw-bold text-dark">{interestSummary.roi_display}</span>
+                                    </div>
+                                    <div className="col-auto px-3 py-2 border-end">
+                                        <span className="text-muted small me-2">Int Amt:</span>
+                                        <span className="fw-bold text-warning">{formatAmt(interestSummary.interest_amt)}</span>
+                                    </div>
+                                    {interestSummary.interest_separate && (
+                                        <>
+                                            <div className="col-auto px-3 py-2 border-end bg-success bg-opacity-10">
+                                                <span className="text-success small fw-bold me-2">Int Paid:</span>
+                                                <span className="fw-bold text-success">{formatAmt(interestSummary.interest_paid)}</span>
+                                            </div>
+                                            <div className="col-auto px-3 py-2 border-end bg-warning bg-opacity-10">
+                                                <span className="text-danger small fw-bold me-2">Int Pending:</span>
+                                                <span className="fw-bold text-danger">{formatAmt(interestSummary.pending_interest)}</span>
+                                            </div>
+                                        </>
+                                    )}
+                                </>
+                            )}
                             <div className="col-auto px-3 py-2 border-end">
                                 <span className="text-muted small me-2">EMI Amt:</span>
                                 <span className="fw-bold text-dark">{formatAmt(financeData.fin_emi_amt)}</span>
@@ -669,6 +788,7 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, on
                     onPrint={handlePrintAll}
                     onPdf={handleDownloadAllPdf}
                     onWhatsApp={handleWhatsAppAll}
+                    whatsAppLoading={sharingWhatsApp}
                 />
             </div>
 

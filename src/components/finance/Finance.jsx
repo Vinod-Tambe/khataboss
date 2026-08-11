@@ -58,6 +58,11 @@ const Finance = () => {
         setShowModal(true);
     };
 
+    const handlePayInterest = () => {
+        setModalConfig({ title: 'Pay Interest', type: 'INTEREST' });
+        setShowModal(true);
+    };
+
     const handleHistory = () => {
         setView('history');
     };
@@ -130,6 +135,7 @@ const Finance = () => {
                             onRollback={handleRollback}
                             onClose={handleClosePayment}
                             onPaidFine={handlePaidFine}
+                            onPayInterest={handlePayInterest}
                             onHistory={handleHistory}
                             isLoading={loading}
                             financeData={financeData}

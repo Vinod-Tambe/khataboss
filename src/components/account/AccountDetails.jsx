@@ -17,6 +17,8 @@ const AccountDetails = () => {
     const [ledgerData, setLedgerData] = useState([]);
     const [openingBalance, setOpeningBalance] = useState(0);
     const [ledgerLoading, setLedgerLoading] = useState(false);
+    const [ledgerError, setLedgerError] = useState(null);
+    const [accountNotFound, setAccountNotFound] = useState(false);
     const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
     const { selectedFirmId } = useSelector((state) => state.firm);
     const [firms, setFirms] = useState([]);
@@ -59,24 +61,39 @@ const AccountDetails = () => {
             if (!uuid || !startDate || !endDate) return;
             try {
                 setLedgerLoading(true);
+                setLedgerError(null);
+                setAccountNotFound(false);
                 const response = await getAccountLedger({
                     startDate,
                     endDate,
-                    acc_id: uuid, // Use UUID directly
+                    acc_id: uuid,
                     firmId: selectedFirm
                 });
                 setLedgerData(response.data.jurnal_trans_data || []);
                 setOpeningBalance(response.data.acc_open_balanace || 0);
-                
-                // Set account info from ledger response
+
                 if (response.data.acc_name) {
                     setAccount({
                         acc_name: response.data.acc_name,
                         acc_pre_acc: response.data.acc_pre_acc
                     });
+                } else {
+                    setAccount(null);
                 }
             } catch (error) {
                 console.error("Error fetching ledger:", error);
+                setLedgerData([]);
+                setOpeningBalance(0);
+                setAccount(null);
+
+                const message = error.message || 'Failed to load account ledger.';
+                if (message.toLowerCase().includes('not found')) {
+                    setAccountNotFound(true);
+                    setLedgerError(null);
+                } else {
+                    setLedgerError(message);
+                    setAccountNotFound(false);
+                }
             } finally {
                 setLedgerLoading(false);
                 setLoading(false);
@@ -132,12 +149,9 @@ const AccountDetails = () => {
             }
         );
 
-        // Set default value
         $(dateRef.current).val(
             `${fyStart.format("DD-MM-YYYY")} - ${fyEnd.format("DD-MM-YYYY")}`
         );
-
-
 
         const dateInput = dateRef.current;
         return () => {
@@ -157,12 +171,13 @@ const AccountDetails = () => {
     return (
         <div className="card p-3 pt-1 shadow-sm">
             <div className="row align-items-center mt-2">
-                <div className="col-md-3 d-none d-md-flex mt-2">
+                <div className="col-md-3 col-12 mt-2">
                     <input
                         type="text"
                         className="form-control border-dark text-center"
                         placeholder="Select Date Range"
                         ref={dateRef}
+                        readOnly
                     />
                 </div>
                 <div className="col-md-6 mt-2 text-center">
@@ -170,14 +185,6 @@ const AccountDetails = () => {
                         <i className="bi bi-bar-chart-line-fill me-2 responsive-text"></i>
                         Account Ledger
                     </h3>
-                </div>
-                <div className="col-md-3 d-md-none mt-2">
-                    <input
-                        type="text"
-                        className="form-control border-dark text-center"
-                        placeholder="Select Date Range"
-                        readOnly
-                    />
                 </div>
                 <div className="col-md-3 mt-2">
                     <select 
@@ -207,19 +214,31 @@ const AccountDetails = () => {
                     </p>
                     <p>
                         <strong className="text-primary-emphasis fw-bold">
-                            ACCOUNT NAME : {loading ? 'Loading...' : account?.acc_name} | PRIMARY ACCOUNT : {loading ? 'Loading...' : account?.acc_pre_acc}
+                            {accountNotFound ? (
+                                'ACCOUNT NOT FOUND'
+                            ) : (
+                                <>
+                                    ACCOUNT NAME : {loading ? 'Loading...' : (account?.acc_name || '-')} | PRIMARY ACCOUNT : {loading ? 'Loading...' : (account?.acc_pre_acc || '-')}
+                                </>
+                            )}
                         </strong>
                     </p>
                 </div>
                 <div className="col-md-12">
-                    <AccountDetailsReport ledgerData={ledgerData} loading={ledgerLoading} openingBalanceProp={openingBalance} />
+                    <AccountDetailsReport
+                        ledgerData={ledgerData}
+                        loading={ledgerLoading}
+                        openingBalanceProp={openingBalance}
+                        errorMessage={ledgerError}
+                        accountNotFound={accountNotFound}
+                    />
                 </div>
             </div>
             <div className="text-center mt-3 mb-2">
                 <button
                     className="btn btn-outline-success"
                     onClick={() => setIsPrintPreviewOpen(true)}
-                    disabled={ledgerLoading}
+                    disabled={ledgerLoading || accountNotFound || !!ledgerError || ledgerData.length === 0}
                 >
                     Print <i className="bi bi-printer-fill"></i>
                 </button>

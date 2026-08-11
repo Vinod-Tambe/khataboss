@@ -40,6 +40,7 @@ const getCellValue = (row, col) => {
 };
 
 const getRowId = (row, index) =>
+  row?.row_id ||
   row?.id ||
   row?.backup_uuid ||
   row?.backup_id ||
@@ -241,7 +242,9 @@ const MobileList = ({
                         {detailColumns.map((col) => (
                           <div key={`${col.key}-${col.title}`} className="mobile-list__cell">
                             <span className="mobile-list__cell-label">{col.title}</span>
-                            {col.customerHome && onCustomerHome ? (
+                            {typeof col.renderMobile === 'function' ? (
+                              col.renderMobile(row)
+                            ) : col.customerHome && onCustomerHome ? (
                               <button
                                 type="button"
                                 className="btn btn-link p-0 text-brown fw-bold text-decoration-none mobile-list__cell-value"
