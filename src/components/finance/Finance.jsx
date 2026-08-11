@@ -38,30 +38,20 @@ const Finance = () => {
         fetchDetails();
     }, [fetchDetails]);
 
-    const handlePayment = () => {
-        setModalConfig({ title: 'Finance Payment', type: 'PAID' });
+    const openModal = (title, type) => {
+        setModalConfig({ title, type });
         setShowModal(true);
     };
 
-    const handleRollback = () => {
-        setModalConfig({ title: 'Finance Rollback', type: 'ROLLBACK' });
-        setShowModal(true);
-    };
+    const handlePayment = () => openModal('Finance Payment', 'PAID');
 
-    const handleClosePayment = () => {
-        setModalConfig({ title: 'Close Finance', type: 'CLOSE' });
-        setShowModal(true);
-    };
+    const handleRollback = () => openModal('Finance Rollback', 'ROLLBACK');
 
-    const handlePaidFine = () => {
-        setModalConfig({ title: 'Paid Fine / Collect', type: 'FINE' });
-        setShowModal(true);
-    };
+    const handleClosePayment = () => openModal('Close Finance', 'CLOSE');
 
-    const handlePayInterest = () => {
-        setModalConfig({ title: 'Pay Interest', type: 'INTEREST' });
-        setShowModal(true);
-    };
+    const handlePaidFine = () => openModal('Paid Fine / Collect', 'FINE');
+
+    const handlePayInterest = () => openModal('Pay Interest', 'INTEREST');
 
     const handleHistory = () => {
         setView('history');

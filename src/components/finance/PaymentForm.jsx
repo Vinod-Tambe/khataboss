@@ -113,9 +113,9 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
         }, { pending: 0, paid: 0 });
     }, [finance?.finance_trans]);
 
-    const fineSummary = finance?.fine_summary || {};
-    const interestSummary = finance?.interest_summary || {};
-    const rollbackSummary = finance?.rollback_summary || {};
+    const fineSummary = useMemo(() => finance?.fine_summary || {}, [finance?.fine_summary]);
+    const interestSummary = useMemo(() => finance?.interest_summary || {}, [finance?.interest_summary]);
+    const rollbackSummary = useMemo(() => finance?.rollback_summary || {}, [finance?.rollback_summary]);
     const pendingFine = parseFloat(fineSummary.pendingFine) || 0;
     const pendingCollect = parseFloat(fineSummary.pendingCollect) || 0;
     const pendingInterest = parseFloat(interestSummary.pending_interest) || 0;
