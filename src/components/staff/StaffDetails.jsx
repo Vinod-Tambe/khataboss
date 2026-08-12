@@ -3,6 +3,14 @@ import { useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { showToast } from "../common/ToastAlert";
 import { getValidatedUploadFile } from "../../utils/fileUpload";
+import ProfileDocumentsSection from "../common/ProfileDocumentsSection";
+import {
+    appendOtherImagesToFormData,
+    collectExistingDocumentUpdates,
+    documentsFromOtherImages,
+    getNewDocumentUploads,
+} from "../../utils/imageHelpers";
+import "../../css/ProfileDocumentsSection.css";
 import {
     getStaff,
     updateStaff,
@@ -17,7 +25,6 @@ import {
 
 const IMAGE_BASE_URL = "http://localhost:9000/";
 const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
-const DOC_PLACEHOLDER = "https://cdn-icons-png.flaticon.com/512/281/281764.png";
 
 const emptyPermissions = {
     firm: { view: false, create: false, edit: false, delete: false },
@@ -84,17 +91,9 @@ const mapStaffToForm = (staff) => ({
     bankAccNo: staff.staff_bank_acc_no || "",
     ifscCode: staff.staff_ifsc_code || "",
     otherInformation: staff.staff_other_info || "",
-    aadhaarFront: resolveImg(staff.staff_adhaar_front_img, DOC_PLACEHOLDER),
-    aadhaarBack: resolveImg(staff.staff_adhaar_back_img, DOC_PLACEHOLDER),
-    panCard: resolveImg(staff.staff_pan_card_img, DOC_PLACEHOLDER),
-    signature: resolveImg(staff.staff_sign_img, DOC_PLACEHOLDER),
     image: resolveImg(staff.staff_profile_img),
     status: staff.staff_status === "Active",
     photoFile: null,
-    aadhaarFrontFile: null,
-    aadhaarBackFile: null,
-    panCardFile: null,
-    signatureFile: null,
 });
 
 const mergePermissions = (incoming = {}) => {
@@ -136,6 +135,8 @@ const StaffDetails = () => {
     });
     const [activeDetailTab, setActiveDetailTab] = useState("personal");
     const [permissions, setPermissions] = useState(emptyPermissions);
+    const [documents, setDocuments] = useState([]);
+    const [removedDocPaths, setRemovedDocPaths] = useState([]);
 
     const personalInfo = useMemo(
         () => ({
@@ -202,6 +203,8 @@ const StaffDetails = () => {
                 if (cancelled) return;
                 const staff = res.data;
                 setUserData(mapStaffToForm(staff));
+                setDocuments(documentsFromOtherImages(staff.staff_other_images));
+                setRemovedDocPaths([]);
                 setLoginId(staff.staff_login_id || "");
                 setFullLoginId(staff.full_login_id || `${ownerLoginId}+${staff.staff_login_id || ""}`);
                 setPermissions(mergePermissions(staff.permissions));
@@ -216,6 +219,23 @@ const StaffDetails = () => {
         if (id) load();
         return () => { cancelled = true; };
     }, [id, ownerLoginId]);
+
+    const handleProfileFile = (file) => {
+        if (!file) return;
+        setUserData((prev) => ({
+            ...prev,
+            photoFile: file,
+            image: URL.createObjectURL(file),
+        }));
+    };
+
+    const handleProfileRemove = () => {
+        setUserData((prev) => ({
+            ...prev,
+            photoFile: null,
+            image: DEFAULT_AVATAR,
+        }));
+    };
 
     const handleFieldChange = (e) => {
         const { name, value } = e.target;
@@ -267,14 +287,18 @@ const StaffDetails = () => {
         payload.append("otherInformation", userData.otherInformation || "");
         payload.append("staff_status", userData.status ? "Active" : "Inactive");
         if (userData.photoFile) payload.append("photo", userData.photoFile);
-        if (userData.aadhaarFrontFile) payload.append("adhaarFront", userData.aadhaarFrontFile);
-        if (userData.aadhaarBackFile) payload.append("adhaarBack", userData.aadhaarBackFile);
-        if (userData.panCardFile) payload.append("panCard", userData.panCardFile);
-        if (userData.signatureFile) payload.append("signature", userData.signatureFile);
+        appendOtherImagesToFormData(
+            payload,
+            getNewDocumentUploads(documents),
+            removedDocPaths,
+            collectExistingDocumentUpdates(documents)
+        );
 
         try {
             const res = await updateStaff(id, payload);
             setUserData(mapStaffToForm(res.data));
+            setDocuments(documentsFromOtherImages(res.data.staff_other_images));
+            setRemovedDocPaths([]);
             setFullLoginId(res.data.full_login_id || fullLoginId);
             triggerAlert("Staff profile details saved successfully.");
         } catch (err) {
@@ -829,76 +853,57 @@ const StaffDetails = () => {
                                         )}
 
                                         {activeDetailTab === 'documents' && (
-                                            <div className="row g-3">
-                                                <div className="col-12 col-md-4">
-                                                    <div className="card bg-light border-0 p-2 text-center" style={{ borderRadius: '8px' }}>
-                                                        <span className="small fw-bold text-muted mb-2">Aadhaar Front</span>
-                                                        <div className="bg-white rounded p-1 mb-2 mx-auto d-flex align-items-center justify-content-center" style={{ width: '100%', height: '120px' }}>
-                                                            <img src={userData.aadhaarFront} alt="Aadhaar Front" className="object-fit-contain w-100 h-100 rounded" />
-                                                        </div>
-                                                        <label className="btn btn-sm btn-outline-success fw-bold w-100">
-                                                            Upload Aadhaar Front
-                                                            <input type="file" accept="image/*" className="d-none" onChange={(e) => {
-                                                                const file = getValidatedUploadFile(e);
-                                                                if (file) setUserData(prev => ({ ...prev, aadhaarFrontFile: file, aadhaarFront: URL.createObjectURL(file) }));
-                                                            }} />
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                                <div className="col-12 col-md-4">
-                                                    <div className="card bg-light border-0 p-2 text-center" style={{ borderRadius: '8px' }}>
-                                                        <span className="small fw-bold text-muted mb-2">Aadhaar Back</span>
-                                                        <div className="bg-white rounded p-1 mb-2 mx-auto d-flex align-items-center justify-content-center" style={{ width: '100%', height: '120px' }}>
-                                                            <img src={userData.aadhaarBack} alt="Aadhaar Back" className="object-fit-contain w-100 h-100 rounded" />
-                                                        </div>
-                                                        <label className="btn btn-sm btn-outline-success fw-bold w-100">
-                                                            Upload Aadhaar Back
-                                                            <input type="file" accept="image/*" className="d-none" onChange={(e) => {
-                                                                const file = getValidatedUploadFile(e);
-                                                                if (file) setUserData(prev => ({ ...prev, aadhaarBackFile: file, aadhaarBack: URL.createObjectURL(file) }));
-                                                            }} />
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                                <div className="col-12 col-md-4">
-                                                    <div className="card bg-light border-0 p-2 text-center" style={{ borderRadius: '8px' }}>
-                                                        <span className="small fw-bold text-muted mb-2">PAN Card</span>
-                                                        <div className="bg-white rounded p-1 mb-2 mx-auto d-flex align-items-center justify-content-center" style={{ width: '100%', height: '120px' }}>
-                                                            <img src={userData.panCard} alt="PAN Card" className="object-fit-contain w-100 h-100 rounded" />
-                                                        </div>
-                                                        <label className="btn btn-sm btn-outline-success fw-bold w-100">
-                                                            Upload PAN Card
-                                                            <input type="file" accept="image/*" className="d-none" onChange={(e) => {
-                                                                const file = getValidatedUploadFile(e);
-                                                                if (file) setUserData(prev => ({ ...prev, panCardFile: file, panCard: URL.createObjectURL(file) }));
-                                                            }} />
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            <ProfileDocumentsSection
+                                                profilePreview={userData.image}
+                                                onProfileFile={handleProfileFile}
+                                                onProfileRemove={handleProfileRemove}
+                                                documents={documents}
+                                                onAddDocument={(doc) => setDocuments((prev) => [...prev, doc])}
+                                                onRemoveDocument={(index) => {
+                                                    setDocuments((prev) => {
+                                                        const removed = prev[index];
+                                                        if (removed?.isExisting && removed.path) {
+                                                            setRemovedDocPaths((paths) => [...paths, removed.path]);
+                                                        }
+                                                        return prev.filter((_, i) => i !== index);
+                                                    });
+                                                }}
+                                                onReplaceDocument={(index, file) => {
+                                                    setDocuments((prev) => {
+                                                        const replaced = prev[index];
+                                                        if (replaced?.isExisting && replaced.path) {
+                                                            setRemovedDocPaths((paths) => [...paths, replaced.path]);
+                                                        }
+                                                        return prev.map((doc, i) =>
+                                                            i === index
+                                                                ? {
+                                                                      ...doc,
+                                                                      file,
+                                                                      preview: URL.createObjectURL(file),
+                                                                      isExisting: false,
+                                                                      path: null,
+                                                                  }
+                                                                : doc
+                                                        );
+                                                    });
+                                                }}
+                                                onUpdateDocument={(index, patch) =>
+                                                    setDocuments((prev) =>
+                                                        prev.map((doc, i) => (i === index ? { ...doc, ...patch } : doc))
+                                                    )
+                                                }
+                                            />
                                         )}
 
                                         {activeDetailTab === 'other' && (
                                             <div className="row g-3">
-                                                <div className="col-12 col-md-4">
-                                                    <div className="card bg-light border-0 p-2 text-center" style={{ borderRadius: '8px' }}>
-                                                        <span className="small fw-bold text-muted mb-2">Signature</span>
-                                                        <div className="bg-white rounded p-1 mb-2 mx-auto d-flex align-items-center justify-content-center" style={{ width: '100%', height: '120px' }}>
-                                                            <img src={userData.signature} alt="Signature" className="object-fit-contain w-100 h-100 rounded" />
-                                                        </div>
-                                                        <label className="btn btn-sm btn-outline-success fw-bold w-100">
-                                                            Upload Signature
-                                                            <input type="file" accept="image/*" className="d-none" onChange={(e) => {
-                                                                const file = getValidatedUploadFile(e);
-                                                                if (file) setUserData(prev => ({ ...prev, signatureFile: file, signature: URL.createObjectURL(file) }));
-                                                            }} />
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                                <div className="col-12 col-md-8">
+                                                <div className="col-12">
                                                     <div className="h-100 d-flex flex-column">
                                                         <label className="form-label text-muted small fw-bold mb-1">Other Information</label>
                                                         <textarea name="otherInformation" className="form-control flex-grow-1" rows="5" style={{ minHeight: '120px' }} value={userData.otherInformation || ""} onChange={handleFieldChange} />
+                                                        <p className="text-muted small mt-2 mb-0">
+                                                            Upload signature and other documents in the Documents tab with a label (e.g. Signature).
+                                                        </p>
                                                     </div>
                                                 </div>
                                             </div>

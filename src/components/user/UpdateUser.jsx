@@ -1,14 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import DocumentUploadCard from '../common/DocumentUploadCard';
+import ProfileDocumentsSection from '../common/ProfileDocumentsSection';
+import {
+    appendOtherImagesToFormData,
+    collectExistingDocumentUpdates,
+    documentsFromOtherImages,
+    getNewDocumentUploads,
+    resolveImageUrl,
+} from '../../utils/imageHelpers';
+import '../../css/ProfileDocumentsSection.css';
 import moment from 'moment';
 import $ from 'jquery';
 import 'daterangepicker';
 import 'daterangepicker/daterangepicker.css';
 import { toast } from 'react-hot-toast';
 import { validatePincode, validatePan, validateAadhaar, validateGstin, validateIfsc, validateMobile, validatePhone } from '../../utils/validation';
-import { getValidatedUploadFile, validateUploadFile } from '../../utils/fileUpload';
+import { validateUploadFile } from '../../utils/fileUpload';
 import useFormNavigation from '../../hooks/useFormNavigation';
 import { getFirmsDropdown } from '../../api/firmApi';
 import { getUser, updateUser } from '../../api/userApi';
@@ -27,23 +35,8 @@ const UpdateUser = () => {
 
     // Previews
     const [photoPreview, setPhotoPreview] = useState(null);
-    const [aadhaarFrontPreview, setAadhaarFrontPreview] = useState(null);
-    const [aadhaarBackPreview, setAadhaarBackPreview] = useState(null);
-    const [panCardPreview, setPanCardPreview] = useState(null);
-
-    // Webcam
-    const videoRef = useRef(null);
-    const canvasRef = useRef(null);
-    const [stream, setStream] = useState(null);
-    const [showWebcam, setShowWebcam] = useState(false);
-    const [captureTime, setCaptureTime] = useState(null);
-    const [activeCaptureField, setActiveCaptureField] = useState(null);
-
-    // File inputs
-    const photoInputRef = useRef(null);
-    const aadhaarFrontInputRef = useRef(null);
-    const aadhaarBackInputRef = useRef(null);
-    const panCardInputRef = useRef(null);
+    const [documents, setDocuments] = useState([]);
+    const [removedDocPaths, setRemovedDocPaths] = useState([]);
 
     // Signature
     const signatureRef = useRef(null);
@@ -62,8 +55,7 @@ const UpdateUser = () => {
         shopName: '', officeAddress: '', permanentAddress: '', currentAddress: '',
         village: '', wardNumber: '', tehsil: '', city: '', country: '',
         pincode: '', state: '', otherInformation: '',
-        photo: null, adhaarFront: null, adhaarBack: null, panCard: null,
-        signature: null,
+        photo: null,
         firmId: '',
         occupation: '',
     });
@@ -123,18 +115,13 @@ const UpdateUser = () => {
                         otherInformation: user.user_other_info || '',
                         firmId: user.user_firm_id || '',
                         photo: null,
-                        adhaarFront: null,
-                        adhaarBack: null,
-                        panCard: null,
-                        signature: null,
                     });
 
-                    // Set image previews
-                    const baseUrl = 'http://localhost:9000/';
-                    if (user.user_profile_img?.path) setPhotoPreview(`${baseUrl}${user.user_profile_img.path}`);
-                    if (user.user_adhaar_front_img?.path) setAadhaarFrontPreview(`${baseUrl}${user.user_adhaar_front_img.path}`);
-                    if (user.user_adhaar_back_img?.path) setAadhaarBackPreview(`${baseUrl}${user.user_adhaar_back_img.path}`);
-                    if (user.user_pan_card_img?.path) setPanCardPreview(`${baseUrl}${user.user_pan_card_img.path}`);
+                    if (user.user_profile_img?.path) {
+                        setPhotoPreview(resolveImageUrl(user.user_profile_img));
+                    }
+                    setDocuments(documentsFromOtherImages(user.user_other_images));
+                    setRemovedDocPaths([]);
                 }
             } catch (error) {
                 console.error("Error fetching data:", error);
@@ -204,70 +191,15 @@ const UpdateUser = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleFileSelect = (e, fieldName, setPreview) => {
-        const file = getValidatedUploadFile(e);
+    const handleProfileFile = (file) => {
         if (!file) return;
-        setFormData(prev => ({ ...prev, [fieldName]: file }));
-        setPreview(URL.createObjectURL(file));
+        setFormData(prev => ({ ...prev, photo: file }));
+        setPhotoPreview(URL.createObjectURL(file));
     };
 
-    const removeFile = (fieldName, setPreview) => {
-        setFormData(prev => ({ ...prev, [fieldName]: null }));
-        setPreview(null);
-    };
-
-    const startWebcam = (fieldName) => {
-        setActiveCaptureField(fieldName);
-        navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } })
-            .then(mediaStream => {
-                setStream(mediaStream);
-                if (videoRef.current) {
-                    videoRef.current.srcObject = mediaStream;
-                    videoRef.current.play().catch(e => console.error("Video play error:", e));
-                }
-                setShowWebcam(true);
-                setCaptureTime(null);
-            })
-            .catch(err => {
-                alert("Cannot access webcam: " + err.message);
-                setActiveCaptureField(null);
-            });
-    };
-
-    const stopWebcam = () => {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-            setStream(null);
-        }
-        if (videoRef.current) videoRef.current.srcObject = null;
-        setShowWebcam(false);
-        setActiveCaptureField(null);
-    };
-
-    const capturePhoto = () => {
-        if (!canvasRef.current || !videoRef.current || !activeCaptureField) return;
-
-        const context = canvasRef.current.getContext('2d');
-        context.drawImage(videoRef.current, 0, 0, 320, 240);
-
-        canvasRef.current.toBlob((blob) => {
-            const file = new File([blob], `${activeCaptureField}_captured.jpg`, { type: "image/jpeg" });
-            if (!validateUploadFile(file)) return;
-            setFormData(prev => ({ ...prev, [activeCaptureField]: file }));
-            const previewUrl = URL.createObjectURL(file);
-
-            if (activeCaptureField === 'photo') setPhotoPreview(previewUrl);
-            else if (activeCaptureField === 'adhaarFront') setAadhaarFrontPreview(previewUrl);
-            else if (activeCaptureField === 'adhaarBack') setAadhaarBackPreview(previewUrl);
-            else if (activeCaptureField === 'panCard') setPanCardPreview(previewUrl);
-
-            setCaptureTime(new Date().toLocaleString('en-IN', {
-                day: '2-digit', month: 'short', year: 'numeric',
-                hour: '2-digit', minute: '2-digit', hour12: true
-            }));
-
-            stopWebcam();
-        }, 'image/jpeg', 0.92);
+    const handleProfileRemove = () => {
+        setFormData(prev => ({ ...prev, photo: null }));
+        setPhotoPreview(null);
     };
 
     const clearSignature = () => {
@@ -275,7 +207,6 @@ const UpdateUser = () => {
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        setFormData(prev => ({ ...prev, signature: null }));
     };
 
     const saveSignature = () => {
@@ -286,8 +217,21 @@ const UpdateUser = () => {
             .then(blob => {
                 const file = new File([blob], "signature.png", { type: "image/png" });
                 if (!validateUploadFile(file)) return;
-                setFormData(prev => ({ ...prev, signature: file }));
-                toast.success("Signature saved!");
+                setDocuments((prev) => {
+                    const withoutOld = prev.filter((d) => d.label !== 'Signature');
+                    return [
+                        ...withoutOld,
+                        {
+                            id: `sig-${Date.now()}`,
+                            file,
+                            preview: URL.createObjectURL(file),
+                            label: 'Signature',
+                            note: '',
+                            isExisting: false,
+                        },
+                    ];
+                });
+                toast.success("Signature added to documents!");
             });
     };
 
@@ -351,10 +295,12 @@ const UpdateUser = () => {
             });
 
             if (formData.photo) data.append('photo', formData.photo);
-            if (formData.adhaarFront) data.append('adhaarFront', formData.adhaarFront);
-            if (formData.adhaarBack) data.append('adhaarBack', formData.adhaarBack);
-            if (formData.panCard) data.append('panCard', formData.panCard);
-            if (formData.signature) data.append('signature', formData.signature);
+            appendOtherImagesToFormData(
+                data,
+                getNewDocumentUploads(documents),
+                removedDocPaths,
+                collectExistingDocumentUpdates(documents)
+            );
 
             const result = await updateUser(uuid, data);
             toast.success(result.message || 'Customer updated successfully!');
@@ -463,20 +409,46 @@ const UpdateUser = () => {
                 </div>
             </div>
 
-            <div className="row g-3 mt-2">
-                <div className="col-12 col-md-6 col-lg-3">
-                    <DocumentUploadCard title="Profile Photo" fieldName="photo" preview={photoPreview} setPreview={setPhotoPreview} inputRef={photoInputRef} showCamera={true} startWebcam={() => startWebcam('photo')} handleFileSelect={handleFileSelect} removeFile={removeFile} />
-                </div>
-                <div className="col-12 col-md-6 col-lg-3">
-                    <DocumentUploadCard title="Aadhaar Front" fieldName="adhaarFront" preview={aadhaarFrontPreview} setPreview={setAadhaarFrontPreview} inputRef={aadhaarFrontInputRef} showCamera={true} startWebcam={() => startWebcam('adhaarFront')} handleFileSelect={handleFileSelect} removeFile={removeFile} />
-                </div>
-                <div className="col-12 col-md-6 col-lg-3">
-                    <DocumentUploadCard title="Aadhaar Back" fieldName="adhaarBack" preview={aadhaarBackPreview} setPreview={setAadhaarBackPreview} inputRef={aadhaarBackInputRef} showCamera={true} startWebcam={() => startWebcam('adhaarBack')} handleFileSelect={handleFileSelect} removeFile={removeFile} />
-                </div>
-                <div className="col-12 col-md-6 col-lg-3">
-                    <DocumentUploadCard title="PAN Card" fieldName="panCard" preview={panCardPreview} setPreview={setPanCardPreview} inputRef={panCardInputRef} showCamera={true} startWebcam={() => startWebcam('panCard')} handleFileSelect={handleFileSelect} removeFile={removeFile} />
-                </div>
-            </div>
+            <ProfileDocumentsSection
+                profilePreview={photoPreview}
+                onProfileFile={handleProfileFile}
+                onProfileRemove={handleProfileRemove}
+                documents={documents}
+                onAddDocument={(doc) => setDocuments((prev) => [...prev, doc])}
+                onRemoveDocument={(index) => {
+                    setDocuments((prev) => {
+                        const removed = prev[index];
+                        if (removed?.isExisting && removed.path) {
+                            setRemovedDocPaths((paths) => [...paths, removed.path]);
+                        }
+                        return prev.filter((_, i) => i !== index);
+                    });
+                }}
+                onReplaceDocument={(index, file) => {
+                    setDocuments((prev) => {
+                        const replaced = prev[index];
+                        if (replaced?.isExisting && replaced.path) {
+                            setRemovedDocPaths((paths) => [...paths, replaced.path]);
+                        }
+                        return prev.map((doc, i) =>
+                            i === index
+                                ? {
+                                      ...doc,
+                                      file,
+                                      preview: URL.createObjectURL(file),
+                                      isExisting: false,
+                                      path: null,
+                                  }
+                                : doc
+                        );
+                    });
+                }}
+                onUpdateDocument={(index, patch) =>
+                    setDocuments((prev) =>
+                        prev.map((doc, i) => (i === index ? { ...doc, ...patch } : doc))
+                    )
+                }
+            />
         </>
     );
 
@@ -591,27 +563,6 @@ const UpdateUser = () => {
     return (
         <form ref={formRef} onSubmit={handleSubmit}>
             {renderContent()}
-            {showWebcam && (
-                <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.65)' }}>
-                    <div className="modal-dialog modal-dialog-centered">
-                        <div className="modal-content">
-                            <div className="modal-header">
-                                <h5 className="modal-title">Capture Image</h5>
-                                <button type="button" className="btn-close" onClick={stopWebcam}></button>
-                            </div>
-                            <div className="modal-body text-center">
-                                <video ref={videoRef} autoPlay playsInline muted width="320" height="240" className="rounded shadow-sm mb-3" style={{ border: '2px solid #dee2e6' }} />
-                                <canvas ref={canvasRef} width="320" height="240" style={{ display: 'none' }} />
-                                {captureTime && <div className="mt-2 text-muted small">Captured: {captureTime}</div>}
-                            </div>
-                            <div className="modal-footer">
-                                <button type="button" className="btn btn-secondary" onClick={stopWebcam}>Cancel</button>
-                                <button type="button" className="btn btn-primary" onClick={capturePhoto}>Capture</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
         </form>
     );
 };

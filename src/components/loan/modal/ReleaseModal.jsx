@@ -6,16 +6,41 @@ import 'daterangepicker';
 import 'daterangepicker/daterangepicker.css';
 import { getAccountsDropdown } from '../../../api/accountApi';
 import { addRelease } from '../../../api/releaseApi';
+import { uploadItemImage } from '../../../api/girviApi';
 import { toast } from 'react-hot-toast';
+import ProfileDocumentsSection from '../../common/ProfileDocumentsSection';
+import { appendOtherImagesToFormData, getNewDocumentUploads } from '../../../utils/imageHelpers';
+import '../../../css/ProfileDocumentsSection.css';
 import '../../../css/Modal.css';
 import useFormNavigation from '../../../hooks/useFormNavigation';
+
+const MAX_RELEASE_ITEM_IMAGES = 4;
+
+const emptyReleaseUser = () => ({
+  ru_full_name: '',
+  ru_mobile: '',
+  ru_email: '',
+  ru_aadhaar: '',
+  ru_gender: '',
+  ru_pan: '',
+  ru_address: '',
+  ru_state: '',
+  ru_city: '',
+  ru_pincode: '',
+});
 
 const ReleaseModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pendingPrincipal, pendingInterest, onSuccess }) => {
   const { selectedFirm } = useSelector((state) => state.firm);
   const [accounts, setAccounts] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [itemImages, setItemImages] = useState([]);
+  const [isOtherUserRelease, setIsOtherUserRelease] = useState(false);
+  const [releaseUser, setReleaseUser] = useState(emptyReleaseUser());
+  const [releaseUserDocuments, setReleaseUserDocuments] = useState([]);
   const rel_trans_dateRef = useRef(null);
   const formRef = useRef(null);
+
+  const isSecured = String(loanDetails?.girv_type || '').toLowerCase() === 'secured';
 
   useFormNavigation(formRef, false, isOpen);
 
@@ -57,7 +82,8 @@ const ReleaseModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pen
     rel_card_amt: '',
 
     rel_pay_info: '',
-    rel_other_info: ''
+    rel_other_info: '',
+    rel_remark: '',
   });
 
   // Prevent body scroll when modal is open
@@ -87,8 +113,13 @@ const ReleaseModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pen
         rel_online_amt: '',
         rel_card_amt: '',
         rel_pay_info: '',
-        rel_other_info: ''
+        rel_other_info: '',
+        rel_remark: '',
       }));
+      setItemImages([]);
+      setIsOtherUserRelease(false);
+      setReleaseUser(emptyReleaseUser());
+      setReleaseUserDocuments([]);
     }
   }, [loanDetails, isOpen, pendingPrincipal, pendingInterest, totalDueAmount]);
 
@@ -195,6 +226,20 @@ const ReleaseModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pen
     });
   };
 
+  const handleReleaseUserChange = (e) => {
+    const { id, value } = e.target;
+    setReleaseUser((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const releaseItemDocuments = itemImages.map((img, index) => ({
+    id: `release-item-${index}`,
+    file: img.file,
+    preview: img.preview,
+    label: '',
+    note: '',
+    isExisting: false,
+  }));
+
   const totalPayment = (parseFloat(formData.rel_cash_amt) || 0) +
     (parseFloat(formData.rel_bank_amt) || 0) +
     (parseFloat(formData.rel_online_amt) || 0) +
@@ -219,6 +264,12 @@ const ReleaseModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pen
     validationError = "Please select an Online Account.";
   } else if (parseFloat(formData.rel_card_amt) > 0 && !formData.rel_card_acc_id) {
     validationError = "Please select a Card Account.";
+  } else if (isOtherUserRelease && !releaseUser.ru_full_name.trim()) {
+    validationError = "Release user full name is required.";
+  } else if (isOtherUserRelease && (!releaseUser.ru_mobile || releaseUser.ru_mobile.length < 10)) {
+    validationError = "Valid release user mobile number is required.";
+  } else if (isOtherUserRelease && releaseUserDocuments.length === 0) {
+    validationError = "Upload at least one document for the release user (e.g. Aadhaar).";
   }
 
   const isSubmitDisabled = submitting || !!validationError;
@@ -234,14 +285,43 @@ const ReleaseModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pen
     setSubmitting(true);
 
     try {
-      const payload = {
+      let uploadedItemImages = [];
+      if (isSecured && itemImages.length > 0) {
+        uploadedItemImages = await Promise.all(
+          itemImages.map(async (img) => {
+            const imageFormData = new FormData();
+            imageFormData.append('itemImage', img.file);
+            const uploadRes = await uploadItemImage(imageFormData);
+            return uploadRes.data;
+          })
+        );
+      }
+
+      const basePayload = {
         ...formData,
         rel_girv_id: loanDetails.girv_id,
         rel_firm_id: loanDetails.girv_firm_id,
-        rel_user_id: loanDetails.girv_user_id
+        rel_user_id: loanDetails.girv_user_id,
+        rel_is_other_user: isOtherUserRelease,
+        rel_item_images: uploadedItemImages.length > 0 ? JSON.stringify(uploadedItemImages) : '',
       };
 
-      await addRelease(payload);
+      if (isOtherUserRelease) {
+        const formPayload = new FormData();
+        Object.entries(basePayload).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            formPayload.append(key, value);
+          }
+        });
+        Object.entries(releaseUser).forEach(([key, value]) => {
+          formPayload.append(key, value || '');
+        });
+        appendOtherImagesToFormData(formPayload, getNewDocumentUploads(releaseUserDocuments));
+        await addRelease(formPayload);
+      } else {
+        await addRelease(basePayload);
+      }
+
       toast.success("Loan Released successfully");
       if (onSuccess) onSuccess();
       if (onClose && !isTab) onClose();
@@ -284,6 +364,148 @@ const ReleaseModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pen
           <input type="text" id="rel_payable_amt" value={formData.rel_payable_amt} onChange={handleInputChange} className="form-control border-dark text-center bg-light" readOnly />
         </div>
       </div>
+
+      {/* Remark */}
+      <div className="row g-3 mb-3">
+        <div className="col-12">
+          <label className="form-label" htmlFor="rel_remark">Remark</label>
+          <textarea
+            id="rel_remark"
+            value={formData.rel_remark}
+            onChange={handleInputChange}
+            className="form-control border-dark"
+            placeholder="Release remark / notes"
+            rows={2}
+          />
+        </div>
+      </div>
+
+      {/* Secured loan — item images at release */}
+      {isSecured && (
+        <div className="mb-3">
+          <ProfileDocumentsSection
+            showProfile={false}
+            documentsTitle={`Released Item Images (up to ${MAX_RELEASE_ITEM_IMAGES})`}
+            documents={releaseItemDocuments}
+            maxDocuments={MAX_RELEASE_ITEM_IMAGES}
+            onAddDocument={(doc) =>
+              setItemImages((prev) => [...prev, { file: doc.file, preview: doc.preview }])
+            }
+            onRemoveDocument={(index) =>
+              setItemImages((prev) => prev.filter((_, i) => i !== index))
+            }
+            onReplaceDocument={(index, file) =>
+              setItemImages((prev) =>
+                prev.map((img, i) =>
+                  i === index ? { file, preview: URL.createObjectURL(file) } : img
+                )
+              )
+            }
+            onUpdateDocument={() => {}}
+            showDocumentLabels={false}
+          />
+        </div>
+      )}
+
+      {/* Other user release */}
+      <div className="mb-3">
+        <div className="form-check">
+          <input
+            className="form-check-input"
+            type="checkbox"
+            id="rel_is_other_user"
+            checked={isOtherUserRelease}
+            onChange={(e) => setIsOtherUserRelease(e.target.checked)}
+          />
+          <label className="form-check-label" htmlFor="rel_is_other_user">
+            Other user release (person collecting items is not the loan holder)
+          </label>
+        </div>
+      </div>
+
+      {isOtherUserRelease && (
+        <div className="border rounded p-3 mb-3 bg-light">
+          <div className="section-title mb-2">Release User Details</div>
+          <div className="row g-3">
+            <div className="col-md-4">
+              <label className="form-label" htmlFor="ru_full_name">Full Name <span className="text-danger">*</span></label>
+              <input type="text" id="ru_full_name" value={releaseUser.ru_full_name} onChange={handleReleaseUserChange} className="form-control form-control-sm border-dark" />
+            </div>
+            <div className="col-md-4">
+              <label className="form-label" htmlFor="ru_mobile">Mobile <span className="text-danger">*</span></label>
+              <input type="text" id="ru_mobile" value={releaseUser.ru_mobile} onChange={handleReleaseUserChange} className="form-control form-control-sm border-dark" maxLength={10} />
+            </div>
+            <div className="col-md-4">
+              <label className="form-label" htmlFor="ru_aadhaar">Aadhaar No.</label>
+              <input type="text" id="ru_aadhaar" value={releaseUser.ru_aadhaar} onChange={handleReleaseUserChange} className="form-control form-control-sm border-dark" maxLength={12} />
+            </div>
+            <div className="col-md-4">
+              <label className="form-label" htmlFor="ru_email">Email</label>
+              <input type="email" id="ru_email" value={releaseUser.ru_email} onChange={handleReleaseUserChange} className="form-control form-control-sm border-dark" />
+            </div>
+            <div className="col-md-4">
+              <label className="form-label" htmlFor="ru_pan">PAN</label>
+              <input type="text" id="ru_pan" value={releaseUser.ru_pan} onChange={handleReleaseUserChange} className="form-control form-control-sm border-dark" />
+            </div>
+            <div className="col-md-4">
+              <label className="form-label" htmlFor="ru_gender">Gender</label>
+              <select id="ru_gender" value={releaseUser.ru_gender} onChange={handleReleaseUserChange} className="form-select form-select-sm border-dark">
+                <option value="">Select</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div className="col-md-8">
+              <label className="form-label" htmlFor="ru_address">Address</label>
+              <input type="text" id="ru_address" value={releaseUser.ru_address} onChange={handleReleaseUserChange} className="form-control form-control-sm border-dark" />
+            </div>
+            <div className="col-md-4">
+              <label className="form-label" htmlFor="ru_city">City</label>
+              <input type="text" id="ru_city" value={releaseUser.ru_city} onChange={handleReleaseUserChange} className="form-control form-control-sm border-dark" />
+            </div>
+            <div className="col-md-4">
+              <label className="form-label" htmlFor="ru_state">State</label>
+              <input type="text" id="ru_state" value={releaseUser.ru_state} onChange={handleReleaseUserChange} className="form-control form-control-sm border-dark" />
+            </div>
+            <div className="col-md-4">
+              <label className="form-label" htmlFor="ru_pincode">Pincode</label>
+              <input type="text" id="ru_pincode" value={releaseUser.ru_pincode} onChange={handleReleaseUserChange} className="form-control form-control-sm border-dark" maxLength={6} />
+            </div>
+            <div className="col-12">
+              <ProfileDocumentsSection
+                showProfile={false}
+                documentsTitle="Pickup Person Documents"
+                documents={releaseUserDocuments}
+                onAddDocument={(doc) => setReleaseUserDocuments((prev) => [...prev, doc])}
+                onRemoveDocument={(index) =>
+                  setReleaseUserDocuments((prev) => prev.filter((_, i) => i !== index))
+                }
+                onReplaceDocument={(index, file) =>
+                  setReleaseUserDocuments((prev) =>
+                    prev.map((doc, i) =>
+                      i === index
+                        ? {
+                            ...doc,
+                            file,
+                            preview: URL.createObjectURL(file),
+                            isExisting: false,
+                            path: null,
+                          }
+                        : doc
+                    )
+                  )
+                }
+                onUpdateDocument={(index, patch) =>
+                  setReleaseUserDocuments((prev) =>
+                    prev.map((doc, i) => (i === index ? { ...doc, ...patch } : doc))
+                  )
+                }
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Payment Details Section */}
       <div className="row g-4">

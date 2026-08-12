@@ -13,6 +13,8 @@ import { getPurities } from '../../api/purityApi';
 import { getRates } from '../../api/rateApi';
 import useFormNavigation from '../../hooks/useFormNavigation';
 import { validateUploadFile } from '../../utils/fileUpload';
+import ImageUploadSquare from '../common/ImageUploadSquare';
+import '../../css/ProfileDocumentsSection.css';
 import { calculateFirstMonthInterest } from '../../utils/loanInterest';
 
 const AddLoan = () => {
@@ -400,6 +402,7 @@ const AddLoan = () => {
       ...updatedItems[index],
       itemImage: file,
       imageName: file.name,
+      itemImagePreview: URL.createObjectURL(file),
     };
     setFormData((prev) => ({ ...prev, items: updatedItems }));
   };
@@ -850,44 +853,13 @@ const AddLoan = () => {
                   />
                 </td>
                 <td className="text-center px-1 py-1 position-relative">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    id={`itemImageInput-${index}`}
-                    style={{ display: 'none' }}
-                    onChange={(e) => {
-                      if (e.target.files?.[0]) {
-                        updateItemImage(index, e.target.files[0]);
-                      }
-                    }}
+                  <ImageUploadSquare
+                    size="mini"
+                    preview={item.itemImagePreview || null}
+                    onFile={(file) => updateItemImage(index, file)}
+                    modalTitle={item.itemImagePreview ? 'Change Item Image' : 'Item Image'}
+                    showRemove={false}
                   />
-                  {item.itemImage || item.imageName ? (
-                    <>
-                      <label htmlFor={`itemImageInput-${index}`} style={{ cursor: 'pointer' }}>
-                        <img
-                          src={item.itemImage ? URL.createObjectURL(item.itemImage) : '#'}
-                          alt="Item preview"
-                          style={{
-                            maxWidth: '26px',
-                            maxHeight: '26px',
-                            objectFit: 'cover',
-                            cursor: 'pointer',
-                            border: '1px solid #ccc',
-                            borderRadius: '4px',
-                          }}
-                          onError={(e) => { e.target.style.display = 'none'; }}
-                        />
-                      </label>
-                    </>
-                  ) : (
-                    <label
-                      htmlFor={`itemImageInput-${index}`}
-                      className="btn btn-sm btn-outline-info p-1 mb-0"
-                      style={{ cursor: 'pointer', minWidth: '40px' }}
-                    >
-                      <i className="bi bi-upload"></i>
-                    </label>
-                  )}
                 </td>
                 <td className="text-center px-1 py-1">
                   <div className="d-flex justify-content-center gap-1">

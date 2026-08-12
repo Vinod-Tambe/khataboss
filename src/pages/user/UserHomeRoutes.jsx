@@ -15,6 +15,8 @@ import LoanInfo from "../../components/loan/LoanInfo";
 import ListLoan from "../../components/loan/ListLoan";
 import AuctionLoanList from "../../components/loan/AuctionLoanList";
 import { ConfirmAlert } from "../../components/common/ConfirmAlert";
+import { getCustomerPhone } from "../../utils/customerFormatters";
+import CustomerAddressTooltip from "../../components/user/CustomerAddressTooltip";
 
 const BLOCK_INFO_MAX_CHARS = 40;
 
@@ -57,6 +59,10 @@ const BlockInfoLabel = ({ text, maxChars = BLOCK_INFO_MAX_CHARS, className = "",
   );
 };
 
+const CustomerPhoneDisplay = ({ user, className = "text-muted small text-truncate" }) => (
+  <div className={className}>{getCustomerPhone(user)}</div>
+);
+
 const UserHomeRoutes = () => {
   const navigate = useNavigate();
   const { selectedUser } = useSelector((state) => state.user);
@@ -77,7 +83,6 @@ const UserHomeRoutes = () => {
     user_unique_code,
     user_first_name,
     user_last_name,
-    user_mobile_no,
     user_profile_img,
     user_other_info
   } = selectedUser;
@@ -113,6 +118,12 @@ const UserHomeRoutes = () => {
         >
           {/* USER INFO */}
           <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
+          <CustomerAddressTooltip
+            user={selectedUser}
+            tooltipId="user-home-address-desktop"
+            wrapperClassName="d-flex align-items-center"
+            placement="bottom"
+          >
             <img
               alt="User"
               className="rounded-circle border border-dark flex-shrink-0"
@@ -120,17 +131,17 @@ const UserHomeRoutes = () => {
               height="40"
               src={profileImg}
               role="button"
-              title="Update customer"
               style={{ cursor: "pointer" }}
               onClick={handleProfileClick}
               onError={(e) => {
                 e.target.src = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
               }}
             />
-            <Link className="text-decoration-none ms-2" to="/user/home">
+            <Link className="text-decoration-none ms-2" to="/user/home" style={{ minWidth: 0 }}>
               <div className="fw-bold text-dark">{user_first_name} {user_last_name}</div>
-              <div className="text-muted small">{user_mobile_no}</div>
+              <CustomerPhoneDisplay user={selectedUser} />
             </Link>
+          </CustomerAddressTooltip>
           </div>
 
           {/* BLOCK INFO - CENTER */}
@@ -226,6 +237,12 @@ const UserHomeRoutes = () => {
         <div className="d-lg-none">
           <div className="d-flex align-items-center justify-content-between mb-1 gap-2">
             <div className="d-flex align-items-center min-w-0">
+            <CustomerAddressTooltip
+              user={selectedUser}
+              tooltipId="user-home-address-mobile"
+              wrapperClassName="d-flex align-items-center min-w-0"
+              placement="bottom"
+            >
               <img
                 alt="User"
                 className="rounded-circle border border-dark flex-shrink-0"
@@ -233,7 +250,6 @@ const UserHomeRoutes = () => {
                 height="40"
                 src={profileImg}
                 role="button"
-                title="Update customer"
                 style={{ cursor: "pointer" }}
                 onClick={handleProfileClick}
                 onError={(e) => {
@@ -242,8 +258,9 @@ const UserHomeRoutes = () => {
               />
               <Link className="text-decoration-none ms-2 min-w-0" to="/user/home">
                 <div className="fw-bold text-dark text-truncate">{user_first_name} {user_last_name}</div>
-                <div className="text-muted small text-truncate">{user_mobile_no}</div>
+                <CustomerPhoneDisplay user={selectedUser} />
               </Link>
+            </CustomerAddressTooltip>
             </div>
 
             <Dropdown align="end">

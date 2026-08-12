@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import DocumentUploadCard from '../common/DocumentUploadCard';
+import ProfileDocumentsSection from '../common/ProfileDocumentsSection';
+import { appendOtherImagesToFormData, getNewDocumentUploads } from '../../utils/imageHelpers';
+import '../../css/ProfileDocumentsSection.css';
 import moment from 'moment';
 import $ from 'jquery';
 import 'daterangepicker';
 import 'daterangepicker/daterangepicker.css';
 import { useNavigate } from 'react-router-dom';
 import useFormNavigation from '../../hooks/useFormNavigation';
-import { getValidatedUploadFile } from '../../utils/fileUpload';
+import { validateUploadFile } from '../../utils/fileUpload';
 import { createStaff } from '../../api/staffApi';
 import { showToast } from '../common/ToastAlert';
 import {
@@ -34,23 +36,7 @@ const AddStaff = () => {
 
     // Previews
     const [photoPreview, setPhotoPreview] = useState(null);
-    const [aadhaarFrontPreview, setAadhaarFrontPreview] = useState(null);
-    const [aadhaarBackPreview, setAadhaarBackPreview] = useState(null);
-    const [panCardPreview, setPanCardPreview] = useState(null);
-
-    // Webcam
-    const videoRef = useRef(null);
-    const canvasRef = useRef(null);
-    const [stream, setStream] = useState(null);
-    const [showWebcam, setShowWebcam] = useState(false);
-    const [captureTime, setCaptureTime] = useState(null);
-    const [activeCaptureField, setActiveCaptureField] = useState(null);
-
-    // File inputs
-    const photoInputRef = useRef(null);
-    const aadhaarFrontInputRef = useRef(null);
-    const aadhaarBackInputRef = useRef(null);
-    const panCardInputRef = useRef(null);
+    const [documents, setDocuments] = useState([]);
 
     // Signature
     const signatureRef = useRef(null);
@@ -77,8 +63,7 @@ const AddStaff = () => {
         shopName: '', officeAddress: '', permanentAddress: '', currentAddress: '',
         village: '', wardNumber: '', tehsil: '', city: '', country: '',
         pincode: '', state: '', otherInformation: '',
-        photo: null, adhaarFront: null, adhaarBack: null, panCard: null,
-        signature: null,
+        photo: null,
     });
 
     const personalInfo = useMemo(
@@ -146,86 +131,15 @@ const AddStaff = () => {
         setFormData(prev => ({ ...prev, [name]: nextValue }));
     };
 
-    const handleFileSelect = (e, fieldName, setPreview) => {
-        const file = getValidatedUploadFile(e);
+    const handleProfileFile = (file) => {
         if (!file) return;
-        setFormData(prev => ({ ...prev, [fieldName]: file }));
-        setPreview(URL.createObjectURL(file));
+        setFormData(prev => ({ ...prev, photo: file }));
+        setPhotoPreview(URL.createObjectURL(file));
     };
 
-    const removeFile = (fieldName, setPreview) => {
-        setFormData(prev => ({ ...prev, [fieldName]: null }));
-        setPreview(null);
-    };
-
-    // ─── Webcam Functions ────────────────────────────────────────────────
-    const startWebcam = (fieldName) => {
-        setActiveCaptureField(fieldName);
-        navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } })
-            .then(mediaStream => {
-                setStream(mediaStream);
-                if (videoRef.current) {
-                    videoRef.current.srcObject = mediaStream;
-                    videoRef.current.play().catch(e => console.error("Video play error:", e));
-                }
-                setShowWebcam(true);
-                setCaptureTime(null);
-            })
-            .catch(err => {
-                alert("Cannot access webcam: " + err.message);
-                setActiveCaptureField(null);
-            });
-    };
-
-    const stopWebcam = () => {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-            setStream(null);
-        }
-        if (videoRef.current) {
-            videoRef.current.srcObject = null;
-        }
-        setShowWebcam(false);
-        setActiveCaptureField(null);
-    };
-
-    const capturePhoto = () => {
-        if (!canvasRef.current || !videoRef.current || !activeCaptureField) return;
-
-        const context = canvasRef.current.getContext('2d');
-        context.drawImage(videoRef.current, 0, 0, 320, 240);
-
-        canvasRef.current.toBlob((blob) => {
-            const file = new File([blob], `${activeCaptureField}_captured.jpg`, { type: "image/jpeg" });
-
-            setFormData(prev => ({ ...prev, [activeCaptureField]: file }));
-
-            const previewUrl = URL.createObjectURL(file);
-
-            switch (activeCaptureField) {
-                case 'photo':
-                    setPhotoPreview(previewUrl);
-                    break;
-                case 'adhaarFront':
-                    setAadhaarFrontPreview(previewUrl);
-                    break;
-                case 'adhaarBack':
-                    setAadhaarBackPreview(previewUrl);
-                    break;
-                case 'panCard':
-                    setPanCardPreview(previewUrl);
-                    break;
-                default:
-                    break;
-            }
-
-            setCaptureTime(new Date().toLocaleString('en-IN', {
-                day: '2-digit', month: 'short', year: 'numeric',
-                hour: '2-digit', minute: '2-digit', hour12: true
-            }));
-
-            stopWebcam();
-        }, 'image/jpeg', 0.92);
+    const handleProfileRemove = () => {
+        setFormData(prev => ({ ...prev, photo: null }));
+        setPhotoPreview(null);
     };
 
     // ─── Signature Pad (unchanged) ────────────────────────────────────────
@@ -287,7 +201,6 @@ const AddStaff = () => {
         const canvas = signatureRef.current;
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        setFormData(prev => ({ ...prev, signature: null }));
     };
 
     const saveSignature = () => {
@@ -297,7 +210,22 @@ const AddStaff = () => {
             .then(res => res.blob())
             .then(blob => {
                 const file = new File([blob], "signature.png", { type: "image/png" });
-                setFormData(prev => ({ ...prev, signature: file }));
+                if (!validateUploadFile(file)) return;
+                setDocuments((prev) => {
+                    const withoutOld = prev.filter((d) => d.label !== 'Signature');
+                    return [
+                        ...withoutOld,
+                        {
+                            id: `sig-${Date.now()}`,
+                            file,
+                            preview: URL.createObjectURL(file),
+                            label: 'Signature',
+                            note: '',
+                            isExisting: false,
+                        },
+                    ];
+                });
+                showToast('Signature added to documents', 'success');
             });
     };
 
@@ -367,10 +295,7 @@ const AddStaff = () => {
             payload.append('ifscCode', formData.ifscCode || '');
             payload.append('otherInformation', formData.otherInformation || '');
             if (formData.photo) payload.append('photo', formData.photo);
-            if (formData.adhaarFront) payload.append('adhaarFront', formData.adhaarFront);
-            if (formData.adhaarBack) payload.append('adhaarBack', formData.adhaarBack);
-            if (formData.panCard) payload.append('panCard', formData.panCard);
-            if (formData.signature) payload.append('signature', formData.signature);
+            appendOtherImagesToFormData(payload, getNewDocumentUploads(documents));
 
             const res = await createStaff(payload);
             showToast(res.message || 'Staff created successfully.');
@@ -587,64 +512,34 @@ const AddStaff = () => {
                 )}
             </div>
 
-            {/* Document Upload Cards */}
-            <div className="row g-3 mt-2">
-                <div className="col-12 col-md-6 col-lg-3">
-                    <DocumentUploadCard
-                        title="Profile Photo"
-                        fieldName="photo"
-                        preview={photoPreview}
-                        setPreview={setPhotoPreview}
-                        inputRef={photoInputRef}
-                        showCamera={true}
-                        startWebcam={() => startWebcam('photo')}
-                        handleFileSelect={handleFileSelect}
-                        removeFile={removeFile}
-                    />
-                </div>
-
-                <div className="col-12 col-md-6 col-lg-3">
-                    <DocumentUploadCard
-                        title="Aadhaar Front"
-                        fieldName="adhaarFront"
-                        preview={aadhaarFrontPreview}
-                        setPreview={setAadhaarFrontPreview}
-                        inputRef={aadhaarFrontInputRef}
-                        showCamera={true}
-                        startWebcam={() => startWebcam('adhaarFront')}
-                        handleFileSelect={handleFileSelect}
-                        removeFile={removeFile}
-                    />
-                </div>
-
-                <div className="col-12 col-md-6 col-lg-3">
-                    <DocumentUploadCard
-                        title="Aadhaar Back"
-                        fieldName="adhaarBack"
-                        preview={aadhaarBackPreview}
-                        setPreview={setAadhaarBackPreview}
-                        inputRef={aadhaarBackInputRef}
-                        showCamera={true}
-                        startWebcam={() => startWebcam('adhaarBack')}
-                        handleFileSelect={handleFileSelect}
-                        removeFile={removeFile}
-                    />
-                </div>
-
-                <div className="col-12 col-md-6 col-lg-3">
-                    <DocumentUploadCard
-                        title="PAN Card"
-                        fieldName="panCard"
-                        preview={panCardPreview}
-                        setPreview={setPanCardPreview}
-                        inputRef={panCardInputRef}
-                        showCamera={true}
-                        startWebcam={() => startWebcam('panCard')}
-                        handleFileSelect={handleFileSelect}
-                        removeFile={removeFile}
-                    />
-                </div>
-            </div>
+            <ProfileDocumentsSection
+                profilePreview={photoPreview}
+                onProfileFile={handleProfileFile}
+                onProfileRemove={handleProfileRemove}
+                documents={documents}
+                onAddDocument={(doc) => setDocuments((prev) => [...prev, doc])}
+                onRemoveDocument={(index) => setDocuments((prev) => prev.filter((_, i) => i !== index))}
+                onReplaceDocument={(index, file) =>
+                    setDocuments((prev) =>
+                        prev.map((doc, i) =>
+                            i === index
+                                ? {
+                                      ...doc,
+                                      file,
+                                      preview: URL.createObjectURL(file),
+                                      isExisting: false,
+                                      path: null,
+                                  }
+                                : doc
+                        )
+                    )
+                }
+                onUpdateDocument={(index, patch) =>
+                    setDocuments((prev) =>
+                        prev.map((doc, i) => (i === index ? { ...doc, ...patch } : doc))
+                    )
+                }
+            />
         </>
     );
 
@@ -837,68 +732,8 @@ const AddStaff = () => {
             <form ref={formRef} onSubmit={handleSubmit}>
                 {renderContent()}
             </form>
-
-            {/* Webcam Modal */}
-            {showWebcam && (
-                <div
-                    className="modal show d-block"
-                    tabIndex="-1"
-                    style={{ backgroundColor: 'rgba(0,0,0,0.65)' }}
-                >
-                    <div className="modal-dialog modal-dialog-centered">
-                        <div className="modal-content">
-                            <div className="modal-header">
-                                <h5 className="modal-title">
-                                    Capture {activeCaptureField === 'photo' ? 'Profile Photo' :
-                                        activeCaptureField === 'adhaarFront' ? 'Aadhaar Front' :
-                                            activeCaptureField === 'adhaarBack' ? 'Aadhaar Back' : 'PAN Card'}
-                                </h5>
-                                <button
-                                    type="button"
-                                    className="btn-close"
-                                    onClick={stopWebcam}
-                                />
-                            </div>
-                            <div className="modal-body text-center">
-                                <video
-                                    ref={videoRef}
-                                    autoPlay
-                                    playsInline
-                                    muted
-                                    width="320"
-                                    height="240"
-                                    className="rounded shadow-sm mb-3"
-                                    style={{ border: '2px solid #dee2e6' }}
-                                />
-                                <canvas ref={canvasRef} width="320" height="240" style={{ display: 'none' }} />
-                                {captureTime && (
-                                    <div className="mt-2 text-muted small">
-                                        Captured: {captureTime}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="modal-footer">
-                                <button
-                                    type="button"
-                                    className="btn btn-secondary"
-                                    onClick={stopWebcam}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn btn-primary"
-                                    onClick={capturePhoto}
-                                >
-                                    Capture
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
-    )
+    );
 };
 
 export default AddStaff;

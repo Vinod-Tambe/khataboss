@@ -7,7 +7,9 @@ import TransactionModal from './modal/TransactionModal';
 import LoanRecordReceiptModal from './LoanRecordReceiptModal';
 import { downloadLoanInvoicePdf } from './invoice/downloadLoanInvoicePdf';
 import { getGirviById, deleteGirvi } from '../../api/girviApi';
-import { deleteRelease } from '../../api/releaseApi';
+import { deleteRelease, getReleaseUsers } from '../../api/releaseApi';
+import ReleaseUserListSection from './ReleaseUserListSection';
+import { buildReleaseUserRows } from '../../utils/releaseUserHelpers';
 import { deleteDeposit } from '../../api/depositApi';
 import { deleteAdditionalPrincipal } from '../../api/addPrincipalApi';
 import moment from 'moment';
@@ -22,6 +24,11 @@ import {
 import ImageModal from '../common/ImageModal';
 import EntityLogsModal from '../logs/EntityLogsModal';
 import usePermissions from '../../hooks/usePermissions';
+import UpdateInterestModal from './modal/UpdateInterestModal';
+import {
+  getInterestUpdateBlockReason,
+  getLoanUpdateRules,
+} from '../../utils/loanUpdateRules';
 import '../../css/DataTable.css';
 
 const formatAmt = (value) =>
@@ -71,10 +78,46 @@ const getLoanItems = (loan) => {
 const getItemValuation = (item = {}) =>
   item.st_final_valuation ?? item.st_valuation ?? item.valuation ?? 0;
 
-// Interest Calculation Helper
+const formatInterestMethodLabel = (data) => {
+  if (!data?.girv_interest_method) return 'SIMPLE';
+  const method = data.girv_interest_method.toUpperCase();
+  if (data.girv_interest_method === 'compound' && data.girv_compound_freq) {
+    return `${method} (${data.girv_compound_freq.toUpperCase()})`;
+  }
+  return method;
+};
+
 // Reusable Components
-const LoanInformation = ({ data }) => (
+const LoanInformation = ({
+  data,
+  canUpdateInterest,
+  interestBlockReason,
+  onEditInterestClick,
+}) => (
   <div className="panel-section">
+    <div className="d-flex justify-content-between align-items-center mb-2">
+      <div className="section-header mb-0">Loan Information</div>
+      {canUpdateInterest ? (
+        <button
+          type="button"
+          className="btn btn-sm btn-outline-info"
+          onClick={onEditInterestClick}
+          title="Update interest method and options"
+        >
+          <i className="bi bi-pencil me-1"></i>
+          Edit Interest
+        </button>
+      ) : interestBlockReason ? (
+        <span
+          className="text-muted small"
+          title={interestBlockReason}
+          style={{ maxWidth: '320px', textAlign: 'right' }}
+        >
+          <i className="bi bi-lock-fill me-1"></i>
+          Interest locked
+        </span>
+      ) : null}
+    </div>
     <div className="row g-3">
       <div className="col-md-3">
         <label className="form-label">Principal Amount</label>
@@ -90,9 +133,7 @@ const LoanInformation = ({ data }) => (
           type="text"
           className="form-control border-dark"
           readOnly
-          value={data?.girv_interest_method ?
-            (data.girv_interest_method.toUpperCase() + (data.girv_interest_method === 'compound' && data.girv_compound_freq ? ` (${data.girv_compound_freq.toUpperCase()})` : ''))
-            : 'SIMPLE'}
+          value={formatInterestMethodLabel(data)}
         />
       </div>
       <div className="col-md-3">
@@ -445,6 +486,8 @@ const ReleaseInfoTable = ({ data, onDeleteRelease, canDeleteRelease, deletingRel
               <th className='table-danger text-brown border border-dark'>Discount Amount</th>
               <th className='table-danger text-brown border border-dark'>Extra Amount</th>
               <th className='table-danger text-brown border border-dark'>Total Received</th>
+              <th className='table-danger text-brown border border-dark'>Remark</th>
+              <th className='table-danger text-brown border border-dark'>Released By</th>
               {canDeleteRelease ? (
                 <th className='table-danger text-brown border border-dark'>Action</th>
               ) : null}
@@ -460,6 +503,12 @@ const ReleaseInfoTable = ({ data, onDeleteRelease, canDeleteRelease, deletingRel
                 <td className="text-danger fw-bold">{Number(row.discount || 0).toFixed(2)}</td>
                 <td className="text-danger fw-bold">{Number(row.extraAmt || 0).toFixed(2)}</td>
                 <td className="text-danger fw-bold">{Number(row.total || 0).toFixed(2)}</td>
+                <td>{row.remark || '-'}</td>
+                <td>
+                  {row.isOtherUser && row.pickupUser
+                    ? `${row.pickupUser.ru_full_name || ''}${row.pickupUser.ru_mobile ? ` (${row.pickupUser.ru_mobile})` : ''}`.trim() || 'Other user'
+                    : 'Loan holder'}
+                </td>
                 {canDeleteRelease ? (
                   <td>
                     <button
@@ -650,6 +699,7 @@ const LoanMobileView = ({
   principalDataRows,
   depositDataRows,
   releaseDataRows,
+  releaseUserRows,
   totalInterest,
   firstMonthInterest,
   payableAmount,
@@ -686,15 +736,11 @@ const LoanMobileView = ({
   canDeleteLoan,
   isDeletingLoan,
   onImageClick,
+  canUpdateInterest,
+  interestBlockReason,
+  onEditInterestClick,
 }) => {
-  const interestMethodLabel = loanInfoData?.girv_interest_method
-    ? (
-      loanInfoData.girv_interest_method.toUpperCase() +
-      (loanInfoData.girv_interest_method === 'compound' && loanInfoData.girv_compound_freq
-        ? ` (${loanInfoData.girv_compound_freq.toUpperCase()})`
-        : '')
-    )
-    : 'SIMPLE';
+  const interestMethodLabel = formatInterestMethodLabel(loanInfoData);
 
   const displayPrincipal = loanDetails.girv_status === 'RELEASED'
     ? originalPrincipal + totalAdditionalPrincipal
@@ -801,7 +847,24 @@ const LoanMobileView = ({
         )}
       </div>
 
-      <div className="loan-mobile-section-title">Loan Overview</div>
+      <div className="loan-mobile-section-title d-flex justify-content-between align-items-center gap-2">
+        <span>Loan Overview</span>
+        {canUpdateInterest ? (
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-info"
+            onClick={onEditInterestClick}
+          >
+            <i className="bi bi-pencil me-1"></i>
+            Edit Interest
+          </button>
+        ) : interestBlockReason ? (
+          <span className="text-muted small" title={interestBlockReason}>
+            <i className="bi bi-lock-fill me-1"></i>
+            Interest locked
+          </span>
+        ) : null}
+      </div>
       <div className="loan-mobile-overview">
         {overviewCards.map((row) => (
           <div key={row.label} className="loan-mobile-overview__item">
@@ -1019,6 +1082,20 @@ const LoanMobileView = ({
                     { label: 'Card', value: formatAmt(row.cardAmt), className: 'text-danger' },
                   ]}
                 />
+                {(row.remark || row.isOtherUser) && (
+                  <LoanMobileDetailRows
+                    title="Release Details"
+                    rows={[
+                      ...(row.remark ? [{ label: 'Remark', value: row.remark }] : []),
+                      {
+                        label: 'Released By',
+                        value: row.isOtherUser && row.pickupUser
+                          ? `${row.pickupUser.ru_full_name || 'Other user'}${row.pickupUser.ru_mobile ? ` · ${row.pickupUser.ru_mobile}` : ''}`
+                          : 'Loan holder',
+                      },
+                    ]}
+                  />
+                )}
                 {canDeleteRelease && (
                   <div className="text-center mt-2">
                     <button
@@ -1041,6 +1118,12 @@ const LoanMobileView = ({
           </div>
         </>
       )}
+
+      <ReleaseUserListSection
+        data={releaseUserRows}
+        onImageClick={onImageClick}
+        variant="mobile"
+      />
 
       <div className="loan-mobile-section-title">
         {isUnsecured ? 'Total Summary' : 'Final Valuation'}
@@ -1151,6 +1234,7 @@ const LoanInfo = () => {
   const [showLogsModal, setShowLogsModal] = useState(false);
   const [isInvoiceDownloading, setIsInvoiceDownloading] = useState(false);
   const [loanDetails, setLoanDetails] = useState(null);
+  const [releaseUserRows, setReleaseUserRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [receiptState, setReceiptState] = useState({ show: false, type: 'principal', record: null });
   const [previewImage, setPreviewImage] = useState(null);
@@ -1158,11 +1242,13 @@ const LoanInfo = () => {
   const [deletingDepositId, setDeletingDepositId] = useState(null);
   const [deletingApId, setDeletingApId] = useState(null);
   const [isDeletingLoan, setIsDeletingLoan] = useState(false);
+  const [showInterestModal, setShowInterestModal] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
   const { selectedUser } = useSelector((state) => state.user);
   const { can } = usePermissions();
+  const canEditLoan = can('loan.edit');
   const canViewLogs = can('loan.loanLogs') || can('reports.logs');
   const canDeleteRelease = can('loan.release');
   const canDeleteDeposit = can('loan.deposit');
@@ -1219,6 +1305,38 @@ const LoanInfo = () => {
       setLoading(false);
     }
   }, [location.state, navigate]);
+
+  useEffect(() => {
+    if (!loanDetails?.girv_id) {
+      setReleaseUserRows([]);
+      return;
+    }
+
+    const fromReleases = buildReleaseUserRows(loanDetails.releases || []);
+    if (fromReleases.length) {
+      setReleaseUserRows(fromReleases);
+      return;
+    }
+
+    const hasOtherUserRelease = (loanDetails.releases || []).some((rel) => rel.rel_is_other_user);
+    if (!hasOtherUserRelease) {
+      setReleaseUserRows([]);
+      return;
+    }
+
+    let cancelled = false;
+    getReleaseUsers({ girvId: loanDetails.girv_id })
+      .then((users) => {
+        if (!cancelled) setReleaseUserRows(users || []);
+      })
+      .catch(() => {
+        if (!cancelled) setReleaseUserRows([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loanDetails]);
 
   const handleDeleteRelease = async (row) => {
     if (!row?.relId || deletingReleaseId) return;
@@ -1308,10 +1426,17 @@ const LoanInfo = () => {
   if (loading) return <div className="p-4 text-center">Loading loan details...</div>;
   if (!loanDetails) return <div className="p-4 text-center">Loan not found.</div>;
 
-  const hasTrans = (loanDetails?.additionalPrincipals && loanDetails.additionalPrincipals.length > 0) ||
-    (loanDetails?.deposits && loanDetails.deposits.length > 0) ||
-    (loanDetails?.releases && loanDetails.releases.length > 0);
-  const isUpdateAllowed = loanDetails?.girv_status === 'ACTIVE' && !hasTrans;
+  const loanUpdateRules = getLoanUpdateRules(loanDetails);
+  const { hasTransactions: hasTrans, canUpdateLoan: isUpdateAllowed } = loanUpdateRules;
+  const canUpdateInterest = loanUpdateRules.canUpdateInterest && canEditLoan;
+  const interestBlockReason = getInterestUpdateBlockReason(loanDetails, canEditLoan);
+  const openInterestModal = () => {
+    if (!canUpdateInterest) {
+      if (interestBlockReason) toast.error(interestBlockReason);
+      return;
+    }
+    setShowInterestModal(true);
+  };
 
   const totalAdditionalPrincipal =
     loanDetails.additionalPrincipals?.reduce(
@@ -1489,6 +1614,10 @@ const LoanInfo = () => {
         extraAmt: relExtra,
         total: relTotal,
         date: relDate.format('DD-MM-YYYY'),
+        remark: rel.rel_remark || '',
+        itemImages: rel.rel_item_images || null,
+        pickupUser: rel.pickupUser || null,
+        isOtherUser: rel.rel_is_other_user,
         status:
           idx === loanDetails.releases.length - 1 && loanDetails.girv_status === 'RELEASED'
             ? 'FULL RELEASE'
@@ -1534,6 +1663,7 @@ const LoanInfo = () => {
         principalDataRows={principalDataRows}
         depositDataRows={depositDataRows}
         releaseDataRows={releaseDataRows}
+        releaseUserRows={releaseUserRows}
         totalInterest={totalInterest}
         firstMonthInterest={firstMonthInterest}
         payableAmount={payableAmount}
@@ -1570,6 +1700,9 @@ const LoanInfo = () => {
         canDeleteLoan={canDeleteLoanAllowed}
         isDeletingLoan={isDeletingLoan}
         onImageClick={setPreviewImage}
+        canUpdateInterest={canUpdateInterest}
+        interestBlockReason={interestBlockReason}
+        onEditInterestClick={openInterestModal}
       />
 
       {/* ========== Desktop view ========== */}
@@ -1602,7 +1735,12 @@ const LoanInfo = () => {
           </div>
         </div>
 
-        <LoanInformation data={loanInfoData} />
+        <LoanInformation
+          data={loanInfoData}
+          canUpdateInterest={canUpdateInterest}
+          interestBlockReason={interestBlockReason}
+          onEditInterestClick={openInterestModal}
+        />
 
         {showItems && (
           <ItemTable data={loanItems} onImageClick={setPreviewImage} />
@@ -1631,6 +1769,11 @@ const LoanInfo = () => {
           onDeleteRelease={handleDeleteRelease}
           canDeleteRelease={canDeleteRelease && canTransact}
           deletingReleaseId={deletingReleaseId}
+        />
+
+        <ReleaseUserListSection
+          data={releaseUserRows}
+          onImageClick={setPreviewImage}
         />
 
         <div className="panel-section mt-2">
@@ -1781,6 +1924,14 @@ const LoanInfo = () => {
         onHide={() => setPreviewImage(null)}
         imageUrl={previewImage}
         title="Image Preview"
+      />
+
+      <UpdateInterestModal
+        isOpen={showInterestModal}
+        onClose={() => setShowInterestModal(false)}
+        loanDetails={loanDetails}
+        canEdit={canEditLoan}
+        onSuccess={fetchLoan}
       />
     </div>
   );

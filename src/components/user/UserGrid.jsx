@@ -5,6 +5,12 @@ import { getUsers, deleteUser } from "../../api/userApi";
 import { setSelectedUser } from "../../store/slices/userSlice";
 import { toast } from "react-toastify";
 import { ConfirmAlert } from "../common/ConfirmAlert";
+import {
+  getCustomerAddress,
+  getCustomerEmail,
+  getCustomerPhone,
+} from "../../utils/customerFormatters";
+import CustomerAddressTooltip from "./CustomerAddressTooltip";
 
 const UserGrid = () => {
   const navigate = useNavigate();
@@ -114,32 +120,31 @@ const UserGrid = () => {
                   }}
                 >
                   <div className="card-body text-dark p-2">
-                    <div className="row align-items-center">
-                      <div className="col-3 text-center">
-                        <img
-                          src={getProfileImage(user)}
-                          alt={user.user_first_name}
-                          width="80"
-                          height="80"
-                          className="rounded-circle border border-danger object-fit-cover"
-                          onError={(e) => {
-                            e.target.src = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
-                          }}
-                        />
-                      </div>
+                    <CustomerAddressTooltip user={user} tooltipId={`user-grid-address-${user.user_id}`}>
+                      <div className="row align-items-center">
+                        <div className="col-3 text-center">
+                          <img
+                            src={getProfileImage(user)}
+                            alt={user.user_first_name}
+                            width="80"
+                            height="80"
+                            className="rounded-circle border border-danger object-fit-cover"
+                            onError={(e) => {
+                              e.target.src = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+                            }}
+                          />
+                        </div>
 
-                      <div className="col-9 text-dark">
-                        <h5 className="card-title text-success-emphasis mb-1 fw-bold">
-                          {user.user_first_name} {user.user_last_name}
-                        </h5>
-                        <p className="m-0">
-                          <strong>Phone :</strong> {user.user_mobile_no}
-                        </p>
-                        <p className="m-0">
-                          <strong>Address :</strong> {user.user_city}, {user.user_state}
-                        </p>
+                        <div className="col-9 text-dark">
+                          <h5 className="card-title text-success-emphasis mb-1 fw-bold">
+                            {user.user_first_name} {user.user_last_name}
+                          </h5>
+                          <p className="m-0">{getCustomerPhone(user)}</p>
+                          <p className="m-0 text-break">{getCustomerEmail(user)}</p>
+                          <p className="m-0 text-break">{getCustomerAddress(user)}</p>
+                        </div>
                       </div>
-                    </div>
+                    </CustomerAddressTooltip>
                   </div>
                 </div>
 

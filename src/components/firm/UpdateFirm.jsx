@@ -1,16 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { toast } from 'react-hot-toast';
+import { loadFirmsDropdown } from '../../store/slices/firmSlice';
 import moment from 'moment';
-import DocumentUploadCard from '../common/DocumentUploadCard';
+import ImageUploadSquare from '../common/ImageUploadSquare';
 import { getFirmByUuid, updateFirm } from '../../api/firmApi';
 import { validatePincode, validatePan, validateAadhaar, validateGstin, validateIfsc } from '../../utils/validation';
-import { getValidatedUploadFile } from '../../utils/fileUpload';
 import useFormNavigation from '../../hooks/useFormNavigation';
+import { IMAGE_BASE_URL } from '../../utils/imageHelpers';
+import '../../css/ProfileDocumentsSection.css';
 
 const UpdateFirm = () => {
   const { uuid } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -21,12 +25,6 @@ const UpdateFirm = () => {
   const [rightLogoPreview, setRightLogoPreview] = useState(null);
   const [qrCodePreview, setQrCodePreview] = useState(null);
   const [panPreview, setPanPreview] = useState(null);
-
-  // Refs
-  const leftLogoInputRef = useRef(null);
-  const rightLogoInputRef = useRef(null);
-  const qrCodeInputRef = useRef(null);
-  const panInputRef = useRef(null);
 
   // Form Navigation
   const formRef = useRef(null);
@@ -130,11 +128,18 @@ const UpdateFirm = () => {
           });
 
           // Set Previews for existing images if they exist
-          const IMAGE_BASE_URL = 'http://localhost:9000';
-          if (data.firm_left_logo_img?.path) setLeftLogoPreview(`${IMAGE_BASE_URL}/${data.firm_left_logo_img.path}`);
-          if (data.firm_right_logo_img?.path) setRightLogoPreview(`${IMAGE_BASE_URL}/${data.firm_right_logo_img.path}`);
-          if (data.firm_qr_code_img?.path) setQrCodePreview(`${IMAGE_BASE_URL}/${data.firm_qr_code_img.path}`);
-          if (data.firm_own_sign_img?.path) setPanPreview(`${IMAGE_BASE_URL}/${data.firm_own_sign_img.path}`);
+          if (data.firm_left_logo_img?.path) {
+            setLeftLogoPreview(`${IMAGE_BASE_URL}${data.firm_left_logo_img.path}`);
+          }
+          if (data.firm_right_logo_img?.path) {
+            setRightLogoPreview(`${IMAGE_BASE_URL}${data.firm_right_logo_img.path}`);
+          }
+          if (data.firm_qr_code_img?.path) {
+            setQrCodePreview(`${IMAGE_BASE_URL}${data.firm_qr_code_img.path}`);
+          }
+          if (data.firm_own_sign_img?.path) {
+            setPanPreview(`${IMAGE_BASE_URL}${data.firm_own_sign_img.path}`);
+          }
         }
       } catch (error) {
         console.error('Fetch Error:', error);
@@ -162,14 +167,12 @@ const UpdateFirm = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFileSelect = (e, fieldName, setPreview) => {
-    const file = getValidatedUploadFile(e);
-    if (!file) return;
+  const handleImageFile = (fieldName, setPreview) => (file) => {
     setFormData((prev) => ({ ...prev, [fieldName]: file }));
     setPreview(URL.createObjectURL(file));
   };
 
-  const removeFile = (fieldName, setPreview) => {
+  const handleImageRemove = (fieldName, setPreview) => () => {
     setFormData((prev) => ({ ...prev, [fieldName]: null }));
     setPreview(null);
   };
@@ -280,6 +283,7 @@ const UpdateFirm = () => {
 
       const response = await updateFirm(uuid, data);
       toast.success(response.message || 'Firm updated successfully!');
+      dispatch(loadFirmsDropdown());
 
       setTimeout(() => navigate('/firm/list'), 1500);
     } catch (error) {
@@ -426,47 +430,39 @@ const UpdateFirm = () => {
 
         <div className="row g-3 mt-2">
           <div className="col-12 col-md-4 col-lg-3">
-            <DocumentUploadCard
-              title="Left Logo"
-              fieldName="leftLogo"
+            <ImageUploadSquare
               preview={leftLogoPreview}
-              setPreview={setLeftLogoPreview}
-              inputRef={leftLogoInputRef}
-              handleFileSelect={handleFileSelect}
-              removeFile={removeFile}
+              onFile={handleImageFile('leftLogo', setLeftLogoPreview)}
+              onRemove={handleImageRemove('leftLogo', setLeftLogoPreview)}
+              modalTitle="Left Logo"
+              label="Left Logo"
             />
           </div>
           <div className="col-12 col-md-4 col-lg-3">
-            <DocumentUploadCard
-              title="Right Logo"
-              fieldName="rightLogo"
+            <ImageUploadSquare
               preview={rightLogoPreview}
-              setPreview={setRightLogoPreview}
-              inputRef={rightLogoInputRef}
-              handleFileSelect={handleFileSelect}
-              removeFile={removeFile}
+              onFile={handleImageFile('rightLogo', setRightLogoPreview)}
+              onRemove={handleImageRemove('rightLogo', setRightLogoPreview)}
+              modalTitle="Right Logo"
+              label="Right Logo"
             />
           </div>
           <div className="col-12 col-md-4 col-lg-3">
-            <DocumentUploadCard
-              title="QR Code"
-              fieldName="qrCode"
+            <ImageUploadSquare
               preview={qrCodePreview}
-              setPreview={setQrCodePreview}
-              inputRef={qrCodeInputRef}
-              handleFileSelect={handleFileSelect}
-              removeFile={removeFile}
+              onFile={handleImageFile('qrCode', setQrCodePreview)}
+              onRemove={handleImageRemove('qrCode', setQrCodePreview)}
+              modalTitle="QR Code"
+              label="QR Code"
             />
           </div>
           <div className="col-12 col-md-4 col-lg-3">
-            <DocumentUploadCard
-              title="PAN Card"
-              fieldName="panDoc"
+            <ImageUploadSquare
               preview={panPreview}
-              setPreview={setPanPreview}
-              inputRef={panInputRef}
-              handleFileSelect={handleFileSelect}
-              removeFile={removeFile}
+              onFile={handleImageFile('panDoc', setPanPreview)}
+              onRemove={handleImageRemove('panDoc', setPanPreview)}
+              modalTitle="PAN Card"
+              label="PAN Card"
             />
           </div>
         </div>

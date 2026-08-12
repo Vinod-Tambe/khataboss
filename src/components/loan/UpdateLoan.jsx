@@ -15,10 +15,24 @@ import { getRates } from '../../api/rateApi';
 import { toast } from 'react-hot-toast';
 import { validateUploadFile } from '../../utils/fileUpload';
 import { calculateFirstMonthInterest, normalizeRoiType } from '../../utils/loanInterest';
+import {
+  getInterestUpdateBlockReason,
+  getLoanUpdateRules,
+  validateInterestForm,
+} from '../../utils/loanUpdateRules';
+import ImageUploadSquare from '../common/ImageUploadSquare';
+import '../../css/ProfileDocumentsSection.css';
 
 const UpdateLoan = () => {
   const { id } = useParams();
-  const [hasTransactions, setHasTransactions] = useState(false);
+  const [loanUpdateRules, setLoanUpdateRules] = useState({
+    hasTransactions: false,
+    canUpdateFinancial: false,
+    canUpdateInterest: false,
+    canUpdateDetails: false,
+    isClosed: false,
+    interestBlockReason: null,
+  });
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -29,6 +43,12 @@ const UpdateLoan = () => {
   const [firmRates, setFirmRates] = useState([]);
   const { selectedFirmId, firms: reduxFirms } = useSelector((state) => state.firm);
   const { selectedUser } = useSelector((state) => state.user);
+  const {
+    hasTransactions,
+    canUpdateFinancial,
+    canUpdateInterest,
+    interestBlockReason,
+  } = loanUpdateRules;
 
   const backendUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:9000/' : 'https://khataboss.in/';
   const resolveItemImage = (item) => {
@@ -174,12 +194,12 @@ const UpdateLoan = () => {
         const res = await getGirviById(id);
         if (res && res.data) {
           const d = res.data;
-          const isClosed = d.girv_status === 'CLOSED' || d.girv_status === 'RELEASED';
-          const hasTrans = (d.additionalPrincipals && d.additionalPrincipals.length > 0) ||
-            (d.deposits && d.deposits.length > 0) ||
-            (d.releases && d.releases.length > 0);
+          const rules = getLoanUpdateRules(d);
 
-          setHasTransactions(isClosed || hasTrans);
+          setLoanUpdateRules({
+            ...rules,
+            interestBlockReason: getInterestUpdateBlockReason(d, true),
+          });
 
           setFormData(prev => ({
             ...prev,
@@ -504,6 +524,7 @@ const UpdateLoan = () => {
       ...updatedItems[index],
       itemImage: file,
       imageName: file.name,
+      itemImagePreview: URL.createObjectURL(file),
     };
     setFormData((prev) => ({ ...prev, items: updatedItems }));
   };
@@ -520,6 +541,13 @@ const UpdateLoan = () => {
       if (!formData.girv_prin_amt || !formData.girv_start_date || !formData.girv_roi_type || !formData.girv_roi) {
         toast.error('Please fill all required fields in Loan Information');
         return;
+      }
+      if (canUpdateInterest) {
+        const interestValidationError = validateInterestForm(formData);
+        if (interestValidationError) {
+          toast.error(interestValidationError);
+          return;
+        }
       }
     }
     if (formData.girv_type === 'secured' && currentStep === 2) {
@@ -586,6 +614,14 @@ const UpdateLoan = () => {
       return;
     }
 
+    if (canUpdateInterest) {
+      const interestValidationError = validateInterestForm(formData);
+      if (interestValidationError) {
+        toast.error(interestValidationError);
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     try {
       // Upload item images first
@@ -625,6 +661,12 @@ const UpdateLoan = () => {
   const loanInformation = (
     <>
       <h5 className="text-muted">Loan Information</h5>
+      {!canUpdateInterest && interestBlockReason && (
+        <div className="alert alert-warning py-2 px-3 mb-3 small">
+          <i className="bi bi-lock-fill me-1"></i>
+          {interestBlockReason}
+        </div>
+      )}
       <div className="row g-3">
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Principal Amount <span className="text-danger">*</span></label>
@@ -634,7 +676,7 @@ const UpdateLoan = () => {
             placeholder="Enter principal amount"
             className="form-control border-dark"
             value={formData.girv_prin_amt}
-            disabled={hasTransactions}
+            disabled={!canUpdateFinancial}
             onChange={(e) => {
               const val = e.target.value.replace(/[^0-9.]/g, '');
               e.target.value = val;
@@ -650,7 +692,7 @@ const UpdateLoan = () => {
             name="girv_start_date"
             ref={girv_start_dateRef}
             className="form-control border-dark"
-            disabled={hasTransactions}
+            disabled={!canUpdateFinancial}
             defaultValue={formData.girv_start_date ? moment(formData.girv_start_date).format('DD-MM-YYYY') : ''}
           />
         </div>
@@ -671,7 +713,7 @@ const UpdateLoan = () => {
             placeholder="Enter rate of interest"
             className="form-control border-dark"
             value={formData.girv_roi}
-            disabled={hasTransactions}
+            disabled={!canUpdateFinancial}
             onChange={(e) => {
               const val = e.target.value.replace(/[^0-9.]/g, '');
               e.target.value = val;
@@ -757,7 +799,7 @@ const UpdateLoan = () => {
         </div>
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Interest Method <span className="text-danger">*</span></label>
-          <select name="girv_interest_method" className="form-select border-dark" value={formData.girv_interest_method} disabled={hasTransactions} onChange={handleChange} required>
+          <select name="girv_interest_method" className="form-select border-dark" value={formData.girv_interest_method} disabled={!canUpdateInterest} onChange={handleChange} required>
             <option value="simple">Simple</option>
             <option value="compound">Compound</option>
           </select>
@@ -765,7 +807,7 @@ const UpdateLoan = () => {
         {formData.girv_interest_method === 'compound' && (
           <div className="col-12 col-md-6 col-lg-3">
             <label className="form-label fw-medium">Compound Freq <span className="text-danger">*</span></label>
-            <select name="girv_compound_freq" className="form-select border-dark" value={formData.girv_compound_freq} disabled={hasTransactions} onChange={handleChange} required>
+            <select name="girv_compound_freq" className="form-select border-dark" value={formData.girv_compound_freq} disabled={!canUpdateInterest} onChange={handleChange} required>
               <option value="monthly">Monthly</option>
               <option value="quarterly">Quarterly</option>
               <option value="half_yearly">Half Yearly</option>
@@ -775,7 +817,7 @@ const UpdateLoan = () => {
         )}
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Interest Option <span className="text-danger">*</span></label>
-          <select name="girv_roi_type" className="form-select border-dark" value={formData.girv_roi_type} disabled={hasTransactions} onChange={handleChange} required>
+          <select name="girv_roi_type" className="form-select border-dark" value={formData.girv_roi_type} disabled={!canUpdateInterest} onChange={handleChange} required>
             <option value="" disabled>Select option</option>
             <option value="monthly">Monthly</option>
             <option value="annually">Annual</option>
@@ -784,7 +826,7 @@ const UpdateLoan = () => {
 
         <div className="col-12 col-md-6 col-lg-3 d-flex align-items-center">
           <div className="form-check mt-4">
-            <input type="checkbox" name="girv_first_int" className="form-check-input" id="firstMonthInt" checked={formData.girv_first_int} disabled={hasTransactions} onChange={handleChange} />
+            <input type="checkbox" name="girv_first_int" className="form-check-input" id="firstMonthInt" checked={formData.girv_first_int} disabled={!canUpdateFinancial} onChange={handleChange} />
             <label className="form-check-label fw-medium" htmlFor="firstMonthInt">
               First Month Interest
               {formData.girv_first_int && firstMonthPreview > 0 ? (
@@ -799,7 +841,7 @@ const UpdateLoan = () => {
           {formData.girv_first_int && (
             <>
               <label className="form-label fw-medium">Interest Payment Account (DR) <span className="text-danger">*</span></label>
-              <select name="girv_first_int_dr_acc_id" className="form-select border-dark" value={formData.girv_first_int_dr_acc_id || ''} disabled={hasTransactions} onChange={handleChange} required>
+              <select name="girv_first_int_dr_acc_id" className="form-select border-dark" value={formData.girv_first_int_dr_acc_id || ''} disabled={!canUpdateFinancial} onChange={handleChange} required>
                 <option value="" disabled>Select account</option>
                 {accounts.map(acc => (
                   <option key={acc.acc_id} value={acc.acc_id}>{acc.acc_name}</option>
@@ -815,8 +857,12 @@ const UpdateLoan = () => {
   const itemInformation = (
     <>
       <h5 className="text-muted mt-3">Item Information</h5>
-      {hasTransactions && <div className="alert alert-warning py-1 px-2 mb-2" style={{ fontSize: '0.85rem' }}>Item details cannot be modified because this loan has existing transactions.</div>}
-      <fieldset disabled={hasTransactions}>
+      {!canUpdateFinancial && hasTransactions && (
+        <div className="alert alert-warning py-1 px-2 mb-2" style={{ fontSize: '0.85rem' }}>
+          Item details cannot be modified because this loan has existing transactions.
+        </div>
+      )}
+      <fieldset disabled={!canUpdateFinancial}>
         <div className="table-responsive mb-3">
           <table className="table table-bordered table-hover mb-0">
             <thead>
@@ -957,42 +1003,17 @@ const UpdateLoan = () => {
                     />
                   </td>
                   <td className="text-center px-1 py-1 position-relative">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      id={`itemImageInput-${index}`}
-                      style={{ display: 'none' }}
-                      onChange={(e) => {
-                        if (e.target.files?.[0]) {
-                          updateItemImage(index, e.target.files[0]);
-                        }
-                      }}
+                    <ImageUploadSquare
+                      size="mini"
+                      preview={item.itemImagePreview || resolveItemImage(item)}
+                      onFile={(file) => updateItemImage(index, file)}
+                      modalTitle={
+                        item.itemImagePreview || resolveItemImage(item)
+                          ? 'Change Item Image'
+                          : 'Item Image'
+                      }
+                      showRemove={false}
                     />
-                    {(() => {
-                      const imgUrl = resolveItemImage(item);
-                      return imgUrl ? (
-                        <label htmlFor={`itemImageInput-${index}`} style={{ cursor: 'pointer' }}>
-                          <img
-                            src={imgUrl}
-                            alt="Item preview"
-                            style={{
-                              maxWidth: '26px',
-                              maxHeight: '26px',
-                              objectFit: 'cover',
-                              borderRadius: '4px'
-                            }}
-                          />
-                        </label>
-                      ) : (
-                        <label
-                          htmlFor={`itemImageInput-${index}`}
-                          className="btn btn-sm btn-outline-info p-1 mb-0"
-                          style={{ cursor: 'pointer', minWidth: '40px' }}
-                        >
-                          <i className="bi bi-camera"></i>
-                        </label>
-                      );
-                    })()}
                   </td>
                   <td className="text-center px-1 py-1">
                     <div className="d-flex justify-content-center gap-1">
@@ -1217,7 +1238,7 @@ const UpdateLoan = () => {
               Updating...
             </>
           ) : (
-            hasTransactions ? 'Update Details' : 'Update Loan'
+            canUpdateFinancial ? 'Update Loan' : 'Update Details'
           )}
         </button>
       )}
@@ -1231,17 +1252,17 @@ const UpdateLoan = () => {
           <div className="btn-group" role="group">
             <button
               type="button"
-              className={`btn btn-sm ${formData.girv_type === 'secured' ? 'btn-primary' : 'btn-outline-primary'} ${hasTransactions ? 'disabled' : ''}`}
-              onClick={() => !hasTransactions && setFormData(prev => ({ ...prev, girv_type: 'secured' }))}
-              disabled={hasTransactions}
+              className={`btn btn-sm ${formData.girv_type === 'secured' ? 'btn-primary' : 'btn-outline-primary'} ${!canUpdateFinancial ? 'disabled' : ''}`}
+              onClick={() => canUpdateFinancial && setFormData(prev => ({ ...prev, girv_type: 'secured' }))}
+              disabled={!canUpdateFinancial}
             >
               Secured
             </button>
             <button
               type="button"
-              className={`btn btn-sm ${formData.girv_type === 'unsecured' ? 'btn-primary' : 'btn-outline-primary'} ${hasTransactions ? 'disabled' : ''}`}
-              onClick={() => !hasTransactions && setFormData(prev => ({ ...prev, girv_type: 'unsecured' }))}
-              disabled={hasTransactions}
+              className={`btn btn-sm ${formData.girv_type === 'unsecured' ? 'btn-primary' : 'btn-outline-primary'} ${!canUpdateFinancial ? 'disabled' : ''}`}
+              onClick={() => canUpdateFinancial && setFormData(prev => ({ ...prev, girv_type: 'unsecured' }))}
+              disabled={!canUpdateFinancial}
             >
               Unsecured
             </button>
@@ -1272,7 +1293,7 @@ const UpdateLoan = () => {
                     Updating...
                   </>
                 ) : (
-                  hasTransactions ? 'Update Details' : 'Update Loan'
+                  canUpdateFinancial ? 'Update Loan' : 'Update Details'
                 )}
               </button>
             </div>

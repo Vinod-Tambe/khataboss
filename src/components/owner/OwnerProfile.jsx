@@ -1,19 +1,17 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { toast } from "react-hot-toast";
-import DocumentUploadCard from "../common/DocumentUploadCard";
+import ImageUploadSquare from "../common/ImageUploadSquare";
 import { getMyProfile, updateMyProfile } from "../../api/authApi";
 import { setUser } from "../../store/slices/authSlice";
-import { getValidatedUploadFile } from "../../utils/fileUpload";
 import { validateMobile, validatePhone, validatePincode } from "../../utils/validation";
-
-const IMAGE_BASE_URL = "http://localhost:9000/";
+import { IMAGE_BASE_URL } from "../../utils/imageHelpers";
+import "../../css/ProfileDocumentsSection.css";
 
 const OwnerProfile = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const photoInputRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [photoPreview, setPhotoPreview] = useState(null);
@@ -83,16 +81,14 @@ const OwnerProfile = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFileSelect = (e, fieldName, setPreview) => {
-    const file = getValidatedUploadFile(e);
-    if (!file) return;
-    setFormData((prev) => ({ ...prev, [fieldName]: file }));
-    setPreview(URL.createObjectURL(file));
+  const handleProfileFile = (file) => {
+    setFormData((prev) => ({ ...prev, own_profile_img: file }));
+    setPhotoPreview(URL.createObjectURL(file));
   };
 
-  const removeFile = (fieldName, setPreview) => {
-    setFormData((prev) => ({ ...prev, [fieldName]: null }));
-    setPreview(null);
+  const handleProfileRemove = () => {
+    setFormData((prev) => ({ ...prev, own_profile_img: null }));
+    setPhotoPreview(null);
   };
 
   const handleSubmit = async (e) => {
@@ -173,15 +169,12 @@ const OwnerProfile = () => {
         <form onSubmit={handleSubmit}>
           <div className="row g-3">
             <div className="col-md-3">
-              <DocumentUploadCard
-                title="Profile Photo"
-                fieldName="own_profile_img"
+              <ImageUploadSquare
                 preview={photoPreview}
-                setPreview={setPhotoPreview}
-                inputRef={photoInputRef}
-                accept="image/*"
-                handleFileSelect={handleFileSelect}
-                removeFile={removeFile}
+                onFile={handleProfileFile}
+                onRemove={handleProfileRemove}
+                modalTitle="Profile Photo"
+                label="Profile Photo"
               />
             </div>
             <div className="col-md-9">

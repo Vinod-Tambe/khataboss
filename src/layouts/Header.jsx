@@ -3,8 +3,7 @@ import { FiUser, FiMenu, FiBell, FiSun, FiMoon, FiMonitor, FiBriefcase, FiLock, 
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../store/slices/authSlice";
-import { getFirmsDropdown } from "../api/firmApi";
-import { setFirms, setSelectedFirmId, setLoading as setFirmLoading, setError as setFirmError } from "../store/slices/firmSlice";
+import { loadFirmsDropdown, setSelectedFirmId } from "../store/slices/firmSlice";
 import { useTheme } from "../context/ThemeContext";
 import HeaderSearch from "../components/common/HeaderSearch";
 import FinanceCollectionModal from "../components/finance/FinanceCollectionModal";
@@ -62,19 +61,7 @@ const Header = () => {
   });
 
   useEffect(() => {
-    const fetchFirms = async () => {
-      dispatch(setFirmLoading(true));
-      try {
-        const response = await getFirmsDropdown();
-        dispatch(setFirms(response.data || []));
-      } catch (error) {
-        dispatch(setFirmError(error.message));
-      } finally {
-        dispatch(setFirmLoading(false));
-      }
-    };
-
-    fetchFirms();
+    dispatch(loadFirmsDropdown());
   }, [dispatch]);
 
   useEffect(() => {

@@ -6,17 +6,20 @@ import { toast } from 'react-hot-toast';
 import '../../../css/Modal.css';
 import useFormNavigation from '../../../hooks/useFormNavigation';
 import { getValidatedUploadFile } from '../../../utils/fileUpload';
+import ProfileDocumentsSection from '../../common/ProfileDocumentsSection';
+import { appendOtherImagesToFormData, getNewDocumentUploads } from '../../../utils/imageHelpers';
+import '../../../css/ProfileDocumentsSection.css';
 
 const AuctionModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pendingPrincipal, pendingInterest, onSuccess }) => {
   const { selectedFirm } = useSelector((state) => state.firm);
   const { selectedUser } = useSelector((state) => state.user);
   const [accounts, setAccounts] = useState([]);
   const [submitting, setSubmitting] = useState(false);
-  const [userImage, setUserImage] = useState(null);
-  const [preview, setPreview] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [documents, setDocuments] = useState([]);
   const [existingBuyers, setExistingBuyers] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const imageInputRef = useRef(null);
   const formRef = useRef(null);
 
   useFormNavigation(formRef, false, isOpen);
@@ -152,6 +155,9 @@ const AuctionModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pen
       auc_pay_info: '',
       auc_other_info: ''
     }));
+    setDocuments([]);
+    setPhotoPreview(null);
+    setPhotoFile(null);
   }, [isOpen, loanDetails, selectedUser, pendingPrincipal, pendingInterest, totalDueAmount]);
 
   useEffect(() => {
@@ -253,11 +259,15 @@ const AuctionModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pen
     });
   };
 
-  const handleFileSelect = (e, fieldName, setPreview) => {
-    const file = getValidatedUploadFile(e);
+  const handleProfileFile = (file) => {
     if (!file) return;
-    setUserImage(file);
-    setPreview(URL.createObjectURL(file));
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  };
+
+  const handleProfileRemove = () => {
+    setPhotoFile(null);
+    setPhotoPreview(null);
   };
 
   const totalPayment = (parseFloat(formData.auc_cash_amt) || 0) +
@@ -313,9 +323,10 @@ const AuctionModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pen
         finalPayload.append(key, payloadData[key]);
       }
       
-      if (userImage) {
-        finalPayload.append("user_image", userImage);
+      if (photoFile) {
+        finalPayload.append("photo", photoFile);
       }
+      appendOtherImagesToFormData(finalPayload, getNewDocumentUploads(documents));
 
       await addAuction(finalPayload);
       toast.success("Auction submitted successfully");
@@ -358,24 +369,35 @@ const AuctionModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pen
       {/* User Information */}
       <div className="section-title">User Information</div>
       <div className="row g-3 mb-3">
-        <div className="col-md-1 d-flex justify-content-center">
-          <div 
-            className="d-flex justify-content-center align-items-center mt-4"
-            style={{ width: '42px', height: '42px', cursor: 'pointer', overflow: 'hidden', borderRadius: '50%', border: preview ? 'none' : '1px solid #ccc' }}
-            onClick={() => imageInputRef.current?.click()}
-          >
-            {preview ? (
-              <img src={preview} alt="user" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              <i className="bi bi-camera fs-5 text-secondary"></i>
-            )}
-          </div>
-          <input 
-            type="file" 
-            ref={imageInputRef} 
-            className="d-none" 
-            accept="image/*" 
-            onChange={(e) => handleFileSelect(e, 'user_image', setPreview)} 
+        <div className="col-12">
+          <ProfileDocumentsSection
+            profilePreview={photoPreview}
+            onProfileFile={handleProfileFile}
+            onProfileRemove={handleProfileRemove}
+            documents={documents}
+            onAddDocument={(doc) => setDocuments((prev) => [...prev, doc])}
+            onRemoveDocument={(index) => setDocuments((prev) => prev.filter((_, i) => i !== index))}
+            onReplaceDocument={(index, file) =>
+              setDocuments((prev) =>
+                prev.map((doc, i) =>
+                  i === index
+                    ? {
+                        ...doc,
+                        file,
+                        preview: URL.createObjectURL(file),
+                        isExisting: false,
+                        path: null,
+                      }
+                    : doc
+                )
+              )
+            }
+            onUpdateDocument={(index, patch) =>
+              setDocuments((prev) =>
+                prev.map((doc, i) => (i === index ? { ...doc, ...patch } : doc))
+              )
+            }
+            documentsTitle="Buyer Documents"
           />
         </div>
         <div className="col-md-3 position-relative">

@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import List from "../common/List";
 import { getFirms, deleteFirm } from "../../api/firmApi";
+import { loadFirmsDropdown } from "../../store/slices/firmSlice";
 import { toast } from "react-hot-toast";
 
 const FirmList = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [firms, setFirms] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -61,7 +64,8 @@ const FirmList = () => {
     try {
       const response = await deleteFirm(rowData.firm_uuid);
       toast.success(response.message || "Firm deleted successfully.");
-      fetchFirms(); // Refresh the list
+      fetchFirms();
+      dispatch(loadFirmsDropdown());
     } catch (error) {
       console.error("Error deleting firm:", error);
       toast.error(error.message || "Failed to delete firm.");

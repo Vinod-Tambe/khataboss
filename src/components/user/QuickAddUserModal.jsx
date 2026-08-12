@@ -1,13 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { createUser } from '../../api/userApi';
 import { setSelectedUser } from '../../store/slices/userSlice';
-import DocumentUploadCard from '../common/DocumentUploadCard';
+import ImageUploadSquare from '../common/ImageUploadSquare';
 import CommonModal from '../common/CommonModal';
 import { validateMobile, validateAadhaar } from '../../utils/validation';
-import { getValidatedUploadFile, validateUploadFile } from '../../utils/fileUpload';
+import '../../css/ProfileDocumentsSection.css';
 
 const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
     const dispatch = useDispatch();
@@ -15,14 +15,6 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
     const [loading, setLoading] = useState(false);
     const [activeAction, setActiveAction] = useState(null);
     const [photoPreview, setPhotoPreview] = useState(null);
-    const photoInputRef = useRef(null);
-
-    // Webcam Refs & State
-    const videoRef = useRef(null);
-    const canvasRef = useRef(null);
-    const [stream, setStream] = useState(null);
-    const [showWebcam, setShowWebcam] = useState(false);
-    const [activeCaptureField, setActiveCaptureField] = useState(null);
 
     const initialFormData = {
         firstName: '',
@@ -51,64 +43,19 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
     }, [show, selectedFirmId, firms]);
 
     // ─── Handlers ────────────────────────────────────────────────────────
-    const handleFileSelect = (e, fieldName, setPreview) => {
-        const file = getValidatedUploadFile(e);
-        if (!file) return;
-        setFormData(prev => ({ ...prev, [fieldName]: file }));
-        setPreview(URL.createObjectURL(file));
+    const handleProfileFile = (file) => {
+        setFormData(prev => ({ ...prev, photo: file }));
+        setPhotoPreview(URL.createObjectURL(file));
     };
 
-    const removeFile = (fieldName, setPreview) => {
-        setFormData(prev => ({ ...prev, [fieldName]: null }));
-        setPreview(null);
+    const handleProfileRemove = () => {
+        setFormData(prev => ({ ...prev, photo: null }));
+        setPhotoPreview(null);
     };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
-    };
-
-    // ─── Webcam Logic ───────────────────────────────────────────────────
-    const startWebcam = (fieldName) => {
-        setActiveCaptureField(fieldName);
-        navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } })
-            .then(mediaStream => {
-                setStream(mediaStream);
-                if (videoRef.current) {
-                    videoRef.current.srcObject = mediaStream;
-                }
-                setShowWebcam(true);
-            })
-            .catch(err => {
-                toast.error("Cannot access webcam: " + err.message);
-                setActiveCaptureField(null);
-            });
-    };
-
-    const stopWebcam = () => {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-            setStream(null);
-        }
-        setShowWebcam(false);
-        setActiveCaptureField(null);
-    };
-
-    const capturePhoto = () => {
-        if (!canvasRef.current || !videoRef.current || !activeCaptureField) return;
-
-        const context = canvasRef.current.getContext('2d');
-        context.drawImage(videoRef.current, 0, 0, 320, 240);
-
-        canvasRef.current.toBlob((blob) => {
-            const file = new File([blob], `${activeCaptureField}_captured.jpg`, { type: "image/jpeg" });
-            if (!validateUploadFile(file)) return;
-            setFormData(prev => ({ ...prev, [activeCaptureField]: file }));
-
-            const previewUrl = URL.createObjectURL(file);
-            setPhotoPreview(previewUrl);
-            stopWebcam();
-        }, 'image/jpeg', 0.95);
     };
 
     const validateForm = () => {
@@ -217,19 +164,13 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
                         {/* Profile Image Field */}
                         <div className="col-md-2">
                             <label className="form-label fw-bold small text-muted mb-1">Profile Image</label>
-                            <DocumentUploadCard
-                                title=""
-                                fieldName="photo"
+                            <ImageUploadSquare
                                 preview={photoPreview}
-                                setPreview={setPhotoPreview}
-                                inputRef={photoInputRef}
-                                showCamera={true}
-                                startWebcam={() => startWebcam('photo')}
-                                handleFileSelect={handleFileSelect}
-                                removeFile={removeFile}
-                                small={true}
-                                noBorder={true}
-                                iconBorder={true}
+                                onFile={handleProfileFile}
+                                onRemove={handleProfileRemove}
+                                modalTitle="Profile Photo"
+                                size="compact"
+                                showRemove={Boolean(photoPreview)}
                             />
                         </div>
 
@@ -387,32 +328,6 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
                     </div>
                 </form>
             </CommonModal>
-
-            {/* Webcam Layer */}
-            {showWebcam && (
-                <div className="modal show d-block" style={{ background: 'rgba(0,0,0,0.8)', zIndex: 1100 }}>
-                    <div className="modal-dialog modal-dialog-centered">
-                        <div className="modal-content shadow-lg border-0">
-                            <div className="modal-header py-2">
-                                <h6 className="modal-title fw-bold">Capture Photo</h6>
-                                <button className="btn-close" onClick={stopWebcam}></button>
-                            </div>
-                            <div className="modal-body text-center bg-dark p-0">
-                                <video ref={videoRef} autoPlay playsInline className="w-100" style={{ transform: 'scaleX(-1)' }}></video>
-                                <canvas ref={canvasRef} width="320" height="240" className="d-none"></canvas>
-                            </div>
-                            <div className="modal-footer py-2 justify-content-center border-0">
-                                <button className="btn btn-light rounded-circle border p-2" onClick={stopWebcam}>
-                                    <i className="bi bi-x fs-4"></i>
-                                </button>
-                                <button className="btn btn-primary rounded-circle p-3 ms-4" onClick={capturePhoto}>
-                                    <i className="bi bi-camera-fill fs-5"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
         </>
     );
 };
