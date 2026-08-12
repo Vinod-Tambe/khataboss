@@ -14,3 +14,17 @@ export const getUserDashboard = async (params) => {
     throw new Error(message);
   }
 };
+
+/**
+ * Get owner/staff home dashboard (cards + charts)
+ * @param {Object} params - { firmId }
+ */
+export const getOwnerDashboard = async (params) => {
+  try {
+    const response = await axiosInstance.get('/dashboard/home', { params });
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.error || error.response?.data?.message || error.message;
+    throw new Error(message);
+  }
+};

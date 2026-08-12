@@ -33,6 +33,7 @@ const UserHome = () => {
   const [financeList, setFinanceList] = useState([]);
   const [loanList, setLoanList] = useState([]);
   const [transactionList, setTransactionList] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [totals, setTotals] = useState({
     totalActiveFinance: 0,
     totalCloseFinance: 0,
@@ -48,6 +49,7 @@ const UserHome = () => {
     const fetchData = async () => {
       if (!selectedUser?.user_id) return;
 
+      setLoading(true);
       try {
         const dashboardRes = await getUserDashboard({
           userId: selectedUser.user_id,
@@ -146,6 +148,8 @@ const UserHome = () => {
 
       } catch (error) {
         console.error("Error fetching user dashboard data:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -293,6 +297,12 @@ const UserHome = () => {
 
   return (
     <div className="card p-0 p-md-3 pt-2 border-0">
+      {loading && (
+        <div className="text-center text-muted py-2 mb-2">
+          <span className="spinner-border spinner-border-sm me-2" role="status" />
+          Updating dashboard…
+        </div>
+      )}
       {/* ================= INFO CARDS ================= */}
       {/* Row 1: Counts */}
       <div className="row g-4 mb-3">
