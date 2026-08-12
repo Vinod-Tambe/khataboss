@@ -5,7 +5,6 @@ import { addAuction, getAuctionUsers } from '../../../api/auctionApi';
 import { toast } from 'react-hot-toast';
 import '../../../css/Modal.css';
 import useFormNavigation from '../../../hooks/useFormNavigation';
-import { getValidatedUploadFile } from '../../../utils/fileUpload';
 import ProfileDocumentsSection from '../../common/ProfileDocumentsSection';
 import { appendOtherImagesToFormData, getNewDocumentUploads } from '../../../utils/imageHelpers';
 import '../../../css/ProfileDocumentsSection.css';
