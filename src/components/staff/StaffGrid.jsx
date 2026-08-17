@@ -4,16 +4,11 @@ import { getStaffList, deleteStaff } from "../../api/staffApi";
 import { showToast } from "../common/ToastAlert";
 import usePermissions from "../../hooks/usePermissions";
 import PermissionGate from "../common/PermissionGate";
+import { resolveImageUrl } from "../../utils/imageHelpers";
 
 const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
-const IMAGE_BASE_URL = "http://localhost:9000/";
 
-const resolveImageUrl = (img) => {
-  if (!img) return DEFAULT_AVATAR;
-  if (typeof img === "string") return img.startsWith("http") ? img : `${IMAGE_BASE_URL}${img.replace(/^\/+/, "")}`;
-  if (img.path) return `${IMAGE_BASE_URL}${String(img.path).replace(/^\/+/, "")}`;
-  return DEFAULT_AVATAR;
-};
+const resolveStaffImageUrl = (img) => resolveImageUrl(img) || DEFAULT_AVATAR;
 
 const formatDate = (value) => {
   if (!value) return "";
@@ -116,7 +111,7 @@ const StaffGrid = () => {
           const address = [staff.staff_curr_address, staff.staff_city, staff.staff_pincode]
             .filter(Boolean)
             .join(", ");
-          const image = resolveImageUrl(staff.staff_profile_img);
+          const image = resolveStaffImageUrl(staff.staff_profile_img);
 
           return (
             <div

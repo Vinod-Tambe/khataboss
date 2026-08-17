@@ -14,6 +14,7 @@ import { getPurities } from '../../api/purityApi';
 import { getRates } from '../../api/rateApi';
 import { toast } from 'react-hot-toast';
 import { validateUploadFile } from '../../utils/fileUpload';
+import { resolveImageUrl } from '../../utils/imageHelpers';
 import { calculateFirstMonthInterest, normalizeRoiType } from '../../utils/loanInterest';
 import {
   getInterestUpdateBlockReason,
@@ -50,7 +51,6 @@ const UpdateLoan = () => {
     interestBlockReason,
   } = loanUpdateRules;
 
-  const backendUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:9000/' : 'https://khataboss.in/';
   const resolveItemImage = (item) => {
     if (!item) return null;
     if (item.itemImage) return URL.createObjectURL(item.itemImage);
@@ -64,10 +64,7 @@ const UpdateLoan = () => {
     }
     path = path || item.st_image_url || item.image_url;
     if (!path) return null;
-    if (path.startsWith('http')) return path;
-
-    const cleanPath = String(path).replace(/\\/g, '/').replace(/^\/+/, '');
-    return `${backendUrl}${cleanPath}`;
+    return resolveImageUrl(path);
   };
 
   const getEmptyItem = () => ({

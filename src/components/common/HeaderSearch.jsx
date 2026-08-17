@@ -3,8 +3,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { searchUsers } from "../../api/userApi";
 import { setSelectedUser } from "../../store/slices/userSlice";
+import { resolveImageUrl } from "../../utils/imageHelpers";
 
-const IMAGE_BASE_URL = "http://localhost:9000/";
+const getProfileImgUrl = (user) => {
+  return resolveImageUrl(user?.user_profile_img) || "";
+};
 
 const formatUserAddress = (user) => {
   if (!user) return "";
@@ -17,13 +20,6 @@ const formatUserAddress = (user) => {
   const locality = [city, state, country].filter(Boolean).join(", ");
   const withPin = [locality, pincode].filter(Boolean).join(" - ");
   return [street, withPin].filter(Boolean).join(", ");
-};
-
-const getProfileImgUrl = (user) => {
-  const path = user?.user_profile_img?.path;
-  if (!path) return "";
-  if (/^https?:\/\//i.test(path)) return path;
-  return `${IMAGE_BASE_URL}${String(path).replace(/^\/+/, "")}`;
 };
 
 const HeaderSearch = ({

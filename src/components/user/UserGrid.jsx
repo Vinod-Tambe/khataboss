@@ -11,6 +11,7 @@ import {
   getCustomerPhone,
 } from "../../utils/customerFormatters";
 import CustomerAddressTooltip from "./CustomerAddressTooltip";
+import { resolveImageUrl } from "../../utils/imageHelpers";
 
 const UserGrid = () => {
   const navigate = useNavigate();
@@ -61,12 +62,9 @@ const UserGrid = () => {
     }
   };
 
-  const getProfileImage = (user) => {
-    if (user.user_profile_img && user.user_profile_img.path) {
-      return `http://localhost:9000/${user.user_profile_img.path}`;
-    }
-    return "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
-  };
+  const getProfileImage = (user) =>
+    resolveImageUrl(user.user_profile_img) ||
+    "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
 
   return (
     <div className="card p-3 pt-2 shadow-sm position-relative">

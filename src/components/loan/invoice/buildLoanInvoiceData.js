@@ -5,6 +5,7 @@ import {
   getLoanInterestSummary,
   getTenureMonths,
 } from '../../../utils/loanInterest';
+import { resolveImageUrl } from '../../../utils/imageHelpers';
 
 const formatMoney = (value) => {
   const num = Number(value) || 0;
@@ -29,12 +30,7 @@ const getPaymentMode = (record, prefixes) => {
 
 const buildAddress = (parts = []) => parts.filter(Boolean).join(', ') || '-';
 
-const getImageUrl = (img) => {
-  if (!img) return null;
-  if (typeof img === 'string') return img;
-  if (img.path) return `http://localhost:9000/${img.path}`;
-  return null;
-};
+const getImageUrl = (img) => resolveImageUrl(img);
 
 /**
  * Builds a reusable loan invoice data object from API loan + customer.

@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ProfileDocumentsSection from '../common/ProfileDocumentsSection';
+import SignaturePad from '../common/SignaturePad';
 import {
     appendOtherImagesToFormData,
     getNewDocumentUploads,
@@ -11,7 +12,6 @@ import 'daterangepicker';
 import 'daterangepicker/daterangepicker.css';
 import { toast } from 'react-hot-toast';
 import { validatePincode, validatePan, validateAadhaar, validateGstin, validateIfsc, validateMobile, validatePhone } from '../../utils/validation';
-import { validateUploadFile } from '../../utils/fileUpload';
 import useFormNavigation from '../../hooks/useFormNavigation';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -33,10 +33,8 @@ const AddUser = () => {
     const [photoPreview, setPhotoPreview] = useState(null);
     const [documents, setDocuments] = useState([]);
 
-    // Signature
-    const signatureRef = useRef(null);
     const dateOfBirthRef = useRef(null);
-    const [isDrawing, setIsDrawing] = useState(false);
+    const [signaturePadKey, setSignaturePadKey] = useState(0);
 
     const [firms, setFirms] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -107,7 +105,7 @@ const AddUser = () => {
 
     // Webcam handled inside ProfileDocumentsSection
 
-    // ─── Signature Pad (unchanged) ────────────────────────────────────────
+    // ─── Signature Pad ────────────────────────────────────────────────────
     useEffect(() => {
         if (dateOfBirthRef.current) {
             $(dateOfBirthRef.current).daterangepicker({
@@ -121,78 +119,25 @@ const AddUser = () => {
                 setFormData(prev => ({ ...prev, dateOfBirth: start.format('YYYY-MM-DD') }));
             });
         }
+    }, []);
 
-        const canvas = signatureRef.current;
-        if (!canvas) return;
-
-        const ctx = canvas.getContext('2d');
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 2;
-        ctx.lineCap = 'round';
-
-        const startDrawing = (e) => { setIsDrawing(true); draw(e); };
-        const stopDrawing = () => { setIsDrawing(false); ctx.beginPath(); };
-        const draw = (e) => {
-            if (!isDrawing) return;
-            const rect = canvas.getBoundingClientRect();
-            const x = (e.clientX || e.touches?.[0]?.clientX || 0) - rect.left;
-            const y = (e.clientY || e.touches?.[0]?.clientY || 0) - rect.top;
-            ctx.lineTo(x, y);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(x, y);
-        };
-
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseout', stopDrawing);
-        canvas.addEventListener('touchstart', startDrawing);
-        canvas.addEventListener('touchmove', draw);
-        canvas.addEventListener('touchend', stopDrawing);
-
-        return () => {
-            canvas.removeEventListener('mousedown', startDrawing);
-            canvas.removeEventListener('mousemove', draw);
-            canvas.removeEventListener('mouseup', stopDrawing);
-            canvas.removeEventListener('mouseout', stopDrawing);
-            canvas.removeEventListener('touchstart', startDrawing);
-            canvas.removeEventListener('touchmove', draw);
-            canvas.removeEventListener('touchend', stopDrawing);
-        };
-    }, [isDrawing]);
-
-    const clearSignature = () => {
-        const canvas = signatureRef.current;
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-    };
-
-    const saveSignature = () => {
-        const canvas = signatureRef.current;
-        const dataUrl = canvas.toDataURL('image/png');
-        fetch(dataUrl)
-            .then(res => res.blob())
-            .then(blob => {
-                const file = new File([blob], "signature.png", { type: "image/png" });
-                if (!validateUploadFile(file)) return;
-                setDocuments((prev) => {
-                    const withoutOld = prev.filter((d) => d.label !== 'Signature');
-                    return [
-                        ...withoutOld,
-                        {
-                            id: `sig-${Date.now()}`,
-                            file,
-                            preview: URL.createObjectURL(file),
-                            label: 'Signature',
-                            note: '',
-                            isExisting: false,
-                        },
-                    ];
-                });
-                toast.success('Signature added to documents');
-            });
-    };
+    const handleSignatureSave = useCallback((file) => {
+        setDocuments((prev) => {
+            const withoutOld = prev.filter((d) => d.label !== 'Signature');
+            return [
+                ...withoutOld,
+                {
+                    id: `sig-${Date.now()}`,
+                    file,
+                    preview: URL.createObjectURL(file),
+                    label: 'Signature',
+                    note: '',
+                    isExisting: false,
+                },
+            ];
+        });
+        toast.success('Signature added to documents');
+    }, []);
 
     const validateStep1 = () => {
         const requiredFields = ['firstName', 'lastName', 'mobileNo', 'gender'];
@@ -335,7 +280,7 @@ const AddUser = () => {
             });
             setPhotoPreview(null);
             setDocuments([]);
-            clearSignature();
+            setSignaturePadKey((k) => k + 1);
             if (isMobile) setCurrentStep(1);
 
         } catch (error) {
@@ -551,42 +496,13 @@ const AddUser = () => {
                 </div>
 
                 <div className="col-12 col-md-6">
-                    <label className="form-label">Signature</label><br></br>
-                    <div style={{ position: 'relative', display: 'inline-block' }}>
-                        <canvas
-                            ref={signatureRef}
-                            width={isMobile ? 380 : 480}
-                            height={105}
-                            style={{
-                                border: '2px dashed #ccc',
-                                background: '#fff',
-                                touchAction: 'none',
-                                borderRadius: '8px'
-                            }}
-                        />
-                        <div style={{
-                            position: 'absolute',
-                            bottom: '10px',
-                            right: '10px',
-                            display: 'flex',
-                            gap: '8px'
-                        }}>
-                            <button
-                                type="button"
-                                className="btn btn-sm btn-danger mb-1"
-                                onClick={clearSignature}
-                            >
-                                <i className="bi bi-eraser"></i>
-                            </button>
-                            <button
-                                type="button"
-                                className="btn btn-sm btn-success mb-1"
-                                onClick={saveSignature}
-                            >
-                                <i className="bi bi-save"></i>
-                            </button>
-                        </div>
-                    </div>
+                    <label className="form-label">Signature</label><br />
+                    <SignaturePad
+                        key={signaturePadKey}
+                        width={isMobile ? 380 : 480}
+                        height={105}
+                        onSave={handleSignatureSave}
+                    />
                 </div>
             </div>
         </>

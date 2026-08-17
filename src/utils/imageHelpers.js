@@ -1,7 +1,18 @@
-export const IMAGE_BASE_URL =
-  process.env.NODE_ENV === "development"
-    ? "http://localhost:9000/"
-    : "https://khataboss.in/";
+import appConfig, {
+  apiPublicUrl,
+  r2PublicUrl,
+  isCloudflareAccessEnabled,
+} from "../config/appConfig";
+
+/** Cloudflare R2 public URL (custom domain or R2 dev URL). */
+const R2_PUBLIC_URL = (r2PublicUrl || appConfig.r2PublicUrl || "").replace(/\/$/, "");
+
+/** Legacy backend static URL for old local uploads/ paths only */
+const LEGACY_BASE_URL = `${apiPublicUrl.replace(/\/$/, "")}/`;
+
+export const IMAGE_BASE_URL = isCloudflareAccessEnabled() && R2_PUBLIC_URL
+  ? `${R2_PUBLIC_URL}/`
+  : LEGACY_BASE_URL;
 
 export const MAX_DOCUMENT_IMAGES = 10;
 
@@ -19,13 +30,29 @@ export function parseOtherImages(value) {
   return [];
 }
 
+function resolvePathToUrl(pathValue) {
+  if (!pathValue) return null;
+  const path = String(pathValue).replace(/^\/+/, "");
+  if (path.startsWith("http") || path.startsWith("blob:")) return path;
+
+  // Cloudflare R2 keys: owner/1/user/5/photo.jpg
+  if (path.startsWith("owner/")) {
+    if (!isCloudflareAccessEnabled()) return null;
+    if (R2_PUBLIC_URL) return `${R2_PUBLIC_URL}/${path}`;
+    return null;
+  }
+
+  // Legacy local paths: uploads/user/5/... or user/5/...
+  return `${LEGACY_BASE_URL.replace(/\/$/, "")}/${path.startsWith("uploads/") ? path : `uploads/${path}`}`;
+}
+
 export function resolveImageUrl(img) {
   if (!img) return null;
   if (typeof img === "string") {
     if (img.startsWith("http") || img.startsWith("blob:")) return img;
-    return `${IMAGE_BASE_URL}${img.replace(/^\//, "")}`;
+    return resolvePathToUrl(img);
   }
-  if (img.path) return `${IMAGE_BASE_URL}${String(img.path).replace(/^\//, "")}`;
+  if (img.path) return resolvePathToUrl(img.path);
   return null;
 }
 

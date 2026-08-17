@@ -6,7 +6,7 @@ import ImageUploadSquare from "../common/ImageUploadSquare";
 import { getMyProfile, updateMyProfile } from "../../api/authApi";
 import { setUser } from "../../store/slices/authSlice";
 import { validateMobile, validatePhone, validatePincode } from "../../utils/validation";
-import { IMAGE_BASE_URL } from "../../utils/imageHelpers";
+import { resolveImageUrl } from "../../utils/imageHelpers";
 import "../../css/ProfileDocumentsSection.css";
 
 const OwnerProfile = () => {
@@ -51,11 +51,7 @@ const OwnerProfile = () => {
       own_pincode: profile.own_pincode || "",
       own_profile_img: null,
     });
-    if (profile.own_profile_img?.path) {
-      setPhotoPreview(`${IMAGE_BASE_URL}${profile.own_profile_img.path}`);
-    } else {
-      setPhotoPreview(null);
-    }
+    setPhotoPreview(resolveImageUrl(profile.own_profile_img));
   };
 
   useEffect(() => {

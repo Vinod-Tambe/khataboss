@@ -22,6 +22,7 @@ import {
   getTenureMonths,
 } from '../../utils/loanInterest';
 import ImageModal from '../common/ImageModal';
+import { resolveImageUrl } from '../../utils/imageHelpers';
 import EntityLogsModal from '../logs/EntityLogsModal';
 import usePermissions from '../../hooks/usePermissions';
 import UpdateInterestModal from './modal/UpdateInterestModal';
@@ -195,7 +196,6 @@ const LoanInformation = ({
   </div>
 );
 
-const backendUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:9000/' : 'https://khataboss.in/';
 const resolveItemImage = (imgData) => {
   if (!imgData || imgData === '-') return null;
   if (typeof imgData === 'string' && imgData.startsWith('blob:')) return imgData;
@@ -220,10 +220,7 @@ const resolveItemImage = (imgData) => {
   }
 
   if (!path) return null;
-  if (path.startsWith('http')) return path;
-
-  const cleanPath = String(path).replace(/\\/g, '/').replace(/^\/+/, '');
-  return `${backendUrl}${cleanPath}`;
+  return resolveImageUrl(path);
 };
 
 const ItemTable = ({ data, onImageClick }) => (

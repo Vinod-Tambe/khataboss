@@ -6,6 +6,7 @@ import { showToast } from "../common/ToastAlert";
 import { sendOtp } from "../../api/authApi";
 import { useDispatch, useSelector } from "react-redux";
 import { login as reduxLogin, loginWithOtp as reduxLoginWithOtp } from "../../store/slices/authSlice";
+import { otpExpirySeconds } from "../../config/appConfig";
 
 
 const TypingEffect = ({ texts = [], speed = 100, pause = 1500 }) => {
@@ -128,7 +129,7 @@ const LoginForm = () => {
       if (response.success) {
         showToast(response.message, "success");
         setOtpSent(true);
-        setResendTimer(30);
+        setResendTimer(otpExpirySeconds);
         setOtpDigits(["", "", "", "", "", ""]); // Clear digits on resend
         setTimeout(() => otpRefs.current[0]?.focus(), 100);
       }

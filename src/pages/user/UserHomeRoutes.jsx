@@ -17,6 +17,7 @@ import AuctionLoanList from "../../components/loan/AuctionLoanList";
 import { ConfirmAlert } from "../../components/common/ConfirmAlert";
 import { getCustomerPhone } from "../../utils/customerFormatters";
 import CustomerAddressTooltip from "../../components/user/CustomerAddressTooltip";
+import { resolveImageUrl } from "../../utils/imageHelpers";
 
 const BLOCK_INFO_MAX_CHARS = 40;
 
@@ -87,9 +88,9 @@ const UserHomeRoutes = () => {
     user_other_info
   } = selectedUser;
 
-  const profileImg = user_profile_img?.path
-    ? `http://localhost:9000/${user_profile_img.path}`
-    : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+  const profileImg =
+    resolveImageUrl(user_profile_img) ||
+    "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
 
   const handleProfileClick = async (e) => {
     e.preventDefault();

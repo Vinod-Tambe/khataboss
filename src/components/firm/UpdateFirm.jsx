@@ -8,7 +8,7 @@ import ImageUploadSquare from '../common/ImageUploadSquare';
 import { getFirmByUuid, updateFirm } from '../../api/firmApi';
 import { validatePincode, validatePan, validateAadhaar, validateGstin, validateIfsc } from '../../utils/validation';
 import useFormNavigation from '../../hooks/useFormNavigation';
-import { IMAGE_BASE_URL } from '../../utils/imageHelpers';
+import { resolveImageUrl } from '../../utils/imageHelpers';
 import '../../css/ProfileDocumentsSection.css';
 
 const UpdateFirm = () => {
@@ -129,16 +129,16 @@ const UpdateFirm = () => {
 
           // Set Previews for existing images if they exist
           if (data.firm_left_logo_img?.path) {
-            setLeftLogoPreview(`${IMAGE_BASE_URL}${data.firm_left_logo_img.path}`);
+            setLeftLogoPreview(resolveImageUrl(data.firm_left_logo_img));
           }
           if (data.firm_right_logo_img?.path) {
-            setRightLogoPreview(`${IMAGE_BASE_URL}${data.firm_right_logo_img.path}`);
+            setRightLogoPreview(resolveImageUrl(data.firm_right_logo_img));
           }
           if (data.firm_qr_code_img?.path) {
-            setQrCodePreview(`${IMAGE_BASE_URL}${data.firm_qr_code_img.path}`);
+            setQrCodePreview(resolveImageUrl(data.firm_qr_code_img));
           }
           if (data.firm_own_sign_img?.path) {
-            setPanPreview(`${IMAGE_BASE_URL}${data.firm_own_sign_img.path}`);
+            setPanPreview(resolveImageUrl(data.firm_own_sign_img));
           }
         }
       } catch (error) {

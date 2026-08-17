@@ -61,7 +61,7 @@ const DocumentUploadCard = ({
               <button
                 type="button"
                 className="btn btn-outline-primary btn-sm"
-                title="Upload (max 5MB)"
+                title="Upload (max 2MB)"
                 onClick={() => inputRef.current?.click()}
               >
                 <i className="bi bi-cloud-upload" />
@@ -129,7 +129,7 @@ const DocumentUploadCard = ({
             <button
               type="button"
               className={`btn btn-outline-primary btn-lg ${iconBorder ? '' : 'border-0'} d-flex flex-column align-items-center`}
-              title="Upload (max 5MB)"
+              title="Upload (max 2MB)"
               onClick={() => inputRef.current?.click()}
             >
               <i className="bi bi-cloud-upload fs-2 p-0 m-0" />

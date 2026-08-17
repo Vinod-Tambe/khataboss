@@ -9,6 +9,7 @@ import {
     collectExistingDocumentUpdates,
     documentsFromOtherImages,
     getNewDocumentUploads,
+    resolveImageUrl,
 } from "../../utils/imageHelpers";
 import "../../css/ProfileDocumentsSection.css";
 import {
@@ -20,10 +21,9 @@ import {
 import {
     getPasswordRuleChecks,
     PASSWORD_MAX_LENGTH,
-    PASSWORD_MIN_LENGTH,
 } from "../../utils/passwordValidation";
+import PasswordRequirementsPanel from "../common/PasswordRequirementsPanel";
 
-const IMAGE_BASE_URL = "http://localhost:9000/";
 const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
 
 const emptyPermissions = {
@@ -48,16 +48,7 @@ const emptyPermissions = {
     settings: { manage: false },
 };
 
-const resolveImg = (img, fallback = DEFAULT_AVATAR) => {
-    if (!img) return fallback;
-    if (typeof img === "string") {
-        return img.startsWith("http") || img.startsWith("blob:")
-            ? img
-            : `${IMAGE_BASE_URL}${img.replace(/^\/+/, "")}`;
-    }
-    if (img.path) return `${IMAGE_BASE_URL}${String(img.path).replace(/^\/+/, "")}`;
-    return fallback;
-};
+const resolveImg = (img, fallback = DEFAULT_AVATAR) => resolveImageUrl(img) || fallback;
 
 const mapStaffToForm = (staff) => ({
     firstName: staff.staff_first_name || "",
@@ -138,30 +129,10 @@ const StaffDetails = () => {
     const [documents, setDocuments] = useState([]);
     const [removedDocPaths, setRemovedDocPaths] = useState([]);
 
-    const personalInfo = useMemo(
-        () => ({
-            firstName: userData.firstName,
-            lastName: userData.lastName,
-            loginId,
-            email: userData.emailId,
-            mobile: userData.mobileNo,
-        }),
-        [userData.firstName, userData.lastName, userData.emailId, userData.mobileNo, loginId]
+    const passwordRules = useMemo(
+        () => getPasswordRuleChecks(password),
+        [password]
     );
-
-    const passwordRules = useMemo(() => {
-        const result = getPasswordRuleChecks(password, {
-            oldPassword: "",
-            personalInfo,
-        });
-        const checks = result.checks.filter((rule) => rule.key !== "different");
-        const failed = checks.find((c) => !c.ok);
-        return {
-            checks,
-            isValid: checks.every((c) => c.ok),
-            message: failed ? failed.label : "Strong password",
-        };
-    }, [password, personalInfo]);
 
     const passwordValidation = useMemo(() => {
         const passwordFailed = !password || !passwordRules.isValid;
@@ -984,12 +955,17 @@ const StaffDetails = () => {
                                         <i className={`bi ${passwordValidation.password.failed ? "bi-x-circle" : "bi-check-circle"} me-1`}></i>
                                         {passwordValidation.password.message}
                                     </div>
-                                ) : (
-                                    <div className="form-text text-muted small mt-1">
-                                        {PASSWORD_MIN_LENGTH}–{PASSWORD_MAX_LENGTH} chars, upper, lower, number, special
-                                    </div>
-                                )}
+                                ) : null}
                             </div>
+
+                            {(showRequirements || password.length > 0) && (
+                                <PasswordRequirementsPanel
+                                    checks={passwordRules.checks}
+                                    password={password}
+                                    className="mb-2"
+                                />
+                            )}
+
                             <div className="mb-2">
                                 <label className="form-label text-muted small fw-bold mb-1">Confirm Password</label>
                                 <div className="input-group has-validation">
@@ -1025,37 +1001,6 @@ const StaffDetails = () => {
                                     </div>
                                 ) : null}
                             </div>
-
-                            {(showRequirements || password.length > 0) && (
-                                <div className="border rounded p-2 mb-3 bg-light">
-                                    <div className="fw-semibold small mb-2">Password requirements</div>
-                                    <ul className="list-unstyled mb-0 small">
-                                        {passwordRules.checks.map((rule) => (
-                                            <li
-                                                key={rule.key}
-                                                className={`d-flex align-items-start gap-2 mb-1 ${
-                                                    password
-                                                        ? rule.ok
-                                                            ? "text-success"
-                                                            : "text-danger"
-                                                        : "text-muted"
-                                                }`}
-                                            >
-                                                <i
-                                                    className={`bi ${
-                                                        password
-                                                            ? rule.ok
-                                                                ? "bi-check-circle-fill"
-                                                                : "bi-x-circle-fill"
-                                                            : "bi-circle"
-                                                    } mt-1`}
-                                                ></i>
-                                                <span>{rule.label}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
 
                             <button
                                 type="button"

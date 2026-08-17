@@ -6,6 +6,7 @@ import { logout } from "../store/slices/authSlice";
 import { loadFirmsDropdown, setSelectedFirmId } from "../store/slices/firmSlice";
 import { useTheme } from "../context/ThemeContext";
 import HeaderSearch from "../components/common/HeaderSearch";
+import { resolveImageUrl } from "../utils/imageHelpers";
 import FinanceCollectionModal from "../components/finance/FinanceCollectionModal";
 import LoanCollectionModal from "../components/loan/LoanCollectionModal";
 
@@ -38,6 +39,46 @@ const dummyNotifications = [
     read: true,
   },
 ];
+
+const HeaderProfileAvatar = ({ imageUrl, variant = "button", className = "" }) => {
+  const [imgFailed, setImgFailed] = useState(false);
+  const isDropdown = variant === "dropdown";
+  const iconSize = isDropdown ? 28 : 22;
+
+  useEffect(() => {
+    setImgFailed(false);
+  }, [imageUrl]);
+
+  const showImage = Boolean(imageUrl) && !imgFailed;
+  const avatarClass = [
+    "header-profile-avatar",
+    isDropdown ? "header-profile-avatar--dropdown" : "header-profile-avatar--button",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  if (showImage) {
+    return (
+      <img
+        src={imageUrl}
+        alt=""
+        className={avatarClass}
+        onError={() => setImgFailed(true)}
+      />
+    );
+  }
+
+  return (
+    <span
+      className={`header-profile-avatar-fallback ${isDropdown ? "header-profile-avatar-fallback--dropdown" : "header-profile-avatar-fallback--button"}`}
+      aria-hidden="true"
+    >
+      <FiUser size={iconSize} />
+    </span>
+  );
+};
+
 const Header = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
@@ -52,6 +93,9 @@ const Header = () => {
   const notificationRef = useRef(null);
   const themeRef = useRef(null);
   const ThemeIcon = theme === "dark" ? FiMoon : theme === "system" ? FiMonitor : FiSun;
+  const profileImageUrl = resolveImageUrl(user?.own_profile_img);
+  const displayName =
+    [user?.own_first_name, user?.own_last_name].filter(Boolean).join(" ") || "Owner";
   const unreadNotifications = dummyNotifications.filter((notification) => !notification.read).length;
   const readNotifications = dummyNotifications.filter((notification) => notification.read).length;
   const filteredNotifications = dummyNotifications.filter((notification) => {
@@ -260,14 +304,19 @@ const Header = () => {
               aria-expanded="false"
               aria-label="Open profile menu"
             >
-              <FiUser size={20} />
+              <HeaderProfileAvatar imageUrl={profileImageUrl} variant="button" />
             </button>
             <ul className="dropdown-menu dropdown-menu-end profile-dropdown" aria-labelledby="profileDropdown">
-              <li className="px-3 py-2 border-bottom">
-                <div className="fw-bold text-truncate">
-                  {[user?.own_first_name, user?.own_last_name].filter(Boolean).join(" ") || "Owner"}
+              <li className="profile-dropdown-user px-3 py-3 border-bottom">
+                <div className="d-flex align-items-center gap-3">
+                  <span className="header-profile-avatar-wrap header-profile-avatar-wrap--dropdown">
+                    <HeaderProfileAvatar imageUrl={profileImageUrl} variant="dropdown" />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="fw-bold text-truncate">{displayName}</div>
+                    <div className="small text-muted text-truncate">{user?.own_email || ""}</div>
+                  </div>
                 </div>
-                <div className="small text-muted text-truncate">{user?.own_email || ""}</div>
               </li>
               <li>
                 <Link className="dropdown-item d-flex align-items-center gap-2" to="/profile">

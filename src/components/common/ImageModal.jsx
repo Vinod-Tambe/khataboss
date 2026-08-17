@@ -1,13 +1,9 @@
 import React from 'react';
 import { Modal } from 'react-bootstrap';
+import { resolveImageUrl } from '../../utils/imageHelpers';
 
 const ImageModal = ({ show, onHide, imageUrl, title = "Image Preview" }) => {
-  const backendUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:9000/' : 'https://khataboss.in/';
-  let finalUrl = typeof imageUrl === 'string' ? imageUrl : (imageUrl?.path || imageUrl?.url || null);
-  if (finalUrl && !finalUrl.startsWith('http') && !finalUrl.startsWith('blob:')) {
-    const clean = finalUrl.replace(/\\/g, '/').replace(/^\/+/, '');
-    finalUrl = `${backendUrl}${clean}`;
-  }
+  const finalUrl = resolveImageUrl(imageUrl);
 
   return (
     <Modal show={show} onHide={onHide} centered size="md">

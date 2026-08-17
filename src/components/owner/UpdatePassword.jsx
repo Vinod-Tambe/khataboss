@@ -6,8 +6,8 @@ import { changePassword } from "../../api/authApi";
 import {
   getPasswordRuleChecks,
   PASSWORD_MAX_LENGTH,
-  PASSWORD_MIN_LENGTH,
 } from "../../utils/passwordValidation";
+import PasswordRequirementsPanel from "../common/PasswordRequirementsPanel";
 
 const UpdatePassword = () => {
   const { user } = useSelector((state) => state.auth);
@@ -231,43 +231,16 @@ const UpdatePassword = () => {
       <div className="card-body">
         <div className="row justify-content-center">
           <div className="col-lg-7 col-md-9">
-            <div className="alert alert-info py-2 small mb-3">
-              Password must be <strong>{PASSWORD_MIN_LENGTH}–{PASSWORD_MAX_LENGTH}</strong> characters and include uppercase, lowercase, number, and special character.
-            </div>
-
             <form onSubmit={handleSubmit} noValidate>
               {renderPasswordField("Old Password", "old_password", "old", "Enter old password")}
               {renderPasswordField("New Password", "new_password", "next", "Enter new password")}
 
               {(showRequirements || formData.new_password.length > 0) && (
-                <div className="border rounded p-3 mb-3 bg-light">
-                  <div className="fw-semibold small mb-2">Password requirements</div>
-                  <ul className="list-unstyled mb-0 small">
-                    {passwordRules.checks.map((rule) => (
-                      <li
-                        key={rule.key}
-                        className={`d-flex align-items-start gap-2 mb-1 ${
-                          formData.new_password
-                            ? rule.ok
-                              ? "text-success"
-                              : "text-danger"
-                            : "text-muted"
-                        }`}
-                      >
-                        <i
-                          className={`bi ${
-                            formData.new_password
-                              ? rule.ok
-                                ? "bi-check-circle-fill"
-                                : "bi-x-circle-fill"
-                              : "bi-circle"
-                          } mt-1`}
-                        ></i>
-                        <span>{rule.label}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                <PasswordRequirementsPanel
+                  checks={passwordRules.checks}
+                  password={formData.new_password}
+                  className="mb-3"
+                />
               )}
 
               {renderPasswordField(

@@ -14,8 +14,8 @@ import { showToast } from '../common/ToastAlert';
 import {
     getPasswordRuleChecks,
     PASSWORD_MAX_LENGTH,
-    PASSWORD_MIN_LENGTH,
 } from '../../utils/passwordValidation';
+import PasswordRequirementsPanel from '../common/PasswordRequirementsPanel';
 
 const AddStaff = () => {
     const navigate = useNavigate();
@@ -66,31 +66,10 @@ const AddStaff = () => {
         photo: null,
     });
 
-    const personalInfo = useMemo(
-        () => ({
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            loginId: formData.loginId,
-            email: formData.emailId,
-            mobile: formData.mobileNo,
-        }),
-        [formData.firstName, formData.lastName, formData.loginId, formData.emailId, formData.mobileNo]
+    const passwordRules = useMemo(
+        () => getPasswordRuleChecks(formData.password),
+        [formData.password]
     );
-
-    const passwordRules = useMemo(() => {
-        const result = getPasswordRuleChecks(formData.password, {
-            oldPassword: '',
-            personalInfo,
-        });
-        // Hide "different from old password" on create (no old password)
-        const checks = result.checks.filter((rule) => rule.key !== 'different');
-        const failed = checks.find((c) => !c.ok);
-        return {
-            checks,
-            isValid: checks.every((c) => c.ok),
-            message: failed ? failed.label : 'Strong password',
-        };
-    }, [formData.password, personalInfo]);
 
     const passwordValidation = useMemo(() => {
         const password = formData.password;
@@ -434,11 +413,7 @@ const AddStaff = () => {
                             <i className={`bi ${passwordValidation.password.failed ? 'bi-x-circle' : 'bi-check-circle'} me-1`}></i>
                             {passwordValidation.password.message}
                         </div>
-                    ) : (
-                        <div className="form-text small">
-                            {PASSWORD_MIN_LENGTH}–{PASSWORD_MAX_LENGTH} chars, upper, lower, number, special
-                        </div>
-                    )}
+                    ) : null}
                 </div>
                 <div className="col-12 col-md-6 col-lg-4">
                     <label className="form-label">Confirm Password <span className="text-danger">*</span></label>
@@ -480,34 +455,10 @@ const AddStaff = () => {
 
                 {(showRequirements || formData.password.length > 0) && (
                     <div className="col-12">
-                        <div className="border rounded p-3 bg-light">
-                            <div className="fw-semibold small mb-2">Password requirements</div>
-                            <ul className="list-unstyled mb-0 small row">
-                                {passwordRules.checks.map((rule) => (
-                                    <li
-                                        key={rule.key}
-                                        className={`col-12 col-md-6 d-flex align-items-start gap-2 mb-1 ${
-                                            formData.password
-                                                ? rule.ok
-                                                    ? 'text-success'
-                                                    : 'text-danger'
-                                                : 'text-muted'
-                                        }`}
-                                    >
-                                        <i
-                                            className={`bi ${
-                                                formData.password
-                                                    ? rule.ok
-                                                        ? 'bi-check-circle-fill'
-                                                        : 'bi-x-circle-fill'
-                                                    : 'bi-circle'
-                                            } mt-1`}
-                                        ></i>
-                                        <span>{rule.label}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
+                        <PasswordRequirementsPanel
+                            checks={passwordRules.checks}
+                            password={formData.password}
+                        />
                     </div>
                 )}
             </div>

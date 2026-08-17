@@ -1,12 +1,9 @@
 import axios from 'axios';
 import { LogoutAlert } from '../components/common/LogoutAlert';
-
-
-const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const baseURL = isDevelopment ? 'http://localhost:9000/api/v1' : 'https://khataboss.in/api/v1';
+import { apiBaseUrl } from '../config/appConfig';
 
 const axiosInstance = axios.create({
-  baseURL: baseURL,
+  baseURL: apiBaseUrl,
   headers: {
     'Content-Type': 'application/json',
     'ngrok-skip-browser-warning': 'true',
