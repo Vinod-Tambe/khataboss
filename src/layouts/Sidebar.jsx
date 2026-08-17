@@ -217,8 +217,7 @@ const Sidebar = () => {
           { label: "Firm List", path: "/firm/list", icon: <FiList />, permission: "firm.view" },
         ],
       },
-      // SMS: owner-only for now (no staff permission key)
-      { id: "sms", label: "SMS", icon: <FiMessageSquare />, path: "/sms", ownerOnly: true },
+      { id: "sms", label: "SMS", icon: <FiMessageSquare />, path: "/sms", anyOf: ["sms.view", "sms.manage"] },
       {
         id: "logs",
         label: "Logs",

@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import Sidebar from '../layouts/Sidebar';
 import Header from '../layouts/Header';
 import HomeRoutes from '../pages/home/HomeRoutes';
@@ -23,11 +23,8 @@ import BackupRoutes from '../pages/backup/BackupRoutes';
 import OwnerProfile from '../components/owner/OwnerProfile';
 import UpdatePassword from '../components/owner/UpdatePassword';
 import PermissionRoute from './PermissionRoute';
-import usePermissions from '../hooks/usePermissions';
 
 const MainRoutes = () => {
-  const { isOwner } = usePermissions();
-
   return (
     <div className="layout-wrapper">
       <Header />
@@ -150,7 +147,11 @@ const MainRoutes = () => {
               />
               <Route
                 path="/sms"
-                element={isOwner ? <SmsPage /> : <Navigate to="/home" replace />}
+                element={
+                  <PermissionRoute anyOf={["sms.view", "sms.manage"]}>
+                    <SmsPage />
+                  </PermissionRoute>
+                }
               />
               <Route
                 path="/backup"
