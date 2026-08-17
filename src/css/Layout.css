@@ -159,6 +159,12 @@
   min-width: 0;
 }
 
+.logo-title:hover,
+.logo-title:focus-visible {
+  color: var(--layout-brand);
+  opacity: 0.88;
+}
+
 .logo-title h1 {
   color: inherit;
   font-size: 1.75rem;
@@ -516,6 +522,20 @@
 
 .notification-dropdown-wrapper {
   position: relative;
+}
+
+.profile-dropdown-wrapper {
+  position: relative;
+}
+
+.profile-dropdown-wrapper .profile-dropdown {
+  display: block;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  left: auto;
+  margin: 0;
+  z-index: 1100;
 }
 
 .notification-btn {
@@ -909,7 +929,18 @@
 
   .profile-dropdown {
     min-width: 220px;
+    width: min(280px, calc(100vw - 20px));
     font-size: 0.9rem;
+    right: -4px;
+    z-index: 1100;
+  }
+
+  .profile-dropdown-wrapper {
+    z-index: 1100;
+  }
+
+  .admin-header {
+    z-index: 1095;
   }
 
   .profile-dropdown .dropdown-item {
@@ -982,6 +1013,12 @@
   min-width: 0;
   flex: 1;
   color: var(--layout-brand);
+}
+
+.sidebar-brand:hover,
+.sidebar-brand:focus-visible {
+  color: var(--layout-brand);
+  opacity: 0.88;
 }
 
 .sidebar-brand svg {

@@ -10,11 +10,17 @@ import { resolveImageUrl } from "../utils/imageHelpers";
 import FinanceCollectionModal from "../components/finance/FinanceCollectionModal";
 import LoanCollectionModal from "../components/loan/LoanCollectionModal";
 
-const themeOptions = [
-  { id: "light", label: "Light", icon: FiSun },
-  { id: "dark", label: "Dark", icon: FiMoon },
-  { id: "system", label: "System", icon: FiMonitor },
-];
+const themeLabels = {
+  light: "Light",
+  dark: "Dark",
+  system: "System",
+};
+
+const nextTheme = {
+  light: "dark",
+  dark: "system",
+  system: "light",
+};
 
 const dummyNotifications = [
   {
@@ -83,16 +89,17 @@ const Header = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { firms, selectedFirmId } = useSelector((state) => state.firm);
-  const { theme, setTheme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [isThemeOpen, setIsThemeOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [notificationFilter, setNotificationFilter] = useState("all");
   const [showFinancePayModal, setShowFinancePayModal] = useState(false);
   const [showLoanDepositModal, setShowLoanDepositModal] = useState(false);
   const [collectionUser, setCollectionUser] = useState(null);
   const notificationRef = useRef(null);
-  const themeRef = useRef(null);
+  const profileRef = useRef(null);
   const ThemeIcon = theme === "dark" ? FiMoon : theme === "system" ? FiMonitor : FiSun;
+  const themeTitle = `Theme: ${themeLabels[theme]} — click for ${themeLabels[nextTheme[theme]]}`;
   const profileImageUrl = resolveImageUrl(user?.own_profile_img);
   const displayName =
     [user?.own_first_name, user?.own_last_name].filter(Boolean).join(" ") || "Owner";
@@ -113,15 +120,15 @@ const Header = () => {
       if (notificationRef.current && !notificationRef.current.contains(event.target)) {
         setIsNotificationOpen(false);
       }
-      if (themeRef.current && !themeRef.current.contains(event.target)) {
-        setIsThemeOpen(false);
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setIsProfileOpen(false);
       }
     };
 
     const handleEscape = (event) => {
       if (event.key === "Escape") {
         setIsNotificationOpen(false);
-        setIsThemeOpen(false);
+        setIsProfileOpen(false);
       }
     };
 
@@ -144,18 +151,17 @@ const Header = () => {
   };
 
   const toggleNotifications = () => {
-    setIsThemeOpen(false);
+    setIsProfileOpen(false);
     setIsNotificationOpen((prevState) => !prevState);
   };
 
-  const toggleThemeMenu = () => {
+  const toggleProfileMenu = () => {
     setIsNotificationOpen(false);
-    setIsThemeOpen((prevState) => !prevState);
+    setIsProfileOpen((prevState) => !prevState);
   };
 
-  const handleThemeSelect = (nextTheme) => {
-    setTheme(nextTheme);
-    setIsThemeOpen(false);
+  const closeProfileMenu = () => {
+    setIsProfileOpen(false);
   };
 
   const openFinancePay = (userRow) => {
@@ -182,9 +188,9 @@ const Header = () => {
             <FiMenu size={22} />
           </button>
 
-          <div className="logo-title">
+          <Link to="/home" className="logo-title text-decoration-none" aria-label="Go to home">
             <h1 className="p-0 m-0">KhataBoss</h1>
-          </div>
+          </Link>
         </div>
 
         {/* CENTER: Search Bar (desktop only) */}
@@ -295,90 +301,69 @@ const Header = () => {
               </div>
             )}
           </div>
-          <div className="dropdown">
+          <div className="profile-dropdown-wrapper" ref={profileRef}>
             <button
-              className="btn header-icon-btn profile-btn dropdown-toggle bg-info-subtle"
+              className="btn header-icon-btn profile-btn bg-info-subtle"
               type="button"
-              id="profileDropdown"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
+              aria-expanded={isProfileOpen}
               aria-label="Open profile menu"
+              onClick={toggleProfileMenu}
             >
               <HeaderProfileAvatar imageUrl={profileImageUrl} variant="button" />
             </button>
-            <ul className="dropdown-menu dropdown-menu-end profile-dropdown" aria-labelledby="profileDropdown">
-              <li className="profile-dropdown-user px-3 py-3 border-bottom">
-                <div className="d-flex align-items-center gap-3">
-                  <span className="header-profile-avatar-wrap header-profile-avatar-wrap--dropdown">
-                    <HeaderProfileAvatar imageUrl={profileImageUrl} variant="dropdown" />
-                  </span>
-                  <div className="min-w-0">
-                    <div className="fw-bold text-truncate">{displayName}</div>
-                    <div className="small text-muted text-truncate">{user?.own_email || ""}</div>
+            {isProfileOpen && (
+              <div className="dropdown-menu dropdown-menu-end profile-dropdown show">
+                <div className="profile-dropdown-user px-3 py-3 border-bottom">
+                  <div className="d-flex align-items-center gap-3">
+                    <span className="header-profile-avatar-wrap header-profile-avatar-wrap--dropdown">
+                      <HeaderProfileAvatar imageUrl={profileImageUrl} variant="dropdown" />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="fw-bold text-truncate">{displayName}</div>
+                      <div className="small text-muted text-truncate">{user?.own_email || ""}</div>
+                    </div>
                   </div>
                 </div>
-              </li>
-              <li>
-                <Link className="dropdown-item d-flex align-items-center gap-2" to="/profile">
+                <Link
+                  className="dropdown-item d-flex align-items-center gap-2"
+                  to="/profile"
+                  onClick={closeProfileMenu}
+                >
                   <FiUser size={16} />
                   <span>Profile</span>
                 </Link>
-              </li>
-              <li>
-                <Link className="dropdown-item d-flex align-items-center gap-2" to="/settings/update-password">
+                <Link
+                  className="dropdown-item d-flex align-items-center gap-2"
+                  to="/settings/update-password"
+                  onClick={closeProfileMenu}
+                >
                   <FiLock size={16} />
                   <span>Update Password</span>
                 </Link>
-              </li>
-              <li className="d-md-none">
-                <hr className="dropdown-divider my-1" />
-              </li>
-              <li className="d-md-none">
+                <hr className="dropdown-divider my-1 d-md-none" />
                 <button
                   type="button"
-                  className="dropdown-item d-flex align-items-center gap-2 text-danger"
-                  onClick={handleLogout}
+                  className="dropdown-item d-flex align-items-center gap-2 text-danger d-md-none"
+                  onClick={(e) => {
+                    closeProfileMenu();
+                    handleLogout(e);
+                  }}
                 >
                   <FiLogOut size={16} />
                   <span>Logout</span>
                 </button>
-              </li>
-            </ul>
-          </div>
-          <div className="theme-dropdown-wrapper" ref={themeRef}>
-            <button
-              className="btn header-icon-btn theme-toggle-btn bg-warning-subtle"
-              type="button"
-              aria-expanded={isThemeOpen}
-              aria-label="Open theme menu"
-              onClick={toggleThemeMenu}
-            >
-              <ThemeIcon size={20} />
-            </button>
-
-            {isThemeOpen && (
-              <div className="theme-dropdown-menu">
-                <div className="theme-dropdown-header">
-                  <h6 className="mb-1">Theme</h6>
-                  <p className="mb-0">Choose Light, Dark, or System</p>
-                </div>
-                <div className="theme-options">
-                  {themeOptions.map(({ id, label, icon: OptionIcon }) => (
-                    <button
-                      key={id}
-                      type="button"
-                      className={`theme-option ${theme === id ? "active" : ""}`}
-                      onClick={() => handleThemeSelect(id)}
-                      aria-pressed={theme === id}
-                    >
-                      <OptionIcon size={16} />
-                      <span>{label}</span>
-                    </button>
-                  ))}
-                </div>
               </div>
             )}
           </div>
+          <button
+            className="btn header-icon-btn theme-toggle-btn bg-warning-subtle"
+            type="button"
+            aria-label={themeTitle}
+            title={themeTitle}
+            onClick={toggleTheme}
+          >
+            <ThemeIcon size={20} />
+          </button>
           <button
             className="btn header-icon-btn logout-icon-btn bg-danger-subtle d-none d-md-inline-flex"
             type="button"

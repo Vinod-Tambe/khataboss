@@ -4,7 +4,7 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import { Offcanvas } from "bootstrap";
 import PerfectScrollbar from "perfect-scrollbar";
 import "perfect-scrollbar/css/perfect-scrollbar.css";
-import { NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 import {
   FiHome,
   FiBook,
@@ -263,12 +263,17 @@ const Sidebar = () => {
     <div className="offcanvas offcanvas-start sidebar" id="sidebar" tabIndex={-1}>
       <div className="offcanvas-body p-0 d-flex flex-column">
         <div className="sidebar-profile sidebar-menu-border">
-          <div className="sidebar-brand">
+          <Link
+            to="/home"
+            className="sidebar-brand text-decoration-none"
+            onClick={closeSidebarOnMobile}
+            aria-label="Go to home"
+          >
             <FaBookOpen size={36} />
             <div>
               <h1 className="fw-bold fs-4 mb-0">KhataBoss</h1>
             </div>
-          </div>
+          </Link>
           <button
             type="button"
             className="btn-close sidebar-close-btn d-lg-none"
