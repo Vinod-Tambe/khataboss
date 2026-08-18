@@ -234,7 +234,7 @@ const UpdateFinance = () => {
         await updateFinance(finId, { fin_other_info: formData.fin_other_info });
         toast.success('Finance updated successfully');
         navigate('/user/home/finance', {
-          state: { finance: { fin_id: finId, ...(location.state?.finance || {}) } },
+          state: { finance: { fin_id: finId } },
         });
       } catch (err) {
         toast.error(err.message || 'Update failed');
@@ -325,7 +325,7 @@ const UpdateFinance = () => {
       await updateFinance(finId, payload);
       toast.success('Finance updated successfully');
       navigate('/user/home/finance', {
-        state: { finance: { fin_id: finId, ...(location.state?.finance || {}) } },
+        state: { finance: { fin_id: finId } },
       });
     } catch (err) {
       toast.error(err.message || 'Update failed');

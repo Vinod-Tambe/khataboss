@@ -1280,7 +1280,9 @@ const LoanInfo = () => {
 
   const fetchLoan = useCallback(async () => {
     try {
-      const loanId = location.state?.loan?.girv_id;
+      const loanId =
+        location.state?.loan?.girv_id ??
+        location.state?.loanData?.girv_id;
       if (!loanId) {
         toast.error("No loan selected");
         navigate('/user/home/active-loan');

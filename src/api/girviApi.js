@@ -1,5 +1,20 @@
 import axiosInstance from "./axiosInstance";
 
+/** Build FormData for loan/stock item image upload (supports re-upload + old image cleanup). */
+export const buildItemImageFormData = (file, { previousImage, stId, girvId } = {}) => {
+  const formData = new FormData();
+  formData.append("itemImage", file);
+  if (previousImage) {
+    formData.append(
+      "previousImage",
+      typeof previousImage === "string" ? previousImage : JSON.stringify(previousImage)
+    );
+  }
+  if (stId != null && stId !== "") formData.append("st_id", String(stId));
+  if (girvId != null && girvId !== "") formData.append("girv_id", String(girvId));
+  return formData;
+};
+
 export const addGirvi = async (girviData) => {
   try {
     const response = await axiosInstance.post("/girvi", girviData);

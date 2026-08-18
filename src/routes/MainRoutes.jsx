@@ -22,6 +22,7 @@ import LoanRoutes from '../pages/loan/LoanRoutes';
 import BackupRoutes from '../pages/backup/BackupRoutes';
 import OwnerProfile from '../components/owner/OwnerProfile';
 import UpdatePassword from '../components/owner/UpdatePassword';
+import KycIntegrationPage from '../components/settings/KycIntegrationPage';
 import PermissionRoute from './PermissionRoute';
 
 const MainRoutes = () => {
@@ -170,6 +171,14 @@ const MainRoutes = () => {
                 }
               />
               <Route path="/profile" element={<OwnerProfile />} />
+              <Route
+                path="/settings/kyc-integration"
+                element={
+                  <PermissionRoute permission="settings.manage">
+                    <KycIntegrationPage />
+                  </PermissionRoute>
+                }
+              />
               <Route path="/settings/update-password" element={<UpdatePassword />} />
               <Route path="/*" element={< HomeRoutes />} />
 

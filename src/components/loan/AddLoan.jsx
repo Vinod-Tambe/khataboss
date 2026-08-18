@@ -8,7 +8,7 @@ import 'daterangepicker/daterangepicker.css';
 import { toast } from 'react-hot-toast';
 import { getFirmsDropdown } from '../../api/firmApi';
 import { getAccountsDropdown } from '../../api/accountApi';
-import { addGirvi, uploadItemImage } from '../../api/girviApi';
+import { addGirvi, uploadItemImage, buildItemImageFormData } from '../../api/girviApi';
 import { getPurities } from '../../api/purityApi';
 import { getRates } from '../../api/rateApi';
 import useFormNavigation from '../../hooks/useFormNavigation';
@@ -491,8 +491,7 @@ const AddLoan = () => {
       const updatedItems = await Promise.all(
         formData.items.map(async (item) => {
           if (item.itemImage) {
-            const imageFormData = new FormData();
-            imageFormData.append('itemImage', item.itemImage);
+            const imageFormData = buildItemImageFormData(item.itemImage);
             const uploadRes = await uploadItemImage(imageFormData);
             // uploadRes.data contains { path, filename, mimetype, size }
             return { ...item, st_image: uploadRes.data, itemImage: undefined };
@@ -510,9 +509,11 @@ const AddLoan = () => {
 
       const res = await addGirvi(payload);
       toast.success('Loan saved successfully!');
-      console.log('API Response:', res);
 
-      navigate('/user/home/loan-info');
+      const girvId = res?.data?.girv_id;
+      navigate('/user/home/loan-info', {
+        state: girvId ? { loan: { girv_id: girvId } } : undefined,
+      });
     } catch (error) {
       console.error('Error saving loan:', error);
       toast.error(error?.error || 'Failed to save loan.');

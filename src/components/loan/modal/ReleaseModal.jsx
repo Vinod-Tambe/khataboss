@@ -6,7 +6,7 @@ import 'daterangepicker';
 import 'daterangepicker/daterangepicker.css';
 import { getAccountsDropdown } from '../../../api/accountApi';
 import { addRelease } from '../../../api/releaseApi';
-import { uploadItemImage } from '../../../api/girviApi';
+import { uploadItemImage, buildItemImageFormData } from '../../../api/girviApi';
 import { toast } from 'react-hot-toast';
 import ProfileDocumentsSection from '../../common/ProfileDocumentsSection';
 import { appendOtherImagesToFormData, getNewDocumentUploads } from '../../../utils/imageHelpers';
@@ -289,8 +289,9 @@ const ReleaseModal = ({ isOpen, onClose, isTab, loanDetails, totalDueAmount, pen
       if (isSecured && itemImages.length > 0) {
         uploadedItemImages = await Promise.all(
           itemImages.map(async (img) => {
-            const imageFormData = new FormData();
-            imageFormData.append('itemImage', img.file);
+            const imageFormData = buildItemImageFormData(img.file, {
+              girvId: loanDetails.girv_id,
+            });
             const uploadRes = await uploadItemImage(imageFormData);
             return uploadRes.data;
           })

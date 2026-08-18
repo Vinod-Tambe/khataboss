@@ -9,7 +9,7 @@ import useFormNavigation from '../../hooks/useFormNavigation';
 import { useParams } from 'react-router-dom';
 import { getFirmsDropdown } from '../../api/firmApi';
 import { getAccountsDropdown } from '../../api/accountApi';
-import { getGirviById, updateGirvi, uploadItemImage } from '../../api/girviApi';
+import { getGirviById, updateGirvi, uploadItemImage, buildItemImageFormData } from '../../api/girviApi';
 import { getPurities } from '../../api/purityApi';
 import { getRates } from '../../api/rateApi';
 import { toast } from 'react-hot-toast';
@@ -219,6 +219,7 @@ const UpdateLoan = () => {
             girv_first_int_cr_acc_id: d.girv_first_int_cr_acc_id || '',
             girv_first_int_dr_acc_id: d.girv_first_int_dr_acc_id || '',
             items: d.items && d.items.length > 0 ? d.items.map(item => ({
+              st_id: item.st_id || null,
               st_metal_type: item.st_metal_type ? item.st_metal_type.toUpperCase() : 'GOLD',
               st_item_name: item.st_item_name || '',
               st_quantity: item.st_quantity || '',
@@ -625,8 +626,11 @@ const UpdateLoan = () => {
       const updatedItems = await Promise.all(
         formData.items.map(async (item) => {
           if (item.itemImage) {
-            const imageFormData = new FormData();
-            imageFormData.append('itemImage', item.itemImage);
+            const imageFormData = buildItemImageFormData(item.itemImage, {
+              previousImage: item.st_image,
+              stId: item.st_id,
+              girvId: formData.girv_id,
+            });
             const uploadRes = await uploadItemImage(imageFormData);
             // uploadRes.data contains { path, filename, mimetype, size }
             return { ...item, st_image: uploadRes.data, itemImage: undefined };
@@ -644,9 +648,9 @@ const UpdateLoan = () => {
 
       const res = await updateGirvi(formData.girv_uuid, payload);
       toast.success('Loan updated successfully!');
-      console.log('API Response:', res);
 
-      navigate('/user/home/loan-info', { state: { loanData: res.data } });
+      const girvId = res?.data?.girv_id || formData.girv_id || id;
+      navigate('/user/home/loan-info', { state: { loan: { girv_id: girvId } } });
     } catch (error) {
       console.error('Error updating loan:', error);
       toast.error(error?.error || 'Failed to update loan.');
