@@ -130,6 +130,12 @@
     padding: 4px 4px 10px;
   }
 
+  .finance-page .panel-header-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    row-gap: 0.35rem;
+  }
+
   .finance-page__title {
     font-size: 1.15rem;
     font-weight: 700;

@@ -5,8 +5,12 @@ import List from "../common/List";
 import { getAccounts, deleteAccount, getAccountTotals } from "../../api/accountApi";
 import { toast } from "react-hot-toast";
 import moment from "moment";
+import usePermissions from "../../hooks/usePermissions";
 
 const AccountList = () => {
+  const { can } = usePermissions();
+  const canEdit = can("account.edit");
+  const canDelete = can("account.delete");
   const [accounts, setAccounts] = useState([]);
   const [totals, setTotals] = useState({ debitTotal: 0, creditTotal: 0, difference: 0 });
   const [loading, setLoading] = useState(true);
@@ -85,10 +89,18 @@ const AccountList = () => {
   ], []);
 
   const handleEdit = (rowData) => {
+    if (!canEdit) {
+      toast.error("You do not have permission to edit accounts");
+      return;
+    }
     navigate(`/account/edit/${rowData.acc_uuid}`);
   };
 
   const handleDelete = async (rowData) => {
+    if (!canDelete) {
+      toast.error("You do not have permission to delete accounts");
+      return;
+    }
     try {
       await deleteAccount(rowData.acc_uuid);
       toast.success("Account deleted successfully");
@@ -118,11 +130,11 @@ const AccountList = () => {
           primaryKey="acc_name"
           subtitleKey="acc_opening_date"
           amountKey="acc_cash_balance"
-          onEdit={handleEdit}
-          onDelete={handleDelete}
+          onEdit={canEdit ? handleEdit : undefined}
+          onDelete={canDelete ? handleDelete : undefined}
           onPrint={handlePrint}
-          hasEdit={true}
-          hasDelete={true}
+          hasEdit={canEdit}
+          hasDelete={canDelete}
           hasPrint={false}
           deleteConfirmMessage={(row) => `Are you sure you want to delete account: ${row?.acc_name}?`}
         />

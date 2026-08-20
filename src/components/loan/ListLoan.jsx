@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import List from "../common/List";
 import { setSelectedUser } from "../../store/slices/userSlice";
 import usePermissions from "../../hooks/usePermissions";
+import PermissionGate from "../common/PermissionGate";
 import {
   formatListAmtOrDash,
   formatListDate,
@@ -20,6 +21,8 @@ const ListLoan = ({ status = "ALL", global = false }) => {
   const { selectedUser } = useSelector((state) => state.user);
   const { selectedFirm } = useSelector((state) => state.firm);
   const { can } = usePermissions();
+  const canViewLoan = can("loan.view");
+  const canEditLoan = can("loan.edit");
   const canDeleteLoan = can("loan.delete");
   const [loans, setLoans] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -56,10 +59,18 @@ const ListLoan = ({ status = "ALL", global = false }) => {
   };
 
   const handleEdit = (rowData) => {
-    navigate("/user/home/loan-info", { state: { loan: rowData } });
+    if (!canEditLoan) {
+      toast.error("You do not have permission to edit loans");
+      return;
+    }
+    navigate(`/user/home/edit-loan/${rowData.girv_id}`, { state: { loan: rowData } });
   };
 
   const handleDelete = async (rowData) => {
+    if (!canDeleteLoan) {
+      toast.error("You do not have permission to delete loans");
+      return;
+    }
     if (!rowData?.girv_id) return;
     const loanRef = rowData.girv_unique_code || rowData.girv_loan_no || `LN-${rowData.girv_id}`;
     const confirmed = window.confirm(
@@ -247,12 +258,15 @@ const ListLoan = ({ status = "ALL", global = false }) => {
       <div className="card-header bg-white d-flex justify-content-between align-items-center py-3">
         <h5 className="mb-0 fw-bold">{getTitle()}</h5>
         {!global && (
-          <button
-            onClick={() => navigate("/user/home/add-loan")}
-            className="btn btn-primary btn-sm"
-          >
-            Add Loan +
-          </button>
+          <PermissionGate permission="loan.create">
+            <button
+              type="button"
+              onClick={() => navigate("/user/home/add-loan")}
+              className="btn btn-primary btn-sm"
+            >
+              Add Loan +
+            </button>
+          </PermissionGate>
         )}
       </div>
       <div className="card-body p-0">
@@ -263,13 +277,13 @@ const ListLoan = ({ status = "ALL", global = false }) => {
           primaryKey="girv_id"
           subtitleKey="girv_start_date"
           amountKey="girv_prin_amt"
-          onView={handleView}
-          onDelete={handleDelete}
-          onEdit={handleEdit}
+          onView={canViewLoan ? handleView : undefined}
+          onDelete={canDeleteLoan ? handleDelete : undefined}
+          onEdit={canEditLoan ? handleEdit : undefined}
           onCustomerHome={global ? handleCustomerHome : undefined}
-          hasView={true}
+          hasView={canViewLoan}
           hasDelete={canDeleteLoan ? (row) => row.girv_status === "ACTIVE" : false}
-          hasEdit={(row) => row.girv_status === "ACTIVE"}
+          hasEdit={canEditLoan ? (row) => row.girv_status === "ACTIVE" : false}
           isLoading={loading}
           showFooter={true}
           deleteConfirmMessage="Are you sure you want to delete this loan? Only clean ACTIVE loans can be deleted."

@@ -1,0 +1,149 @@
+{
+  "title": "FORM 8",
+  "subtitle": "Pledge Book — Register of Pledges",
+  "complianceReference": "Prescribed under Maharashtra Money-Lending (Regulation) Act, 2014 & Rules 2014 (Rule 18 — Form Nos. 7 & 8) and Tamil Nadu Pawn Brokers Act, 1943 (Form E — Pledge Book)",
+  "headerNote": "Licence No.: {{firm_reg_no}} | Pledge / Ticket No.: {{loan_no}} | Date of Loan: {{loan_date}}",
+  "footerNote": "Note: All entries except payments (Item 5), date of redemption (Item 9) and person redeeming (Item 11) shall be made on the day of pawning. Duplicate pawn receipt register to be maintained under Section 24(5), Maharashtra Money-Lending (Regulation) Act, 2014.",
+  "pageSize": "A4",
+  "orientation": "portrait",
+  "fontSize": "medium",
+  "showPageNumbers": true,
+  "theme": {
+    "primaryColor": "#000000",
+    "secondaryColor": "#1a1a1a",
+    "textColor": "#000000",
+    "mutedTextColor": "#333333",
+    "borderColor": "#000000",
+    "headerBackground": "#ffffff",
+    "sectionBackground": "#ffffff",
+    "sectionTitleColor": "#000000",
+    "tableHeaderBackground": "#e8e8e8",
+    "accentColor": "#000000",
+    "pageBackground": "#ffffff"
+  },
+  "layout": {
+    "showLeftLogo": true,
+    "showRightLogo": false,
+    "showOwnerSign": true,
+    "showQrCode": false,
+    "useFirmFormHeader": true,
+    "useFirmFormFooter": true
+  },
+  "sections": [
+    {
+      "id": "firm_details",
+      "label": "Particulars of Pawnbroker / Money-Lender",
+      "enabled": true,
+      "order": 1,
+      "fields": [
+        { "id": "firm_name", "label": "Name of Pawnbroker / Money-Lender", "enabled": true, "fieldLayout": "full" },
+        { "id": "firm_shop_name", "label": "Place of Business / Shop Name", "enabled": true, "fieldLayout": "half" },
+        { "id": "firm_reg_no", "label": "Licence / Registration No.", "enabled": true, "fieldLayout": "half" },
+        { "id": "firm_address", "label": "Full Address of Pawnbroker", "enabled": true, "fieldLayout": "full" },
+        { "id": "firm_phone_no", "label": "Phone No.", "enabled": true, "fieldLayout": "half" },
+        { "id": "firm_pan_no", "label": "PAN of Money-Lender", "enabled": true, "fieldLayout": "half" },
+        { "id": "firm_gstin_no", "label": "GSTIN (if applicable)", "enabled": false, "fieldLayout": "half" }
+      ]
+    },
+    {
+      "id": "customer_details",
+      "label": "Particulars of Pawner",
+      "enabled": true,
+      "order": 2,
+      "fields": [
+        { "id": "customer_name", "label": "Name of Pawner", "enabled": true, "fieldLayout": "full" },
+        { "id": "customer_address", "label": "Full Address of Pawner", "enabled": true, "fieldLayout": "full" },
+        { "id": "customer_mobile", "label": "Mobile No.", "enabled": true, "fieldLayout": "half" },
+        { "id": "customer_aadhaar", "label": "Aadhaar / Identity Proof No.", "enabled": true, "fieldLayout": "half" },
+        { "id": "customer_pan", "label": "PAN of Pawner", "enabled": false, "fieldLayout": "half" },
+        { "id": "owner_name_address", "label": "10. Name & Address of Owner (if pawner is not the owner)", "enabled": true, "fieldLayout": "full" },
+        { "id": "customer_photo", "label": "Photo of Pawner (on file)", "enabled": true, "fieldLayout": "half" }
+      ]
+    },
+    {
+      "id": "loan_details",
+      "label": "Pledge Particulars (Form E — Items 1 to 4 & 8)",
+      "enabled": true,
+      "order": 3,
+      "fields": [
+        { "id": "loan_no", "label": "1. Number of Pledge / Ticket No.", "enabled": true, "fieldLayout": "half" },
+        { "id": "loan_date", "label": "2. Date of Loan", "enabled": true, "fieldLayout": "half" },
+        { "id": "loan_amount", "label": "3. Amount of Principal of the Loan (Rs.)", "enabled": true, "fieldLayout": "half" },
+        { "id": "interest_rate", "label": "4. Rate of Interest Charged", "enabled": true, "fieldLayout": "half" },
+        { "id": "interest_type", "label": "Interest Type (Simple / Compound)", "enabled": true, "fieldLayout": "half" },
+        { "id": "loan_period", "label": "8. Time Agreed for Redemption of Pledge", "enabled": true, "fieldLayout": "half" },
+        { "id": "due_date", "label": "Due Date for Redemption", "enabled": true, "fieldLayout": "half" },
+        { "id": "loan_status", "label": "Status of Pledge", "enabled": true, "fieldLayout": "half" }
+      ]
+    },
+    {
+      "id": "item_details",
+      "label": "Description & Value of Pledged Article(s) (Form E — Items 6 & 7)",
+      "enabled": true,
+      "order": 4,
+      "fields": [
+        { "id": "item_description", "label": "6. Full & Detailed Description of Article(s)", "enabled": true, "fieldLayout": "full" },
+        { "id": "item_metal", "label": "Metal / Type", "enabled": true, "fieldLayout": "small" },
+        { "id": "item_gross_wt", "label": "Gross Weight", "enabled": true, "fieldLayout": "small" },
+        { "id": "item_net_wt", "label": "Net Weight", "enabled": true, "fieldLayout": "small" },
+        { "id": "item_purity", "label": "Purity / Karat", "enabled": true, "fieldLayout": "small" },
+        { "id": "item_pieces", "label": "No. of Pieces", "enabled": true, "fieldLayout": "small" },
+        { "id": "item_value", "label": "7. Value of Article(s) at Time of Pledge (Rs.)", "enabled": true, "fieldLayout": "half" }
+      ]
+    },
+    {
+      "id": "transaction_history",
+      "label": "5. Register of Payments (Amount & Date of Every Payment)",
+      "enabled": true,
+      "order": 5,
+      "fields": [
+        { "id": "payment_date", "label": "Date of Payment", "enabled": true },
+        { "id": "principal_paid", "label": "Amount Paid — Principal (Rs.)", "enabled": true },
+        { "id": "interest_paid", "label": "Amount Paid — Interest (Rs.)", "enabled": true },
+        { "id": "balance_principal", "label": "Balance — Principal (Rs.)", "enabled": true },
+        { "id": "balance_interest", "label": "Balance — Interest (Rs.)", "enabled": true },
+        { "id": "initials", "label": "Initials of Pawnbroker", "enabled": true }
+      ]
+    },
+    {
+      "id": "interest_summary",
+      "label": "Account Summary",
+      "enabled": true,
+      "order": 6,
+      "fields": [
+        { "id": "total_interest", "label": "Total Interest Accrued (Rs.)", "enabled": true, "fieldLayout": "half" },
+        { "id": "total_deposit", "label": "Total Amount Received (Rs.)", "enabled": true, "fieldLayout": "half" },
+        { "id": "outstanding", "label": "Outstanding Balance (Rs.)", "enabled": true, "fieldLayout": "half" },
+        { "id": "last_transaction_date", "label": "Date of Last Payment", "enabled": true, "fieldLayout": "half" }
+      ]
+    },
+    {
+      "id": "redemption_details",
+      "label": "Redemption / Release (Form E — Items 9 to 11)",
+      "enabled": true,
+      "order": 7,
+      "fields": [
+        { "id": "date_of_redemption", "label": "9. Date of Redemption or Sale in Auction", "enabled": true, "fieldLayout": "half" },
+        { "id": "redeeming_person", "label": "11. Name & Address of Person Redeeming / Purchaser", "enabled": true, "fieldLayout": "full" },
+        { "id": "release_remarks", "label": "Remarks (Renewal / Closure / Auction)", "enabled": true, "fieldLayout": "full" }
+      ]
+    }
+  ],
+  "termsAndConditions": "I hereby declare that the article(s) pledged above belong to me and are free from any encumbrance. I agree to repay the principal amount with interest at the rate stated above within the time agreed for redemption. I understand that the pledge shall be redeemable within the period agreed and during the days of grace as provided under applicable law. The pawnbroker / money-lender shall have the right to sell the pledged article(s) in case of default after due notice as prescribed under the Maharashtra Money-Lending (Regulation) Act, 2014 or the Tamil Nadu Pawn Brokers Act, 1943, as applicable.",
+  "declarationText": "I have read and understood the terms and conditions stated above. The particulars furnished by me are true and correct to the best of my knowledge.",
+  "signatureLabels": {
+    "customer": "Signature / Thumb-impression of Pawner",
+    "owner": "Signature of Pawnbroker / Authorised Agent",
+    "witness": "Witness (Optional)"
+  },
+  "variables": [
+    { "key": "{{firm_name}}", "label": "Pawnbroker Name" },
+    { "key": "{{firm_reg_no}}", "label": "Licence / Registration No." },
+    { "key": "{{loan_no}}", "label": "Pledge / Ticket No." },
+    { "key": "{{loan_date}}", "label": "Date of Loan" },
+    { "key": "{{customer_name}}", "label": "Pawner Name" },
+    { "key": "{{loan_amount}}", "label": "Principal Amount" },
+    { "key": "{{outstanding}}", "label": "Outstanding Balance" },
+    { "key": "{{today_date}}", "label": "Today's Date" }
+  ]
+}

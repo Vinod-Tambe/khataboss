@@ -192,3 +192,24 @@ span.badge.status-badge {
   color: var(--status-badge-secondary-text) !important;
   border-color: var(--status-badge-secondary-border) !important;
 }
+
+.customer-card-firm-badge,
+.mobile-list__corner-badge {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.55rem;
+  z-index: 2;
+  max-width: 42%;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.2;
+  padding: 0.22rem 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.card:has(> .customer-card-firm-badge) .customer-card-body {
+  padding-top: 1.85rem !important;
+}

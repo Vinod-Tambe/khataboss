@@ -7,11 +7,15 @@ import { setSelectedUser } from '../../store/slices/userSlice';
 import ImageUploadSquare from '../common/ImageUploadSquare';
 import CommonModal from '../common/CommonModal';
 import { validateMobile, validateAadhaar } from '../../utils/validation';
+import usePermissions from '../../hooks/usePermissions';
 import '../../css/ProfileDocumentsSection.css';
 
 const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const { can } = usePermissions();
+    const canCreateFinance = can('finance.create');
+    const canCreateLoan = can('loan.create');
     const [loading, setLoading] = useState(false);
     const [activeAction, setActiveAction] = useState(null);
     const [photoPreview, setPhotoPreview] = useState(null);
@@ -139,8 +143,16 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
             if (action === 'home') {
                 navigate('/user/home');
             } else if (action === 'finance') {
+                if (!canCreateFinance) {
+                    toast.error('You do not have permission to add finance');
+                    return;
+                }
                 navigate('/user/home/add-finance');
             } else if (action === 'loan') {
+                if (!canCreateLoan) {
+                    toast.error('You do not have permission to add loan');
+                    return;
+                }
                 navigate('/user/home/add-loan');
             }
         } catch (err) {
@@ -305,24 +317,28 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
                                     <i className="bi bi-house-door"></i>
                                     {loading && activeAction === 'home' ? 'Processing...' : 'Home'}
                                 </button>
-                                <button
-                                    type="button"
-                                    className="btn btn-warning px-4 py-2 fw-bold d-inline-flex align-items-center gap-1"
-                                    disabled={loading}
-                                    onClick={() => handleSubmit('finance')}
-                                >
-                                    <i className="bi bi-cash-stack"></i>
-                                    {loading && activeAction === 'finance' ? 'Processing...' : 'Finance'}
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn btn-secondary px-4 py-2 fw-bold d-inline-flex align-items-center gap-1"
-                                    disabled={loading}
-                                    onClick={() => handleSubmit('loan')}
-                                >
-                                    <i className="bi bi-bank"></i>
-                                    {loading && activeAction === 'loan' ? 'Processing...' : 'Loan'}
-                                </button>
+                                {canCreateFinance && (
+                                  <button
+                                      type="button"
+                                      className="btn btn-warning px-4 py-2 fw-bold d-inline-flex align-items-center gap-1"
+                                      disabled={loading}
+                                      onClick={() => handleSubmit('finance')}
+                                  >
+                                      <i className="bi bi-cash-stack"></i>
+                                      {loading && activeAction === 'finance' ? 'Processing...' : 'Finance'}
+                                  </button>
+                                )}
+                                {canCreateLoan && (
+                                  <button
+                                      type="button"
+                                      className="btn btn-secondary px-4 py-2 fw-bold d-inline-flex align-items-center gap-1"
+                                      disabled={loading}
+                                      onClick={() => handleSubmit('loan')}
+                                  >
+                                      <i className="bi bi-bank"></i>
+                                      {loading && activeAction === 'loan' ? 'Processing...' : 'Loan'}
+                                  </button>
+                                )}
                             </div>
                         </div>
                     </div>

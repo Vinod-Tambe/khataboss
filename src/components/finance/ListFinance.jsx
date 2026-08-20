@@ -5,6 +5,8 @@ import { getFinances, deleteFinance } from "../../api/financeApi";
 import { toast } from "react-toastify";
 import List from "../common/List";
 import { setSelectedUser } from "../../store/slices/userSlice";
+import usePermissions from "../../hooks/usePermissions";
+import PermissionGate from "../common/PermissionGate";
 import {
   formatListAmtOrDash,
   formatListDate,
@@ -17,6 +19,10 @@ const ListFinance = ({ status = "ALL", global = false }) => {
   const dispatch = useDispatch();
   const { selectedUser } = useSelector((state) => state.user);
   const { selectedFirm } = useSelector((state) => state.firm);
+  const { can } = usePermissions();
+  const canViewFinance = can("finance.view");
+  const canEditFinance = can("finance.edit");
+  const canDeleteFinance = can("finance.delete");
   const [finances, setFinances] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -60,10 +66,18 @@ const ListFinance = ({ status = "ALL", global = false }) => {
   };
 
   const handleEdit = (rowData) => {
+    if (!canEditFinance) {
+      toast.error("You do not have permission to edit finance records");
+      return;
+    }
     navigate(`/user/home/edit-finance/${rowData.fin_id}`, { state: { finance: rowData } });
   };
 
   const handleDelete = async (rowData) => {
+    if (!canDeleteFinance) {
+      toast.error("You do not have permission to delete finance records");
+      return;
+    }
     try {
       await deleteFinance(rowData.fin_id);
       toast.success("Finance record deleted successfully");
@@ -208,12 +222,15 @@ const ListFinance = ({ status = "ALL", global = false }) => {
       <div className="card-header bg-white d-flex justify-content-between align-items-center py-3">
         <h5 className="mb-0 fw-bold">{getTitle()}</h5>
         {!global && (
-          <button
-            onClick={() => navigate("/user/home/add-finance")}
-            className="btn btn-primary btn-sm"
-          >
-            Add Finance +
-          </button>
+          <PermissionGate permission="finance.create">
+            <button
+              type="button"
+              onClick={() => navigate("/user/home/add-finance")}
+              className="btn btn-primary btn-sm"
+            >
+              Add Finance +
+            </button>
+          </PermissionGate>
         )}
       </div>
       <div className="card-body p-0">
@@ -224,13 +241,13 @@ const ListFinance = ({ status = "ALL", global = false }) => {
           primaryKey="fin_id"
           subtitleKey="fin_start_date"
           amountKey="fin_prin_amt"
-          onView={handleView}
-          onDelete={handleDelete}
-          onEdit={handleEdit}
+          onView={canViewFinance ? handleView : undefined}
+          onDelete={canDeleteFinance ? handleDelete : undefined}
+          onEdit={canEditFinance ? handleEdit : undefined}
           onCustomerHome={global ? handleCustomerHome : undefined}
-          hasView={true}
-          hasDelete={!global}
-          hasEdit={true}
+          hasView={canViewFinance}
+          hasDelete={!global && canDeleteFinance}
+          hasEdit={canEditFinance}
           isLoading={loading}
           showFooter={true}
           deleteConfirmMessage="Are you sure you want to delete this finance record?"

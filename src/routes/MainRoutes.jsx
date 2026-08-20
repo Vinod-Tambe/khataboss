@@ -23,6 +23,7 @@ import BackupRoutes from '../pages/backup/BackupRoutes';
 import OwnerProfile from '../components/owner/OwnerProfile';
 import UpdatePassword from '../components/owner/UpdatePassword';
 import KycIntegrationPage from '../components/settings/KycIntegrationPage';
+import FormCustomizationPage from '../components/settings/FormCustomizationPage';
 import PermissionRoute from './PermissionRoute';
 
 const MainRoutes = () => {
@@ -176,6 +177,14 @@ const MainRoutes = () => {
                 element={
                   <PermissionRoute permission="settings.manage">
                     <KycIntegrationPage />
+                  </PermissionRoute>
+                }
+              />
+              <Route
+                path="/settings/form-customization"
+                element={
+                  <PermissionRoute permission="settings.manage">
+                    <FormCustomizationPage />
                   </PermissionRoute>
                 }
               />

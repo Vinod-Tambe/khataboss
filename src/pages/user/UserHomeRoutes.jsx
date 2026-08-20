@@ -18,6 +18,9 @@ import { ConfirmAlert } from "../../components/common/ConfirmAlert";
 import { getCustomerPhone } from "../../utils/customerFormatters";
 import CustomerAddressTooltip from "../../components/user/CustomerAddressTooltip";
 import { resolveImageUrl } from "../../utils/imageHelpers";
+import usePermissions from "../../hooks/usePermissions";
+import PermissionRoute from "../../routes/PermissionRoute";
+import { toast } from "react-toastify";
 
 const BLOCK_INFO_MAX_CHARS = 40;
 
@@ -67,6 +70,12 @@ const CustomerPhoneDisplay = ({ user, className = "text-muted small text-truncat
 const UserHomeRoutes = () => {
   const navigate = useNavigate();
   const { selectedUser } = useSelector((state) => state.user);
+  const { can } = usePermissions();
+  const canEditCustomer = can("user.edit");
+  const canCreateLoan = can("loan.create");
+  const canCreateFinance = can("finance.create");
+  const canViewLoan = can("loan.view");
+  const canViewFinance = can("finance.view");
 
   if (!selectedUser) {
     return (
@@ -96,6 +105,11 @@ const UserHomeRoutes = () => {
     e.preventDefault();
     e.stopPropagation();
     if (!user_uuid) return;
+
+    if (!canEditCustomer) {
+      toast.error("You do not have permission to edit customers");
+      return;
+    }
 
     const isConfirmed = await ConfirmAlert(
       `Are you sure you want to update this customer: ${user_first_name} ${user_last_name}?`
@@ -131,9 +145,9 @@ const UserHomeRoutes = () => {
               width="40"
               height="40"
               src={profileImg}
-              role="button"
-              style={{ cursor: "pointer" }}
-              onClick={handleProfileClick}
+              role={canEditCustomer ? "button" : undefined}
+              style={{ cursor: canEditCustomer ? "pointer" : "default" }}
+              onClick={canEditCustomer ? handleProfileClick : undefined}
               onError={(e) => {
                 e.target.src = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
               }}
@@ -152,20 +166,25 @@ const UserHomeRoutes = () => {
 
           {/* DESKTOP MENU */}
           <ul className="nav align-items-center flex-nowrap mb-0">
-            <li className="nav-item mx-1">
-              <Link className="btn btn-outline-success d-inline-flex align-items-center gap-1" to="/user/home/add-loan">
-                <i className="bi bi-plus-circle"></i>
-                Loan
-              </Link>
-            </li>
+            {canCreateLoan && (
+              <li className="nav-item mx-1">
+                <Link className="btn btn-outline-success d-inline-flex align-items-center gap-1" to="/user/home/add-loan">
+                  <i className="bi bi-plus-circle"></i>
+                  Loan
+                </Link>
+              </li>
+            )}
 
-            <li className="nav-item mx-1">
-              <Link className="btn btn-outline-primary fw-bold d-inline-flex align-items-center gap-1" to="/user/home/add-finance">
-                <i className="bi bi-plus-circle-fill"></i>
-                Finance
-              </Link>
-            </li>
+            {canCreateFinance && (
+              <li className="nav-item mx-1">
+                <Link className="btn btn-outline-primary fw-bold d-inline-flex align-items-center gap-1" to="/user/home/add-finance">
+                  <i className="bi bi-plus-circle-fill"></i>
+                  Finance
+                </Link>
+              </li>
+            )}
 
+            {canViewFinance && (
             <li className="nav-item mx-1">
               <Dropdown>
                 <Dropdown.Toggle variant="outline-warning" className="d-inline-flex align-items-center gap-1">
@@ -192,7 +211,9 @@ const UserHomeRoutes = () => {
                 </Dropdown.Menu>
               </Dropdown>
             </li>
+            )}
 
+            {canViewLoan && (
             <li className="nav-item mx-1">
               <Dropdown>
                 <Dropdown.Toggle variant="outline-secondary" className="d-inline-flex align-items-center gap-1">
@@ -224,6 +245,7 @@ const UserHomeRoutes = () => {
                 </Dropdown.Menu>
               </Dropdown>
             </li>
+            )}
 
             <li className="nav-item">
               <span className="input-group-text fw-bold border border-secondary d-inline-flex align-items-center gap-1">
@@ -250,9 +272,9 @@ const UserHomeRoutes = () => {
                 width="40"
                 height="40"
                 src={profileImg}
-                role="button"
-                style={{ cursor: "pointer" }}
-                onClick={handleProfileClick}
+                role={canEditCustomer ? "button" : undefined}
+                style={{ cursor: canEditCustomer ? "pointer" : "default" }}
+                onClick={canEditCustomer ? handleProfileClick : undefined}
                 onError={(e) => {
                   e.target.src = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
                 }}
@@ -270,61 +292,72 @@ const UserHomeRoutes = () => {
                 {user_unique_code || user_id}
               </Dropdown.Toggle>
               <Dropdown.Menu>
-                <Dropdown.Item as={Link} to="/user/home/add-loan" className="d-flex align-items-center gap-2">
-                  <i className="bi bi-plus-circle text-success"></i>
-                  Loan
-                </Dropdown.Item>
-                <Dropdown.Item as={Link} to="/user/home/add-finance" className="d-flex align-items-center gap-2">
-                  <i className="bi bi-plus-circle-fill text-primary"></i>
-                  Finance
-                </Dropdown.Item>
-                <Dropdown.Divider />
-                <Dropdown.Header>
-                  <i className="bi bi-cash-stack me-1"></i>
-                  Finance
-                </Dropdown.Header>
-                <Dropdown.Item as={Link} to="/user/home/active-finance" className="d-flex align-items-center gap-2">
-                  <i className="bi bi-check2-circle text-success"></i>
-                  Active Finance List
-                </Dropdown.Item>
-                <Dropdown.Item as={Link} to="/user/home/completed-finance" className="d-flex align-items-center gap-2">
-                  <i className="bi bi-check2-all text-primary"></i>
-                  Completed Finance List
-                </Dropdown.Item>
-                <Dropdown.Item as={Link} to="/user/home/close-finance" className="d-flex align-items-center gap-2">
-                  <i className="bi bi-lock text-danger"></i>
-                  Closed Finance List
-                </Dropdown.Item>
-                <Dropdown.Item as={Link} to="/user/home/all-finance" className="d-flex align-items-center gap-2">
-                  <i className="bi bi-list-ul text-warning"></i>
-                  All Finance List
-                </Dropdown.Item>
-                <Dropdown.Divider />
-                <Dropdown.Header>
-                  <i className="bi bi-bank me-1"></i>
-                  Loan
-                </Dropdown.Header>
-                <Dropdown.Item as={Link} to="/user/home/active-loan" className="d-flex align-items-center gap-2">
-                  <i className="bi bi-lightning-charge text-success"></i>
-                  Active Loan List
-                </Dropdown.Item>
-                <Dropdown.Item as={Link} to="/user/home/release-loan" className="d-flex align-items-center gap-2">
-                  <i className="bi bi-arrow-up-right text-info"></i>
-                  Release Loan List
-                </Dropdown.Item>
-                <Dropdown.Item as={Link} to="/user/home/auction-loan" className="d-flex align-items-center gap-2">
-                  <i className="bi bi-award text-warning"></i>
-                  Auction Loan List
-                </Dropdown.Item>
-                <Dropdown.Item as={Link} to="/user/home/transfer-loan" className="d-flex align-items-center gap-2">
-                  <i className="bi bi-arrow-repeat text-primary"></i>
-                  Transfer Loan List
-                </Dropdown.Item>
-
-                <Dropdown.Item as={Link} to="/user/home/all-loan" className="d-flex align-items-center gap-2">
-                  <i className="bi bi-list-ul text-secondary"></i>
-                  All Loan List
-                </Dropdown.Item>
+                {canCreateLoan && (
+                  <Dropdown.Item as={Link} to="/user/home/add-loan" className="d-flex align-items-center gap-2">
+                    <i className="bi bi-plus-circle text-success"></i>
+                    Loan
+                  </Dropdown.Item>
+                )}
+                {canCreateFinance && (
+                  <Dropdown.Item as={Link} to="/user/home/add-finance" className="d-flex align-items-center gap-2">
+                    <i className="bi bi-plus-circle-fill text-primary"></i>
+                    Finance
+                  </Dropdown.Item>
+                )}
+                {(canCreateLoan || canCreateFinance) && (canViewFinance || canViewLoan) && <Dropdown.Divider />}
+                {canViewFinance && (
+                  <>
+                    <Dropdown.Header>
+                      <i className="bi bi-cash-stack me-1"></i>
+                      Finance
+                    </Dropdown.Header>
+                    <Dropdown.Item as={Link} to="/user/home/active-finance" className="d-flex align-items-center gap-2">
+                      <i className="bi bi-check2-circle text-success"></i>
+                      Active Finance List
+                    </Dropdown.Item>
+                    <Dropdown.Item as={Link} to="/user/home/completed-finance" className="d-flex align-items-center gap-2">
+                      <i className="bi bi-check2-all text-primary"></i>
+                      Completed Finance List
+                    </Dropdown.Item>
+                    <Dropdown.Item as={Link} to="/user/home/close-finance" className="d-flex align-items-center gap-2">
+                      <i className="bi bi-lock text-danger"></i>
+                      Closed Finance List
+                    </Dropdown.Item>
+                    <Dropdown.Item as={Link} to="/user/home/all-finance" className="d-flex align-items-center gap-2">
+                      <i className="bi bi-list-ul text-warning"></i>
+                      All Finance List
+                    </Dropdown.Item>
+                  </>
+                )}
+                {canViewFinance && canViewLoan && <Dropdown.Divider />}
+                {canViewLoan && (
+                  <>
+                    <Dropdown.Header>
+                      <i className="bi bi-bank me-1"></i>
+                      Loan
+                    </Dropdown.Header>
+                    <Dropdown.Item as={Link} to="/user/home/active-loan" className="d-flex align-items-center gap-2">
+                      <i className="bi bi-lightning-charge text-success"></i>
+                      Active Loan List
+                    </Dropdown.Item>
+                    <Dropdown.Item as={Link} to="/user/home/release-loan" className="d-flex align-items-center gap-2">
+                      <i className="bi bi-arrow-up-right text-info"></i>
+                      Release Loan List
+                    </Dropdown.Item>
+                    <Dropdown.Item as={Link} to="/user/home/auction-loan" className="d-flex align-items-center gap-2">
+                      <i className="bi bi-award text-warning"></i>
+                      Auction Loan List
+                    </Dropdown.Item>
+                    <Dropdown.Item as={Link} to="/user/home/transfer-loan" className="d-flex align-items-center gap-2">
+                      <i className="bi bi-arrow-repeat text-primary"></i>
+                      Transfer Loan List
+                    </Dropdown.Item>
+                    <Dropdown.Item as={Link} to="/user/home/all-loan" className="d-flex align-items-center gap-2">
+                      <i className="bi bi-list-ul text-secondary"></i>
+                      All Loan List
+                    </Dropdown.Item>
+                  </>
+                )}
               </Dropdown.Menu>
             </Dropdown>
           </div>
@@ -338,23 +371,23 @@ const UserHomeRoutes = () => {
         {/* ================= ROUTES ================= */}
         <Routes>
           <Route path="/*" element={<UserHome />} />
-          <Route path="/loan-info" element={<LoanInfo />} />
-          <Route path="/add-loan" element={<AddLoan />} />
-          <Route path="/edit-loan/:id" element={<UpdateLoan />} />
-          <Route path="/add-finance" element={<AddFinance />} />
-          <Route path="/edit-finance/:id" element={<UpdateFinance />} />
-          <Route path="/active-finance" element={<ListFinance status="ACTIVE" />} />
-          <Route path="/completed-finance" element={<ListFinance status="COMPLETED" />} />
-          <Route path="/close-finance" element={<ListFinance status="CLOSED" />} />
-          <Route path="/all-finance" element={<ListFinance status="ALL" />} />
-          <Route path="/finance" element={<Finance />} />
+          <Route path="/loan-info" element={<PermissionRoute permission="loan.view"><LoanInfo /></PermissionRoute>} />
+          <Route path="/add-loan" element={<PermissionRoute permission="loan.create"><AddLoan /></PermissionRoute>} />
+          <Route path="/edit-loan/:id" element={<PermissionRoute permission="loan.edit"><UpdateLoan /></PermissionRoute>} />
+          <Route path="/add-finance" element={<PermissionRoute permission="finance.create"><AddFinance /></PermissionRoute>} />
+          <Route path="/edit-finance/:id" element={<PermissionRoute permission="finance.edit"><UpdateFinance /></PermissionRoute>} />
+          <Route path="/active-finance" element={<PermissionRoute permission="finance.view"><ListFinance status="ACTIVE" /></PermissionRoute>} />
+          <Route path="/completed-finance" element={<PermissionRoute permission="finance.view"><ListFinance status="COMPLETED" /></PermissionRoute>} />
+          <Route path="/close-finance" element={<PermissionRoute permission="finance.view"><ListFinance status="CLOSED" /></PermissionRoute>} />
+          <Route path="/all-finance" element={<PermissionRoute permission="finance.view"><ListFinance status="ALL" /></PermissionRoute>} />
+          <Route path="/finance" element={<PermissionRoute permission="finance.view"><Finance /></PermissionRoute>} />
 
-          <Route path="/active-loan" element={<ListLoan status="ACTIVE" />} />
-          <Route path="/release-loan" element={<ListLoan status="RELEASED" />} />
-          <Route path="/auction-loan" element={<AuctionLoanList />} />
-          <Route path="/transfer-loan" element={<ListLoan status="TRANSFERRED" />} />
-          <Route path="/close-loan" element={<ListLoan status="CLOSED" />} />
-          <Route path="/all-loan" element={<ListLoan status="ALL" />} />
+          <Route path="/active-loan" element={<PermissionRoute permission="loan.view"><ListLoan status="ACTIVE" /></PermissionRoute>} />
+          <Route path="/release-loan" element={<PermissionRoute permission="loan.view"><ListLoan status="RELEASED" /></PermissionRoute>} />
+          <Route path="/auction-loan" element={<PermissionRoute permission="loan.auction"><AuctionLoanList /></PermissionRoute>} />
+          <Route path="/transfer-loan" element={<PermissionRoute permission="loan.transfer"><ListLoan status="TRANSFERRED" /></PermissionRoute>} />
+          <Route path="/close-loan" element={<PermissionRoute permission="loan.view"><ListLoan status="CLOSED" /></PermissionRoute>} />
+          <Route path="/all-loan" element={<PermissionRoute permission="loan.view"><ListLoan status="ALL" /></PermissionRoute>} />
         </Routes>
 
       </div>

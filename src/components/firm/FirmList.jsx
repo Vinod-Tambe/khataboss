@@ -5,8 +5,12 @@ import List from "../common/List";
 import { getFirms, deleteFirm } from "../../api/firmApi";
 import { loadFirmsDropdown } from "../../store/slices/firmSlice";
 import { toast } from "react-hot-toast";
+import usePermissions from "../../hooks/usePermissions";
 
 const FirmList = () => {
+  const { can } = usePermissions();
+  const canEdit = can("firm.edit");
+  const canDelete = can("firm.delete");
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [firms, setFirms] = useState([]);
@@ -57,10 +61,18 @@ const FirmList = () => {
   ];
 
   const handleEdit = (rowData) => {
+    if (!canEdit) {
+      toast.error("You do not have permission to edit firms");
+      return;
+    }
     navigate(`/firm/edit/${rowData.firm_uuid}`);
   };
 
   const handleDelete = async (rowData) => {
+    if (!canDelete) {
+      toast.error("You do not have permission to delete firms");
+      return;
+    }
     try {
       const response = await deleteFirm(rowData.firm_uuid);
       toast.success(response.message || "Firm deleted successfully.");
@@ -91,12 +103,12 @@ const FirmList = () => {
           title="All Firm List"
           primaryKey="firm_name"
           subtitleKey="firm_add_date"
-          onEdit={handleEdit}
-          onDelete={handleDelete}
+          onEdit={canEdit ? handleEdit : undefined}
+          onDelete={canDelete ? handleDelete : undefined}
           onPrint={handlePrint}
-          hasEdit={true}
-          hasDelete={true}
-          hasPrint={true}
+          hasEdit={canEdit}
+          hasDelete={canDelete}
+          hasPrint={canEdit}
           showFooter={false}
           deleteConfirmMessage={(row) => `Are you sure you want to delete firm: ${row?.firm_name}?`}
         />

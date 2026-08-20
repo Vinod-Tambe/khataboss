@@ -119,13 +119,19 @@ const MobileList = ({
     );
   }, [columns, amountKey]);
 
+  const cornerCol = useMemo(
+    () => columns.find((c) => c.cardCorner) || null,
+    [columns]
+  );
+
   const detailColumns = useMemo(
     () =>
       columns.filter(
         (c) =>
           c.key !== titleCol?.key &&
           c.key !== subtitleCol?.key &&
-          c.key !== amountCol?.key
+          c.key !== amountCol?.key &&
+          !c.cardCorner
       ),
     [columns, titleCol, subtitleCol, amountCol]
   );
@@ -201,12 +207,21 @@ const MobileList = ({
             const heading = titleCol ? getCellValue(row, titleCol) : `#${rowId}`;
             const subtitle = subtitleCol ? getCellValue(row, subtitleCol) : null;
             const amount = amountCol ? getCellValue(row, amountCol) : null;
+            const cornerLabel = cornerCol ? getCellValue(row, cornerCol) : null;
 
             return (
               <article
                 key={key}
                 className={`mobile-list__card ${expanded ? "is-open" : ""}`}
               >
+                {cornerLabel != null && cornerLabel !== "-" && (
+                  <span
+                    className="mobile-list__corner-badge badge status-badge status-badge--primary"
+                    title={String(cornerLabel)}
+                  >
+                    {cornerLabel}
+                  </span>
+                )}
                 <button
                   type="button"
                   className="mobile-list__card-main"

@@ -3,8 +3,12 @@ import { useNavigate } from "react-router-dom";
 import List from "../common/List";
 import { getMoneyLenders, deleteMoneyLender } from "../../api/moneyLenderApi";
 import { toast } from "react-hot-toast";
+import usePermissions from "../../hooks/usePermissions";
 
 const MoneyLenderList = () => {
+  const { can } = usePermissions();
+  const canEdit = can("moneyLender.edit");
+  const canDelete = can("moneyLender.delete");
   const navigate = useNavigate();
   const [moneyLenders, setMoneyLenders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -55,10 +59,18 @@ const MoneyLenderList = () => {
   ];
 
   const handleEdit = (rowData) => {
+    if (!canEdit) {
+      toast.error("You do not have permission to edit money lenders");
+      return;
+    }
     navigate(`/money-lender/edit/${rowData.ml_uuid}`);
   };
 
   const handleDelete = async (rowData) => {
+    if (!canDelete) {
+      toast.error("You do not have permission to delete money lenders");
+      return;
+    }
     try {
       const response = await deleteMoneyLender(rowData.ml_uuid);
       toast.success(response.message || "Money Lender deleted successfully.");
@@ -84,10 +96,10 @@ const MoneyLenderList = () => {
           title="All Money Lender List"
           primaryKey="ml_name"
           subtitleKey="created_at"
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          hasDelete={true}
-          hasEdit={true}
+          onEdit={canEdit ? handleEdit : undefined}
+          onDelete={canDelete ? handleDelete : undefined}
+          hasDelete={canDelete}
+          hasEdit={canEdit}
           hasPrint={false}
           showFooter={false}
           deleteConfirmMessage={(row) => `Are you sure you want to delete money lender: ${row?.ml_first_name}?`}

@@ -418,6 +418,140 @@
   filter: brightness(0.97);
 }
 
+.header-search__summary {
+  font-size: 0.75rem;
+  padding: 0.45rem 0.75rem 0.25rem;
+  border-bottom: 1px solid var(--form-custom-border, #e5e7eb);
+}
+
+.header-search__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-right: 0.35rem;
+  flex-shrink: 0;
+}
+
+.header-search__badge.is-customer {
+  background: rgba(59, 130, 246, 0.12);
+  color: #2563eb;
+}
+
+.header-search__badge.is-loan {
+  background: rgba(245, 158, 11, 0.15);
+  color: #b45309;
+}
+
+.header-search__badge.is-finance {
+  background: rgba(16, 185, 129, 0.14);
+  color: #047857;
+}
+
+.header-search__record {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 0;
+  border-bottom: 1px solid var(--layout-item-border, #e5e7eb);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.header-search__record:last-child {
+  border-bottom: 0;
+}
+
+.header-search__record.is-active,
+.header-search__record:hover {
+  background: var(--layout-filter-hover-bg, #f3f4f6);
+}
+
+.header-search__record-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+.header-search__record-icon.is-loan {
+  background: rgba(245, 158, 11, 0.15);
+  color: #b45309;
+}
+
+.header-search__record-icon.is-finance {
+  background: rgba(16, 185, 129, 0.14);
+  color: #047857;
+}
+
+.header-search__record-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.header-search__record-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.88rem;
+}
+
+.header-search__record-sub {
+  font-size: 0.78rem;
+  color: var(--layout-muted-text, #6b7280);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header-search__record-arrow {
+  color: var(--layout-muted-text, #9ca3af);
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .header-search__record.is-active,
+[data-theme="dark"] .header-search__record:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .header-search__summary {
+  border-bottom-color: var(--app-border, #3d3d5c);
+}
+
+[data-theme="dark"] .header-search__record {
+  border-bottom-color: var(--app-border, #3d3d5c);
+}
+
+[data-theme="dark"] .header-search__badge.is-customer {
+  background: rgba(96, 165, 250, 0.18);
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .header-search__badge.is-loan {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fcd34d;
+}
+
+[data-theme="dark"] .header-search__badge.is-finance {
+  background: rgba(16, 185, 129, 0.18);
+  color: #6ee7b7;
+}
+
 /* RIGHT */
 .header-right {
   display: flex;

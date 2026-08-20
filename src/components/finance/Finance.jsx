@@ -1,17 +1,26 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import FinanceInfo from './FinanceInfo'
 import FinanceHistory from './FinanceHistory'
 import PaymentForm from './PaymentForm'
 import CommonModal from '../common/CommonModal'
+import RecordNavButtons from '../common/RecordNavButtons'
 import { getFinanceDetails } from '../../api/financeApi'
 import { toast } from 'react-toastify'
 import { getStatusBadgeMeta } from '../../utils/listFormatters'
+import usePermissions from '../../hooks/usePermissions'
+import useUserRecordNavigation from '../../hooks/useUserRecordNavigation'
+import '../../css/ActiveLoanPanel.css'
 import '../../css/Finance.css'
 
 const Finance = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const { selectedUser } = useSelector((state) => state.user);
+    const { selectedFirm, selectedFirmId } = useSelector((state) => state.firm);
+    const { can } = usePermissions();
+    const canEditFinance = can('finance.edit');
     const initialFinance = location.state?.finance;
 
     const [view, setView] = useState('info'); // 'info' or 'history'
@@ -37,6 +46,53 @@ const Finance = () => {
     useEffect(() => {
         fetchDetails();
     }, [fetchDetails]);
+
+    useEffect(() => {
+        setView('info');
+    }, [initialFinance?.fin_id]);
+
+    const currentFinanceId = financeData?.fin_id || initialFinance?.fin_id;
+    const navUserId =
+        selectedUser?.user_id ??
+        financeData?.fin_user_id ??
+        initialFinance?.fin_user_id ??
+        initialFinance?.user?.user_id;
+    const navFirmId =
+        selectedFirmId === 'all' ? null : (selectedFirm?.firm_id || selectedFirmId);
+
+    const recordNav = useUserRecordNavigation({
+        type: 'finance',
+        currentId: currentFinanceId,
+        userId: navUserId,
+        firmId: navFirmId,
+    });
+
+    const financeHeaderActions = (
+        <>
+            <span className="badge bg-primary-subtle border border-primary text-primary fw-bold fs-6 px-3 d-inline-flex align-items-center">
+                {financeData?.fin_unique_code || initialFinance?.fin_unique_code || (initialFinance?.fin_id ? `FIN-${initialFinance.fin_id}` : '')}
+            </span>
+            {(() => {
+                const finStatus = financeData?.fin_status || initialFinance?.fin_status || 'ACTIVE';
+                const { label, icon, className } = getStatusBadgeMeta(finStatus);
+                return (
+                    <span className={`${className} loan-info-header-badge shadow-sm px-3 d-inline-flex align-items-center`}>
+                        <i className={`bi ${icon} me-2 fs-6`}></i>
+                        <h6 className="mb-0 fw-bold fs-6">{label}</h6>
+                    </span>
+                );
+            })()}
+            <RecordNavButtons
+                variant="panel"
+                hasPrev={recordNav.hasPrev}
+                hasNext={recordNav.hasNext}
+                onPrev={recordNav.goPrev}
+                onNext={recordNav.goNext}
+                positionLabel={recordNav.positionLabel}
+                disabled={recordNav.loading}
+            />
+        </>
+    );
 
     const openModal = (title, type) => {
         setModalConfig({ title, type });
@@ -90,23 +146,13 @@ const Finance = () => {
                                     </p>
                                 )}
                             </div>
-                            <div className="d-flex align-items-stretch gap-2" style={{ height: '36px' }}>
-                                <span className="badge bg-primary-subtle border border-primary text-primary fw-bold fs-6 px-3 d-inline-flex align-items-center">
-                                    {financeData?.fin_unique_code || initialFinance?.fin_unique_code || (initialFinance?.fin_id ? `FIN-${initialFinance.fin_id}` : '')}
-                                </span>
-                                {(() => {
-                                    const finStatus = financeData?.fin_status || initialFinance?.fin_status || 'ACTIVE';
-                                    const { label, icon, className } = getStatusBadgeMeta(finStatus);
-                                    return (
-                                        <span className={`${className} loan-info-header-badge shadow-sm px-3 d-inline-flex align-items-center`}>
-                                            <i className={`bi ${icon} me-2 fs-6`}></i>
-                                            <h6 className="mb-0 fw-bold fs-6">{label}</h6>
-                                        </span>
-                                    );
-                                })()}
+                            <div className="panel-header-actions">
+                                {financeHeaderActions}
+                                {canEditFinance && (
                                 <button
                                     type="button"
-                                    className="btn btn-sm btn-outline-primary px-3 d-inline-flex align-items-center"
+                                    className="btn btn-sm btn-outline-primary px-3 shadow-sm d-inline-flex align-items-center"
+                                    style={{ height: '36px' }}
                                     onClick={() =>
                                         navigate(
                                             `/user/home/edit-finance/${financeData?.fin_id || initialFinance?.fin_id}`,
@@ -117,6 +163,7 @@ const Finance = () => {
                                 >
                                     <i className="bi bi-pencil-square me-1"></i> Edit
                                 </button>
+                                )}
                             </div>
                         </div>
                         <FinanceInfo
@@ -145,21 +192,14 @@ const Finance = () => {
                                     </p>
                                 )}
                             </div>
-                            <div className="d-flex align-items-stretch gap-2" style={{ height: '36px' }}>
-                                <span className="badge bg-primary-subtle border border-primary text-primary fw-bold fs-6 px-3 d-inline-flex align-items-center">
-                                    {financeData?.fin_unique_code || initialFinance?.fin_unique_code || (initialFinance?.fin_id ? `FIN-${initialFinance.fin_id}` : '')}
-                                </span>
-                                {(() => {
-                                    const finStatus = financeData?.fin_status || initialFinance?.fin_status || 'ACTIVE';
-                                    const { label, icon, className } = getStatusBadgeMeta(finStatus);
-                                    return (
-                                        <span className={`${className} loan-info-header-badge shadow-sm px-3 d-inline-flex align-items-center`}>
-                                            <i className={`bi ${icon} me-2 fs-6`}></i>
-                                            <h6 className="mb-0 fw-bold fs-6">{label}</h6>
-                                        </span>
-                                    );
-                                })()}
-                                <button className="btn btn-sm btn-outline-secondary px-3 finance-page__back d-inline-flex align-items-center justify-content-center" onClick={handleBackToInfo}>
+                            <div className="panel-header-actions">
+                                {financeHeaderActions}
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-secondary px-3 shadow-sm finance-page__back d-inline-flex align-items-center justify-content-center"
+                                    style={{ height: '36px' }}
+                                    onClick={handleBackToInfo}
+                                >
                                     <i className="bi bi-arrow-left me-1 fs-6"></i> Back
                                 </button>
                             </div>

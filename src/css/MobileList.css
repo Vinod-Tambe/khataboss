@@ -52,6 +52,7 @@
 }
 
 .mobile-list__card {
+  position: relative;
   background-color: var(--home-card-bg, #fff);
   border: 1px solid var(--app-border, #e5e5e5);
   border-radius: 12px;

@@ -160,17 +160,19 @@ const StaffGrid = () => {
                   >
                     {staff.staff_unique_code || staff.staff_id}
                   </button>
-                  <button
-                    type="button"
-                    className="btn me-2 bg-info-subtle border-secondary rounded-circle"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      navigate(`/staff/staff-details/${staff.staff_uuid}`);
-                    }}
-                  >
-                    <i className="bi bi-pencil-square"></i>
-                  </button>
+                  {can("staff.edit") && (
+                    <button
+                      type="button"
+                      className="btn me-2 bg-info-subtle border-secondary rounded-circle"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        navigate(`/staff/staff-details/${staff.staff_uuid}`);
+                      }}
+                    >
+                      <i className="bi bi-pencil-square"></i>
+                    </button>
+                  )}
                   {can("staff.delete") && (
                     <button
                       type="button"

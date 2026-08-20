@@ -57,6 +57,23 @@ export const searchUsers = async (q, firmId = null, limit = 12) => {
 };
 
 /**
+ * Header global search — customers, loan ID, finance ID.
+ */
+export const globalSearch = async (q, firmId = null, limit = 15) => {
+  try {
+    const params = { q, limit };
+    if (firmId != null && firmId !== '' && firmId !== 'all') {
+      params.firmId = firmId;
+    }
+    const response = await axiosInstance.get('/user/global-search', { params });
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.error || error.response?.data?.message || error.message;
+    throw new Error(message);
+  }
+};
+
+/**
  * Delete a user by UUID
  * @param {string} uuid - User UUID
  * @returns {Promise} - Response object

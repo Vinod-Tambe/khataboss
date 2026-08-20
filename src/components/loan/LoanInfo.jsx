@@ -6,6 +6,7 @@ import DepositModal from './modal/DepositModal';
 import TransactionModal from './modal/TransactionModal';
 import LoanRecordReceiptModal from './LoanRecordReceiptModal';
 import { downloadLoanInvoicePdf } from './invoice/downloadLoanInvoicePdf';
+import { downloadLoanForm8Pdf } from './downloadLoanForm8Pdf';
 import { getGirviById, deleteGirvi } from '../../api/girviApi';
 import { deleteRelease, getReleaseUsers } from '../../api/releaseApi';
 import ReleaseUserListSection from './ReleaseUserListSection';
@@ -25,6 +26,8 @@ import ImageModal from '../common/ImageModal';
 import { resolveImageUrl } from '../../utils/imageHelpers';
 import EntityLogsModal from '../logs/EntityLogsModal';
 import usePermissions from '../../hooks/usePermissions';
+import useUserRecordNavigation from '../../hooks/useUserRecordNavigation';
+import RecordNavButtons from '../common/RecordNavButtons';
 import UpdateInterestModal from './modal/UpdateInterestModal';
 import {
   getInterestUpdateBlockReason,
@@ -536,22 +539,32 @@ const ReleaseInfoTable = ({ data, onDeleteRelease, canDeleteRelease, deletingRel
 const ActionFooter = ({
   onUpdateClick,
   onDepositClick,
+  onForm8Click,
   onTransactionClick,
   onInvoiceClick,
   onLogsClick,
   onDeleteClick,
   showLogs,
+  canForm8,
   canTransact,
   canDeleteLoan,
   isUpdateAllowed,
   isInvoiceDownloading,
+  isForm8Downloading,
   isDeletingLoan,
 }) => (
   <div className="action-footer mt-4">
     <div className="d-flex flex-wrap gap-2 justify-content-center">
-      <button className="btn btn-sm text-nowrap blue-btn" onClick={onDepositClick}>
-        <i className="bi bi-file-text text-primary me-1"></i> FORM 8
-      </button>
+      {canForm8 && (
+        <button
+          className="btn btn-sm text-nowrap blue-btn"
+          onClick={onForm8Click}
+          disabled={isForm8Downloading}
+        >
+          <i className={`bi ${isForm8Downloading ? 'bi-hourglass-split' : 'bi-file-text'} text-primary me-1`}></i>
+          {isForm8Downloading ? 'Downloading...' : 'FORM 8'}
+        </button>
+      )}
       {isUpdateAllowed && (
         <button className="btn btn-sm text-nowrap blue-btn" onClick={onUpdateClick}>
           <i className="bi bi-pencil text-info me-1"></i> Update
@@ -709,10 +722,12 @@ const LoanMobileView = ({
   canTransact,
   isUpdateAllowed,
   isInvoiceDownloading,
+  isForm8Downloading,
+  canForm8,
   customerName = '',
-  onBack,
   onUpdateClick,
   onDepositClick,
+  onForm8Click,
   onTransactionClick,
   onInvoiceClick,
   onLogsClick,
@@ -736,6 +751,7 @@ const LoanMobileView = ({
   canUpdateInterest,
   interestBlockReason,
   onEditInterestClick,
+  recordNav = null,
 }) => {
   const interestMethodLabel = formatInterestMethodLabel(loanInfoData);
 
@@ -793,6 +809,18 @@ const LoanMobileView = ({
           </p>
         </div>
         <div className="loan-mobile-header__actions">
+          {recordNav ? (
+            <RecordNavButtons
+              variant="panel"
+              size="sm"
+              hasPrev={recordNav.hasPrev}
+              hasNext={recordNav.hasNext}
+              onPrev={recordNav.goPrev}
+              onNext={recordNav.goNext}
+              positionLabel={recordNav.positionLabel}
+              disabled={recordNav.loading}
+            />
+          ) : null}
           {(() => {
             const { label, icon, className } = getStatusBadgeMeta(loanDetails.girv_status);
             return (
@@ -802,9 +830,6 @@ const LoanMobileView = ({
               </span>
             );
           })()}
-          <button type="button" className="btn btn-outline-secondary" onClick={onBack} aria-label="Back">
-            <i className="bi bi-arrow-left"></i>
-          </button>
         </div>
       </div>
 
@@ -1174,9 +1199,17 @@ const LoanMobileView = ({
       </div>
 
       <div className="loan-mobile-actions loan-mobile-actions--footer">
-        <button type="button" className="btn loan-mobile-action-btn" onClick={onDepositClick}>
-          <i className="bi bi-file-text text-primary"></i> Form 8
-        </button>
+        {canForm8 && (
+          <button
+            type="button"
+            className="btn loan-mobile-action-btn"
+            onClick={onForm8Click}
+            disabled={isForm8Downloading}
+          >
+            <i className={`bi ${isForm8Downloading ? 'bi-hourglass-split' : 'bi-file-text'} text-primary`}></i>
+            {isForm8Downloading ? 'Form 8...' : 'Form 8'}
+          </button>
+        )}
         {isUpdateAllowed && (
           <button type="button" className="btn loan-mobile-action-btn" onClick={onUpdateClick}>
             <i className="bi bi-pencil text-info"></i> Update
@@ -1230,6 +1263,7 @@ const LoanInfo = () => {
   const [activeModal, setActiveModal] = useState(null);
   const [showLogsModal, setShowLogsModal] = useState(false);
   const [isInvoiceDownloading, setIsInvoiceDownloading] = useState(false);
+  const [isForm8Downloading, setIsForm8Downloading] = useState(false);
   const [loanDetails, setLoanDetails] = useState(null);
   const [releaseUserRows, setReleaseUserRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1244,6 +1278,7 @@ const LoanInfo = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { selectedUser } = useSelector((state) => state.user);
+  const { selectedFirm, selectedFirmId } = useSelector((state) => state.firm);
   const { can } = usePermissions();
   const canEditLoan = can('loan.edit');
   const canViewLogs = can('loan.loanLogs') || can('reports.logs');
@@ -1251,6 +1286,7 @@ const LoanInfo = () => {
   const canDeleteDeposit = can('loan.deposit');
   const canDeletePrincipal = can('loan.addPrincipal');
   const canDeleteLoan = can('loan.delete');
+  const canForm8 = can('loan.form8') || can('loan.view');
 
   const customerName = selectedUser?.user_first_name
     ? `${selectedUser.user_first_name} ${selectedUser.user_last_name || ''}`.trim()
@@ -1262,6 +1298,25 @@ const LoanInfo = () => {
 
   const closeRecordReceipt = () => {
     setReceiptState({ show: false, type: 'principal', record: null });
+  };
+
+  const handleForm8Download = async () => {
+    if (!loanDetails || isForm8Downloading) return;
+    if (!canForm8) {
+      toast.error('You do not have permission to download Form 8');
+      return;
+    }
+
+    setIsForm8Downloading(true);
+    try {
+      const fileName = await downloadLoanForm8Pdf(loanDetails, selectedUser);
+      toast.success(`Form 8 downloaded: ${fileName}`);
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || 'Failed to download Form 8');
+    } finally {
+      setIsForm8Downloading(false);
+    }
   };
 
   const handleInvoiceDownload = () => {
@@ -1280,6 +1335,7 @@ const LoanInfo = () => {
 
   const fetchLoan = useCallback(async () => {
     try {
+      setLoading(true);
       const loanId =
         location.state?.loan?.girv_id ??
         location.state?.loanData?.girv_id;
@@ -1421,6 +1477,26 @@ const LoanInfo = () => {
   useEffect(() => {
     fetchLoan();
   }, [fetchLoan]);
+
+  const currentLoanId =
+    loanDetails?.girv_id ??
+    location.state?.loan?.girv_id ??
+    location.state?.loanData?.girv_id;
+
+  const navUserId =
+    selectedUser?.user_id ??
+    loanDetails?.girv_user_id ??
+    location.state?.loan?.girv_user_id;
+
+  const navFirmId =
+    selectedFirmId === "all" ? null : (selectedFirm?.firm_id || selectedFirmId);
+
+  const recordNav = useUserRecordNavigation({
+    type: "loan",
+    currentId: currentLoanId,
+    userId: navUserId,
+    firmId: navFirmId,
+  });
 
   if (loading) return <div className="p-4 text-center">Loading loan details...</div>;
   if (!loanDetails) return <div className="p-4 text-center">Loan not found.</div>;
@@ -1675,10 +1751,12 @@ const LoanInfo = () => {
         canTransact={canTransact}
         isUpdateAllowed={isUpdateAllowed}
         isInvoiceDownloading={isInvoiceDownloading}
+        isForm8Downloading={isForm8Downloading}
+        canForm8={canForm8}
         customerName={customerName}
-        onBack={() => navigate(-1)}
         onUpdateClick={() => navigate('/user/home/edit-loan/' + loanDetails.girv_id)}
         onDepositClick={() => setActiveModal('deposit')}
+        onForm8Click={handleForm8Download}
         onTransactionClick={() => setActiveModal('transaction')}
         onInvoiceClick={handleInvoiceDownload}
         onLogsClick={openLogsModal}
@@ -1702,6 +1780,7 @@ const LoanInfo = () => {
         canUpdateInterest={canUpdateInterest}
         interestBlockReason={interestBlockReason}
         onEditInterestClick={openInterestModal}
+        recordNav={recordNav}
       />
 
       {/* ========== Desktop view ========== */}
@@ -1711,7 +1790,7 @@ const LoanInfo = () => {
             <h5 className="fw-bold text-primary mb-0">LOAN DETAILS PANEL</h5>
           </div>
           <div className="col-8">
-            <div className="d-flex justify-content-end align-items-stretch gap-2" style={{ height: '36px' }}>
+            <div className="d-flex justify-content-end align-items-stretch gap-2 panel-header-actions" style={{ height: '36px' }}>
               <span className="badge bg-primary-subtle border border-primary text-primary fw-bold fs-6 px-3 d-inline-flex align-items-center">
                 {loanDetails.girv_unique_code || loanDetails.girv_loan_no || (loanDetails.girv_id ? `LN-${loanDetails.girv_id}` : '')}
               </span>
@@ -1724,12 +1803,15 @@ const LoanInfo = () => {
                   </span>
                 );
               })()}
-              <button className="btn btn-outline-danger btn-sm shadow-sm px-3 d-inline-flex align-items-center justify-content-center" onClick={() => navigate(-1)} title="Back">
-                <i className="bi bi-arrow-left-circle fs-6"></i>
-              </button>
-              <button className="btn btn-outline-success btn-sm shadow-sm px-3 d-inline-flex align-items-center justify-content-center" title="Next">
-                <i className="bi bi-arrow-right-circle fs-6"></i>
-              </button>
+            <RecordNavButtons
+              variant="panel"
+              hasPrev={recordNav.hasPrev}
+              hasNext={recordNav.hasNext}
+              onPrev={recordNav.goPrev}
+              onNext={recordNav.goNext}
+              positionLabel={recordNav.positionLabel}
+              disabled={recordNav.loading}
+            />
             </div>
           </div>
         </div>
@@ -1862,11 +1944,14 @@ const LoanInfo = () => {
         <ActionFooter
           onUpdateClick={() => navigate('/user/home/edit-loan/' + loanDetails.girv_id)}
           onDepositClick={() => setActiveModal('deposit')}
+          onForm8Click={handleForm8Download}
           onTransactionClick={() => setActiveModal('transaction')}
           onInvoiceClick={handleInvoiceDownload}
           onLogsClick={openLogsModal}
           showLogs={canViewLogs}
           isInvoiceDownloading={isInvoiceDownloading}
+          isForm8Downloading={isForm8Downloading}
+          canForm8={canForm8}
           canTransact={canTransact}
           isUpdateAllowed={isUpdateAllowed}
           onDeleteClick={handleDeleteLoan}
