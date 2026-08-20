@@ -137,6 +137,7 @@ const UserHomeMobileLists = ({
                   items={[
                     { label: "Status", node: <StatusBadge status={row.status} /> },
                     { label: "Start Date", value: row.startDate },
+                    { label: "T.Period", value: row.timePeriod },
                     { label: "Principal", value: row.principal },
                     { label: "EMI Amt", value: row.emi },
                     { label: "EMIs Paid", value: row.emiProgress },
@@ -145,10 +146,6 @@ const UserHomeMobileLists = ({
                     { label: "ROI", value: row.roi },
                     { label: "Frequency", value: row.freq },
                     { label: "Final Amt", value: row.finalAmt },
-                    { label: "Cash", value: row.cash },
-                    { label: "Bank", value: row.bank },
-                    { label: "Online", value: row.online },
-                    { label: "Card", value: row.card },
                     { label: "Firm", value: row.firmName, full: true },
                     {
                       label: "Action",
@@ -190,19 +187,14 @@ const UserHomeMobileLists = ({
                 <DetailGrid
                   items={[
                     { label: "Status", node: <StatusBadge status={row.status} /> },
+                    { label: "Type", value: row.type },
                     { label: "Start Date", value: row.startDate },
                     { label: "End Date", value: row.endDate },
                     { label: "T.Period", value: row.timePeriod },
-                    { label: "Type", value: row.type },
                     { label: "Principal", value: row.principal },
-                    { label: "ROI", value: row.roi },
-                    { label: "Packet No", value: row.packetNo },
-                    { label: "Locker No", value: row.lockerNo },
-                    { label: "Final Amt", value: row.finalAmt },
-                    { label: "Cash", value: row.cash },
-                    { label: "Bank", value: row.bank },
-                    { label: "Online", value: row.online },
-                    { label: "Card", value: row.card },
+                    { label: "Interest", value: row.interest },
+                    { label: "Final Pay", value: row.finalPay },
+                    { label: "Profit/Loss", value: row.profitLoss },
                     {
                       label: "Action",
                       full: true,

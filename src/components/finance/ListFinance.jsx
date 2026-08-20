@@ -6,10 +6,10 @@ import { toast } from "react-toastify";
 import List from "../common/List";
 import { setSelectedUser } from "../../store/slices/userSlice";
 import {
-  formatListAmt,
+  formatListAmtOrDash,
   formatListDate,
   statusBadgeHtml,
-  getFinanceEmiStats,
+  normalizeFinanceListRow,
 } from "../../utils/listFormatters";
 
 const ListFinance = ({ status = "ALL", global = false }) => {
@@ -40,7 +40,7 @@ const ListFinance = ({ status = "ALL", global = false }) => {
       }
       const response = await getFinances(filters);
       const data = Array.isArray(response) ? response : (response.data || []);
-      setFinances(data);
+      setFinances(data.map(normalizeFinanceListRow));
     } catch (error) {
       console.error("Error fetching finances:", error);
       toast.error("Failed to load finance records");
@@ -104,73 +104,83 @@ const ListFinance = ({ status = "ALL", global = false }) => {
     if (global) {
       cols.push(
         {
-          key: "user",
+          key: "fin_customer_name",
           title: "Customer",
           searchable: true,
           customerHome: true,
           render: (data, type, row) => {
-            const name = row.user
-              ? `${row.user.user_first_name || ""} ${row.user.user_last_name || ""}`.trim()
-              : "N/A";
-            if (type !== "display") return name || "N/A";
+            const name = data || "N/A";
+            if (type !== "display") return name;
             if (!row.user) return "N/A";
             return `<span class="text-brown fw-bold cursor-pointer customer-home-btn" title="Open customer home">${name}</span>`;
           },
         },
         {
-          key: "user",
+          key: "fin_customer_mobile",
           title: "Mobile",
           searchable: true,
-          render: (data, type, row) => row.user?.user_mobile_no || "-",
+          render: (data) => data || "-",
         }
       );
     }
 
-    cols.push(
-      {
-        key: "firm",
+    cols.push({
+      key: "fin_status",
+      title: "Status",
+      render: (data) => statusBadgeHtml(data),
+    });
+
+    if (global) {
+      cols.push({
+        key: "fin_firm_name",
         title: "Firm",
-        render: (data, type, row) => row.firm?.firm_name || "N/A",
-      },
-      {
-        key: "fin_status",
-        title: "Status",
-        render: (data) => statusBadgeHtml(data),
-      },
+        render: (data) => data || "N/A",
+      });
+    }
+
+    cols.push(
       {
         key: "fin_start_date",
         title: "Start Date",
         dateFilter: true,
         render: (data) =>
-          `<span class="text-brown fw-bold cursor-pointer view-btn">${formatListDate(data)}</span>`,
+          data
+            ? `<span class="text-brown fw-bold cursor-pointer view-btn">${formatListDate(data)}</span>`
+            : "-",
+      },
+      {
+        key: "fin_time_period",
+        title: "T.Period",
+        render: (data) => data || "-",
       },
       {
         key: "fin_prin_amt",
         title: "Principal",
         sum: true,
-        render: (data) => formatListAmt(data),
+        render: (data) => formatListAmtOrDash(data),
       },
       {
         key: "fin_emi_amt",
         title: "EMI Amt",
         sum: true,
-        render: (data) => formatListAmt(data),
+        render: (data) => formatListAmtOrDash(data),
       },
       {
-        key: "fin_no_of_emi",
+        key: "fin_emi_progress",
         title: "EMIs",
-        render: (data, type, row) => getFinanceEmiStats(row).emiProgress,
+        render: (data) => data || "-",
       },
       {
         key: "fin_collec_amt",
         title: "Collected",
         sum: true,
-        render: (data) => formatListAmt(data),
+        render: (data) => formatListAmtOrDash(data),
       },
       {
-        key: "fin_id",
+        key: "fin_pending_amt",
         title: "Pending",
-        render: (data, type, row) => formatListAmt(getFinanceEmiStats(row).pendingAmt),
+        sum: true,
+        render: (data) => formatListAmtOrDash(data),
       },
       {
         key: "fin_roi",
@@ -186,31 +196,7 @@ const ListFinance = ({ status = "ALL", global = false }) => {
         key: "fin_final_amt",
         title: "Final Amt",
         sum: true,
-        render: (data) => formatListAmt(data),
-      },
-      {
-        key: "fin_cash_amt",
-        title: "Cash",
-        sum: true,
-        render: (data) => formatListAmt(data),
-      },
-      {
-        key: "fin_bank_amt",
-        title: "Bank",
-        sum: true,
-        render: (data) => formatListAmt(data),
-      },
-      {
-        key: "fin_online_amt",
-        title: "Online",
-        sum: true,
-        render: (data) => formatListAmt(data),
-      },
-      {
-        key: "fin_card_amt",
-        title: "Card",
-        sum: true,
-        render: (data) => formatListAmt(data),
+        render: (data) => formatListAmtOrDash(data),
       }
     );
 

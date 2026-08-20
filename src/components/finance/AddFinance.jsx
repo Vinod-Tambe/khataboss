@@ -11,6 +11,7 @@ import { getAccountsDropdown } from '../../api/accountApi';
 import { createFinance } from '../../api/financeApi';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import FormUniqueCodeBadge from '../common/FormUniqueCodeBadge';
 
 
 const AddFinance = () => {
@@ -819,7 +820,12 @@ const AddFinance = () => {
 
   return (
     <div className="card border-0">
-      <h4 className="card-title text-center fw-bold">Add New Finance</h4>
+      <div className="position-relative mb-3 mt-2">
+        <div className="position-absolute top-0 start-0 z-1">
+          <FormUniqueCodeBadge entityType="FINANCE" />
+        </div>
+        <h4 className="card-title text-center fw-bold m-0 py-1">Add New Finance</h4>
+      </div>
 
       <form ref={formRef} noValidate onSubmit={handleSubmit}>
         {progressBar}

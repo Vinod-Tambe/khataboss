@@ -14,6 +14,7 @@ import {
   sendWhatsAppPdfOnly,
   LOAN_RECEIPT_TEMPLATE_BY_TYPE,
 } from '../../utils/dispatchWhatsAppReceipt';
+import { getCustomerWhatsAppNo } from '../../utils/customerFormatters';
 
 const LoanRecordReceiptModal = ({
   show,
@@ -68,7 +69,7 @@ const LoanRecordReceiptModal = ({
     setSharing(true);
     const fileName = getLoanRecordFileName(options);
     const firmId = loanDetails?.girv_firm_id || loanDetails?.firm?.firm_id;
-    const toPhone = customer?.user_mobile_no;
+    const toPhone = getCustomerWhatsAppNo(customer);
     const toEmail = customer?.user_email_id;
     const customerName = customer?.user_first_name
       ? `${customer.user_first_name} ${customer.user_last_name || ''}`.trim()

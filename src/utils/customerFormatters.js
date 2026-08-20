@@ -54,3 +54,69 @@ export const getCustomerPhoneParts = (user) => {
 
   return { mobile, phone };
 };
+
+/** WhatsApp number for messaging; falls back to mobile if not set. */
+export const getCustomerWhatsAppNo = (user) => {
+  const whatsapp = String(user?.user_whatsapp_no || '').trim();
+  const mobile = String(user?.user_mobile_no || '').trim();
+  return whatsapp || mobile || '';
+};
+
+export const getCustomerFirmInfo = (user, firms = []) => {
+  if (user?.firm && typeof user.firm === 'object') return user.firm;
+
+  const firmId = user?.user_firm_id;
+  if (firmId && Array.isArray(firms) && firms.length) {
+    return firms.find((f) => String(f.firm_id) === String(firmId)) || null;
+  }
+
+  return null;
+};
+
+export const getCustomerFirmName = (user, firms = []) => {
+  const firm = getCustomerFirmInfo(user, firms);
+  if (firm?.firm_name) return String(firm.firm_name).trim();
+
+  const fromRelation = String(user?.firm?.firm_name || '').trim();
+  if (fromRelation) return fromRelation;
+
+  return '';
+};
+
+/** Lines for customer name hover tooltip (home, grid, etc.). */
+export const buildCustomerHoverDetails = (user, firms = []) => {
+  if (!user) return [];
+
+  const lines = [];
+  const push = (label, value) => {
+    const text = String(value || '').trim();
+    if (text) lines.push({ label, value: text });
+  };
+
+  const fullName = [user.user_first_name, user.user_last_name].filter(Boolean).join(' ').trim();
+  push('Name', fullName);
+  push('Customer ID', user.user_unique_code || (user.user_id != null ? String(user.user_id) : ''));
+
+  const firm = getCustomerFirmInfo(user, firms);
+  push('Firm', firm?.firm_name || getCustomerFirmName(user, firms));
+  push('Firm Phone', firm?.firm_phone_no);
+  push('Firm City', firm?.firm_city);
+
+  const mobile = String(user.user_mobile_no || '').trim();
+  const phone = String(user.user_phone_no || '').trim();
+  const whatsapp = String(user.user_whatsapp_no || '').trim();
+
+  push('Mobile', mobile);
+  if (phone && phone !== mobile) push('Phone', phone);
+  if (whatsapp) push('WhatsApp', whatsapp);
+
+  const email = getCustomerEmail(user);
+  if (email !== '-') push('Email', email);
+
+  push('Father', user.user_father_name);
+
+  const address = getCustomerFullAddress(user);
+  if (address !== '-') push('Address', address);
+
+  return lines;
+};

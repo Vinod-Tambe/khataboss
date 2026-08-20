@@ -8,7 +8,14 @@ import { getFinanceDetails } from "../../api/financeApi";
 import { getGirviById } from "../../api/girviApi";
 import { getUserDashboard } from "../../api/dashboardApi";
 import moment from "moment";
-import { formatTimePeriod } from "../../utils/formatTimePeriod";
+import {
+  getFinanceTimePeriod,
+  getLoanEndDate,
+  getLoanTimePeriod,
+  getLoanListMetrics,
+  formatProfitLossText,
+  getLoanPrincipalAmount,
+} from "../../utils/listFormatters";
 import "../../css/Home.css";
 
 const LAST_N = 5;
@@ -85,10 +92,7 @@ const UserHome = () => {
             roi: f.fin_roi != null && f.fin_roi !== "" ? `${f.fin_roi}%` : "-",
             freq: f.fin_freq_type || "-",
             startDate: f.fin_start_date ? moment(f.fin_start_date).format("DD-MM-YYYY") : "-",
-            cash: formatAmt(f.fin_cash_amt),
-            bank: formatAmt(f.fin_bank_amt),
-            online: formatAmt(f.fin_online_amt),
-            card: formatAmt(f.fin_card_amt),
+            timePeriod: getFinanceTimePeriod(f),
             firmName: f.firm?.firm_name || "-",
             otherInfo: f.fin_other_info || "-",
             status: f.fin_status,
@@ -99,26 +103,19 @@ const UserHome = () => {
         // Set Loan List (last 5) with detailed info
         const dynamicLoans = (latestLoans || []).slice(0, LAST_N).map((l) => {
           const startDate = l.girv_start_date ? moment(l.girv_start_date) : null;
-          // Active loans have no stored end date — use today (same as Loan Info)
-          const endDate = moment();
-          const roiType = l.girv_roi_type ? String(l.girv_roi_type).toUpperCase() : "";
+          const metrics = getLoanListMetrics(l);
           return {
             ...l,
             id: l.girv_id,
             loanNo: l.girv_unique_code || l.girv_loan_no || `Loan-${l.girv_id}`,
-            principal: formatAmt(l.girv_prin_amt),
-            finalAmt: formatAmt(l.girv_final_amt),
-            roi: l.girv_roi != null && l.girv_roi !== "" ? `${l.girv_roi}%${roiType ? ` ${roiType}` : ""}` : "-",
+            principal: formatAmt(getLoanPrincipalAmount(l)),
+            interest: metrics.interest != null ? formatAmt(metrics.interest) : "-",
+            finalPay: metrics.finalPay != null ? formatAmt(metrics.finalPay) : "-",
+            profitLoss: formatProfitLossText(metrics.profitLoss),
             type: l.girv_type ? String(l.girv_type).toUpperCase() : "-",
             startDate: startDate?.isValid() ? startDate.format("DD-MM-YYYY") : "-",
-            endDate: endDate.format("DD-MM-YYYY"),
-            timePeriod: startDate?.isValid() ? formatTimePeriod(startDate, endDate) : "-",
-            packetNo: l.girv_packet_no || "-",
-            lockerNo: l.girv_locker_no || "-",
-            cash: formatAmt(l.girv_cash_amt),
-            bank: formatAmt(l.girv_bank_amt),
-            online: formatAmt(l.girv_online_amt),
-            card: formatAmt(l.girv_card_amt),
+            endDate: getLoanEndDate(l),
+            timePeriod: getLoanTimePeriod(l),
             otherInfo: l.girv_other_info || "-",
             status: l.girv_status,
           };
@@ -193,6 +190,7 @@ const UserHome = () => {
         <ClickableCell onClick={() => handleViewFinance(row.id)}>{row.startDate}</ClickableCell>
       ),
     },
+    { header: "T.Period", key: "timePeriod" },
     { header: "Principal", key: "principal" },
     { header: "EMI Amt", key: "emi" },
     { header: "EMIs", key: "emiProgress" },
@@ -201,10 +199,6 @@ const UserHome = () => {
     { header: "ROI", key: "roi" },
     { header: "Freq", key: "freq" },
     { header: "Final Amt", key: "finalAmt" },
-    { header: "Cash", key: "cash" },
-    { header: "Bank", key: "bank" },
-    { header: "Online", key: "online" },
-    { header: "Card", key: "card" },
   ];
 
   const loanColumns = [
@@ -216,6 +210,7 @@ const UserHome = () => {
       ),
     },
     { header: "Status", key: "status" },
+    { header: "Type", key: "type" },
     {
       header: "Start Date",
       key: "startDate",
@@ -225,16 +220,10 @@ const UserHome = () => {
     },
     { header: "End Date", key: "endDate" },
     { header: "T.Period", key: "timePeriod" },
-    { header: "Type", key: "type" },
     { header: "Principal", key: "principal" },
-    { header: "ROI", key: "roi" },
-    { header: "Packet", key: "packetNo" },
-    { header: "Locker", key: "lockerNo" },
-    { header: "Final Amt", key: "finalAmt" },
-    { header: "Cash", key: "cash" },
-    { header: "Bank", key: "bank" },
-    { header: "Online", key: "online" },
-    { header: "Card", key: "card" },
+    { header: "Interest", key: "interest" },
+    { header: "Final Pay", key: "finalPay" },
+    { header: "Profit/Loss", key: "profitLoss" },
   ];
 
   const getTransactionLink = (row) => {

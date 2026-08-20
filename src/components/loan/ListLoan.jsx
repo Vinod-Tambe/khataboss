@@ -7,11 +7,11 @@ import List from "../common/List";
 import { setSelectedUser } from "../../store/slices/userSlice";
 import usePermissions from "../../hooks/usePermissions";
 import {
-  formatListAmt,
+  formatListAmtOrDash,
   formatListDate,
   statusBadgeHtml,
-  getLoanEndDate,
-  getLoanTimePeriod,
+  formatProfitLossHtml,
+  normalizeLoanListRow,
 } from "../../utils/listFormatters";
 
 const ListLoan = ({ status = "ALL", global = false }) => {
@@ -36,7 +36,7 @@ const ListLoan = ({ status = "ALL", global = false }) => {
       }
       const response = await getGirvis(filters);
       const data = Array.isArray(response) ? response : (response.data || []);
-      setLoans(data);
+      setLoans(data.map(normalizeLoanListRow));
     } catch (error) {
       console.error("Error fetching loans:", error);
       toast.error("Failed to load loan records");
@@ -101,29 +101,35 @@ const ListLoan = ({ status = "ALL", global = false }) => {
         key: "girv_unique_code",
         title: "Loan No",
         searchable: true,
-        render: (data, type, row) => row?.girv_unique_code || row?.girv_loan_no || `${row?.girv_id || data}`,
+        render: (data, type, row) => {
+          const value = data || row?.girv_loan_no || (row?.girv_id ? String(row.girv_id) : "");
+          if (type !== "display") return value || "-";
+          return value
+            ? `<span class="text-brown fw-bold">${value}</span>`
+            : "-";
+        },
       },
     ];
 
     if (global) {
       cols.push(
         {
-          key: "girv_id",
+          key: "girv_customer_name",
           title: "Customer Name",
           searchable: true,
           customerHome: true,
           render: (data, type, row) => {
-            if (!row?.user) return "-";
-            const name = `${row.user.user_first_name || ""} ${row.user.user_last_name || ""}`.trim() || "-";
+            const name = data || "-";
             if (type !== "display") return name;
+            if (!row?.user) return "-";
             return `<span class="text-brown fw-bold cursor-pointer customer-home-btn" title="Open customer home">${name}</span>`;
           },
         },
         {
-          key: "girv_id",
+          key: "girv_customer_mobile",
           title: "Mobile",
           searchable: true,
-          render: (data, type, row) => row.user?.user_mobile_no || "-",
+          render: (data) => data || "-",
         }
       );
     }
@@ -135,116 +141,75 @@ const ListLoan = ({ status = "ALL", global = false }) => {
         render: (data) => statusBadgeHtml(data),
       },
       {
-        key: "girv_start_date",
-        title: "Start Date",
-        dateFilter: true,
-        render: (data) =>
-          `<span class="text-brown fw-bold cursor-pointer view-btn">${formatListDate(data)}</span>`,
-      },
-      {
-        key: "girv_start_date",
-        title: "End Date",
-        render: (data, type, row) => getLoanEndDate(row),
-      },
-      {
-        key: "girv_start_date",
-        title: "T.Period",
-        render: (data, type, row) => getLoanTimePeriod(row),
-      },
-      {
         key: "girv_type",
         title: "Type",
         render: (data) => (data ? String(data).toUpperCase() : "-"),
       },
       {
-        key: "girv_prin_amt",
+        key: "girv_start_date",
+        title: "Start Date",
+        dateFilter: true,
+        render: (data) =>
+          data
+            ? `<span class="text-brown fw-bold cursor-pointer view-btn">${formatListDate(data)}</span>`
+            : "-",
+      },
+      {
+        key: "girv_end_date_display",
+        title: "End Date",
+        render: (data) => data || "-",
+      },
+      {
+        key: "girv_time_period",
+        title: "T.Period",
+        render: (data) => data || "-",
+      },
+      {
+        key: "girv_display_principal",
         title: "Principal",
         sum: true,
-        render: (data) => formatListAmt(data),
+        render: (data) => formatListAmtOrDash(data),
       },
       {
-        key: "girv_roi",
-        title: "ROI",
-        render: (data, type, row) => {
-          if (data == null || data === "") return "-";
-          const roiType = row?.girv_roi_type ? String(row.girv_roi_type).toUpperCase() : "";
-          return `${data}%${roiType ? ` ${roiType}` : ""}`;
+        key: "girv_total_interest",
+        title: "Interest",
+        sum: true,
+        render: (data) => formatListAmtOrDash(data),
+      },
+      {
+        key: "girv_total_due",
+        title: "Final Pay",
+        sum: true,
+        render: (data) => formatListAmtOrDash(data),
+      },
+      {
+        key: "profit_loss",
+        title: "Profit/Loss",
+        render: (data, type) => {
+          if (type !== "display") {
+            return data != null ? formatListAmtOrDash(data) : "-";
+          }
+          return formatProfitLossHtml(data);
         },
-      },
-      {
-        key: "girv_packet_no",
-        title: "Packet",
-        render: (data) => data || "-",
-      },
-      {
-        key: "girv_locker_no",
-        title: "Locker",
-        render: (data) => data || "-",
       }
     );
 
     if (status === "TRANSFERRED") {
       cols.push(
         {
-          key: "girv_transfer_firm_id",
+          key: "girv_transfer_firm_name",
           title: "Transfer Firm",
           searchable: true,
-          render: (data, type, row) => {
-            const name = row?.transferFirm?.firm_name;
-            if (name) return name;
-            return data ? `Firm #${data}` : "-";
-          },
+          render: (data) => data || "-",
         },
         {
-          key: "girv_transfer_ml_id",
+          key: "girv_transfer_ml_name",
           title: "Money Lender",
           searchable: true,
-          render: (data, type, row) => {
-            const ml = row?.transferMoneyLender;
-            if (ml) {
-              return (
-                [ml.ml_first_name, ml.ml_last_name].filter(Boolean).join(" ").trim() ||
-                `ML #${ml.ml_id}`
-              );
-            }
-            return data ? `ML #${data}` : "-";
-          },
+          render: (data) => data || "-",
         }
       );
     }
-
-    cols.push(
-      {
-        key: "girv_final_amt",
-        title: "Final Amt",
-        sum: true,
-        render: (data) => formatListAmt(data),
-      },
-      {
-        key: "girv_cash_amt",
-        title: "Cash",
-        sum: true,
-        render: (data) => formatListAmt(data),
-      },
-      {
-        key: "girv_bank_amt",
-        title: "Bank",
-        sum: true,
-        render: (data) => formatListAmt(data),
-      },
-      {
-        key: "girv_online_amt",
-        title: "Online",
-        sum: true,
-        render: (data) => formatListAmt(data),
-      },
-      {
-        key: "girv_card_amt",
-        title: "Card",
-        sum: true,
-        render: (data) => formatListAmt(data),
-      }
-    );
 
     return cols;
   }, [global, status]);

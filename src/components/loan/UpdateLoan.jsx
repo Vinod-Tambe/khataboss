@@ -22,6 +22,7 @@ import {
   validateInterestForm,
 } from '../../utils/loanUpdateRules';
 import ImageUploadSquare from '../common/ImageUploadSquare';
+import FormUniqueCodeBadge from '../common/FormUniqueCodeBadge';
 import '../../css/ProfileDocumentsSection.css';
 
 const UpdateLoan = () => {
@@ -41,6 +42,7 @@ const UpdateLoan = () => {
   const [accounts, setAccounts] = useState([]);
   const [dynamicPurities, setDynamicPurities] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loanUniqueCode, setLoanUniqueCode] = useState('');
   const [firmRates, setFirmRates] = useState([]);
   const { selectedFirmId, firms: reduxFirms } = useSelector((state) => state.firm);
   const { selectedUser } = useSelector((state) => state.user);
@@ -191,6 +193,7 @@ const UpdateLoan = () => {
         const res = await getGirviById(id);
         if (res && res.data) {
           const d = res.data;
+          setLoanUniqueCode(d.girv_unique_code || d.girv_loan_no || '');
           const rules = getLoanUpdateRules(d);
 
           setLoanUpdateRules({
@@ -1249,6 +1252,9 @@ const UpdateLoan = () => {
   return (
     <div className="card p-0 border-0 border-md-1 border-secondary">
       <div className="position-relative mb-3 pb-md-0 mt-2">
+        <div className="position-absolute top-0 start-0 z-1">
+          <FormUniqueCodeBadge code={loanUniqueCode} />
+        </div>
         <div className="position-absolute top-0 end-0 d-flex align-items-center h-100 z-1">
           <div className="btn-group" role="group">
             <button

@@ -16,6 +16,7 @@ import { validateUploadFile } from '../../utils/fileUpload';
 import ImageUploadSquare from '../common/ImageUploadSquare';
 import '../../css/ProfileDocumentsSection.css';
 import { calculateFirstMonthInterest } from '../../utils/loanInterest';
+import FormUniqueCodeBadge from '../common/FormUniqueCodeBadge';
 
 const AddLoan = () => {
   const navigate = useNavigate();
@@ -1094,6 +1095,9 @@ const AddLoan = () => {
   return (
     <div className="card p-0 border-0 border-md-1 border-secondary">
       <div className="position-relative mb-3 pb-md-0 mt-2">
+        <div className="position-absolute top-0 start-0 z-1">
+          <FormUniqueCodeBadge entityType="LOAN" />
+        </div>
         <div className="position-absolute top-0 end-0 d-flex align-items-center h-100 z-1">
           <div className="btn-group" role="group">
             <button

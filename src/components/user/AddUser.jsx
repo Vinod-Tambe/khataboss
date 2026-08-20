@@ -77,7 +77,7 @@ const AddUser = () => {
 
     const [formData, setFormData] = useState({
         firstName: '', lastName: '', fatherName: '', motherName: '',
-        mobileNo: '', phoneNo: '', emailId: '', gender: 'Male', cast: '', maritalStatus: '',
+        mobileNo: '', phoneNo: '', whatsappNo: '', emailId: '', gender: 'Male', cast: '', maritalStatus: '',
         dateOfBirth: new Date().toISOString().split('T')[0], panNo: '', gstin: '', taxNo: '', adhaarNo: '',
         bankName: '', bankAccNo: '', ifscCode: '',
         shopName: '', officeAddress: '', permanentAddress: '', currentAddress: '',
@@ -169,6 +169,11 @@ const AddUser = () => {
             return false;
         }
 
+        if (formData.whatsappNo && !validateMobile(formData.whatsappNo)) {
+            toast.error('Invalid WhatsApp Number. It should be 10 digits starting with 6-9.');
+            return false;
+        }
+
         if (formData.gstin && !validateGstin(formData.gstin)) {
             toast.error('Invalid GSTIN. It should be a 15-character alphanumeric code.');
             return false;
@@ -222,6 +227,7 @@ const AddUser = () => {
                 motherName: 'user_mother_name',
                 mobileNo: 'user_mobile_no',
                 phoneNo: 'user_phone_no',
+                whatsappNo: 'user_whatsapp_no',
                 emailId: 'user_email_id',
                 gender: 'user_gender',
                 cast: 'user_cast',
@@ -269,7 +275,7 @@ const AddUser = () => {
             // Reset form (fallback if no data returned)
             setFormData({
                 firstName: '', lastName: '', fatherName: '', motherName: '',
-                mobileNo: '', phoneNo: '', emailId: '', gender: 'Male', cast: '', maritalStatus: '',
+                mobileNo: '', phoneNo: '', whatsappNo: '', emailId: '', gender: 'Male', cast: '', maritalStatus: '',
                 dateOfBirth: new Date().toISOString().split('T')[0], panNo: '', gstin: '', taxNo: '', adhaarNo: '',
                 bankName: '', bankAccNo: '', ifscCode: '',
                 shopName: '', officeAddress: '', permanentAddress: '', currentAddress: '',
@@ -329,6 +335,10 @@ const AddUser = () => {
                 <div className="col-12 col-md-6 col-lg-3">
                     <label className="form-label">Phone No</label>
                     <input type="tel" name="phoneNo" placeholder='Enter phone no' className="form-control border-dark" value={formData.phoneNo} onChange={handleChange} />
+                </div>
+                <div className="col-12 col-md-6 col-lg-3">
+                    <label className="form-label">WhatsApp No</label>
+                    <input type="tel" name="whatsappNo" placeholder='Enter WhatsApp no' className="form-control border-dark" value={formData.whatsappNo} onChange={handleChange} />
                 </div>
                 <div className="col-12 col-md-6 col-lg-3">
                     <label className="form-label">Email Id</label>

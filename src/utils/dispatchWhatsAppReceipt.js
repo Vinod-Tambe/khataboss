@@ -1,5 +1,6 @@
 import moment from 'moment';
 import { dispatchMessage } from '../api/smsApi';
+import { getCustomerWhatsAppNo } from './customerFormatters';
 
 export const FINANCE_RECEIPT_TEMPLATE = 'finance_collection_receipt';
 
@@ -21,7 +22,7 @@ export function getFinanceDispatchContext(initialFinance) {
 
   return {
     firmId: initialFinance?.fin_firm_id || initialFinance?.firm?.firm_id,
-    toPhone: initialFinance?.user?.user_mobile_no,
+    toPhone: getCustomerWhatsAppNo(initialFinance?.user),
     toEmail: initialFinance?.user?.user_email_id,
     customerName,
     regNo: String(initialFinance?.fin_unique_code || initialFinance?.fin_id || 'N/A'),

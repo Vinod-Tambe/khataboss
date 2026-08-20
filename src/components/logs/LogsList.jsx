@@ -47,6 +47,7 @@ const LogsList = ({
   firmId: firmIdProp = null,
 }) => {
   const { selectedFirmId } = useSelector((state) => state.firm);
+  const { user } = useSelector((state) => state.auth);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -67,10 +68,17 @@ const LogsList = ({
     ];
   }, [showFirmColumn]);
 
+  const isStaffUser = user?.role === 'STAFF';
+  const isEntityScope = Boolean(entityType && entityId);
+
   const listTitle = useMemo(() => {
+    if (isStaffUser && !isEntityScope) {
+      if (resolvedFirmId === 'all' && !firmIdProp) return 'My Activity Logs';
+      return `${title} — My Activity`;
+    }
     if (resolvedFirmId === 'all' && !firmIdProp) return 'All Firms — Logs List';
     return title;
-  }, [resolvedFirmId, firmIdProp, title]);
+  }, [resolvedFirmId, firmIdProp, title, isStaffUser, isEntityScope]);
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);

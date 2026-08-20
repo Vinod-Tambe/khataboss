@@ -129,15 +129,56 @@ const List = ({
       return isNaN(num) ? 0 : num;
     };
 
-    const dtColumns = columns.map((col) => ({
-      data: col.key,
-      title: col.title,
-      orderable: col.orderable !== false,
-      searchable: col.searchable !== false,
-      visible: col.visible !== false,
-      className: col.sum ? "text-end" : col.className || "",
-      render: col.render || null,
-    }));
+    const EMPTY_CELL = "-";
+
+    const getCellValue = (row, key) => {
+      if (!row || !key) return null;
+      if (!Object.prototype.hasOwnProperty.call(row, key)) return null;
+      const value = row[key];
+      if (value === undefined || value === null || value === "") return null;
+      return value;
+    };
+
+    const dtColumns = columns.map((col) => {
+      const userRender = col.render;
+      const render = userRender
+        ? function (data, type, row, meta) {
+            const resolved = getCellValue(row, col.key);
+            const cellData = resolved !== null ? resolved : data;
+            const result = userRender(cellData, type, row, meta);
+            if (result === undefined || result === null || result === "") {
+              return type === "display" || type === "export" ? EMPTY_CELL : "";
+            }
+            return result;
+          }
+        : function (data, type) {
+            if (data === undefined || data === null || data === "") {
+              return type === "display" || type === "export" ? EMPTY_CELL : "";
+            }
+            return data;
+          };
+
+      return {
+        data: col.key
+          ? function (row, type, set, meta) {
+              const value = getCellValue(row, col.key);
+              if (value !== null) return value;
+              if (userRender && (type === "sort" || type === "type" || type === "filter")) {
+                const rendered = userRender(null, type, row, meta);
+                return rendered ?? "";
+              }
+              return null;
+            }
+          : null,
+        defaultContent: EMPTY_CELL,
+        title: col.title,
+        orderable: col.orderable !== false,
+        searchable: col.searchable !== false,
+        visible: col.visible !== false,
+        className: col.sum ? "text-end" : col.className || "",
+        render,
+      };
+    });
 
 
     // Action column

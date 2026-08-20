@@ -11,6 +11,7 @@ import { getFirmsDropdown } from '../../api/firmApi';
 import { getAccountsDropdown } from '../../api/accountApi';
 import { getFinanceDetails, updateFinance } from '../../api/financeApi';
 import { toast } from 'react-hot-toast';
+import FormUniqueCodeBadge from '../common/FormUniqueCodeBadge';
 
 const UpdateFinance = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const UpdateFinance = () => {
   const [hasPayments, setHasPayments] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
   const [finId, setFinId] = useState(null);
+  const [finUniqueCode, setFinUniqueCode] = useState('');
   const [collectPaid, setCollectPaid] = useState(0);
 
   const [formData, setFormData] = useState({
@@ -101,6 +103,7 @@ const UpdateFinance = () => {
         const res = await getFinanceDetails(financeId);
         const d = res.data;
         setFinId(d.fin_id);
+        setFinUniqueCode(d.fin_unique_code || '');
         setHasPayments(Boolean(d.has_payments));
         setIsClosed(d.fin_status === 'CLOSED');
         setCollectPaid(parseFloat(d.fine_summary?.collectPaid) || 0);
@@ -345,7 +348,12 @@ const UpdateFinance = () => {
 
   return (
     <div className="card border-0">
-      <h4 className="card-title text-center fw-bold">Update Finance</h4>
+      <div className="position-relative mb-3 mt-2">
+        <div className="position-absolute top-0 start-0 z-1">
+          <FormUniqueCodeBadge code={finUniqueCode} />
+        </div>
+        <h4 className="card-title text-center fw-bold m-0 py-1">Update Finance</h4>
+      </div>
       <div className="alert alert-info py-2 small mx-2">{lockHint}</div>
 
       <form ref={formRef} noValidate onSubmit={handleSubmit}>

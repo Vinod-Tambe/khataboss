@@ -46,7 +46,7 @@ const UpdateUser = () => {
 
     const [formData, setFormData] = useState({
         firstName: '', lastName: '', fatherName: '', motherName: '',
-        mobileNo: '', phoneNo: '', emailId: '', gender: 'Male', cast: '', maritalStatus: '',
+        mobileNo: '', phoneNo: '', whatsappNo: '', emailId: '', gender: 'Male', cast: '', maritalStatus: '',
         dateOfBirth: new Date().toISOString().split('T')[0], panNo: '', gstin: '', taxNo: '', adhaarNo: '',
         bankName: '', bankAccNo: '', ifscCode: '',
         shopName: '', officeAddress: '', permanentAddress: '', currentAddress: '',
@@ -87,6 +87,7 @@ const UpdateUser = () => {
                         motherName: user.user_mother_name || '',
                         mobileNo: user.user_mobile_no || '',
                         phoneNo: user.user_phone_no || '',
+                        whatsappNo: user.user_whatsapp_no || '',
                         emailId: user.user_email_id || '',
                         gender: user.user_gender || 'Male',
                         cast: user.user_cast || '',
@@ -203,6 +204,7 @@ const UpdateUser = () => {
         if (formData.panNo && !validatePan(formData.panNo)) { toast.error('Invalid PAN Number. Format: ABCDE1234F'); return false; }
         if (formData.mobileNo && !validateMobile(formData.mobileNo)) { toast.error('Invalid Mobile Number. It should be 10 digits starting with 6-9.'); return false; }
         if (formData.phoneNo && !validatePhone(formData.phoneNo)) { toast.error('Invalid Phone Number. It should be 10-12 digits.'); return false; }
+        if (formData.whatsappNo && !validateMobile(formData.whatsappNo)) { toast.error('Invalid WhatsApp Number. It should be 10 digits starting with 6-9.'); return false; }
         if (formData.gstin && !validateGstin(formData.gstin)) { toast.error('Invalid GSTIN. It should be a 15-character alphanumeric code.'); return false; }
         if (formData.adhaarNo && !validateAadhaar(formData.adhaarNo)) { toast.error('Invalid Aadhaar Number. It should be 12 digits and not start with 0 or 1.'); return false; }
         if (formData.taxNo && formData.taxNo.length < 5) { toast.error('Tax No should be at least 5 characters.'); return false; }
@@ -232,7 +234,7 @@ const UpdateUser = () => {
             const mapping = {
                 firmId: 'user_firm_id', firstName: 'user_first_name', lastName: 'user_last_name',
                 fatherName: 'user_father_name', motherName: 'user_mother_name',
-                mobileNo: 'user_mobile_no', phoneNo: 'user_phone_no', emailId: 'user_email_id',
+                mobileNo: 'user_mobile_no', phoneNo: 'user_phone_no', whatsappNo: 'user_whatsapp_no', emailId: 'user_email_id',
                 gender: 'user_gender', cast: 'user_cast', maritalStatus: 'user_marital_status',
                 occupation: 'user_occupation', dateOfBirth: 'user_birth_date',
                 gstin: 'user_gstin', taxNo: 'user_tax_no', panNo: 'user_pan_no',
@@ -311,6 +313,10 @@ const UpdateUser = () => {
                 <div className="col-12 col-md-6 col-lg-3">
                     <label className="form-label">Phone No</label>
                     <input type="tel" name="phoneNo" placeholder='Enter phone no' className="form-control border-dark" value={formData.phoneNo} onChange={handleChange} />
+                </div>
+                <div className="col-12 col-md-6 col-lg-3">
+                    <label className="form-label">WhatsApp No</label>
+                    <input type="tel" name="whatsappNo" placeholder='Enter WhatsApp no' className="form-control border-dark" value={formData.whatsappNo} onChange={handleChange} />
                 </div>
                 <div className="col-12 col-md-6 col-lg-3">
                     <label className="form-label">Email Id</label>
