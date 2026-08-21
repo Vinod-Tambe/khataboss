@@ -7,6 +7,7 @@ import TransactionModal from './modal/TransactionModal';
 import LoanRecordReceiptModal from './LoanRecordReceiptModal';
 import { downloadLoanInvoicePdf } from './invoice/downloadLoanInvoicePdf';
 import { downloadLoanForm8Pdf } from './downloadLoanForm8Pdf';
+import { downloadLoanAgreementPdf } from './downloadLoanAgreementPdf';
 import { getGirviById, deleteGirvi } from '../../api/girviApi';
 import { deleteRelease, getReleaseUsers } from '../../api/releaseApi';
 import ReleaseUserListSection from './ReleaseUserListSection';
@@ -540,17 +541,20 @@ const ActionFooter = ({
   onUpdateClick,
   onDepositClick,
   onForm8Click,
+  onAgreementClick,
   onTransactionClick,
   onInvoiceClick,
   onLogsClick,
   onDeleteClick,
   showLogs,
   canForm8,
+  canAgreement,
   canTransact,
   canDeleteLoan,
   isUpdateAllowed,
   isInvoiceDownloading,
   isForm8Downloading,
+  isAgreementDownloading,
   isDeletingLoan,
 }) => (
   <div className="action-footer mt-4">
@@ -563,6 +567,16 @@ const ActionFooter = ({
         >
           <i className={`bi ${isForm8Downloading ? 'bi-hourglass-split' : 'bi-file-text'} text-primary me-1`}></i>
           {isForm8Downloading ? 'Downloading...' : 'FORM 8'}
+        </button>
+      )}
+      {canAgreement && (
+        <button
+          className="btn btn-sm text-nowrap blue-btn"
+          onClick={onAgreementClick}
+          disabled={isAgreementDownloading}
+        >
+          <i className={`bi ${isAgreementDownloading ? 'bi-hourglass-split' : 'bi-file-earmark-text'} text-primary me-1`}></i>
+          {isAgreementDownloading ? 'Downloading...' : 'Agreement'}
         </button>
       )}
       {isUpdateAllowed && (
@@ -723,11 +737,14 @@ const LoanMobileView = ({
   isUpdateAllowed,
   isInvoiceDownloading,
   isForm8Downloading,
+  isAgreementDownloading,
   canForm8,
+  canAgreement,
   customerName = '',
   onUpdateClick,
   onDepositClick,
   onForm8Click,
+  onAgreementClick,
   onTransactionClick,
   onInvoiceClick,
   onLogsClick,
@@ -1210,6 +1227,17 @@ const LoanMobileView = ({
             {isForm8Downloading ? 'Form 8...' : 'Form 8'}
           </button>
         )}
+        {canAgreement && (
+          <button
+            type="button"
+            className="btn loan-mobile-action-btn"
+            onClick={onAgreementClick}
+            disabled={isAgreementDownloading}
+          >
+            <i className={`bi ${isAgreementDownloading ? 'bi-hourglass-split' : 'bi-file-earmark-text'} text-primary`}></i>
+            {isAgreementDownloading ? 'Agreement...' : 'Agreement'}
+          </button>
+        )}
         {isUpdateAllowed && (
           <button type="button" className="btn loan-mobile-action-btn" onClick={onUpdateClick}>
             <i className="bi bi-pencil text-info"></i> Update
@@ -1264,6 +1292,7 @@ const LoanInfo = () => {
   const [showLogsModal, setShowLogsModal] = useState(false);
   const [isInvoiceDownloading, setIsInvoiceDownloading] = useState(false);
   const [isForm8Downloading, setIsForm8Downloading] = useState(false);
+  const [isAgreementDownloading, setIsAgreementDownloading] = useState(false);
   const [loanDetails, setLoanDetails] = useState(null);
   const [releaseUserRows, setReleaseUserRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1287,6 +1316,7 @@ const LoanInfo = () => {
   const canDeletePrincipal = can('loan.addPrincipal');
   const canDeleteLoan = can('loan.delete');
   const canForm8 = can('loan.form8') || can('loan.view');
+  const canAgreement = can('loan.agreement') || can('loan.view');
 
   const customerName = selectedUser?.user_first_name
     ? `${selectedUser.user_first_name} ${selectedUser.user_last_name || ''}`.trim()
@@ -1316,6 +1346,25 @@ const LoanInfo = () => {
       toast.error(err.message || 'Failed to download Form 8');
     } finally {
       setIsForm8Downloading(false);
+    }
+  };
+
+  const handleAgreementDownload = async () => {
+    if (!loanDetails || isAgreementDownloading) return;
+    if (!canAgreement) {
+      toast.error('You do not have permission to download loan agreement');
+      return;
+    }
+
+    setIsAgreementDownloading(true);
+    try {
+      const fileName = await downloadLoanAgreementPdf(loanDetails, selectedUser);
+      toast.success(`Loan agreement downloaded: ${fileName}`);
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || 'Failed to download loan agreement');
+    } finally {
+      setIsAgreementDownloading(false);
     }
   };
 
@@ -1752,11 +1801,14 @@ const LoanInfo = () => {
         isUpdateAllowed={isUpdateAllowed}
         isInvoiceDownloading={isInvoiceDownloading}
         isForm8Downloading={isForm8Downloading}
+        isAgreementDownloading={isAgreementDownloading}
         canForm8={canForm8}
+        canAgreement={canAgreement}
         customerName={customerName}
         onUpdateClick={() => navigate('/user/home/edit-loan/' + loanDetails.girv_id)}
         onDepositClick={() => setActiveModal('deposit')}
         onForm8Click={handleForm8Download}
+        onAgreementClick={handleAgreementDownload}
         onTransactionClick={() => setActiveModal('transaction')}
         onInvoiceClick={handleInvoiceDownload}
         onLogsClick={openLogsModal}
@@ -1945,13 +1997,16 @@ const LoanInfo = () => {
           onUpdateClick={() => navigate('/user/home/edit-loan/' + loanDetails.girv_id)}
           onDepositClick={() => setActiveModal('deposit')}
           onForm8Click={handleForm8Download}
+          onAgreementClick={handleAgreementDownload}
           onTransactionClick={() => setActiveModal('transaction')}
           onInvoiceClick={handleInvoiceDownload}
           onLogsClick={openLogsModal}
           showLogs={canViewLogs}
           isInvoiceDownloading={isInvoiceDownloading}
           isForm8Downloading={isForm8Downloading}
+          isAgreementDownloading={isAgreementDownloading}
           canForm8={canForm8}
+          canAgreement={canAgreement}
           canTransact={canTransact}
           isUpdateAllowed={isUpdateAllowed}
           onDeleteClick={handleDeleteLoan}

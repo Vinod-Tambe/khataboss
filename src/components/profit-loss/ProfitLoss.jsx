@@ -8,6 +8,7 @@ import CapitalAccount from "./CapitalAccount";
 import ProfitLossAccount from "./ProfitLossAccount";
 import TradingAccount from "./TradingAccount";
 import ProfitLossMobileList from "./ProfitLossMobileList";
+import ProfitLossCompliance from "./ProfitLossCompliance";
 import { buildProfitLossAccounts, getAccountById } from "./profitLossData";
 import {
   downloadProfitLossPdf,
@@ -27,6 +28,8 @@ const ProfitLoss = () => {
     selectedFirmId === "all" ? "" : selectedFirmId
   );
   const [accounts, setAccounts] = useState([]);
+  const [scheduleIII, setScheduleIII] = useState(null);
+  const [compliance, setCompliance] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const { fyStart, fyEnd } = useMemo(() => {
@@ -72,6 +75,8 @@ const ProfitLoss = () => {
 
   const pdfOptions = {
     accounts,
+    scheduleIII,
+    compliance,
     firmName: firmDisplayName,
     companyName,
     periodStart: formattedStart,
@@ -96,12 +101,18 @@ const ProfitLoss = () => {
       const response = await getProfitLossEntries(filters);
       if (response.success) {
         setAccounts(buildProfitLossAccounts(response.data));
+        setScheduleIII(response.data?.scheduleIII || null);
+        setCompliance(response.data?.compliance || null);
       } else {
         setAccounts([]);
+        setScheduleIII(null);
+        setCompliance(null);
       }
     } catch (error) {
       console.error("Error fetching profit & loss:", error);
       setAccounts([]);
+      setScheduleIII(null);
+      setCompliance(null);
     } finally {
       setLoading(false);
     }
@@ -308,10 +319,18 @@ const ProfitLoss = () => {
                 <div className="mb-2">
                   <CapitalAccount account={capitalAccount} />
                 </div>
+                <ProfitLossCompliance
+                  scheduleIII={scheduleIII}
+                  compliance={compliance}
+                />
               </div>
 
               <div className="d-md-none no-print">
                 <ProfitLossMobileList accounts={accounts} />
+                <ProfitLossCompliance
+                  scheduleIII={scheduleIII}
+                  compliance={compliance}
+                />
               </div>
             </>
           )}

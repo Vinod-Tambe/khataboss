@@ -8,6 +8,8 @@ import {
     getFinanceEmiFileName,
     printFinanceEmiSchedule,
 } from './downloadFinanceEmiPdf';
+import { downloadFinanceAgreementPdf } from './downloadFinanceAgreementPdf';
+import usePermissions from '../../hooks/usePermissions';
 import {
     sendWhatsAppPdfOnly,
     getFinanceDispatchContext,
@@ -16,6 +18,7 @@ import {
 } from '../../utils/dispatchWhatsAppReceipt';
 import '../../css/Finance.css';
 import { buildFinanceInterestSummary } from '../../utils/financeInterest';
+import { getFinanceTimePeriod } from '../../utils/listFormatters';
 
 const formatAmt = (value) =>
     Number(value || 0).toLocaleString(undefined, {
@@ -78,12 +81,15 @@ const EmiExportActions = ({ disabled, onPrint, onPdf, onWhatsApp, whatsAppLoadin
 );
 
 const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, onPayInterest, onHistory, isLoading, financeData, initialFinance }) => {
+    const { can } = usePermissions();
+    const canAgreement = can('finance.agreement') || can('finance.view');
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
     const [selectedEmiData, setSelectedEmiData] = useState(null);
     const [sharingWhatsApp, setSharingWhatsApp] = useState(false);
+    const [isAgreementDownloading, setIsAgreementDownloading] = useState(false);
 
     const fineSummary = financeData?.fine_summary;
     const interestSummary = useMemo(
@@ -100,6 +106,11 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, on
         (parseFloat(fineSummary?.collectAmt) || 0) > 0 ||
         (parseFloat(fineSummary?.pendingCollect) || 0) > 0 ||
         (parseFloat(fineSummary?.pendingFine) || 0) > 0;
+
+    const timePeriod = useMemo(
+        () => (financeData ? getFinanceTimePeriod(financeData) : '-'),
+        [financeData]
+    );
 
     const handlePrintPreview = (row) => {
         setSelectedEmiData(row);
@@ -181,6 +192,30 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, on
     const handleDownloadAllPdf = () => {
         if (!filteredData.length) return;
         downloadFinanceEmiPdf(scheduleOptions);
+    };
+
+    const handleAgreementDownload = async () => {
+        if (isAgreementDownloading) return;
+        if (!canAgreement) {
+            toast.error('You do not have permission to download finance agreement');
+            return;
+        }
+
+        setIsAgreementDownloading(true);
+        try {
+            const fileName = await downloadFinanceAgreementPdf({
+                financeData,
+                initialFinance,
+                customer: initialFinance?.user,
+                emiRows: filteredData,
+            });
+            toast.success(`Finance agreement downloaded: ${fileName}`);
+        } catch (err) {
+            console.error(err);
+            toast.error(err.message || 'Failed to download finance agreement');
+        } finally {
+            setIsAgreementDownloading(false);
+        }
     };
 
     const handleWhatsAppAll = async () => {
@@ -273,6 +308,10 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, on
                             <div className="finance-mobile-stat">
                                 <span className="finance-mobile-stat__label">Principal</span>
                                 <span className="finance-mobile-stat__value text-primary">{formatAmt(financeData.fin_prin_amt)}</span>
+                            </div>
+                            <div className="finance-mobile-stat">
+                                <span className="finance-mobile-stat__label">T.Period</span>
+                                <span className="finance-mobile-stat__value">{timePeriod}</span>
                             </div>
                             {showInterest && (
                                 <>
@@ -407,6 +446,17 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, on
                         <i className="bi bi-x-circle"></i>
                         <span>Close</span>
                     </button>
+                    {canAgreement && (
+                        <button
+                            className="btn btn-outline-primary"
+                            onClick={handleAgreementDownload}
+                            disabled={isAgreementDownloading}
+                            title="Download finance agreement PDF"
+                        >
+                            <i className={`bi ${isAgreementDownloading ? 'bi-hourglass-split' : 'bi-file-earmark-text'}`}></i>
+                            <span>{isAgreementDownloading ? 'Agreement...' : 'Agreement'}</span>
+                        </button>
+                    )}
                     <button className="btn btn-primary" onClick={onHistory}>
                         <i className="bi bi-clock-history"></i>
                         <span>History</span>
@@ -596,6 +646,17 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, on
                             <button className="btn btn-sm btn-primary px-3" onClick={onHistory}>
                                 <i className="bi bi-clock-history me-1"></i> History
                             </button>
+                            {canAgreement && (
+                                <button
+                                    className="btn btn-sm btn-outline-primary px-3"
+                                    onClick={handleAgreementDownload}
+                                    disabled={isAgreementDownloading}
+                                    title="Download finance agreement PDF"
+                                >
+                                    <i className={`bi ${isAgreementDownloading ? 'bi-hourglass-split' : 'bi-file-earmark-text'} me-1`}></i>
+                                    {isAgreementDownloading ? 'Downloading...' : 'Agreement'}
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -608,6 +669,10 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, on
                             <div className="col-auto px-3 py-2 border-end">
                                 <span className="text-muted small me-2">Prin Amt:</span>
                                 <span className="fw-bold text-primary">{formatAmt(financeData.fin_prin_amt)}</span>
+                            </div>
+                            <div className="col-auto px-3 py-2 border-end">
+                                <span className="text-muted small me-2">T.Period:</span>
+                                <span className="fw-bold text-dark">{timePeriod}</span>
                             </div>
                             {showInterest && (
                                 <>

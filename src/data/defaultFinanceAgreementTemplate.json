@@ -1,0 +1,121 @@
+{
+  "title": "FINANCE AGREEMENT",
+  "subtitle": "Personal / Business Finance Agreement",
+  "complianceReference": "This agreement is executed between the finance company and the borrower for the finance facility as per agreed terms.",
+  "headerNote": "Finance No.: {{finance_no}} | Date: {{finance_date}} | Firm: {{firm_name}}",
+  "footerNote": "This is a computer-generated agreement. Both parties should retain a signed copy for their records.",
+  "pageSize": "A4",
+  "orientation": "portrait",
+  "fontSize": "medium",
+  "showPageNumbers": true,
+  "theme": {
+    "primaryColor": "#1a365d",
+    "secondaryColor": "#2c5282",
+    "textColor": "#1a202c",
+    "mutedTextColor": "#4a5568",
+    "borderColor": "#cbd5e0",
+    "headerBackground": "#ffffff",
+    "sectionBackground": "#f7fafc",
+    "sectionTitleColor": "#1a365d",
+    "tableHeaderBackground": "#edf2f7",
+    "accentColor": "#2b6cb0",
+    "pageBackground": "#ffffff"
+  },
+  "layout": {
+    "showLeftLogo": true,
+    "showRightLogo": false,
+    "showOwnerSign": true,
+    "showQrCode": false,
+    "useFirmFormHeader": true,
+    "useFirmFormFooter": true
+  },
+  "sections": [
+    {
+      "id": "firm_details",
+      "label": "Finance Company / Firm Details",
+      "enabled": true,
+      "order": 1,
+      "fields": [
+        { "id": "firm_name", "label": "Firm Name", "enabled": true, "fieldLayout": "full" },
+        { "id": "firm_shop_name", "label": "Branch Name", "enabled": true, "fieldLayout": "half" },
+        { "id": "firm_reg_no", "label": "Registration No.", "enabled": true, "fieldLayout": "half" },
+        { "id": "firm_address", "label": "Address", "enabled": true, "fieldLayout": "full" },
+        { "id": "firm_phone_no", "label": "Phone No.", "enabled": true, "fieldLayout": "half" },
+        { "id": "firm_pan_no", "label": "PAN", "enabled": true, "fieldLayout": "half" }
+      ]
+    },
+    {
+      "id": "customer_details",
+      "label": "Borrower Details",
+      "enabled": true,
+      "order": 2,
+      "fields": [
+        { "id": "customer_name", "label": "Borrower Name", "enabled": true, "fieldLayout": "full" },
+        { "id": "customer_address", "label": "Address", "enabled": true, "fieldLayout": "full" },
+        { "id": "customer_mobile", "label": "Mobile No.", "enabled": true, "fieldLayout": "half" },
+        { "id": "customer_aadhaar", "label": "Aadhaar / ID Proof", "enabled": true, "fieldLayout": "half" },
+        { "id": "customer_pan", "label": "PAN", "enabled": false, "fieldLayout": "half" }
+      ]
+    },
+    {
+      "id": "finance_details",
+      "label": "Finance Terms",
+      "enabled": true,
+      "order": 3,
+      "fields": [
+        { "id": "finance_no", "label": "Finance No.", "enabled": true, "fieldLayout": "half" },
+        { "id": "finance_date", "label": "Start Date", "enabled": true, "fieldLayout": "half" },
+        { "id": "finance_prin_amt", "label": "Principal Amount (Rs.)", "enabled": true, "fieldLayout": "half" },
+        { "id": "finance_emi_amt", "label": "EMI Amount (Rs.)", "enabled": true, "fieldLayout": "half" },
+        { "id": "finance_no_of_emi", "label": "No. of EMIs", "enabled": true, "fieldLayout": "half" },
+        { "id": "finance_roi", "label": "Rate of Interest", "enabled": true, "fieldLayout": "half" },
+        { "id": "finance_freq_type", "label": "Frequency", "enabled": true, "fieldLayout": "half" },
+        { "id": "finance_time_period", "label": "Time Period", "enabled": true, "fieldLayout": "half" },
+        { "id": "finance_final_amt", "label": "Total Payable (Rs.)", "enabled": true, "fieldLayout": "half" },
+        { "id": "finance_status", "label": "Status", "enabled": true, "fieldLayout": "half" }
+      ]
+    },
+    {
+      "id": "emi_schedule",
+      "label": "EMI Schedule",
+      "enabled": true,
+      "order": 4,
+      "fields": [
+        { "id": "emi_no", "label": "EMI No.", "enabled": true },
+        { "id": "emi_due_date", "label": "Due Date", "enabled": true },
+        { "id": "emi_amount", "label": "EMI Amount (Rs.)", "enabled": true },
+        { "id": "emi_paid_amt", "label": "Paid (Rs.)", "enabled": true },
+        { "id": "emi_pending_amt", "label": "Pending (Rs.)", "enabled": true },
+        { "id": "emi_status", "label": "Status", "enabled": true }
+      ]
+    },
+    {
+      "id": "payment_summary",
+      "label": "Payment Summary",
+      "enabled": true,
+      "order": 5,
+      "fields": [
+        { "id": "total_paid", "label": "Total Paid (Rs.)", "enabled": true, "fieldLayout": "half" },
+        { "id": "total_pending", "label": "Total Pending (Rs.)", "enabled": true, "fieldLayout": "half" },
+        { "id": "total_fine", "label": "Total Fine (Rs.)", "enabled": true, "fieldLayout": "half" },
+        { "id": "disbursement_mode", "label": "Disbursement Mode", "enabled": true, "fieldLayout": "half" }
+      ]
+    }
+  ],
+  "termsAndConditions": "The borrower hereby agrees to repay the finance amount in {{finance_no_of_emi}} installments of Rs. {{finance_emi_amt}} each as per the EMI schedule. Late payment may attract penalty as per company policy. The borrower confirms that all information provided is accurate. {{firm_name}} reserves the right to take legal action in case of default.",
+  "declarationText": "I have read and understood all terms and conditions of this finance agreement. I agree to repay all EMIs on or before the due dates.",
+  "signatureLabels": {
+    "customer": "Signature / Thumb-impression of Borrower",
+    "owner": "Signature of Authorised Signatory",
+    "witness": "Witness (Optional)"
+  },
+  "variables": [
+    { "key": "{{firm_name}}", "label": "Firm Name" },
+    { "key": "{{finance_no}}", "label": "Finance No." },
+    { "key": "{{finance_date}}", "label": "Start Date" },
+    { "key": "{{customer_name}}", "label": "Borrower Name" },
+    { "key": "{{finance_prin_amt}}", "label": "Principal Amount" },
+    { "key": "{{finance_emi_amt}}", "label": "EMI Amount" },
+    { "key": "{{today_date}}", "label": "Today's Date" }
+  ]
+}

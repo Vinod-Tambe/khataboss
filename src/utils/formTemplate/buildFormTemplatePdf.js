@@ -181,7 +181,7 @@ export const buildFormTemplatePdfDefinition = (
         margin: [0, 6, 0, 4],
       });
 
-      if (section.id === 'transaction_history') {
+      if (section.id === 'transaction_history' || section.id === 'emi_schedule') {
         const fields = getSortedFields(section).filter((f) => f.enabled);
         const header = fields.map((f) => ({
           text: f.label,

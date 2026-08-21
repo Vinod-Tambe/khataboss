@@ -127,8 +127,99 @@ const buildAccountTable = (account) => {
   };
 };
 
+const buildScheduleIIISection = (scheduleIII) => {
+  if (!scheduleIII?.otherIncome?.length) return null;
+  const body = [
+    [
+      { text: "Particulars", style: "tableHeader" },
+      { text: "Amount (₹)", style: "tableHeader", alignment: "right" },
+    ],
+    ...scheduleIII.otherIncome.map((row) => [
+      { text: row.particulars || "", style: "tableCell" },
+      {
+        text: formatCurrency(row.amount),
+        style: "tableCell",
+        alignment: "right",
+      },
+    ]),
+    [
+      { text: "Total Other Income", style: "tableFooter" },
+      {
+        text: formatCurrency(scheduleIII.totalOtherIncome),
+        style: "tableFooter",
+        alignment: "right",
+      },
+    ],
+  ];
+
+  return {
+    stack: [
+      {
+        text: scheduleIII.title || "Other Income (Schedule III)",
+        style: "sectionTitle",
+        alignment: "center",
+        margin: [0, 8, 0, 6],
+      },
+      {
+        table: { widths: ["*", 80], body },
+        layout: {
+          hLineWidth: () => 0.5,
+          vLineWidth: () => 0.5,
+          hLineColor: () => COLORS.border,
+          vLineColor: () => COLORS.border,
+          paddingLeft: () => 5,
+          paddingRight: () => 5,
+          paddingTop: () => 4,
+          paddingBottom: () => 4,
+        },
+      },
+    ],
+    margin: [0, 0, 0, 10],
+  };
+};
+
+const buildComplianceSection = (compliance) => {
+  if (!compliance) return null;
+  const lines = [
+    `Financial Year: ${compliance.financialYear || "-"}`,
+    compliance.gstRegistered
+      ? `GSTIN: ${compliance.gstin || "-"} | GST Rate: ${compliance.gstRatePercent || "-"}%`
+      : compliance.gstNote || "",
+    compliance.pan ? `PAN: ${compliance.pan}` : "",
+    compliance.booksMaintainedUnder || "",
+  ].filter(Boolean);
+
+  if (compliance.gstSummary?.lines?.length) {
+    lines.push(
+      `Output GST: ${formatCurrency(compliance.gstSummary.totalOutputGst)}`
+    );
+  }
+  if (compliance.scheduleIIIDisclaimer) {
+    lines.push(compliance.scheduleIIIDisclaimer);
+  }
+
+  return {
+    stack: [
+      {
+        text: "Statutory Information (India)",
+        style: "sectionTitle",
+        alignment: "center",
+        margin: [0, 4, 0, 4],
+      },
+      ...lines.map((line) => ({
+        text: line,
+        style: "meta",
+        margin: [0, 0, 0, 2],
+      })),
+    ],
+    margin: [0, 0, 0, 8],
+  };
+};
+
 const buildDocDefinition = ({
   accounts = [],
+  scheduleIII,
+  compliance,
   firmName,
   companyName,
   periodStart,
@@ -167,7 +258,9 @@ const buildDocDefinition = ({
       margin: [0, 0, 0, 12],
     },
     ...accounts.map((account) => buildAccountTable(account)),
-  ],
+    buildScheduleIIISection(scheduleIII),
+    buildComplianceSection(compliance),
+  ].filter(Boolean),
   styles: {
     title: { fontSize: 16, bold: true, color: COLORS.title },
     sectionTitle: { fontSize: 11, bold: true, color: COLORS.sectionTitle },
@@ -207,6 +300,8 @@ export const getProfitLossShareText = ({
   periodEnd,
   assessmentYear,
   accounts = [],
+  scheduleIII,
+  compliance,
 }) => {
   const lines = [
     "Profit & Loss Report",
@@ -215,6 +310,13 @@ export const getProfitLossShareText = ({
     `AY: ${assessmentYear || "-"}`,
   ];
 
+  if (compliance?.financialYear) {
+    lines.push(`Indian FY: ${compliance.financialYear}`);
+  }
+  if (compliance?.gstRegistered) {
+    lines.push(`GSTIN: ${compliance.gstin}`);
+  }
+
   accounts.forEach((account) => {
     const exp = sumAmounts(account.expenditure);
     const rev = sumAmounts(account.revenue);
@@ -222,6 +324,14 @@ export const getProfitLossShareText = ({
       `${account.title}: Exp ${formatCurrency(exp)} | Rev ${formatCurrency(rev)}`
     );
   });
+
+  if (scheduleIII?.otherIncome?.length) {
+    lines.push("Schedule III — Other Income:");
+    scheduleIII.otherIncome.forEach((row) => {
+      lines.push(`  ${row.particulars}: ${formatCurrency(row.amount)}`);
+    });
+    lines.push(`  Total: ${formatCurrency(scheduleIII.totalOtherIncome)}`);
+  }
 
   return lines.join("\n");
 };

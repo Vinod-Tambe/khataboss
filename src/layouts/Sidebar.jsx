@@ -235,6 +235,7 @@ const Sidebar = () => {
           { label: "Purity", path: "/purity", icon: <FiAward />, permission: "settings.manage" },
           { label: "Backup", path: "/backup", icon: <FiDatabase />, permission: "settings.manage" },
           { label: "Form Customization", path: "/settings/form-customization", icon: <FiFileText />, permission: "settings.manage" },
+          { label: "Agreement Customization", path: "/settings/agreement-customization", icon: <FiFileText />, permission: "settings.manage" },
           { label: "KYC Integration", path: "/settings/kyc-integration", icon: <FiShield />, permission: "settings.manage" },
           // Always allow self password update (no permission key)
           { label: "Update Password", path: "/settings/update-password", icon: <FiLock /> },

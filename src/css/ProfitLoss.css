@@ -459,3 +459,18 @@
 [data-theme="dark"] .profit-loss-mobile-grid-head__col:first-child {
   border-color: var(--pl-row-border);
 }
+
+.profit-loss-compliance {
+  background: var(--bs-body-bg, #fff);
+}
+
+.profit-loss-compliance .table th,
+.profit-loss-compliance .table td {
+  font-size: 0.875rem;
+}
+
+@media print {
+  .profit-loss-compliance {
+    break-inside: avoid;
+  }
+}

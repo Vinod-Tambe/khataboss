@@ -24,6 +24,7 @@ import OwnerProfile from '../components/owner/OwnerProfile';
 import UpdatePassword from '../components/owner/UpdatePassword';
 import KycIntegrationPage from '../components/settings/KycIntegrationPage';
 import FormCustomizationPage from '../components/settings/FormCustomizationPage';
+import AgreementCustomizationPage from '../components/settings/AgreementCustomizationPage';
 import PermissionRoute from './PermissionRoute';
 
 const MainRoutes = () => {
@@ -185,6 +186,14 @@ const MainRoutes = () => {
                 element={
                   <PermissionRoute permission="settings.manage">
                     <FormCustomizationPage />
+                  </PermissionRoute>
+                }
+              />
+              <Route
+                path="/settings/agreement-customization"
+                element={
+                  <PermissionRoute permission="settings.manage">
+                    <AgreementCustomizationPage />
                   </PermissionRoute>
                 }
               />

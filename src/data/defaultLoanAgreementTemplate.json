@@ -1,0 +1,119 @@
+{
+  "title": "LOAN AGREEMENT",
+  "subtitle": "Gold Loan / Pledge Agreement",
+  "complianceReference": "This agreement is executed between the lender and borrower for the loan against pledged articles as per applicable money-lending regulations.",
+  "headerNote": "Agreement No.: {{loan_no}} | Date: {{loan_date}} | Firm: {{firm_name}}",
+  "footerNote": "This is a computer-generated agreement. Both parties should retain a signed copy for their records.",
+  "pageSize": "A4",
+  "orientation": "portrait",
+  "fontSize": "medium",
+  "showPageNumbers": true,
+  "theme": {
+    "primaryColor": "#1a365d",
+    "secondaryColor": "#2c5282",
+    "textColor": "#1a202c",
+    "mutedTextColor": "#4a5568",
+    "borderColor": "#cbd5e0",
+    "headerBackground": "#ffffff",
+    "sectionBackground": "#f7fafc",
+    "sectionTitleColor": "#1a365d",
+    "tableHeaderBackground": "#edf2f7",
+    "accentColor": "#2b6cb0",
+    "pageBackground": "#ffffff"
+  },
+  "layout": {
+    "showLeftLogo": true,
+    "showRightLogo": false,
+    "showOwnerSign": true,
+    "showQrCode": false,
+    "useFirmFormHeader": true,
+    "useFirmFormFooter": true
+  },
+  "sections": [
+    {
+      "id": "firm_details",
+      "label": "Lender / Firm Details",
+      "enabled": true,
+      "order": 1,
+      "fields": [
+        { "id": "firm_name", "label": "Firm / Lender Name", "enabled": true, "fieldLayout": "full" },
+        { "id": "firm_shop_name", "label": "Branch / Shop Name", "enabled": true, "fieldLayout": "half" },
+        { "id": "firm_reg_no", "label": "Licence / Registration No.", "enabled": true, "fieldLayout": "half" },
+        { "id": "firm_address", "label": "Address", "enabled": true, "fieldLayout": "full" },
+        { "id": "firm_phone_no", "label": "Phone No.", "enabled": true, "fieldLayout": "half" },
+        { "id": "firm_pan_no", "label": "PAN", "enabled": true, "fieldLayout": "half" }
+      ]
+    },
+    {
+      "id": "customer_details",
+      "label": "Borrower Details",
+      "enabled": true,
+      "order": 2,
+      "fields": [
+        { "id": "customer_name", "label": "Borrower Name", "enabled": true, "fieldLayout": "full" },
+        { "id": "customer_address", "label": "Address", "enabled": true, "fieldLayout": "full" },
+        { "id": "customer_mobile", "label": "Mobile No.", "enabled": true, "fieldLayout": "half" },
+        { "id": "customer_aadhaar", "label": "Aadhaar / ID Proof", "enabled": true, "fieldLayout": "half" },
+        { "id": "customer_pan", "label": "PAN", "enabled": false, "fieldLayout": "half" }
+      ]
+    },
+    {
+      "id": "loan_details",
+      "label": "Loan Terms",
+      "enabled": true,
+      "order": 3,
+      "fields": [
+        { "id": "loan_no", "label": "Loan / Ticket No.", "enabled": true, "fieldLayout": "half" },
+        { "id": "loan_date", "label": "Loan Date", "enabled": true, "fieldLayout": "half" },
+        { "id": "loan_amount", "label": "Principal Amount (Rs.)", "enabled": true, "fieldLayout": "half" },
+        { "id": "interest_rate", "label": "Rate of Interest", "enabled": true, "fieldLayout": "half" },
+        { "id": "interest_type", "label": "Interest Type", "enabled": true, "fieldLayout": "half" },
+        { "id": "loan_period", "label": "Loan Period", "enabled": true, "fieldLayout": "half" },
+        { "id": "due_date", "label": "Due Date", "enabled": true, "fieldLayout": "half" },
+        { "id": "loan_status", "label": "Status", "enabled": true, "fieldLayout": "half" }
+      ]
+    },
+    {
+      "id": "item_details",
+      "label": "Pledged Article(s)",
+      "enabled": true,
+      "order": 4,
+      "fields": [
+        { "id": "item_description", "label": "Description", "enabled": true, "fieldLayout": "full" },
+        { "id": "item_metal", "label": "Metal / Type", "enabled": true, "fieldLayout": "small" },
+        { "id": "item_gross_wt", "label": "Gross Weight", "enabled": true, "fieldLayout": "small" },
+        { "id": "item_net_wt", "label": "Net Weight", "enabled": true, "fieldLayout": "small" },
+        { "id": "item_purity", "label": "Purity", "enabled": true, "fieldLayout": "small" },
+        { "id": "item_value", "label": "Valuation (Rs.)", "enabled": true, "fieldLayout": "half" }
+      ]
+    },
+    {
+      "id": "interest_summary",
+      "label": "Account Summary",
+      "enabled": true,
+      "order": 5,
+      "fields": [
+        { "id": "total_interest", "label": "Total Interest (Rs.)", "enabled": true, "fieldLayout": "half" },
+        { "id": "total_deposit", "label": "Total Received (Rs.)", "enabled": true, "fieldLayout": "half" },
+        { "id": "outstanding", "label": "Outstanding (Rs.)", "enabled": true, "fieldLayout": "half" },
+        { "id": "last_transaction_date", "label": "Last Payment Date", "enabled": true, "fieldLayout": "half" }
+      ]
+    }
+  ],
+  "termsAndConditions": "The borrower hereby agrees to repay the principal amount along with interest at the rate specified above within the agreed period. The pledged article(s) shall remain in the custody of {{firm_name}} until full repayment. In case of default, the lender reserves the right to sell the pledged article(s) after due notice as per applicable law. The borrower declares that the pledged article(s) belong to them and are free from any encumbrance.",
+  "declarationText": "I have read and understood all terms and conditions of this loan agreement. The information provided by me is true and correct.",
+  "signatureLabels": {
+    "customer": "Signature / Thumb-impression of Borrower",
+    "owner": "Signature of Lender / Authorised Signatory",
+    "witness": "Witness (Optional)"
+  },
+  "variables": [
+    { "key": "{{firm_name}}", "label": "Firm Name" },
+    { "key": "{{loan_no}}", "label": "Loan No." },
+    { "key": "{{loan_date}}", "label": "Loan Date" },
+    { "key": "{{customer_name}}", "label": "Borrower Name" },
+    { "key": "{{loan_amount}}", "label": "Principal Amount" },
+    { "key": "{{outstanding}}", "label": "Outstanding" },
+    { "key": "{{today_date}}", "label": "Today's Date" }
+  ]
+}

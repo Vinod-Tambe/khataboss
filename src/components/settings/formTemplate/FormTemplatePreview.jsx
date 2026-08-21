@@ -14,9 +14,13 @@ import {
   TRANSACTION_TEST_ROWS,
 } from '../../../utils/formTemplate/formTemplateTestData';
 
-const FormTemplatePreview = ({ config, firmName, scale = 0.72 }) => {
+const FormTemplatePreview = ({ config, firmName, scale = 0.72, testData: testDataProp, transactionRows: transactionRowsProp }) => {
   const page = useMemo(() => getPageStyle(config), [config]);
-  const testData = useMemo(() => buildFormTemplateTestData(firmName), [firmName]);
+  const testData = useMemo(
+    () => testDataProp || buildFormTemplateTestData(firmName),
+    [testDataProp, firmName]
+  );
+  const transactionRows = transactionRowsProp || TRANSACTION_TEST_ROWS;
 
   if (!config) {
     return <div className="form-custom-a4-empty">Select a template to preview</div>;
@@ -78,7 +82,7 @@ const FormTemplatePreview = ({ config, firmName, scale = 0.72 }) => {
           >
             <h3>{section.label}</h3>
 
-            {section.id === 'transaction_history' ? (
+            {section.id === 'transaction_history' || section.id === 'emi_schedule' ? (
               <table className="form-custom-a4-table">
                 <thead>
                   <tr>
@@ -90,7 +94,7 @@ const FormTemplatePreview = ({ config, firmName, scale = 0.72 }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {TRANSACTION_TEST_ROWS.map((row, idx) => (
+                  {transactionRows.map((row, idx) => (
                     <tr key={idx}>
                       {getSortedFields(section)
                         .filter((f) => f.enabled)
