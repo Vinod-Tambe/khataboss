@@ -41,11 +41,11 @@
   word-break: break-word;
 }
 
-[data-theme="dark"] .finance-fine-summary__item {
+[data-theme="dark"] .finance-fine-summary__item, [data-theme="brand-dark"] .finance-fine-summary__item{
   background: rgba(255, 255, 255, 0.04);
 }
 
-[data-theme="dark"] .finance-fine-summary__item--payable {
+[data-theme="dark"] .finance-fine-summary__item--payable, [data-theme="brand-dark"] .finance-fine-summary__item--payable{
   background: rgba(25, 135, 84, 0.12);
 }
 
@@ -476,34 +476,34 @@
   }
 }
 
-[data-theme="dark"] .finance-history-hero-count {
+[data-theme="dark"] .finance-history-hero-count, [data-theme="brand-dark"] .finance-history-hero-count{
   background: rgba(13, 110, 253, 0.18) !important;
   border-color: rgba(13, 110, 253, 0.35) !important;
 }
 
 /* Dark theme */
-[data-theme="dark"] .finance-mobile-stat,
-[data-theme="dark"] .finance-mobile-emi {
+[data-theme="dark"] .finance-mobile-stat, [data-theme="brand-dark"] .finance-mobile-stat,
+[data-theme="dark"] .finance-mobile-emi, [data-theme="brand-dark"] .finance-mobile-emi{
   background: rgba(255, 255, 255, 0.04);
   border-color: rgba(255, 255, 255, 0.1);
   box-shadow: none;
 }
 
-[data-theme="dark"] .finance-mobile-hero__tile.is-paid {
+[data-theme="dark"] .finance-mobile-hero__tile.is-paid, [data-theme="brand-dark"] .finance-mobile-hero__tile.is-paid{
   background: rgba(25, 135, 84, 0.18);
   border-color: rgba(25, 135, 84, 0.35);
 }
 
-[data-theme="dark"] .finance-mobile-hero__tile.is-pending {
+[data-theme="dark"] .finance-mobile-hero__tile.is-pending, [data-theme="brand-dark"] .finance-mobile-hero__tile.is-pending{
   background: rgba(220, 53, 69, 0.16);
   border-color: rgba(220, 53, 69, 0.35);
 }
 
-[data-theme="dark"] .finance-mobile-emi__footer {
+[data-theme="dark"] .finance-mobile-emi__footer, [data-theme="brand-dark"] .finance-mobile-emi__footer{
   border-top-color: rgba(255, 255, 255, 0.08);
 }
 
-[data-theme="dark"] .finance-mobile-empty {
+[data-theme="dark"] .finance-mobile-empty, [data-theme="brand-dark"] .finance-mobile-empty{
   background: rgba(255, 255, 255, 0.03);
   border-color: rgba(255, 255, 255, 0.12);
 }

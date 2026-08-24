@@ -684,45 +684,45 @@
 }
 
 /* A4 preview stays paper-like; block app dark theme from styling inner tables */
-[data-theme="dark"] .form-custom-a4-page {
+[data-theme="dark"] .form-custom-a4-page, [data-theme="brand-dark"] .form-custom-a4-page{
   background: var(--ft-page-bg, #ffffff) !important;
   color: var(--ft-text, #111827) !important;
   color-scheme: light;
 }
 
-[data-theme="dark"] .form-custom-a4-page .form-custom-a4-table th,
-[data-theme="dark"] .form-custom-a4-page .form-custom-a4-table td,
-[data-theme="dark"] .form-custom-a4-page table tbody td,
-[data-theme="dark"] .form-custom-a4-page table tbody th,
-[data-theme="dark"] .form-custom-a4-page table thead th {
+[data-theme="dark"] .form-custom-a4-page .form-custom-a4-table th, [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-table th,
+[data-theme="dark"] .form-custom-a4-page .form-custom-a4-table td, [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-table td,
+[data-theme="dark"] .form-custom-a4-page table tbody td, [data-theme="brand-dark"] .form-custom-a4-page table tbody td,
+[data-theme="dark"] .form-custom-a4-page table tbody th, [data-theme="brand-dark"] .form-custom-a4-page table tbody th,
+[data-theme="dark"] .form-custom-a4-page table thead th, [data-theme="brand-dark"] .form-custom-a4-page table thead th{
   background-color: var(--ft-section-bg, #ffffff) !important;
   color: var(--ft-text, #111827) !important;
   border-color: var(--ft-border, #d1d5db) !important;
   box-shadow: none !important;
 }
 
-[data-theme="dark"] .form-custom-a4-page .form-custom-a4-table th,
-[data-theme="dark"] .form-custom-a4-page table thead th {
+[data-theme="dark"] .form-custom-a4-page .form-custom-a4-table th, [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-table th,
+[data-theme="dark"] .form-custom-a4-page table thead th, [data-theme="brand-dark"] .form-custom-a4-page table thead th{
   background-color: var(--ft-table-header, #e5e7eb) !important;
   color: var(--ft-primary, #1e3a5f) !important;
 }
 
-[data-theme="dark"] .form-custom-a4-page .form-custom-a4-section h3 {
+[data-theme="dark"] .form-custom-a4-page .form-custom-a4-section h3, [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-section h3{
   background: var(--ft-table-header, #e5e7eb) !important;
   color: var(--ft-section-title, #374151) !important;
 }
 
-[data-theme="dark"] .form-custom-a4-page .form-custom-a4-field .label {
+[data-theme="dark"] .form-custom-a4-page .form-custom-a4-field .label, [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-field .label{
   color: var(--ft-muted, #6b7280) !important;
 }
 
-[data-theme="dark"] .form-custom-a4-page .form-custom-a4-field .value,
-[data-theme="dark"] .form-custom-a4-page .form-custom-a4-terms p,
-[data-theme="dark"] .form-custom-a4-page .form-custom-a4-declaration,
-[data-theme="dark"] .form-custom-a4-page .form-custom-a4-footer,
-[data-theme="dark"] .form-custom-a4-page .form-custom-a4-meta,
-[data-theme="dark"] .form-custom-a4-page .form-custom-a4-pagenum,
-[data-theme="dark"] .form-custom-a4-page .form-custom-a4-sign-box {
+[data-theme="dark"] .form-custom-a4-page .form-custom-a4-field .value, [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-field .value,
+[data-theme="dark"] .form-custom-a4-page .form-custom-a4-terms p, [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-terms p,
+[data-theme="dark"] .form-custom-a4-page .form-custom-a4-declaration, [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-declaration,
+[data-theme="dark"] .form-custom-a4-page .form-custom-a4-footer, [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-footer,
+[data-theme="dark"] .form-custom-a4-page .form-custom-a4-meta, [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-meta,
+[data-theme="dark"] .form-custom-a4-page .form-custom-a4-pagenum, [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-pagenum,
+[data-theme="dark"] .form-custom-a4-page .form-custom-a4-sign-box, [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-sign-box{
   color: var(--ft-text, #111827) !important;
 }
 
@@ -809,7 +809,7 @@
   padding: 0.75rem;
 }
 
-[data-theme="dark"] .form-custom-page {
+[data-theme="dark"] .form-custom-page, [data-theme="brand-dark"] .form-custom-page{
   --form-custom-accent: #60a5fa;
   --form-custom-accent-hover: #93c5fd;
   --form-custom-accent-soft: rgba(96, 165, 250, 0.18);
@@ -822,193 +822,193 @@
   --form-custom-preview-chrome-bg: var(--print-preview-wrapper-bg, #121218);
 }
 
-[data-theme="dark"] .form-custom-form-card,
-[data-theme="dark"] .form-custom-preview-panel,
-[data-theme="dark"] .form-custom-list-card {
+[data-theme="dark"] .form-custom-form-card, [data-theme="brand-dark"] .form-custom-form-card,
+[data-theme="dark"] .form-custom-preview-panel, [data-theme="brand-dark"] .form-custom-preview-panel,
+[data-theme="dark"] .form-custom-list-card, [data-theme="brand-dark"] .form-custom-list-card{
   background: var(--form-custom-card-bg);
   border-color: var(--form-custom-border);
   color: var(--form-custom-text);
 }
 
-[data-theme="dark"] .form-custom-page-title,
-[data-theme="dark"] .form-custom-form-card-head h4,
-[data-theme="dark"] .form-custom-preview-panel-head h5,
-[data-theme="dark"] .form-custom-section-card h5,
-[data-theme="dark"] .form-custom-form-card .form-label,
-[data-theme="dark"] .form-custom-toggle-item {
+[data-theme="dark"] .form-custom-page-title, [data-theme="brand-dark"] .form-custom-page-title,
+[data-theme="dark"] .form-custom-form-card-head h4, [data-theme="brand-dark"] .form-custom-form-card-head h4,
+[data-theme="dark"] .form-custom-preview-panel-head h5, [data-theme="brand-dark"] .form-custom-preview-panel-head h5,
+[data-theme="dark"] .form-custom-section-card h5, [data-theme="brand-dark"] .form-custom-section-card h5,
+[data-theme="dark"] .form-custom-form-card .form-label, [data-theme="brand-dark"] .form-custom-form-card .form-label,
+[data-theme="dark"] .form-custom-toggle-item, [data-theme="brand-dark"] .form-custom-toggle-item{
   color: var(--form-custom-text);
 }
 
-[data-theme="dark"] .form-custom-page-subtitle,
-[data-theme="dark"] .form-custom-form-hint,
-[data-theme="dark"] .form-custom-preview-panel-head p,
-[data-theme="dark"] .form-custom-a4-size-label,
-[data-theme="dark"] .form-custom-form-empty-icon,
-[data-theme="dark"] .form-custom-a4-empty {
+[data-theme="dark"] .form-custom-page-subtitle, [data-theme="brand-dark"] .form-custom-page-subtitle,
+[data-theme="dark"] .form-custom-form-hint, [data-theme="brand-dark"] .form-custom-form-hint,
+[data-theme="dark"] .form-custom-preview-panel-head p, [data-theme="brand-dark"] .form-custom-preview-panel-head p,
+[data-theme="dark"] .form-custom-a4-size-label, [data-theme="brand-dark"] .form-custom-a4-size-label,
+[data-theme="dark"] .form-custom-form-empty-icon, [data-theme="brand-dark"] .form-custom-form-empty-icon,
+[data-theme="dark"] .form-custom-a4-empty, [data-theme="brand-dark"] .form-custom-a4-empty{
   color: var(--form-custom-muted);
 }
 
-[data-theme="dark"] .form-custom-section-card,
-[data-theme="dark"] .form-custom-editor-tab,
-[data-theme="dark"] .form-custom-dnd-handle {
+[data-theme="dark"] .form-custom-section-card, [data-theme="brand-dark"] .form-custom-section-card,
+[data-theme="dark"] .form-custom-editor-tab, [data-theme="brand-dark"] .form-custom-editor-tab,
+[data-theme="dark"] .form-custom-dnd-handle, [data-theme="brand-dark"] .form-custom-dnd-handle{
   background: var(--form-custom-panel-bg);
   border-color: var(--form-custom-border);
 }
 
-[data-theme="dark"] .form-custom-mobile-mode-tab {
+[data-theme="dark"] .form-custom-mobile-mode-tab, [data-theme="brand-dark"] .form-custom-mobile-mode-tab{
   background: var(--form-custom-card-bg);
   border-color: var(--form-custom-border);
   color: var(--form-custom-text);
 }
 
-[data-theme="dark"] .form-custom-mobile-mode-tab.active {
+[data-theme="dark"] .form-custom-mobile-mode-tab.active, [data-theme="brand-dark"] .form-custom-mobile-mode-tab.active{
   background: var(--form-custom-accent-soft);
   border-color: var(--form-custom-accent);
   color: var(--form-custom-accent);
 }
 
-[data-theme="dark"] .form-custom-editor-tab {
+[data-theme="dark"] .form-custom-editor-tab, [data-theme="brand-dark"] .form-custom-editor-tab{
   color: var(--form-custom-muted);
 }
 
-[data-theme="dark"] .form-custom-editor-tab:hover {
+[data-theme="dark"] .form-custom-editor-tab:hover, [data-theme="brand-dark"] .form-custom-editor-tab:hover{
   color: var(--form-custom-text);
   background: rgba(255, 255, 255, 0.05);
 }
 
-[data-theme="dark"] .form-custom-editor-tab.active {
+[data-theme="dark"] .form-custom-editor-tab.active, [data-theme="brand-dark"] .form-custom-editor-tab.active{
   background: var(--form-custom-accent);
   border-color: var(--form-custom-accent);
   color: #fff;
 }
 
-[data-theme="dark"] .form-custom-edit-badge,
-[data-theme="dark"] .form-custom-variable-chip {
+[data-theme="dark"] .form-custom-edit-badge, [data-theme="brand-dark"] .form-custom-edit-badge,
+[data-theme="dark"] .form-custom-variable-chip, [data-theme="brand-dark"] .form-custom-variable-chip{
   background: rgba(96, 165, 250, 0.18);
   color: #93c5fd;
 }
 
-[data-theme="dark"] .form-custom-dnd-item {
+[data-theme="dark"] .form-custom-dnd-item, [data-theme="brand-dark"] .form-custom-dnd-item{
   background: var(--form-custom-card-bg);
   border-color: var(--form-custom-border);
 }
 
-[data-theme="dark"] .form-custom-dnd-item.is-over {
+[data-theme="dark"] .form-custom-dnd-item.is-over, [data-theme="brand-dark"] .form-custom-dnd-item.is-over{
   border-color: var(--form-custom-accent);
   box-shadow: 0 0 0 2px var(--form-custom-accent-soft);
 }
 
-[data-theme="dark"] .form-custom-dnd-handle {
+[data-theme="dark"] .form-custom-dnd-handle, [data-theme="brand-dark"] .form-custom-dnd-handle{
   color: var(--form-custom-muted);
 }
 
-[data-theme="dark"] .form-custom-form-card .form-control,
-[data-theme="dark"] .form-custom-form-card .form-select,
-[data-theme="dark"] .form-custom-section-card .form-control,
-[data-theme="dark"] .form-custom-section-card .form-select,
-[data-theme="dark"] .form-custom-dnd-item .form-control,
-[data-theme="dark"] .form-custom-dnd-item .form-select,
-[data-theme="dark"] .form-custom-color-field .form-control {
+[data-theme="dark"] .form-custom-form-card .form-control, [data-theme="brand-dark"] .form-custom-form-card .form-control,
+[data-theme="dark"] .form-custom-form-card .form-select, [data-theme="brand-dark"] .form-custom-form-card .form-select,
+[data-theme="dark"] .form-custom-section-card .form-control, [data-theme="brand-dark"] .form-custom-section-card .form-control,
+[data-theme="dark"] .form-custom-section-card .form-select, [data-theme="brand-dark"] .form-custom-section-card .form-select,
+[data-theme="dark"] .form-custom-dnd-item .form-control, [data-theme="brand-dark"] .form-custom-dnd-item .form-control,
+[data-theme="dark"] .form-custom-dnd-item .form-select, [data-theme="brand-dark"] .form-custom-dnd-item .form-select,
+[data-theme="dark"] .form-custom-color-field .form-control, [data-theme="brand-dark"] .form-custom-color-field .form-control{
   background-color: var(--form-custom-input-bg) !important;
   color: var(--form-custom-text) !important;
   border-color: var(--form-custom-border) !important;
 }
 
-[data-theme="dark"] .form-custom-form-card .form-select,
-[data-theme="dark"] .form-custom-section-card .form-select,
-[data-theme="dark"] .form-custom-dnd-item .form-select {
+[data-theme="dark"] .form-custom-form-card .form-select, [data-theme="brand-dark"] .form-custom-form-card .form-select,
+[data-theme="dark"] .form-custom-section-card .form-select, [data-theme="brand-dark"] .form-custom-section-card .form-select,
+[data-theme="dark"] .form-custom-dnd-item .form-select, [data-theme="brand-dark"] .form-custom-dnd-item .form-select{
   background-image: none !important;
 }
 
-[data-theme="dark"] .form-custom-form-card .form-control::placeholder,
-[data-theme="dark"] .form-custom-section-card .form-control::placeholder,
-[data-theme="dark"] .form-custom-dnd-item .form-control::placeholder {
+[data-theme="dark"] .form-custom-form-card .form-control::placeholder, [data-theme="brand-dark"] .form-custom-form-card .form-control::placeholder,
+[data-theme="dark"] .form-custom-section-card .form-control::placeholder, [data-theme="brand-dark"] .form-custom-section-card .form-control::placeholder,
+[data-theme="dark"] .form-custom-dnd-item .form-control::placeholder, [data-theme="brand-dark"] .form-custom-dnd-item .form-control::placeholder{
   color: #8b8ba3 !important;
   opacity: 1;
 }
 
-[data-theme="dark"] .form-custom-form-card .form-select option,
-[data-theme="dark"] .form-custom-section-card .form-select option,
-[data-theme="dark"] .form-custom-dnd-item .form-select option {
+[data-theme="dark"] .form-custom-form-card .form-select option, [data-theme="brand-dark"] .form-custom-form-card .form-select option,
+[data-theme="dark"] .form-custom-section-card .form-select option, [data-theme="brand-dark"] .form-custom-section-card .form-select option,
+[data-theme="dark"] .form-custom-dnd-item .form-select option, [data-theme="brand-dark"] .form-custom-dnd-item .form-select option{
   background-color: #1e1e2e;
   color: #e5e7eb;
 }
 
-[data-theme="dark"] .form-custom-clear-bg {
+[data-theme="dark"] .form-custom-clear-bg, [data-theme="brand-dark"] .form-custom-clear-bg{
   color: #93c5fd !important;
 }
 
-[data-theme="dark"] .form-custom-clear-bg:hover {
+[data-theme="dark"] .form-custom-clear-bg:hover, [data-theme="brand-dark"] .form-custom-clear-bg:hover{
   color: #bfdbfe !important;
 }
 
-[data-theme="dark"] .btn-form-custom-discard {
+[data-theme="dark"] .btn-form-custom-discard, [data-theme="brand-dark"] .btn-form-custom-discard{
   background: transparent !important;
   color: var(--form-custom-text) !important;
   border-color: var(--form-custom-border) !important;
 }
 
-[data-theme="dark"] .btn-form-custom-discard:hover {
+[data-theme="dark"] .btn-form-custom-discard:hover, [data-theme="brand-dark"] .btn-form-custom-discard:hover{
   background: rgba(255, 255, 255, 0.06) !important;
   color: var(--form-custom-text) !important;
 }
 
-[data-theme="dark"] .form-custom-preview-actions .btn-outline-primary {
+[data-theme="dark"] .form-custom-preview-actions .btn-outline-primary, [data-theme="brand-dark"] .form-custom-preview-actions .btn-outline-primary{
   color: #93c5fd !important;
   border-color: #2563eb !important;
 }
 
-[data-theme="dark"] .form-custom-preview-actions .btn-outline-primary:hover {
+[data-theme="dark"] .form-custom-preview-actions .btn-outline-primary:hover, [data-theme="brand-dark"] .form-custom-preview-actions .btn-outline-primary:hover{
   background: rgba(37, 99, 235, 0.18) !important;
   color: #bfdbfe !important;
 }
 
-[data-theme="dark"] .form-custom-preview-actions .btn-outline-secondary {
+[data-theme="dark"] .form-custom-preview-actions .btn-outline-secondary, [data-theme="brand-dark"] .form-custom-preview-actions .btn-outline-secondary{
   color: var(--form-custom-text) !important;
   border-color: var(--form-custom-border) !important;
 }
 
-[data-theme="dark"] .form-custom-preview-actions .btn-outline-secondary:hover {
+[data-theme="dark"] .form-custom-preview-actions .btn-outline-secondary:hover, [data-theme="brand-dark"] .form-custom-preview-actions .btn-outline-secondary:hover{
   background: rgba(255, 255, 255, 0.06) !important;
   color: var(--form-custom-text) !important;
 }
 
-[data-theme="dark"] .form-custom-preview-wrap {
+[data-theme="dark"] .form-custom-preview-wrap, [data-theme="brand-dark"] .form-custom-preview-wrap{
   background: var(--form-custom-preview-chrome-bg);
   border-color: var(--form-custom-border);
 }
 
-[data-theme="dark"] .form-custom-form-actions {
+[data-theme="dark"] .form-custom-form-actions, [data-theme="brand-dark"] .form-custom-form-actions{
   border-top-color: var(--form-custom-border);
 }
 
-[data-theme="dark"] .form-custom-list-card.card {
+[data-theme="dark"] .form-custom-list-card.card, [data-theme="brand-dark"] .form-custom-list-card.card{
   background: var(--form-custom-card-bg) !important;
   border-color: var(--form-custom-border) !important;
 }
 
-[data-theme="dark"] .form-custom-section-collapse-toggle {
+[data-theme="dark"] .form-custom-section-collapse-toggle, [data-theme="brand-dark"] .form-custom-section-collapse-toggle{
   background: var(--form-custom-panel-bg);
   border-color: var(--form-custom-border);
   color: var(--form-custom-muted);
 }
 
-[data-theme="dark"] .form-custom-section-collapse-toggle:hover {
+[data-theme="dark"] .form-custom-section-collapse-toggle:hover, [data-theme="brand-dark"] .form-custom-section-collapse-toggle:hover{
   background: var(--form-custom-accent-soft);
   border-color: var(--form-custom-accent);
   color: var(--form-custom-accent);
 }
 
-[data-theme="dark"] .form-custom-section-collapse-summary:hover {
+[data-theme="dark"] .form-custom-section-collapse-summary:hover, [data-theme="brand-dark"] .form-custom-section-collapse-summary:hover{
   background: rgba(255, 255, 255, 0.04);
   border-color: var(--form-custom-border);
 }
 
-[data-theme="dark"] .form-custom-section-status.is-enabled {
+[data-theme="dark"] .form-custom-section-status.is-enabled, [data-theme="brand-dark"] .form-custom-section-status.is-enabled{
   color: #86efac;
 }
 
-[data-theme="dark"] .form-custom-section-body {
+[data-theme="dark"] .form-custom-section-body, [data-theme="brand-dark"] .form-custom-section-body{
   border-top-color: var(--form-custom-border);
 }
 

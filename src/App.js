@@ -8,6 +8,7 @@ import './css/systemcolor.css';
 import './App.css';
 import './css/Layout.css';
 import './css/Common.css';
+import './css/branddarkcolor.css';
 import Authentication from './pages/authentication/Authentication';
 import { ToastAlert } from './components/common/ToastAlert';
 import ProtectedRoute from './routes/ProtectedRoute';

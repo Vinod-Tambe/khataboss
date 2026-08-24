@@ -112,3 +112,12 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+[data-theme="dark"] .entity-doc-slot__box, [data-theme="brand-dark"] .entity-doc-slot__box{
+  background: var(--light, #2d2d44);
+  border-color: var(--app-border, #6c757d);
+}
+
+[data-theme="dark"] .entity-doc-slot__preview img, [data-theme="brand-dark"] .entity-doc-slot__preview img{
+  border-color: var(--app-border, #ddd);
+}

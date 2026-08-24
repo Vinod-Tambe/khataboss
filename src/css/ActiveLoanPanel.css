@@ -586,21 +586,21 @@ span.badge.status-badge.loan-info-header-badge *,
 }
 
 /* Dark theme */
-[data-theme="dark"] .loan-mobile-stat,
-[data-theme="dark"] .loan-mobile-info,
-[data-theme="dark"] .loan-mobile-overview__item,
-[data-theme="dark"] .loan-mobile-card,
-[data-theme="dark"] .loan-mobile-summary__tile {
+[data-theme="dark"] .loan-mobile-stat, [data-theme="brand-dark"] .loan-mobile-stat,
+[data-theme="dark"] .loan-mobile-info, [data-theme="brand-dark"] .loan-mobile-info,
+[data-theme="dark"] .loan-mobile-overview__item, [data-theme="brand-dark"] .loan-mobile-overview__item,
+[data-theme="dark"] .loan-mobile-card, [data-theme="brand-dark"] .loan-mobile-card,
+[data-theme="dark"] .loan-mobile-summary__tile, [data-theme="brand-dark"] .loan-mobile-summary__tile{
   background: rgba(255, 255, 255, 0.04);
   border-color: rgba(255, 255, 255, 0.1);
   box-shadow: none;
 }
 
-[data-theme="dark"] .loan-mobile-overview__value {
+[data-theme="dark"] .loan-mobile-overview__value, [data-theme="brand-dark"] .loan-mobile-overview__value{
   color: var(--datatable-body-text, #e5e7eb);
 }
 
-[data-theme="dark"] .loan-mobile-card__share {
+[data-theme="dark"] .loan-mobile-card__share, [data-theme="brand-dark"] .loan-mobile-card__share{
   border-top-color: rgba(255, 255, 255, 0.08);
 }
 
@@ -622,106 +622,106 @@ span.badge.status-badge.loan-info-header-badge *,
   }
 }
 
-[data-theme="dark"] .loan-mobile-accordion__content {
+[data-theme="dark"] .loan-mobile-accordion__content, [data-theme="brand-dark"] .loan-mobile-accordion__content{
   border-color: rgba(255, 255, 255, 0.08);
 }
 
-[data-theme="dark"] .loan-mobile-info__row {
+[data-theme="dark"] .loan-mobile-info__row, [data-theme="brand-dark"] .loan-mobile-info__row{
   border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
-[data-theme="dark"] .loan-mobile-hero__tile.is-principal {
+[data-theme="dark"] .loan-mobile-hero__tile.is-principal, [data-theme="brand-dark"] .loan-mobile-hero__tile.is-principal{
   background: rgba(13, 110, 253, 0.18);
   border-color: rgba(13, 110, 253, 0.35);
 }
 
-[data-theme="dark"] .loan-mobile-hero__tile.is-payable {
+[data-theme="dark"] .loan-mobile-hero__tile.is-payable, [data-theme="brand-dark"] .loan-mobile-hero__tile.is-payable{
   background: rgba(255, 193, 7, 0.16);
   border-color: rgba(255, 193, 7, 0.35);
 }
 
-[data-theme="dark"] .loan-mobile-summary__label {
+[data-theme="dark"] .loan-mobile-summary__label, [data-theme="brand-dark"] .loan-mobile-summary__label{
   background: rgba(255, 255, 255, 0.08);
   color: #c5b6f0;
   border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
-[data-theme="dark"] .loan-mobile-summary__value,
-[data-theme="dark"] .loan-mobile-card__title,
-[data-theme="dark"] .loan-mobile-card__cell-value,
-[data-theme="dark"] .loan-mobile-detail__value,
-[data-theme="dark"] .loan-mobile-info__value,
-[data-theme="dark"] .loan-mobile-stat__value {
+[data-theme="dark"] .loan-mobile-summary__value, [data-theme="brand-dark"] .loan-mobile-summary__value,
+[data-theme="dark"] .loan-mobile-card__title, [data-theme="brand-dark"] .loan-mobile-card__title,
+[data-theme="dark"] .loan-mobile-card__cell-value, [data-theme="brand-dark"] .loan-mobile-card__cell-value,
+[data-theme="dark"] .loan-mobile-detail__value, [data-theme="brand-dark"] .loan-mobile-detail__value,
+[data-theme="dark"] .loan-mobile-info__value, [data-theme="brand-dark"] .loan-mobile-info__value,
+[data-theme="dark"] .loan-mobile-stat__value, [data-theme="brand-dark"] .loan-mobile-stat__value{
   color: var(--datatable-body-text, #e5e7eb) !important;
 }
 
-[data-theme="dark"] .loan-mobile-detail__list {
+[data-theme="dark"] .loan-mobile-detail__list, [data-theme="brand-dark"] .loan-mobile-detail__list{
   background: rgba(255, 255, 255, 0.03);
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-[data-theme="dark"] .loan-mobile-detail__row {
+[data-theme="dark"] .loan-mobile-detail__row, [data-theme="brand-dark"] .loan-mobile-detail__row{
   border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
-[data-theme="dark"] .loan-mobile-card__amount {
+[data-theme="dark"] .loan-mobile-card__amount, [data-theme="brand-dark"] .loan-mobile-card__amount{
   background: rgba(244, 114, 182, 0.18) !important;
   color: #f9a8d4 !important;
   border-color: rgba(244, 114, 182, 0.35);
 }
 
-[data-theme="dark"] .active-loan-panel .bg-pink {
+[data-theme="dark"] .active-loan-panel .bg-pink, [data-theme="brand-dark"] .active-loan-panel .bg-pink{
   background-color: rgb(58 32 48) !important;
   color: #f9a8d4 !important;
 }
 
-[data-theme="dark"] .active-loan-panel .bg-blue {
+[data-theme="dark"] .active-loan-panel .bg-blue, [data-theme="brand-dark"] .active-loan-panel .bg-blue{
   background-color: rgba(13, 110, 253, 0.18) !important;
   color: var(--text-brown, #fcd34d) !important;
 }
 
-[data-theme="dark"] .active-loan-panel .bg-cust-info,
-[data-theme="dark"] .active-loan-panel .loan-summary-tile__label {
+[data-theme="dark"] .active-loan-panel .bg-cust-info, [data-theme="brand-dark"] .active-loan-panel .bg-cust-info,
+[data-theme="dark"] .active-loan-panel .loan-summary-tile__label, [data-theme="brand-dark"] .active-loan-panel .loan-summary-tile__label{
   background-color: var(--bg-cust-info, #1f3336) !important;
   color: var(--text-brown, #fcd34d) !important;
 }
 
-[data-theme="dark"] .active-loan-panel .loan-summary-tile {
+[data-theme="dark"] .active-loan-panel .loan-summary-tile, [data-theme="brand-dark"] .active-loan-panel .loan-summary-tile{
   border-color: var(--app-border, rgba(255, 255, 255, 0.12)) !important;
 }
 
-[data-theme="dark"] .active-loan-panel .loan-summary-tile__label {
+[data-theme="dark"] .active-loan-panel .loan-summary-tile__label, [data-theme="brand-dark"] .active-loan-panel .loan-summary-tile__label{
   border-bottom-color: var(--app-border, rgba(255, 255, 255, 0.12)) !important;
 }
 
-[data-theme="dark"] .active-loan-panel .loan-summary-tile__value {
+[data-theme="dark"] .active-loan-panel .loan-summary-tile__value, [data-theme="brand-dark"] .active-loan-panel .loan-summary-tile__value{
   background-color: var(--datatable-body-bg, rgba(255, 255, 255, 0.04));
   color: var(--datatable-body-text, #e5e7eb);
 }
 
-[data-theme="dark"] .active-loan-panel .section-header,
-[data-theme="dark"] .loan-mobile-section-title {
+[data-theme="dark"] .active-loan-panel .section-header, [data-theme="brand-dark"] .active-loan-panel .section-header,
+[data-theme="dark"] .loan-mobile-section-title, [data-theme="brand-dark"] .loan-mobile-section-title{
   color: var(--bs-primary, #6ea8fe);
 }
 
-[data-theme="dark"] .active-loan-panel .loan-summary-tile__value.text-primary {
+[data-theme="dark"] .active-loan-panel .loan-summary-tile__value.text-primary, [data-theme="brand-dark"] .active-loan-panel .loan-summary-tile__value.text-primary{
   color: #6ea8fe !important;
 }
 
-[data-theme="dark"] .loan-mobile-empty {
+[data-theme="dark"] .loan-mobile-empty, [data-theme="brand-dark"] .loan-mobile-empty{
   background: rgba(255, 255, 255, 0.03);
   border-color: rgba(255, 255, 255, 0.12);
 }
 
-[data-theme="dark"] .loan-mobile-action-btn {
+[data-theme="dark"] .loan-mobile-action-btn, [data-theme="brand-dark"] .loan-mobile-action-btn{
   background: var(--blue-btn-bg, #1e3a5f) !important;
   border-color: var(--blue-btn-border, #2563eb) !important;
   color: var(--color-navy, #93c5fd) !important;
 }
 
-[data-theme="dark"] .loan-mobile-action-btn:hover,
-[data-theme="dark"] .loan-mobile-action-btn:focus,
-[data-theme="dark"] .loan-mobile-action-btn:active {
+[data-theme="dark"] .loan-mobile-action-btn:hover, [data-theme="brand-dark"] .loan-mobile-action-btn:hover,
+[data-theme="dark"] .loan-mobile-action-btn:focus, [data-theme="brand-dark"] .loan-mobile-action-btn:focus,
+[data-theme="dark"] .loan-mobile-action-btn:active, [data-theme="brand-dark"] .loan-mobile-action-btn:active{
   background: #254a75 !important;
   border-color: var(--blue-btn-border, #2563eb) !important;
   color: #bfdbfe !important;
@@ -825,22 +825,22 @@ span.badge.status-badge.loan-info-header-badge *,
   color: var(--btn-success-text, #006400);
 }
 
-[data-theme="dark"] .active-loan-panel .record-nav-buttons--panel .record-nav-buttons__count,
-[data-theme="dark"] .finance-page .record-nav-buttons--panel .record-nav-buttons__count {
+[data-theme="dark"] .active-loan-panel .record-nav-buttons--panel .record-nav-buttons__count, [data-theme="brand-dark"] .active-loan-panel .record-nav-buttons--panel .record-nav-buttons__count,
+[data-theme="dark"] .finance-page .record-nav-buttons--panel .record-nav-buttons__count, [data-theme="brand-dark"] .finance-page .record-nav-buttons--panel .record-nav-buttons__count{
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.12);
   color: var(--bs-body-color, #e2e8f0);
 }
 
-[data-theme="dark"] .active-loan-panel .record-nav-buttons--panel .record-nav-buttons__btn--prev:not(:disabled):hover,
-[data-theme="dark"] .finance-page .record-nav-buttons--panel .record-nav-buttons__btn--prev:not(:disabled):hover {
+[data-theme="dark"] .active-loan-panel .record-nav-buttons--panel .record-nav-buttons__btn--prev:not(:disabled):hover, [data-theme="brand-dark"] .active-loan-panel .record-nav-buttons--panel .record-nav-buttons__btn--prev:not(:disabled):hover,
+[data-theme="dark"] .finance-page .record-nav-buttons--panel .record-nav-buttons__btn--prev:not(:disabled):hover, [data-theme="brand-dark"] .finance-page .record-nav-buttons--panel .record-nav-buttons__btn--prev:not(:disabled):hover{
   background: rgba(239, 68, 68, 0.18);
   border-color: rgba(239, 68, 68, 0.35);
   color: #fca5a5;
 }
 
-[data-theme="dark"] .active-loan-panel .record-nav-buttons--panel .record-nav-buttons__btn--next:not(:disabled):hover,
-[data-theme="dark"] .finance-page .record-nav-buttons--panel .record-nav-buttons__btn--next:not(:disabled):hover {
+[data-theme="dark"] .active-loan-panel .record-nav-buttons--panel .record-nav-buttons__btn--next:not(:disabled):hover, [data-theme="brand-dark"] .active-loan-panel .record-nav-buttons--panel .record-nav-buttons__btn--next:not(:disabled):hover,
+[data-theme="dark"] .finance-page .record-nav-buttons--panel .record-nav-buttons__btn--next:not(:disabled):hover, [data-theme="brand-dark"] .finance-page .record-nav-buttons--panel .record-nav-buttons__btn--next:not(:disabled):hover{
   background: rgba(34, 197, 94, 0.18);
   border-color: rgba(34, 197, 94, 0.35);
   color: #86efac;
@@ -861,4 +861,51 @@ span.badge.status-badge.loan-info-header-badge *,
     width: 34px;
     height: 34px;
   }
+}
+
+/* Brand Dark — action buttons use magenta/purple icon palette */
+[data-theme="brand-dark"] .loan-mobile-action-btn:hover,
+[data-theme="brand-dark"] .loan-mobile-action-btn:focus,
+[data-theme="brand-dark"] .loan-mobile-action-btn:active {
+  background: #4a1258 !important;
+  border-color: #a1005b !important;
+  color: #f9a8d4 !important;
+}
+
+[data-theme="brand-dark"] .action-footer .blue-btn {
+  background: var(--blue-btn-bg) !important;
+  border-color: var(--blue-btn-border) !important;
+  color: #f0abfc !important;
+}
+
+[data-theme="brand-dark"] .action-footer .blue-btn:hover,
+[data-theme="brand-dark"] .action-footer .blue-btn:focus {
+  background: #4a1258 !important;
+  border-color: #a1005b !important;
+  color: #f9a8d4 !important;
+}
+
+[data-theme="brand-dark"] .loan-mobile-action-btn .bi.text-primary,
+[data-theme="brand-dark"] .action-footer .blue-btn .bi.text-primary {
+  color: #f0abfc !important;
+}
+
+[data-theme="brand-dark"] .loan-mobile-action-btn .bi.text-info,
+[data-theme="brand-dark"] .action-footer .blue-btn .bi.text-info {
+  color: #c4b5fd !important;
+}
+
+[data-theme="brand-dark"] .loan-mobile-action-btn .bi.text-success,
+[data-theme="brand-dark"] .action-footer .blue-btn .bi.text-success {
+  color: #f9a8d4 !important;
+}
+
+[data-theme="brand-dark"] .loan-mobile-action-btn .bi.text-warning,
+[data-theme="brand-dark"] .action-footer .blue-btn .bi.text-warning {
+  color: #fbbf24 !important;
+}
+
+[data-theme="brand-dark"] .loan-mobile-action-btn .bi.text-danger,
+[data-theme="brand-dark"] .action-footer .blue-btn .bi.text-danger {
+  color: #fca5a5 !important;
 }

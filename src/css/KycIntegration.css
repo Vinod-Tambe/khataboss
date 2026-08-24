@@ -465,29 +465,29 @@
   }
 }
 
-[data-theme="dark"] .kyc-form-card .form-label,
-[data-theme="dark"] .kyc-form-card .card-title {
+[data-theme="dark"] .kyc-form-card .form-label, [data-theme="brand-dark"] .kyc-form-card .form-label,
+[data-theme="dark"] .kyc-form-card .card-title, [data-theme="brand-dark"] .kyc-form-card .card-title{
   color: var(--datatable-body-text);
 }
 
-[data-theme="dark"] .kyc-test-badge.warn {
+[data-theme="dark"] .kyc-test-badge.warn, [data-theme="brand-dark"] .kyc-test-badge.warn{
   color: #ffc107;
 }
 
-[data-theme="dark"] .kyc-provider-logo.sandbox {
+[data-theme="dark"] .kyc-provider-logo.sandbox, [data-theme="brand-dark"] .kyc-provider-logo.sandbox{
   background: rgba(37, 99, 235, 0.2);
   color: #93c5fd;
 }
 
-[data-theme="dark"] .kyc-provider-logo.eko {
+[data-theme="dark"] .kyc-provider-logo.eko, [data-theme="brand-dark"] .kyc-provider-logo.eko{
   background: rgba(5, 150, 105, 0.2);
   color: #6ee7b7;
 }
 
-[data-theme="dark"] .kyc-radio-option.active-yes {
+[data-theme="dark"] .kyc-radio-option.active-yes, [data-theme="brand-dark"] .kyc-radio-option.active-yes{
   background: rgba(25, 135, 84, 0.15);
 }
 
-[data-theme="dark"] .kyc-radio-option.active-no {
+[data-theme="dark"] .kyc-radio-option.active-no, [data-theme="brand-dark"] .kyc-radio-option.active-no{
   background: rgba(108, 117, 125, 0.12);
 }

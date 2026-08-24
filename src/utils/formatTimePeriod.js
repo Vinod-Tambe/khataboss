@@ -3,17 +3,33 @@ import moment from 'moment';
 const pluralize = (value, singular, plural) =>
   `${value} ${value === 1 ? singular : plural}`;
 
+/** Parse stored date (YYYY-MM-DD or ISO) as local calendar day — no UTC day shift. */
+export const toCalendarDay = (value) => {
+  if (!value) return null;
+  const datePart = String(value).trim().slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+    return moment(datePart, 'YYYY-MM-DD', true).startOf('day');
+  }
+  const parsed = moment(value).startOf('day');
+  return parsed.isValid() ? parsed : null;
+};
+
 /**
  * Format date range as: "1 day", "1 month 2 days", "1 year 1 month 2 days"
+ * Loan start date is inclusive (same-day loan = "1 day").
  */
 export const formatTimePeriod = (start, end = moment()) => {
-  const startDate = moment(start).startOf('day');
-  const endDate = moment(end).startOf('day');
+  const startDate = toCalendarDay(start);
+  const endDate = toCalendarDay(end) ?? moment().startOf('day');
 
-  if (!startDate.isValid() || !endDate.isValid()) return '-';
+  if (!startDate?.isValid() || !endDate?.isValid()) return '-';
 
-  if (endDate.isSameOrBefore(startDate)) {
+  if (endDate.isBefore(startDate, 'day')) {
     return '0 days';
+  }
+
+  if (endDate.isSame(startDate, 'day')) {
+    return '1 day';
   }
 
   const years = endDate.diff(startDate, 'years');

@@ -52,6 +52,8 @@ const List = ({
   amountKey,
   /** Set false only when page already has its own mobile UI */
   showMobileList = true,
+  /** When false, do not auto-filter rows to current FY on load (loan/finance lists show all). */
+  applyDefaultDateFilter = true,
 }) => {
   const tableRef = useRef(null);
   const dateRef = useRef(null);
@@ -97,17 +99,21 @@ const List = ({
       }
     );
 
-    $(dateRef.current).val(`${fyStart.format("DD-MM-YYYY")} - ${fyEnd.format("DD-MM-YYYY")}`);
-    setDateRange({
-      startDate: fyStart.format("YYYY-MM-DD"),
-      endDate: fyEnd.format("YYYY-MM-DD"),
-    });
+    if (applyDefaultDateFilter) {
+      $(dateRef.current).val(`${fyStart.format("DD-MM-YYYY")} - ${fyEnd.format("DD-MM-YYYY")}`);
+      setDateRange({
+        startDate: fyStart.format("YYYY-MM-DD"),
+        endDate: fyEnd.format("YYYY-MM-DD"),
+      });
+    } else {
+      $(dateRef.current).val("");
+    }
 
     const dateInput = dateRef.current;
     return () => {
       $(dateInput).data("daterangepicker")?.remove();
     };
-  }, []);
+  }, [applyDefaultDateFilter]);
 
   // ─── DataTable Initialization ─────────────────────────────────
   useEffect(() => {
@@ -509,16 +515,16 @@ const List = ({
 
         if (!rawDate || rawDate === "N/A" || rawDate === "-" || rawDate === "") return true;
 
-        // Parse date - handles DD/MM/YYYY, YYYY-MM-DD, and ISO
-        const empDate = moment(rawDate, ["DD/MM/YYYY", "YYYY-MM-DD", "DD-MM-YYYY"], true);
-        if (!empDate.isValid()) {
-          // Fallback to loose parsing if strict fails
-          const looseDate = moment(rawDate);
-          if (!looseDate.isValid()) return true;
-          return looseDate.isBetween(dateRange.startDate, dateRange.endDate, "day", "[]");
-        }
+        // Parse date - handles DD/MM/YYYY, YYYY-MM-DD, DD-MM-YYYY, and ISO datetimes
+        const empDate = moment(
+          rawDate,
+          ["DD/MM/YYYY", "YYYY-MM-DD", "DD-MM-YYYY", moment.ISO_8601],
+          true
+        );
+        const parsed = empDate.isValid() ? empDate : moment(rawDate);
+        if (!parsed.isValid()) return true;
 
-        return empDate.isBetween(dateRange.startDate, dateRange.endDate, "day", "[]");
+        return parsed.isBetween(dateRange.startDate, dateRange.endDate, "day", "[]");
       } catch (err) {
         console.error("Error in DataTable filterFn:", err);
         return true; // Show row if filter fails

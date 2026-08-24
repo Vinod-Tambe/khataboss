@@ -376,22 +376,22 @@
   }
 }
 
-[data-theme="dark"] .balance-sheet-mobile-wrap {
+[data-theme="dark"] .balance-sheet-mobile-wrap, [data-theme="brand-dark"] .balance-sheet-mobile-wrap{
   background: var(--layout-filter-bg, #1e293b);
 }
 
-[data-theme="dark"] .balance-sheet-mobile-section__list,
-[data-theme="dark"] .balance-sheet-mobile-totals {
+[data-theme="dark"] .balance-sheet-mobile-section__list, [data-theme="brand-dark"] .balance-sheet-mobile-section__list,
+[data-theme="dark"] .balance-sheet-mobile-totals, [data-theme="brand-dark"] .balance-sheet-mobile-totals{
   background: var(--color-white, #1e1e2e);
   border-color: var(--app-border, #3d3d5c);
 }
 
-[data-theme="dark"] .balance-sheet-mobile-section__title {
+[data-theme="dark"] .balance-sheet-mobile-section__title, [data-theme="brand-dark"] .balance-sheet-mobile-section__title{
   background: var(--bg-cust-primary);
   border-color: var(--app-border, #3d3d5c);
 }
 
-[data-theme="dark"] .balance-sheet-period-mobile {
+[data-theme="dark"] .balance-sheet-period-mobile, [data-theme="brand-dark"] .balance-sheet-period-mobile{
   background: var(--btn-info-bg);
   border-color: var(--btn-info-border);
   color: var(--btn-info-text);

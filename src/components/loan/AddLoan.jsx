@@ -118,6 +118,8 @@ const AddLoan = () => {
         singleDatePicker: true,
         showDropdowns: true,
         autoUpdateInput: true,
+        startDate: moment(),
+        endDate: moment(),
         locale: {
           format: 'DD-MM-YYYY'
         }

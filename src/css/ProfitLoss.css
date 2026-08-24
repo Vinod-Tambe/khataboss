@@ -372,8 +372,8 @@
   color: #3d6f94 !important;
 }
 
-[data-theme="dark"] .profit-loss-page,
-[data-theme="dark"] .profit-loss-account-table {
+[data-theme="dark"] .profit-loss-page, [data-theme="brand-dark"] .profit-loss-page,
+[data-theme="dark"] .profit-loss-account-table, [data-theme="brand-dark"] .profit-loss-account-table{
   --pl-profit-text: #86efac;
   --pl-loss-text: #fca5a5;
   --pl-sky-bg: rgba(96, 165, 250, 0.12);
@@ -389,74 +389,74 @@
   --pl-row-border: #3d3d5c;
 }
 
-[data-theme="dark"] .profit-loss-account-table .pl-desktop-head.is-expense,
-[data-theme="dark"] .profit-loss-account-table .pl-desktop-total.is-expense {
+[data-theme="dark"] .profit-loss-account-table .pl-desktop-head.is-expense, [data-theme="brand-dark"] .profit-loss-account-table .pl-desktop-head.is-expense,
+[data-theme="dark"] .profit-loss-account-table .pl-desktop-total.is-expense, [data-theme="brand-dark"] .profit-loss-account-table .pl-desktop-total.is-expense{
   color: #cbd5e1 !important;
 }
 
-[data-theme="dark"] .profit-loss-account-table .pl-desktop-head.is-income,
-[data-theme="dark"] .profit-loss-account-table .pl-desktop-total.is-income {
+[data-theme="dark"] .profit-loss-account-table .pl-desktop-head.is-income, [data-theme="brand-dark"] .profit-loss-account-table .pl-desktop-head.is-income,
+[data-theme="dark"] .profit-loss-account-table .pl-desktop-total.is-income, [data-theme="brand-dark"] .profit-loss-account-table .pl-desktop-total.is-income{
   color: #93c5fd !important;
 }
 
-[data-theme="dark"] .profit-loss-account-table .pl-desktop-cell.is-profit {
+[data-theme="dark"] .profit-loss-account-table .pl-desktop-cell.is-profit, [data-theme="brand-dark"] .profit-loss-account-table .pl-desktop-cell.is-profit{
   color: var(--pl-profit-text) !important;
   background: var(--pl-result-profit-bg) !important;
 }
 
-[data-theme="dark"] .profit-loss-account-table .pl-desktop-cell.is-loss {
+[data-theme="dark"] .profit-loss-account-table .pl-desktop-cell.is-loss, [data-theme="brand-dark"] .profit-loss-account-table .pl-desktop-cell.is-loss{
   color: var(--pl-loss-text) !important;
   background: var(--pl-result-loss-bg) !important;
 }
 
-[data-theme="dark"] .profit-loss-mobile-account,
-[data-theme="dark"] .profit-loss-period-mobile {
+[data-theme="dark"] .profit-loss-mobile-account, [data-theme="brand-dark"] .profit-loss-mobile-account,
+[data-theme="dark"] .profit-loss-period-mobile, [data-theme="brand-dark"] .profit-loss-period-mobile{
   background: var(--home-card-bg, #1e1e2e);
   border-color: var(--app-border, #3d3d5c);
 }
 
-[data-theme="dark"] .profit-loss-mobile-account__title {
+[data-theme="dark"] .profit-loss-mobile-account__title, [data-theme="brand-dark"] .profit-loss-mobile-account__title{
   background: #252540;
   border-color: var(--app-border, #3d3d5c);
 }
 
-[data-theme="dark"] .profit-loss-mobile-cell {
+[data-theme="dark"] .profit-loss-mobile-cell, [data-theme="brand-dark"] .profit-loss-mobile-cell{
   background: #1e1e2e;
 }
 
-[data-theme="dark"] .profit-loss-mobile-grid-head__col.is-expense {
+[data-theme="dark"] .profit-loss-mobile-grid-head__col.is-expense, [data-theme="brand-dark"] .profit-loss-mobile-grid-head__col.is-expense{
   color: #cbd5e1;
 }
 
-[data-theme="dark"] .profit-loss-mobile-grid-head__col.is-income {
+[data-theme="dark"] .profit-loss-mobile-grid-head__col.is-income, [data-theme="brand-dark"] .profit-loss-mobile-grid-head__col.is-income{
   color: #93c5fd;
 }
 
-[data-theme="dark"] .profit-loss-mobile-cell.is-total.is-expense .profit-loss-mobile-cell__name,
-[data-theme="dark"] .profit-loss-mobile-cell.is-total.is-expense .profit-loss-mobile-cell__amount {
+[data-theme="dark"] .profit-loss-mobile-cell.is-total.is-expense .profit-loss-mobile-cell__name, [data-theme="brand-dark"] .profit-loss-mobile-cell.is-total.is-expense .profit-loss-mobile-cell__name,
+[data-theme="dark"] .profit-loss-mobile-cell.is-total.is-expense .profit-loss-mobile-cell__amount, [data-theme="brand-dark"] .profit-loss-mobile-cell.is-total.is-expense .profit-loss-mobile-cell__amount{
   color: #cbd5e1 !important;
 }
 
-[data-theme="dark"] .profit-loss-mobile-cell.is-total.is-income .profit-loss-mobile-cell__name,
-[data-theme="dark"] .profit-loss-mobile-cell.is-total.is-income .profit-loss-mobile-cell__amount {
+[data-theme="dark"] .profit-loss-mobile-cell.is-total.is-income .profit-loss-mobile-cell__name, [data-theme="brand-dark"] .profit-loss-mobile-cell.is-total.is-income .profit-loss-mobile-cell__name,
+[data-theme="dark"] .profit-loss-mobile-cell.is-total.is-income .profit-loss-mobile-cell__amount, [data-theme="brand-dark"] .profit-loss-mobile-cell.is-total.is-income .profit-loss-mobile-cell__amount{
   color: #93c5fd !important;
 }
 
-[data-theme="dark"] .profit-loss-mobile-cell__amount {
+[data-theme="dark"] .profit-loss-mobile-cell__amount, [data-theme="brand-dark"] .profit-loss-mobile-cell__amount{
   color: var(--app-text, #e5e7eb);
 }
 
-[data-theme="dark"] .profit-loss-mobile-net.is-profit {
+[data-theme="dark"] .profit-loss-mobile-net.is-profit, [data-theme="brand-dark"] .profit-loss-mobile-net.is-profit{
   border-top-color: rgba(34, 197, 94, 0.35);
 }
 
-[data-theme="dark"] .profit-loss-mobile-net.is-loss {
+[data-theme="dark"] .profit-loss-mobile-net.is-loss, [data-theme="brand-dark"] .profit-loss-mobile-net.is-loss{
   border-top-color: rgba(239, 68, 68, 0.35);
 }
 
-[data-theme="dark"] .profit-loss-mobile-grid-row,
-[data-theme="dark"] .profit-loss-mobile-cell,
-[data-theme="dark"] .profit-loss-mobile-grid-head__col:first-child {
+[data-theme="dark"] .profit-loss-mobile-grid-row, [data-theme="brand-dark"] .profit-loss-mobile-grid-row,
+[data-theme="dark"] .profit-loss-mobile-cell, [data-theme="brand-dark"] .profit-loss-mobile-cell,
+[data-theme="dark"] .profit-loss-mobile-grid-head__col:first-child, [data-theme="brand-dark"] .profit-loss-mobile-grid-head__col:first-child{
   border-color: var(--pl-row-border);
 }
 

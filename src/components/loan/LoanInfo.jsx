@@ -19,9 +19,8 @@ import { toast } from 'react-toastify';
 import { formatTimePeriod } from '../../utils/formatTimePeriod';
 import { getStatusBadgeMeta } from '../../utils/listFormatters';
 import {
-  calculateInterest,
+  calculateInterestForPeriod,
   getLoanInterestSummary,
-  getTenureMonths,
 } from '../../utils/loanInterest';
 import ImageModal from '../common/ImageModal';
 import { resolveImageUrl } from '../../utils/imageHelpers';
@@ -725,6 +724,7 @@ const LoanMobileView = ({
   releaseDataRows,
   releaseUserRows,
   totalInterest,
+  pendingInterest,
   firstMonthInterest,
   payableAmount,
   totalValuation,
@@ -864,7 +864,7 @@ const LoanMobileView = ({
       <div className="loan-mobile-stats">
         <div className="loan-mobile-stat">
           <span className="loan-mobile-stat__label">Interest</span>
-          <span className="loan-mobile-stat__value">{formatAmt(totalInterest)}</span>
+          <span className="loan-mobile-stat__value">{formatAmt(pendingInterest)}</span>
         </div>
         <div className="loan-mobile-stat">
           <span className="loan-mobile-stat__label">ROI</span>
@@ -1187,7 +1187,7 @@ const LoanMobileView = ({
         </div>
         <div className="loan-mobile-summary__tile">
           <span className="loan-mobile-summary__label">Total Interest</span>
-          <span className="loan-mobile-summary__value">{formatAmt(totalInterest)}</span>
+          <span className="loan-mobile-summary__value">{formatAmt(pendingInterest)}</span>
         </div>
         {firstMonthInterest > 0 && (
           <div className="loan-mobile-summary__tile">
@@ -1576,7 +1576,6 @@ const LoanInfo = () => {
     originalPrincipal,
     currentTotalPrincipal,
     origInterest,
-    additionalInterestTotal,
     firstMonthInterest,
     pendingInterest,
     pendingPrincipal,
@@ -1587,9 +1586,12 @@ const LoanInfo = () => {
     compoundFreq,
   } = interestSummary;
 
-  const payableAmount = serverSummary?.totalDueAmount ?? (
-    currentTotalPrincipal + origInterest + additionalInterestTotal - firstMonthInterest
-  );
+  const payableAmount =
+    serverSummary?.totalDueAmount ??
+    serverSummary?.pending ??
+    parseFloat((pendingPrincipal + pendingInterest).toFixed(2));
+
+  const summaryPendingInterest = pendingInterest;
 
   // Calculate Valuation
   const loanItems = getLoanItems(loanDetails);
@@ -1632,8 +1634,15 @@ const LoanInfo = () => {
       const apPrin = parseFloat(ap.ap_prin_amt) || 0;
       const apRoi = parseFloat(ap.ap_roi) || 0;
       const apStartDate = moment(ap.ap_trans_date);
-      const apMonths = getTenureMonths(ap.ap_trans_date, today);
-      const apInterest = calculateInterest(apPrin, apRoi, apMonths, interestMethod, compoundFreq, roiType);
+      const apInterest = calculateInterestForPeriod(
+        apPrin,
+        apRoi,
+        ap.ap_trans_date,
+        today,
+        interestMethod,
+        compoundFreq,
+        roiType
+      );
       const cashAmt = parseFloat(ap.ap_cash_amt) || 0;
       const bankAmt = parseFloat(ap.ap_bank_amt) || 0;
       const onlineAmt = parseFloat(ap.ap_online_amt) || 0;
@@ -1789,6 +1798,7 @@ const LoanInfo = () => {
         releaseDataRows={releaseDataRows}
         releaseUserRows={releaseUserRows}
         totalInterest={totalInterest}
+        pendingInterest={summaryPendingInterest}
         firstMonthInterest={firstMonthInterest}
         payableAmount={payableAmount}
         totalValuation={totalValuation}
@@ -1955,7 +1965,7 @@ const LoanInfo = () => {
             <div className="col">
               <div className="loan-summary-tile border border-dark h-100">
                 <div className="loan-summary-tile__label bg-cust-info text-brown fw-bold p-1 border-bottom border-dark">Total Interest</div>
-                <div className="loan-summary-tile__value p-2 fw-bold">{totalInterest.toFixed(2)}</div>
+                <div className="loan-summary-tile__value p-2 fw-bold">{summaryPendingInterest.toFixed(2)}</div>
               </div>
             </div>
             {firstMonthInterest > 0 && (

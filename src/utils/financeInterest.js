@@ -1,6 +1,7 @@
 /**
- * Flat ROI interest — collected separately from principal EMIs (loan-style).
+ * Finance ROI interest — same billable-month tenure rules as loan interest.
  */
+import { calculateInterestForPeriod } from './loanInterest';
 
 export function sumPaidInterest(moneyTrans = []) {
   let interestPaid = 0;
@@ -32,12 +33,25 @@ export function isBundledInterestFinance(finance = {}) {
   return scheduleTotal > prin + 0.01;
 }
 
-export function buildFinanceInterestSummary(finance = {}, moneyTrans = null) {
+export function buildFinanceInterestSummary(finance = {}, moneyTrans = null, asOfDate = null) {
   const prin = parseFloat(finance.fin_prin_amt) || 0;
   const roi = parseFloat(finance.fin_roi) || 0;
   const processAmt = parseFloat(finance.fin_proccess_amt) || 0;
+  const endDate = asOfDate || new Date();
   const interestAmt =
-    prin > 0 && roi > 0 ? parseFloat(((prin * roi) / 100).toFixed(2)) : 0;
+    prin > 0 && roi > 0 && finance.fin_start_date
+      ? calculateInterestForPeriod(
+          prin,
+          roi,
+          finance.fin_start_date,
+          endDate,
+          'simple',
+          'monthly',
+          'monthly'
+        )
+      : prin > 0 && roi > 0
+        ? parseFloat(((prin * roi) / 100).toFixed(2))
+        : 0;
   const receivable = parseFloat((prin + interestAmt).toFixed(2));
   const disbursed =
     parseFloat(finance.fin_final_amt) ||

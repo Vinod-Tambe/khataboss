@@ -344,8 +344,8 @@ const StaffDetails = () => {
             width: 2.25em;
             height: 1.15em;
             cursor: pointer;
-            background-color: #e5e7eb;
-            border-color: #d1d5db;
+            background-color: var(--light, #e5e7eb);
+            border-color: var(--app-border, #d1d5db);
           }
           .form-switch .custom-switch:checked {
             background-color: var(--success) !important;
@@ -353,19 +353,19 @@ const StaffDetails = () => {
           }
           .permission-label {
             font-size: 0.85rem;
-            color: #374151;
+            color: var(--app-text, #374151);
             font-weight: 500;
             cursor: pointer;
           }
           .card-header-line {
-            border-bottom: 2px solid #e5e7eb;
+            border-bottom: 2px solid var(--app-border, #e5e7eb);
             margin-bottom: 1.25rem;
             padding-bottom: 0.75rem;
           }
           .user-details-card {
-            background-color: #ffffff !important;
+            background-color: var(--home-card-bg, #ffffff) !important;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03) !important;
-            border: 1px solid #eef0f2 !important;
+            border: 1px solid var(--app-border, #eef0f2) !important;
           }
           .user-details-card .gap-3 {
             gap: 0.5rem !important;
@@ -471,7 +471,7 @@ const StaffDetails = () => {
             .staff-details-save-row {
               position: sticky;
               bottom: calc(60px + env(safe-area-inset-bottom, 0px));
-              background: #fff;
+              background: var(--home-card-bg, #fff);
               margin-left: -0.75rem;
               margin-right: -0.75rem;
               padding: 0.75rem;

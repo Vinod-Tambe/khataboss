@@ -164,40 +164,40 @@
   min-width: 2.25rem;
 }
 
-[data-theme="dark"] .mobile-list__card {
+[data-theme="dark"] .mobile-list__card, [data-theme="brand-dark"] .mobile-list__card{
   background-color: var(--home-card-bg, #2d2d44);
   border-color: var(--app-border);
 }
 
-[data-theme="dark"] .mobile-list__card.is-open {
+[data-theme="dark"] .mobile-list__card.is-open, [data-theme="brand-dark"] .mobile-list__card.is-open{
   border-color: rgba(212, 160, 23, 0.5);
 }
 
-[data-theme="dark"] .mobile-list__title,
-[data-theme="dark"] .mobile-list__card-title,
-[data-theme="dark"] .mobile-list__card-amount,
-[data-theme="dark"] .mobile-list__cell-value {
+[data-theme="dark"] .mobile-list__title, [data-theme="brand-dark"] .mobile-list__title,
+[data-theme="dark"] .mobile-list__card-title, [data-theme="brand-dark"] .mobile-list__card-title,
+[data-theme="dark"] .mobile-list__card-amount, [data-theme="brand-dark"] .mobile-list__card-amount,
+[data-theme="dark"] .mobile-list__cell-value, [data-theme="brand-dark"] .mobile-list__cell-value{
   color: var(--datatable-body-text, #eaeaea);
 }
 
-[data-theme="dark"] .mobile-list__empty {
+[data-theme="dark"] .mobile-list__empty, [data-theme="brand-dark"] .mobile-list__empty{
   background-color: #2d2d44;
   border-color: var(--app-border);
 }
 
-[data-theme="dark"] .mobile-list__search .input-group-text,
-[data-theme="dark"] .mobile-list__search .form-control {
+[data-theme="dark"] .mobile-list__search .input-group-text, [data-theme="brand-dark"] .mobile-list__search .input-group-text,
+[data-theme="dark"] .mobile-list__search .form-control, [data-theme="brand-dark"] .mobile-list__search .form-control{
   background-color: #2d2d44;
   color: var(--datatable-body-text, #eaeaea);
   border-color: var(--app-border);
 }
 
-[data-theme="dark"] .mobile-list__count-badge {
+[data-theme="dark"] .mobile-list__count-badge, [data-theme="brand-dark"] .mobile-list__count-badge{
   background-color: rgba(212, 160, 23, 0.2);
   color: #e0b02a;
 }
 
-[data-theme="dark"] .mobile-list__details,
-[data-theme="dark"] .mobile-list__actions {
+[data-theme="dark"] .mobile-list__details, [data-theme="brand-dark"] .mobile-list__details,
+[data-theme="dark"] .mobile-list__actions, [data-theme="brand-dark"] .mobile-list__actions{
   border-color: var(--app-border);
 }

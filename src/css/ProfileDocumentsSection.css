@@ -297,3 +297,45 @@
     height: 96px;
   }
 }
+
+[data-theme="dark"] .profile-documents-section__square, [data-theme="brand-dark"] .profile-documents-section__square,
+[data-theme="dark"] .profile-documents-section__square--add, [data-theme="brand-dark"] .profile-documents-section__square--add,
+[data-theme="dark"] .profile-documents-section__square--profile-trigger, [data-theme="brand-dark"] .profile-documents-section__square--profile-trigger,
+[data-theme="dark"] .profile-documents-section__square--doc-trigger, [data-theme="brand-dark"] .profile-documents-section__square--doc-trigger{
+  background: var(--light, #2d2d44);
+  border-color: var(--app-border, #6c757d);
+  color: var(--bs-secondary-color, #94a3b8);
+}
+
+[data-theme="dark"] .profile-documents-section__square--add:hover, [data-theme="brand-dark"] .profile-documents-section__square--add:hover,
+[data-theme="dark"] .profile-documents-section__square--profile-trigger:hover, [data-theme="brand-dark"] .profile-documents-section__square--profile-trigger:hover,
+[data-theme="dark"] .profile-documents-section__square--doc-trigger:hover, [data-theme="brand-dark"] .profile-documents-section__square--doc-trigger:hover{
+  border-color: #60a5fa;
+  color: #60a5fa;
+}
+
+[data-theme="dark"] .profile-documents-section__options-modal, [data-theme="brand-dark"] .profile-documents-section__options-modal,
+[data-theme="dark"] .profile-documents-section__camera-modal, [data-theme="brand-dark"] .profile-documents-section__camera-modal{
+  background: var(--home-card-bg, #1e1e2e);
+  color: var(--app-text, #e5e7eb);
+}
+
+[data-theme="dark"] .profile-documents-section__options-header, [data-theme="brand-dark"] .profile-documents-section__options-header,
+[data-theme="dark"] .profile-documents-section__camera-footer, [data-theme="brand-dark"] .profile-documents-section__camera-footer{
+  border-color: var(--app-border, #3d3d5c);
+}
+
+[data-theme="dark"] .profile-documents-section__option-btn, [data-theme="brand-dark"] .profile-documents-section__option-btn{
+  background: var(--light, #2d2d44);
+  border-color: var(--app-border, #3d3d5c);
+  color: var(--app-text, #e5e7eb);
+}
+
+[data-theme="dark"] .profile-documents-section__option-btn:hover, [data-theme="brand-dark"] .profile-documents-section__option-btn:hover{
+  background: var(--home-card-bg, #1e1e2e);
+  border-color: #60a5fa;
+}
+
+[data-theme="dark"] .profile-documents-section__camera-video, [data-theme="brand-dark"] .profile-documents-section__camera-video{
+  border-color: var(--app-border, #3d3d5c);
+}

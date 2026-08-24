@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FiUser, FiMenu, FiBell, FiSun, FiMoon, FiMonitor, FiBriefcase, FiLock, FiLogOut } from 'react-icons/fi';
+import { FiUser, FiMenu, FiBell, FiSun, FiMoon, FiMonitor, FiDroplet, FiBriefcase, FiLock, FiLogOut } from 'react-icons/fi';
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../store/slices/authSlice";
@@ -13,13 +13,15 @@ import LoanCollectionModal from "../components/loan/LoanCollectionModal";
 const themeLabels = {
   light: "Light",
   dark: "Dark",
-  system: "System",
+  system: "Brand",
+  "brand-dark": "Brand Dark",
 };
 
 const nextTheme = {
   light: "dark",
   dark: "system",
-  system: "light",
+  system: "brand-dark",
+  "brand-dark": "light",
 };
 
 const dummyNotifications = [
@@ -98,7 +100,14 @@ const Header = () => {
   const [collectionUser, setCollectionUser] = useState(null);
   const notificationRef = useRef(null);
   const profileRef = useRef(null);
-  const ThemeIcon = theme === "dark" ? FiMoon : theme === "system" ? FiMonitor : FiSun;
+  const ThemeIcon =
+    theme === "dark"
+      ? FiMoon
+      : theme === "system"
+        ? FiMonitor
+        : theme === "brand-dark"
+          ? FiDroplet
+          : FiSun;
   const themeTitle = `Theme: ${themeLabels[theme]} — click for ${themeLabels[nextTheme[theme]]}`;
   const profileImageUrl = resolveImageUrl(user?.own_profile_img);
   const displayName =

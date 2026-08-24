@@ -51,6 +51,9 @@ const ListLoan = ({ status = "ALL", global = false }) => {
   useEffect(() => {
     if (global || selectedUser?.user_id) {
       fetchLoans();
+    } else {
+      setLoans([]);
+      setLoading(false);
     }
   }, [selectedUser?.user_id, fetchLoans, global]);
 
@@ -270,24 +273,31 @@ const ListLoan = ({ status = "ALL", global = false }) => {
         )}
       </div>
       <div className="card-body p-0">
-        <List
-          data={loans}
-          columns={columns}
-          title={getTitle()}
-          primaryKey="girv_id"
-          subtitleKey="girv_start_date"
-          amountKey="girv_prin_amt"
-          onView={canViewLoan ? handleView : undefined}
-          onDelete={canDeleteLoan ? handleDelete : undefined}
-          onEdit={canEditLoan ? handleEdit : undefined}
-          onCustomerHome={global ? handleCustomerHome : undefined}
-          hasView={canViewLoan}
-          hasDelete={canDeleteLoan ? (row) => row.girv_status === "ACTIVE" : false}
-          hasEdit={canEditLoan ? (row) => row.girv_status === "ACTIVE" : false}
-          isLoading={loading}
-          showFooter={true}
-          deleteConfirmMessage="Are you sure you want to delete this loan? Only clean ACTIVE loans can be deleted."
-        />
+        {!global && !selectedUser?.user_id ? (
+          <div className="text-center text-muted py-5">
+            Select a customer from User Home to view their loan list.
+          </div>
+        ) : (
+          <List
+            data={loans}
+            columns={columns}
+            title={getTitle()}
+            primaryKey="girv_id"
+            subtitleKey="girv_start_date"
+            amountKey="girv_prin_amt"
+            onView={canViewLoan ? handleView : undefined}
+            onDelete={canDeleteLoan ? handleDelete : undefined}
+            onEdit={canEditLoan ? handleEdit : undefined}
+            onCustomerHome={global ? handleCustomerHome : undefined}
+            hasView={canViewLoan}
+            hasDelete={canDeleteLoan ? (row) => row.girv_status === "ACTIVE" : false}
+            hasEdit={canEditLoan ? (row) => row.girv_status === "ACTIVE" : false}
+            isLoading={loading}
+            showFooter={true}
+            applyDefaultDateFilter={false}
+            deleteConfirmMessage="Are you sure you want to delete this loan? Only clean ACTIVE loans can be deleted."
+          />
+        )}
       </div>
     </div>
   );

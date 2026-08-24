@@ -58,6 +58,9 @@ const ListFinance = ({ status = "ALL", global = false }) => {
   useEffect(() => {
     if (global || selectedUser?.user_id) {
       fetchFinances();
+    } else {
+      setFinances([]);
+      setLoading(false);
     }
   }, [selectedUser?.user_id, fetchFinances, global]);
 
@@ -234,24 +237,31 @@ const ListFinance = ({ status = "ALL", global = false }) => {
         )}
       </div>
       <div className="card-body p-0">
-        <List
-          data={finances}
-          columns={columns}
-          title={getTitle()}
-          primaryKey="fin_id"
-          subtitleKey="fin_start_date"
-          amountKey="fin_prin_amt"
-          onView={canViewFinance ? handleView : undefined}
-          onDelete={canDeleteFinance ? handleDelete : undefined}
-          onEdit={canEditFinance ? handleEdit : undefined}
-          onCustomerHome={global ? handleCustomerHome : undefined}
-          hasView={canViewFinance}
-          hasDelete={!global && canDeleteFinance}
-          hasEdit={canEditFinance}
-          isLoading={loading}
-          showFooter={true}
-          deleteConfirmMessage="Are you sure you want to delete this finance record?"
-        />
+        {!global && !selectedUser?.user_id ? (
+          <div className="text-center text-muted py-5">
+            Select a customer from User Home to view their finance list.
+          </div>
+        ) : (
+          <List
+            data={finances}
+            columns={columns}
+            title={getTitle()}
+            primaryKey="fin_id"
+            subtitleKey="fin_start_date"
+            amountKey="fin_prin_amt"
+            onView={canViewFinance ? handleView : undefined}
+            onDelete={canDeleteFinance ? handleDelete : undefined}
+            onEdit={canEditFinance ? handleEdit : undefined}
+            onCustomerHome={global ? handleCustomerHome : undefined}
+            hasView={canViewFinance}
+            hasDelete={!global && canDeleteFinance}
+            hasEdit={canEditFinance}
+            isLoading={loading}
+            showFooter={true}
+            applyDefaultDateFilter={false}
+            deleteConfirmMessage="Are you sure you want to delete this finance record?"
+          />
+        )}
       </div>
     </div>
   );

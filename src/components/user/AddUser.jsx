@@ -18,6 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { setSelectedUser } from '../../store/slices/userSlice';
 import { getFirmsDropdown } from '../../api/firmApi';
 import { createUser } from '../../api/userApi';
+import { NOMINEE_RELATION_OPTIONS } from '../../constants/customerFormOptions';
 
 const AddUser = () => {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -76,10 +77,11 @@ const AddUser = () => {
     }, [selectedFirmId, reduxFirms]);
 
     const [formData, setFormData] = useState({
-        firstName: '', lastName: '', fatherName: '', motherName: '',
+        firstName: '', lastName: '', fatherName: '', motherName: '', spouseName: '',
         mobileNo: '', phoneNo: '', whatsappNo: '', emailId: '', gender: 'Male', cast: '', maritalStatus: '',
         dateOfBirth: new Date().toISOString().split('T')[0], panNo: '', gstin: '', taxNo: '', adhaarNo: '',
-        bankName: '', bankAccNo: '', ifscCode: '',
+        bankName: '', bankAccNo: '', ifscCode: '', occupation: '',
+        nomineeName: '', nomineeRelation: '', nomineeMobile: '', nomineeAddress: '',
         shopName: '', officeAddress: '', permanentAddress: '', currentAddress: '',
         village: '', wardNumber: '', tehsil: '', city: '', country: '',
         pincode: '', state: '', otherInformation: '',
@@ -225,6 +227,7 @@ const AddUser = () => {
                 lastName: 'user_last_name',
                 fatherName: 'user_father_name',
                 motherName: 'user_mother_name',
+                spouseName: 'user_spouse_name',
                 mobileNo: 'user_mobile_no',
                 phoneNo: 'user_phone_no',
                 whatsappNo: 'user_whatsapp_no',
@@ -250,7 +253,11 @@ const AddUser = () => {
                 state: 'user_state',
                 country: 'user_country',
                 pincode: 'user_pincode',
-                otherInformation: 'user_other_info'
+                otherInformation: 'user_other_info',
+                nomineeName: 'user_nominee_name',
+                nomineeRelation: 'user_nominee_relation',
+                nomineeMobile: 'user_nominee_mobile',
+                nomineeAddress: 'user_nominee_address',
             };
 
             Object.keys(formData).forEach(key => {
@@ -274,7 +281,7 @@ const AddUser = () => {
 
             // Reset form (fallback if no data returned)
             setFormData({
-                firstName: '', lastName: '', fatherName: '', motherName: '',
+                firstName: '', lastName: '', fatherName: '', motherName: '', spouseName: '',
                 mobileNo: '', phoneNo: '', whatsappNo: '', emailId: '', gender: 'Male', cast: '', maritalStatus: '',
                 dateOfBirth: new Date().toISOString().split('T')[0], panNo: '', gstin: '', taxNo: '', adhaarNo: '',
                 bankName: '', bankAccNo: '', ifscCode: '',
@@ -316,6 +323,10 @@ const AddUser = () => {
                 <div className="col-12 col-md-6 col-lg-3">
                     <label className="form-label">Mother Name</label>
                     <input type="text" name="motherName" placeholder='Enter your mother name' className="form-control border-dark" value={formData.motherName} onChange={handleChange} />
+                </div>
+                <div className="col-12 col-md-6 col-lg-3">
+                    <label className="form-label">Spouse Name</label>
+                    <input type="text" name="spouseName" placeholder='Enter spouse name' className="form-control border-dark" value={formData.spouseName} onChange={handleChange} />
                 </div>
                 <div className="col-12 col-md-6 col-lg-3">
                     <label className="form-label">Firm Name <span className="text-danger">*</span></label>
@@ -369,7 +380,7 @@ const AddUser = () => {
                 </div>
                 <div className="col-12 col-md-6 col-lg-3">
                     <label className="form-label">Occupation</label>
-                    <input type="text" name="Occupation" className="form-control border-dark" placeholder='Enter your occupation' onChange={handleChange} />
+                    <input type="text" name="occupation" className="form-control border-dark" placeholder='Enter your occupation' value={formData.occupation} onChange={handleChange} />
                 </div>
                 <div className="col-12 col-md-6 col-lg-3">
                     <label className="form-label">Date Of Birth</label>
@@ -489,6 +500,31 @@ const AddUser = () => {
                 <div className="col-12 col-md-6 col-lg-4">
                     <label className="form-label">IFSC Code</label>
                     <input type="text" name="ifscCode" placeholder='Enter IFSC code' className="form-control border-dark" value={formData.ifscCode} onChange={handleChange} />
+                </div>
+            </div>
+
+            <h5 className="mb-3 mt-4">Nominee Details</h5>
+            <div className="row g-3">
+                <div className="col-12 col-md-6 col-lg-3">
+                    <label className="form-label">Nominee Name</label>
+                    <input type="text" name="nomineeName" placeholder='Enter nominee name' className="form-control border-dark" value={formData.nomineeName} onChange={handleChange} />
+                </div>
+                <div className="col-12 col-md-6 col-lg-3">
+                    <label className="form-label">Relation</label>
+                    <select name="nomineeRelation" className="form-select border-dark" value={formData.nomineeRelation} onChange={handleChange}>
+                        <option value="">Select relation</option>
+                        {NOMINEE_RELATION_OPTIONS.map((option) => (
+                            <option key={option} value={option}>{option}</option>
+                        ))}
+                    </select>
+                </div>
+                <div className="col-12 col-md-6 col-lg-3">
+                    <label className="form-label">Nominee Mobile</label>
+                    <input type="tel" name="nomineeMobile" placeholder='Enter nominee mobile no' className="form-control border-dark" value={formData.nomineeMobile} onChange={handleChange} />
+                </div>
+                <div className="col-12 col-md-6 col-lg-3">
+                    <label className="form-label">Nominee Address</label>
+                    <input type="text" name="nomineeAddress" placeholder='Enter nominee address' className="form-control border-dark" value={formData.nomineeAddress} onChange={handleChange} />
                 </div>
             </div>
 

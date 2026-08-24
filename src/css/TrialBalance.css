@@ -203,17 +203,17 @@
   font-variant-numeric: tabular-nums;
 }
 
-[data-theme="dark"] .trial-balance-mobile-wrap {
+[data-theme="dark"] .trial-balance-mobile-wrap, [data-theme="brand-dark"] .trial-balance-mobile-wrap{
   background: var(--layout-filter-bg, #1e293b);
 }
 
-[data-theme="dark"] .trial-balance-mobile-card,
-[data-theme="dark"] .trial-balance-mobile-totals {
+[data-theme="dark"] .trial-balance-mobile-card, [data-theme="brand-dark"] .trial-balance-mobile-card,
+[data-theme="dark"] .trial-balance-mobile-totals, [data-theme="brand-dark"] .trial-balance-mobile-totals{
   background: var(--color-white, #1e1e2e);
   border-color: var(--app-border, #3d3d5c);
 }
 
-[data-theme="dark"] .trial-balance-period-mobile {
+[data-theme="dark"] .trial-balance-period-mobile, [data-theme="brand-dark"] .trial-balance-period-mobile{
   background: var(--btn-info-bg);
   border-color: var(--btn-info-border);
   color: var(--btn-info-text);

@@ -16,11 +16,31 @@ const EMPTY_AMOUNTS = {
 
 const DashboardCharts = ({ charts, loading }) => {
   const { theme } = useTheme();
-  const isDark = theme === 'dark';
-  const chartLabelColor = isDark ? '#94a3b8' : '#6c757d';
+  const isBrandDark = theme === 'brand-dark';
+  const isDark = theme === 'dark' || isBrandDark;
+  const chartLabelColor = isBrandDark ? '#c4a8b8' : isDark ? '#94a3b8' : '#6c757d';
   const chartTheme = isDark ? 'dark' : 'light';
-  const chartValueColor = isDark ? '#f1f5f9' : '#1f2937';
-  const chartTrackColor = isDark ? '#252540' : '#f1f5f9';
+  const chartValueColor = isBrandDark ? '#fce7f3' : isDark ? '#f1f5f9' : '#1f2937';
+  const chartTrackColor = isBrandDark ? '#2a1230' : isDark ? '#252540' : '#f1f5f9';
+  const countChartColors = useMemo(
+    () => (isBrandDark ? ['#a1005b', '#7c3aed'] : ['#3b82f6', '#10b981']),
+    [isBrandDark]
+  );
+  const amountChartColors = useMemo(
+    () => (isBrandDark ? ['#c026d3', '#f59e0b'] : ['#8b5cf6', '#f59e0b']),
+    [isBrandDark]
+  );
+  const profitChartColors = useMemo(
+    () => (isBrandDark ? ['#f472b6', '#ef4444'] : ['#10b981', '#ef4444']),
+    [isBrandDark]
+  );
+  const arrowColors = useMemo(
+    () =>
+      isBrandDark
+        ? ['#f0abfc', '#f9a8d4', '#c4b5fd', '#fda4af', '#fcd34d', '#fbbf24', '#e879f9']
+        : ['#a5b4fc', '#f9a8d4', '#7dd3fc', '#93c5fd', '#5eead4', '#fcd34d', '#6ee7b7'],
+    [isBrandDark]
+  );
   const [countView, setCountView] = useState('monthly');
   const [amountView, setAmountView] = useState('monthly');
 
@@ -70,11 +90,11 @@ const DashboardCharts = ({ charts, loading }) => {
     yaxis: { labels: { style: { colors: chartLabelColor } } },
     grid: { show: false },
     theme: { mode: chartTheme },
-    colors: ['#3b82f6', '#10b981'],
+    colors: countChartColors,
     tooltip: { theme: chartTheme },
     legend: { position: 'top', horizontalAlign: 'right', offsetY: -20 },
     };
-  }, [chartLabelColor, chartTheme, countData, countView, loading]);
+  }, [chartLabelColor, chartTheme, countChartColors, countData, countView, loading]);
 
   const countChartSeries = useMemo(() => ([
     { name: 'New Loans', data: countData[countView]?.loans || [] },
@@ -115,14 +135,14 @@ const DashboardCharts = ({ charts, loading }) => {
       type: 'gradient',
       gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05, stops: [0, 90, 100] },
     },
-    colors: ['#8b5cf6', '#f59e0b'],
+    colors: amountChartColors,
     legend: { position: 'top', horizontalAlign: 'right', offsetY: -20 },
     tooltip: {
       theme: chartTheme,
       y: { formatter: (value) => `₹${Number(value || 0).toLocaleString()}` },
     },
     };
-  }, [amountData, amountView, chartLabelColor, chartTheme, loading]);
+  }, [amountChartColors, amountData, amountView, chartLabelColor, chartTheme, loading]);
 
   const amountChartSeries = useMemo(() => ([
     { name: 'Loan Amount', data: amountData[amountView]?.loans || [] },
@@ -152,7 +172,7 @@ const DashboardCharts = ({ charts, loading }) => {
       },
     },
     labels: ['Interest', 'Discount'],
-    colors: ['#10b981', '#ef4444'],
+    colors: profitChartColors,
     stroke: { lineCap: 'round' },
     legend: { show: true, position: 'bottom' },
     tooltip: {
@@ -165,14 +185,13 @@ const DashboardCharts = ({ charts, loading }) => {
             : `₹${Number(currentProfitData?.loss || 0).toLocaleString()}`,
       },
     },
-  }), [chartLabelColor, chartTheme, chartTrackColor, chartValueColor, currentProfitData, loading]);
+  }), [chartLabelColor, chartTheme, chartTrackColor, chartValueColor, currentProfitData, loading, profitChartColors]);
 
   const profitChartSeries = useMemo(
     () => [profitPercentage, lossPercentage],
     [profitPercentage, lossPercentage]
   );
 
-  const arrowColors = ['#a5b4fc', '#f9a8d4', '#7dd3fc', '#93c5fd', '#5eead4', '#fcd34d', '#6ee7b7'];
   const maxTransactionTotal = last7DaysData.length
     ? Math.max(...last7DaysData.map((d) => (d.loan || 0) + (d.finance || 0)), 1)
     : 1;

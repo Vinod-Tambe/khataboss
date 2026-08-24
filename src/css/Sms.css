@@ -1270,7 +1270,7 @@
   }
 }
 
-[data-theme="dark"] .sms-page {
+[data-theme="dark"] .sms-page, [data-theme="brand-dark"] .sms-page{
   --sms-border: var(--app-border, #3d3d5c);
   --sms-muted: #b4b4c8;
   --sms-card-bg: var(--home-card-bg, #1e1e2e);
@@ -1279,194 +1279,194 @@
   --sms-input-bg: var(--datatable-body-bg, #252540);
 }
 
-[data-theme="dark"] .sms-rich-wrap {
+[data-theme="dark"] .sms-rich-wrap, [data-theme="brand-dark"] .sms-rich-wrap{
   border-color: var(--sms-border);
   background: var(--sms-card-bg);
 }
 
-[data-theme="dark"] .sms-rich-editor {
+[data-theme="dark"] .sms-rich-editor, [data-theme="brand-dark"] .sms-rich-editor{
   background-color: var(--sms-input-bg) !important;
   color: var(--sms-text) !important;
 }
 
-[data-theme="dark"] .sms-rich-editor:empty:before {
+[data-theme="dark"] .sms-rich-editor:empty:before, [data-theme="brand-dark"] .sms-rich-editor:empty:before{
   color: #8b8ba3;
 }
 
-[data-theme="dark"] .sms-toolbar-divider {
+[data-theme="dark"] .sms-toolbar-divider, [data-theme="brand-dark"] .sms-toolbar-divider{
   background: var(--sms-border);
 }
 
-[data-theme="dark"] .sms-form-card,
-[data-theme="dark"] .sms-table-card,
-[data-theme="dark"] .sms-preview-panel,
-[data-theme="dark"] .sms-list-card,
-[data-theme="dark"] .sms-tabs {
+[data-theme="dark"] .sms-form-card, [data-theme="brand-dark"] .sms-form-card,
+[data-theme="dark"] .sms-table-card, [data-theme="brand-dark"] .sms-table-card,
+[data-theme="dark"] .sms-preview-panel, [data-theme="brand-dark"] .sms-preview-panel,
+[data-theme="dark"] .sms-list-card, [data-theme="brand-dark"] .sms-list-card,
+[data-theme="dark"] .sms-tabs, [data-theme="brand-dark"] .sms-tabs{
   background: var(--sms-card-bg);
   border-color: var(--sms-border);
   color: var(--sms-text);
 }
 
-[data-theme="dark"] .sms-mobile-mode-tabs {
+[data-theme="dark"] .sms-mobile-mode-tabs, [data-theme="brand-dark"] .sms-mobile-mode-tabs{
   background: var(--sms-card-bg);
   border-color: var(--sms-border);
 }
 
-[data-theme="dark"] .sms-mobile-mode-tab {
+[data-theme="dark"] .sms-mobile-mode-tab, [data-theme="brand-dark"] .sms-mobile-mode-tab{
   color: var(--sms-muted);
 }
 
-[data-theme="dark"] .sms-mobile-mode-tab.active {
+[data-theme="dark"] .sms-mobile-mode-tab.active, [data-theme="brand-dark"] .sms-mobile-mode-tab.active{
   background: var(--sms-green);
   color: #fff;
 }
 
-[data-theme="dark"] .sms-preview-panel {
+[data-theme="dark"] .sms-preview-panel, [data-theme="brand-dark"] .sms-preview-panel{
   background: var(--sms-panel-bg);
 }
 
-[data-theme="dark"] .sms-page-title,
-[data-theme="dark"] .sms-form-card h4,
-[data-theme="dark"] .sms-table-card h4,
-[data-theme="dark"] .sms-preview-panel-head h5,
-[data-theme="dark"] .sms-list-toolbar h5,
-[data-theme="dark"] .sms-form-card .form-label,
-[data-theme="dark"] .sms-table td,
-[data-theme="dark"] .sms-table th,
-[data-theme="dark"] .sms-char-count,
-[data-theme="dark"] .sms-empty,
-[data-theme="dark"] .sms-content-cell,
-[data-theme="dark"] .sms-sample-chip {
+[data-theme="dark"] .sms-page-title, [data-theme="brand-dark"] .sms-page-title,
+[data-theme="dark"] .sms-form-card h4, [data-theme="brand-dark"] .sms-form-card h4,
+[data-theme="dark"] .sms-table-card h4, [data-theme="brand-dark"] .sms-table-card h4,
+[data-theme="dark"] .sms-preview-panel-head h5, [data-theme="brand-dark"] .sms-preview-panel-head h5,
+[data-theme="dark"] .sms-list-toolbar h5, [data-theme="brand-dark"] .sms-list-toolbar h5,
+[data-theme="dark"] .sms-form-card .form-label, [data-theme="brand-dark"] .sms-form-card .form-label,
+[data-theme="dark"] .sms-table td, [data-theme="brand-dark"] .sms-table td,
+[data-theme="dark"] .sms-table th, [data-theme="brand-dark"] .sms-table th,
+[data-theme="dark"] .sms-char-count, [data-theme="brand-dark"] .sms-char-count,
+[data-theme="dark"] .sms-empty, [data-theme="brand-dark"] .sms-empty,
+[data-theme="dark"] .sms-content-cell, [data-theme="brand-dark"] .sms-content-cell,
+[data-theme="dark"] .sms-sample-chip, [data-theme="brand-dark"] .sms-sample-chip{
   color: var(--sms-text);
 }
 
-[data-theme="dark"] .sms-page-subtitle,
-[data-theme="dark"] .sms-form-hint,
-[data-theme="dark"] .sms-field-hint,
-[data-theme="dark"] .sms-preview-panel-head p,
-[data-theme="dark"] .sms-phone-caption,
-[data-theme="dark"] .sms-sample-legend-title {
+[data-theme="dark"] .sms-page-subtitle, [data-theme="brand-dark"] .sms-page-subtitle,
+[data-theme="dark"] .sms-form-hint, [data-theme="brand-dark"] .sms-form-hint,
+[data-theme="dark"] .sms-field-hint, [data-theme="brand-dark"] .sms-field-hint,
+[data-theme="dark"] .sms-preview-panel-head p, [data-theme="brand-dark"] .sms-preview-panel-head p,
+[data-theme="dark"] .sms-phone-caption, [data-theme="brand-dark"] .sms-phone-caption,
+[data-theme="dark"] .sms-sample-legend-title, [data-theme="brand-dark"] .sms-sample-legend-title{
   color: var(--sms-muted);
 }
 
-[data-theme="dark"] .sms-edit-badge {
+[data-theme="dark"] .sms-edit-badge, [data-theme="brand-dark"] .sms-edit-badge{
   background: rgba(251, 191, 36, 0.18);
   color: #fcd34d;
 }
 
-[data-theme="dark"] .sms-tab:hover {
+[data-theme="dark"] .sms-tab:hover, [data-theme="brand-dark"] .sms-tab:hover{
   background: rgba(255, 255, 255, 0.05);
 }
 
-[data-theme="dark"] .sms-tab.active {
+[data-theme="dark"] .sms-tab.active, [data-theme="brand-dark"] .sms-tab.active{
   color: #fff;
   background: var(--sms-green);
 }
 
-[data-theme="dark"] .sms-table th,
-[data-theme="dark"] .sms-content-cell,
-[data-theme="dark"] .sms-form-card .form-label,
-[data-theme="dark"] .sms-char-count,
-[data-theme="dark"] .sms-empty {
+[data-theme="dark"] .sms-table th, [data-theme="brand-dark"] .sms-table th,
+[data-theme="dark"] .sms-content-cell, [data-theme="brand-dark"] .sms-content-cell,
+[data-theme="dark"] .sms-form-card .form-label, [data-theme="brand-dark"] .sms-form-card .form-label,
+[data-theme="dark"] .sms-char-count, [data-theme="brand-dark"] .sms-char-count,
+[data-theme="dark"] .sms-empty, [data-theme="brand-dark"] .sms-empty{
   color: var(--sms-muted);
 }
 
-[data-theme="dark"] .sms-search input,
-[data-theme="dark"] .sms-form-card .form-control,
-[data-theme="dark"] .sms-form-card .form-select {
+[data-theme="dark"] .sms-search input, [data-theme="brand-dark"] .sms-search input,
+[data-theme="dark"] .sms-form-card .form-control, [data-theme="brand-dark"] .sms-form-card .form-control,
+[data-theme="dark"] .sms-form-card .form-select, [data-theme="brand-dark"] .sms-form-card .form-select{
   background-color: var(--sms-input-bg) !important;
   color: var(--sms-text) !important;
   border-color: var(--sms-border) !important;
 }
 
-[data-theme="dark"] .sms-form-card .form-select {
+[data-theme="dark"] .sms-form-card .form-select, [data-theme="brand-dark"] .sms-form-card .form-select{
   background-image: none !important;
 }
 
-[data-theme="dark"] .sms-select-wrap::after {
+[data-theme="dark"] .sms-select-wrap::after, [data-theme="brand-dark"] .sms-select-wrap::after{
   border-color: var(--sms-muted);
 }
 
-[data-theme="dark"] .sms-select-wrap.is-open::after {
+[data-theme="dark"] .sms-select-wrap.is-open::after, [data-theme="brand-dark"] .sms-select-wrap.is-open::after{
   border-color: #4ade80;
 }
 
-[data-theme="dark"] .sms-search input::placeholder,
-[data-theme="dark"] .sms-form-card .form-control::placeholder {
+[data-theme="dark"] .sms-search input::placeholder, [data-theme="brand-dark"] .sms-search input::placeholder,
+[data-theme="dark"] .sms-form-card .form-control::placeholder, [data-theme="brand-dark"] .sms-form-card .form-control::placeholder{
   color: #8b8ba3 !important;
   opacity: 1;
 }
 
-[data-theme="dark"] .sms-form-card .form-select option {
+[data-theme="dark"] .sms-form-card .form-select option, [data-theme="brand-dark"] .sms-form-card .form-select option{
   background-color: #1e1e2e;
   color: #e5e7eb;
 }
 
-[data-theme="dark"] .sms-editor-toolbar {
+[data-theme="dark"] .sms-editor-toolbar, [data-theme="brand-dark"] .sms-editor-toolbar{
   background: rgba(255, 255, 255, 0.04);
   border-color: var(--sms-border);
 }
 
-[data-theme="dark"] .sms-editor-tool {
+[data-theme="dark"] .sms-editor-tool, [data-theme="brand-dark"] .sms-editor-tool{
   color: var(--sms-text);
 }
 
-[data-theme="dark"] .sms-editor-tool:hover {
+[data-theme="dark"] .sms-editor-tool:hover, [data-theme="brand-dark"] .sms-editor-tool:hover{
   background: rgba(255, 255, 255, 0.08);
 }
 
-[data-theme="dark"] .sms-var-chip {
+[data-theme="dark"] .sms-var-chip, [data-theme="brand-dark"] .sms-var-chip{
   background: rgba(255, 255, 255, 0.08);
   border-color: var(--sms-border);
   color: var(--sms-text);
 }
 
-[data-theme="dark"] .sms-var-chip:hover {
+[data-theme="dark"] .sms-var-chip:hover, [data-theme="brand-dark"] .sms-var-chip:hover{
   background: var(--sms-green-soft);
   border-color: var(--sms-green);
   color: #4ade80;
 }
 
-[data-theme="dark"] .btn-sms-discard {
+[data-theme="dark"] .btn-sms-discard, [data-theme="brand-dark"] .btn-sms-discard{
   background: transparent !important;
   color: var(--sms-text) !important;
   border-color: var(--sms-border) !important;
 }
 
-[data-theme="dark"] .btn-sms-discard:hover {
+[data-theme="dark"] .btn-sms-discard:hover, [data-theme="brand-dark"] .btn-sms-discard:hover{
   background: rgba(255, 255, 255, 0.06) !important;
 }
 
-[data-theme="dark"] .sms-status {
+[data-theme="dark"] .sms-status, [data-theme="brand-dark"] .sms-status{
   background: rgba(34, 197, 94, 0.2);
   color: #86efac;
 }
 
-[data-theme="dark"] .sms-status.inactive {
+[data-theme="dark"] .sms-status.inactive, [data-theme="brand-dark"] .sms-status.inactive{
   background: rgba(255, 255, 255, 0.08);
   color: var(--sms-muted);
 }
 
-[data-theme="dark"] .sms-tab {
+[data-theme="dark"] .sms-tab, [data-theme="brand-dark"] .sms-tab{
   color: var(--sms-muted);
 }
 
-[data-theme="dark"] .sms-tab:hover {
+[data-theme="dark"] .sms-tab:hover, [data-theme="brand-dark"] .sms-tab:hover{
   color: var(--sms-text);
   background: rgba(255, 255, 255, 0.05);
 }
 
-[data-theme="dark"] .sms-tab.active {
+[data-theme="dark"] .sms-tab.active, [data-theme="brand-dark"] .sms-tab.active{
   color: #fff !important;
   background: var(--sms-green) !important;
 }
 
-[data-theme="dark"] .sms-preview-channel-pill {
+[data-theme="dark"] .sms-preview-channel-pill, [data-theme="brand-dark"] .sms-preview-channel-pill{
   background: rgba(74, 222, 128, 0.15);
   color: #4ade80;
 }
 
-[data-theme="dark"] .sms-sample-chip code {
+[data-theme="dark"] .sms-sample-chip code, [data-theme="brand-dark"] .sms-sample-chip code{
   background: rgba(74, 222, 128, 0.15);
   color: #4ade80;
 }

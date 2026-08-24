@@ -1,9 +1,8 @@
 import moment from 'moment';
 import { formatTimePeriod } from '../../../utils/formatTimePeriod';
 import {
-  calculateInterest,
+  calculateInterestForPeriod,
   getLoanInterestSummary,
-  getTenureMonths,
 } from '../../../utils/loanInterest';
 import { resolveImageUrl } from '../../../utils/imageHelpers';
 
@@ -117,11 +116,11 @@ export const buildLoanInvoiceData = (loanDetails, customer = null) => {
     const apPrin = parseFloat(ap.ap_prin_amt) || 0;
     const apRoi = parseFloat(ap.ap_roi) || 0;
     const apDate = moment(ap.ap_trans_date);
-    const apMonths = getTenureMonths(ap.ap_trans_date, today);
-    const apInterest = calculateInterest(
+    const apInterest = calculateInterestForPeriod(
       apPrin,
       apRoi,
-      apMonths,
+      ap.ap_trans_date,
+      today,
       interestMethod,
       compoundFreq,
       roiType

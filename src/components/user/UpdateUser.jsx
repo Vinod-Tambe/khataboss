@@ -20,6 +20,7 @@ import { validatePincode, validatePan, validateAadhaar, validateGstin, validateI
 import useFormNavigation from '../../hooks/useFormNavigation';
 import { getFirmsDropdown } from '../../api/firmApi';
 import { getUser, updateUser } from '../../api/userApi';
+import { NOMINEE_RELATION_OPTIONS } from '../../constants/customerFormOptions';
 import { setSelectedUser } from '../../store/slices/userSlice';
 
 const UpdateUser = () => {
@@ -45,13 +46,14 @@ const UpdateUser = () => {
 
 
     const [formData, setFormData] = useState({
-        firstName: '', lastName: '', fatherName: '', motherName: '',
+        firstName: '', lastName: '', fatherName: '', motherName: '', spouseName: '',
         mobileNo: '', phoneNo: '', whatsappNo: '', emailId: '', gender: 'Male', cast: '', maritalStatus: '',
         dateOfBirth: new Date().toISOString().split('T')[0], panNo: '', gstin: '', taxNo: '', adhaarNo: '',
         bankName: '', bankAccNo: '', ifscCode: '',
         shopName: '', officeAddress: '', permanentAddress: '', currentAddress: '',
         village: '', wardNumber: '', tehsil: '', city: '', country: '',
         pincode: '', state: '', otherInformation: '',
+        nomineeName: '', nomineeRelation: '', nomineeMobile: '', nomineeAddress: '',
         photo: null,
         firmId: '',
         occupation: '',
@@ -85,6 +87,7 @@ const UpdateUser = () => {
                         lastName: user.user_last_name || '',
                         fatherName: user.user_father_name || '',
                         motherName: user.user_mother_name || '',
+                        spouseName: user.user_spouse_name || '',
                         mobileNo: user.user_mobile_no || '',
                         phoneNo: user.user_phone_no || '',
                         whatsappNo: user.user_whatsapp_no || '',
@@ -111,6 +114,10 @@ const UpdateUser = () => {
                         country: user.user_country || '',
                         pincode: user.user_pincode || '',
                         otherInformation: user.user_other_info || '',
+                        nomineeName: user.user_nominee_name || '',
+                        nomineeRelation: user.user_nominee_relation || '',
+                        nomineeMobile: user.user_nominee_mobile || '',
+                        nomineeAddress: user.user_nominee_address || '',
                         firmId: user.user_firm_id || '',
                         photo: null,
                     });
@@ -233,7 +240,7 @@ const UpdateUser = () => {
             const data = new FormData();
             const mapping = {
                 firmId: 'user_firm_id', firstName: 'user_first_name', lastName: 'user_last_name',
-                fatherName: 'user_father_name', motherName: 'user_mother_name',
+                fatherName: 'user_father_name', motherName: 'user_mother_name', spouseName: 'user_spouse_name',
                 mobileNo: 'user_mobile_no', phoneNo: 'user_phone_no', whatsappNo: 'user_whatsapp_no', emailId: 'user_email_id',
                 gender: 'user_gender', cast: 'user_cast', maritalStatus: 'user_marital_status',
                 occupation: 'user_occupation', dateOfBirth: 'user_birth_date',
@@ -243,7 +250,9 @@ const UpdateUser = () => {
                 permanentAddress: 'user_per_address', currentAddress: 'user_curr_address',
                 village: 'user_village', wardNumber: 'user_ward_no', tehsil: 'user_tehsil',
                 city: 'user_city', state: 'user_state', country: 'user_country',
-                pincode: 'user_pincode', otherInformation: 'user_other_info'
+                pincode: 'user_pincode', otherInformation: 'user_other_info',
+                nomineeName: 'user_nominee_name', nomineeRelation: 'user_nominee_relation',
+                nomineeMobile: 'user_nominee_mobile', nomineeAddress: 'user_nominee_address',
             };
 
             Object.keys(formData).forEach(key => {
@@ -296,6 +305,10 @@ const UpdateUser = () => {
                 <div className="col-12 col-md-6 col-lg-3">
                     <label className="form-label">Mother Name</label>
                     <input type="text" name="motherName" placeholder='Enter your mother name' className="form-control border-dark" value={formData.motherName} onChange={handleChange} />
+                </div>
+                <div className="col-12 col-md-6 col-lg-3">
+                    <label className="form-label">Spouse Name</label>
+                    <input type="text" name="spouseName" placeholder='Enter spouse name' className="form-control border-dark" value={formData.spouseName} onChange={handleChange} />
                 </div>
                 <div className="col-12 col-md-6 col-lg-3">
                     <label className="form-label">Firm Name <span className="text-danger">*</span></label>
@@ -465,6 +478,31 @@ const UpdateUser = () => {
                 <div className="col-12 col-md-6 col-lg-4">
                     <label className="form-label">IFSC Code</label>
                     <input type="text" name="ifscCode" placeholder='Enter IFSC code' className="form-control border-dark" value={formData.ifscCode} onChange={handleChange} />
+                </div>
+            </div>
+
+            <h5 className="mb-3 mt-4">Nominee Details</h5>
+            <div className="row g-3">
+                <div className="col-12 col-md-6 col-lg-3">
+                    <label className="form-label">Nominee Name</label>
+                    <input type="text" name="nomineeName" placeholder='Enter nominee name' className="form-control border-dark" value={formData.nomineeName} onChange={handleChange} />
+                </div>
+                <div className="col-12 col-md-6 col-lg-3">
+                    <label className="form-label">Relation</label>
+                    <select name="nomineeRelation" className="form-select border-dark" value={formData.nomineeRelation} onChange={handleChange}>
+                        <option value="">Select relation</option>
+                        {NOMINEE_RELATION_OPTIONS.map((option) => (
+                            <option key={option} value={option}>{option}</option>
+                        ))}
+                    </select>
+                </div>
+                <div className="col-12 col-md-6 col-lg-3">
+                    <label className="form-label">Nominee Mobile</label>
+                    <input type="tel" name="nomineeMobile" placeholder='Enter nominee mobile no' className="form-control border-dark" value={formData.nomineeMobile} onChange={handleChange} />
+                </div>
+                <div className="col-12 col-md-6 col-lg-3">
+                    <label className="form-label">Nominee Address</label>
+                    <input type="text" name="nomineeAddress" placeholder='Enter nominee address' className="form-control border-dark" value={formData.nomineeAddress} onChange={handleChange} />
                 </div>
             </div>
 

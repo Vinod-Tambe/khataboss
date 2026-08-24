@@ -22,17 +22,18 @@ const UserHomeList = ({ title, icon, data, columns }) => {
       </h5>
 
       <style>{`
-        
         .sticky-col {
           position: sticky;
           left: 0;
-          background: #fff;
+          background: var(--datatable-body-bg, var(--color-white));
+          color: var(--datatable-body-text, inherit);
           z-index: 2;
         }
         thead th {
           position: sticky;
           top: 0;
-          background: #f8f9fa;
+          background: var(--datatable-head-bg, var(--light));
+          color: var(--datatable-head-text, inherit);
           z-index: 3;
         }
       `}</style>

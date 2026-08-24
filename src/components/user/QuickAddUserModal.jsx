@@ -8,7 +8,7 @@ import ImageUploadSquare from '../common/ImageUploadSquare';
 import CommonModal from '../common/CommonModal';
 import { validateMobile, validateAadhaar } from '../../utils/validation';
 import usePermissions from '../../hooks/usePermissions';
-import '../../css/ProfileDocumentsSection.css';
+import { NOMINEE_RELATION_OPTIONS } from '../../constants/customerFormOptions';
 
 const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
     const dispatch = useDispatch();
@@ -25,12 +25,17 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
         lastName: '',
         fatherName: '',
         motherName: '',
+        spouseName: '',
         mobileNo: '',
         gender: 'Male',
         adhaarNo: '',
         emailId: '',
         firmId: '',
         currentAddress: '',
+        nomineeName: '',
+        nomineeRelation: '',
+        nomineeMobile: '',
+        nomineeAddress: '',
         photo: null
     };
 
@@ -105,12 +110,17 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
                 lastName: 'user_last_name',
                 fatherName: 'user_father_name',
                 motherName: 'user_mother_name',
+                spouseName: 'user_spouse_name',
                 mobileNo: 'user_mobile_no',
                 gender: 'user_gender',
                 adhaarNo: 'user_adhaar_no',
                 emailId: 'user_email_id',
                 firmId: 'user_firm_id',
-                currentAddress: 'user_curr_address'
+                currentAddress: 'user_curr_address',
+                nomineeName: 'user_nominee_name',
+                nomineeRelation: 'user_nominee_relation',
+                nomineeMobile: 'user_nominee_mobile',
+                nomineeAddress: 'user_nominee_address',
             };
 
             Object.keys(formData).forEach(key => {
@@ -228,6 +238,16 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
                             />
                         </div>
                         <div className="col-md-4">
+                            <label className="form-label fw-bold small text-muted mb-1">Spouse Name</label>
+                            <input
+                                name="spouseName"
+                                className="form-control border-dark"
+                                placeholder="Spouse Name"
+                                value={formData.spouseName}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div className="col-md-4">
                             <label className="form-label fw-bold small text-muted mb-1">Mobile No <span className="text-danger">*</span></label>
                             <input
                                 name="mobileNo"
@@ -293,6 +313,55 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
                                 rows="1"
                                 placeholder="Enter full address..."
                                 value={formData.currentAddress}
+                                onChange={handleChange}
+                            />
+                        </div>
+
+                        <div className="col-md-4">
+                            <label className="form-label fw-bold small text-muted mb-1">Nominee Name</label>
+                            <input
+                                name="nomineeName"
+                                className="form-control border-dark"
+                                placeholder="Nominee Name"
+                                value={formData.nomineeName}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div className="col-md-4">
+                            <label className="form-label fw-bold small text-muted mb-1">Nominee Relation</label>
+                            <select
+                                name="nomineeRelation"
+                                className="form-select border-dark"
+                                value={formData.nomineeRelation}
+                                onChange={handleChange}
+                            >
+                                <option value="">Select relation</option>
+                                {NOMINEE_RELATION_OPTIONS.map((option) => (
+                                    <option key={option} value={option}>{option}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="col-md-4">
+                            <label className="form-label fw-bold small text-muted mb-1">Nominee Mobile</label>
+                            <input
+                                name="nomineeMobile"
+                                maxLength="10"
+                                className="form-control border-dark"
+                                placeholder="Nominee Mobile"
+                                value={formData.nomineeMobile}
+                                onChange={(e) => {
+                                    const val = e.target.value.replace(/\D/g, '');
+                                    setFormData(prev => ({ ...prev, nomineeMobile: val }));
+                                }}
+                            />
+                        </div>
+                        <div className="col-md-12">
+                            <label className="form-label fw-bold small text-muted mb-1">Nominee Address</label>
+                            <input
+                                name="nomineeAddress"
+                                className="form-control border-dark"
+                                placeholder="Nominee Address"
+                                value={formData.nomineeAddress}
                                 onChange={handleChange}
                             />
                         </div>

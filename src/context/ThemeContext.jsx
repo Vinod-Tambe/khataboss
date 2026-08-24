@@ -2,7 +2,7 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const ThemeContext = createContext();
 
-export const THEMES = ['light', 'dark', 'system'];
+export const THEMES = ['light', 'dark', 'system', 'brand-dark'];
 
 const getInitialTheme = () => {
   if (typeof window === 'undefined') {
@@ -18,8 +18,11 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    // Bootstrap only supports light | dark; System is a light brand theme
-    document.documentElement.setAttribute('data-bs-theme', theme === 'dark' ? 'dark' : 'light');
+    // Bootstrap only supports light | dark; system is light brand, brand-dark is dark brand
+    document.documentElement.setAttribute(
+      'data-bs-theme',
+      theme === 'dark' || theme === 'brand-dark' ? 'dark' : 'light'
+    );
     localStorage.setItem('theme', theme);
   }, [theme]);
 

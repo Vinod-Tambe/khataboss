@@ -14,8 +14,8 @@ export const getMonthlyRate = (roi, roiType = 'monthly') => {
 };
 
 /**
- * Accrued interest for a principal over `months` tenure.
- * `rate` is the stored ROI; `roiType` decides monthly vs annual.
+ * Accrued interest for a principal over `months` tenure (whole months).
+ * Each calendar month or part thereof = 1 full month charge.
  */
 export const calculateInterest = (
   principal,
@@ -27,7 +27,7 @@ export const calculateInterest = (
 ) => {
   const p = parseFloat(principal) || 0;
   const monthlyRate = getMonthlyRate(rate, roiType);
-  const m = parseFloat(months) || 0;
+  const m = Math.max(0, Math.round(parseFloat(months) || 0));
   if (!p || !monthlyRate || !m) return 0;
 
   if (method === 'compound') {
@@ -55,12 +55,52 @@ export const calculateFirstMonthInterest = (
   roiType = 'monthly'
 ) => calculateInterest(principal, rate, 1, method, freq, roiType);
 
+/** Parse stored date as local calendar day — interest starts on this date (inclusive). */
+const toCalendarDay = (value) => {
+  if (!value) return null;
+  const datePart = String(value).trim().slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+    return moment(datePart, 'YYYY-MM-DD', true).startOf('day');
+  }
+  const parsed = moment(value).startOf('day');
+  return parsed.isValid() ? parsed : null;
+};
+
+/**
+ * Count billable months: each full month + any extra days = +1 full month.
+ * Min 1 month (even same-day loan).
+ * e.g. 1 month 1 day → 2 months; ₹1000 @ 1% → ₹10 + ₹10 = ₹20
+ */
 export const getTenureMonths = (startDate, endDate = moment()) => {
-  if (!startDate) return 1;
-  const start = moment(startDate);
-  const end = moment(endDate);
-  if (!start.isValid() || !end.isValid()) return 1;
-  return Math.max(1, end.diff(start, 'months'));
+  const start = toCalendarDay(startDate);
+  const end = toCalendarDay(endDate) ?? moment().startOf('day');
+  if (!start?.isValid() || !end?.isValid()) return 1;
+  if (end.isBefore(start, 'day')) return 0;
+
+  const years = end.diff(start, 'years');
+  const afterYears = start.clone().add(years, 'years');
+  const months = end.diff(afterYears, 'months');
+  const afterMonths = afterYears.clone().add(months, 'months');
+  const days = end.diff(afterMonths, 'days');
+
+  let totalMonths = years * 12 + months;
+  if (days > 0) totalMonths += 1;
+
+  return Math.max(1, totalMonths);
+};
+
+/** Single entry: billable months from dates, then interest (all method/ROI types). */
+export const calculateInterestForPeriod = (
+  principal,
+  rate,
+  startDate,
+  endDate = moment(),
+  method = 'simple',
+  freq = 'monthly',
+  roiType = 'monthly'
+) => {
+  const months = getTenureMonths(startDate, endDate);
+  return calculateInterest(principal, rate, months, method, freq, roiType);
 };
 
 export const isFirstMonthInterestEnabled = (loan) =>
@@ -85,6 +125,7 @@ export const getLoanInterestSummary = (data, asOfDate = moment()) => {
       pendingInterest: 0,
       pendingPrincipal: 0,
       pending: 0,
+      totalDueAmount: 0,
     };
   }
 
@@ -109,11 +150,11 @@ export const getLoanInterestSummary = (data, asOfDate = moment()) => {
   const interestMethod = data.girv_interest_method || 'simple';
   const compoundFreq = data.girv_compound_freq || 'monthly';
 
-  const origMonths = getTenureMonths(data.girv_start_date, today);
-  const origInterest = calculateInterest(
+  const origInterest = calculateInterestForPeriod(
     originalPrincipal,
     roi,
-    origMonths,
+    data.girv_start_date,
+    today,
     interestMethod,
     compoundFreq,
     roiType
@@ -124,11 +165,11 @@ export const getLoanInterestSummary = (data, asOfDate = moment()) => {
     data.additionalPrincipals.forEach((ap) => {
       const apPrin = parseFloat(ap.ap_prin_amt) || 0;
       const apRoi = parseFloat(ap.ap_roi) || roi;
-      const apMonths = getTenureMonths(ap.ap_trans_date, today);
-      additionalInterestTotal += calculateInterest(
+      additionalInterestTotal += calculateInterestForPeriod(
         apPrin,
         apRoi,
-        apMonths,
+        ap.ap_trans_date,
+        today,
         interestMethod,
         compoundFreq,
         roiType
@@ -160,6 +201,8 @@ export const getLoanInterestSummary = (data, asOfDate = moment()) => {
     )
   );
   const pendingPrincipal = currentTotalPrincipal;
+  const pending = parseFloat((pendingPrincipal + pendingInterest).toFixed(2));
+  const totalDueAmount = pending;
 
   return {
     originalPrincipal,
@@ -174,7 +217,8 @@ export const getLoanInterestSummary = (data, asOfDate = moment()) => {
     totalReleasesInterest,
     pendingInterest,
     pendingPrincipal,
-    pending: pendingPrincipal + pendingInterest,
+    pending,
+    totalDueAmount,
     roi,
     roiType,
     interestMethod,
