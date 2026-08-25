@@ -55,6 +55,44 @@ export const calculateFirstMonthInterest = (
   roiType = 'monthly'
 ) => calculateInterest(principal, rate, 1, method, freq, roiType);
 
+/** Net amount disbursed to customer after processing, charge, and prepaid first-month interest. */
+export const calculateNetLoanDisbursement = ({
+  principal,
+  processAmt = 0,
+  chargeAmt = 0,
+  firstMonthIntEnabled = false,
+  roi = 0,
+  interestMethod = 'simple',
+  compoundFreq = 'monthly',
+  roiType = 'monthly',
+}) => {
+  const prin = parseFloat(principal) || 0;
+  const process = parseFloat(processAmt) || 0;
+  const charge = parseFloat(chargeAmt) || 0;
+  const enabled =
+    firstMonthIntEnabled === true ||
+    firstMonthIntEnabled === 'Y' ||
+    firstMonthIntEnabled === 'y';
+  const firstMonthInt = enabled
+    ? calculateFirstMonthInterest(principal, roi, interestMethod, compoundFreq, roiType)
+    : 0;
+  return parseFloat(Math.max(0, prin - process - charge - firstMonthInt).toFixed(2));
+};
+
+/** Form fields that trigger net disbursement (cash) recalculation on Add/Update Loan. */
+export const LOAN_DISBURSEMENT_FIELDS = new Set([
+  'girv_prin_amt',
+  'girv_process_per',
+  'girv_process_amt',
+  'girv_charge_per',
+  'girv_charge_amt',
+  'girv_first_int',
+  'girv_roi',
+  'girv_interest_method',
+  'girv_compound_freq',
+  'girv_roi_type',
+]);
+
 /** Parse stored date as local calendar day — interest starts on this date (inclusive). */
 const toCalendarDay = (value) => {
   if (!value) return null;

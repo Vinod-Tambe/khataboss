@@ -15,7 +15,12 @@ import { getRates } from '../../api/rateApi';
 import { toast } from 'react-hot-toast';
 import { validateUploadFile } from '../../utils/fileUpload';
 import { resolveImageUrl } from '../../utils/imageHelpers';
-import { calculateFirstMonthInterest, normalizeRoiType } from '../../utils/loanInterest';
+import {
+  calculateFirstMonthInterest,
+  calculateNetLoanDisbursement,
+  LOAN_DISBURSEMENT_FIELDS,
+  normalizeRoiType,
+} from '../../utils/loanInterest';
 import {
   getInterestUpdateBlockReason,
   getLoanUpdateRules,
@@ -411,19 +416,28 @@ const UpdateLoan = () => {
       if (name === 'girv_prin_amt') {
         if (newForm.girv_process_per) updates.girv_process_amt = (prinAmt * parseFloat(newForm.girv_process_per) / 100).toFixed(2);
         if (newForm.girv_charge_per) updates.girv_charge_amt = (prinAmt * parseFloat(newForm.girv_charge_per) / 100).toFixed(2);
-        updates.girv_cash_amt = (prinAmt - (parseFloat(updates.girv_process_amt || newForm.girv_process_amt) || 0) - (parseFloat(updates.girv_charge_amt || newForm.girv_charge_amt) || 0)).toString();
       } else if (name === 'girv_process_per') {
         updates.girv_process_amt = (prinAmt * parseFloat(value || 0) / 100).toFixed(2);
-        updates.girv_cash_amt = (prinAmt - parseFloat(updates.girv_process_amt) - (parseFloat(newForm.girv_charge_amt) || 0)).toString();
       } else if (name === 'girv_process_amt') {
         if (prinAmt > 0) updates.girv_process_per = ((parseFloat(value || 0) / prinAmt) * 100).toFixed(2);
-        updates.girv_cash_amt = (prinAmt - parseFloat(value || 0) - (parseFloat(newForm.girv_charge_amt) || 0)).toString();
       } else if (name === 'girv_charge_per') {
         updates.girv_charge_amt = (prinAmt * parseFloat(value || 0) / 100).toFixed(2);
-        updates.girv_cash_amt = (prinAmt - (parseFloat(newForm.girv_process_amt) || 0) - parseFloat(updates.girv_charge_amt)).toString();
       } else if (name === 'girv_charge_amt') {
         if (prinAmt > 0) updates.girv_charge_per = ((parseFloat(value || 0) / prinAmt) * 100).toFixed(2);
-        updates.girv_cash_amt = (prinAmt - (parseFloat(newForm.girv_process_amt) || 0) - parseFloat(value || 0)).toString();
+      }
+
+      const merged = { ...prev, ...updates };
+      if (LOAN_DISBURSEMENT_FIELDS.has(name)) {
+        updates.girv_cash_amt = calculateNetLoanDisbursement({
+          principal: merged.girv_prin_amt,
+          processAmt: merged.girv_process_amt,
+          chargeAmt: merged.girv_charge_amt,
+          firstMonthIntEnabled: merged.girv_first_int,
+          roi: merged.girv_roi,
+          interestMethod: merged.girv_interest_method,
+          compoundFreq: merged.girv_compound_freq,
+          roiType: merged.girv_roi_type,
+        }).toString();
       }
 
       return { ...prev, ...updates };
@@ -607,8 +621,13 @@ const UpdateLoan = () => {
     const cardAmt = parseFloat(formData.girv_card_amt) || 0;
     const totalPayment = cashAmt + bankAmt + onlineAmt + cardAmt;
 
-    if (Math.abs(prinAmt - (totalPayment + processAmt + chargeAmt)) > 0.01) {
-      toast.error(`Payment sum (${totalPayment}) + Processing (${processAmt}) + Charge (${chargeAmt}) must equal Principal Amount (${prinAmt}). Please adjust the payment panel.`);
+    const firstMonthInt = formData.girv_first_int ? firstMonthPreview : 0;
+    if (Math.abs(prinAmt - (totalPayment + processAmt + chargeAmt + firstMonthInt)) > 0.01) {
+      const firstMonthPart =
+        firstMonthInt > 0 ? ` + First Month Interest (${firstMonthInt})` : '';
+      toast.error(
+        `Payment sum (${totalPayment}) + Processing (${processAmt}) + Charge (${chargeAmt})${firstMonthPart} must equal Principal Amount (${prinAmt}). Please adjust the payment panel.`
+      );
       return;
     }
 

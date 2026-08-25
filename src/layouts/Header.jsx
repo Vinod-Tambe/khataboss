@@ -1,12 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FiUser, FiMenu, FiBell, FiSun, FiMoon, FiMonitor, FiDroplet, FiBriefcase, FiLock, FiLogOut } from 'react-icons/fi';
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../store/slices/authSlice";
 import { loadFirmsDropdown, setSelectedFirmId } from "../store/slices/firmSlice";
 import { useTheme } from "../context/ThemeContext";
 import HeaderSearch from "../components/common/HeaderSearch";
 import { resolveImageUrl } from "../utils/imageHelpers";
+import { getHeaderAlerts } from "../api/logsApi";
+import { hasPermission, isOwner } from "../utils/permissions";
 import FinanceCollectionModal from "../components/finance/FinanceCollectionModal";
 import LoanCollectionModal from "../components/loan/LoanCollectionModal";
 
@@ -24,29 +26,45 @@ const nextTheme = {
   "brand-dark": "light",
 };
 
-const dummyNotifications = [
-  {
-    id: 1,
-    title: "New finance entry added",
-    message: "A new finance record was created for today's collection.",
-    time: "2 min ago",
-    read: false,
-  },
-  {
-    id: 2,
-    title: "Loan payment received",
-    message: "Ravi Kumar's installment payment has been marked as received.",
-    time: "15 min ago",
-    read: false,
-  },
-  {
-    id: 3,
-    title: "Staff reminder",
-    message: "Monthly staff expense summary is ready for review.",
-    time: "1 hour ago",
-    read: true,
-  },
-];
+const ALERT_POLL_MS = 60000;
+const ALERT_LIMIT = 30;
+
+const getAlertReadKey = (user) => {
+  const id = user?.staff_uuid || user?.own_uuid || "guest";
+  return `kb_header_alerts_read_${id}`;
+};
+
+const loadReadAlertIds = (user) => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(getAlertReadKey(user)) || "[]");
+    return new Set(Array.isArray(parsed) ? parsed.map(String) : []);
+  } catch {
+    return new Set();
+  }
+};
+
+const saveReadAlertIds = (user, ids) => {
+  const list = [...ids].map(String).slice(-200);
+  localStorage.setItem(getAlertReadKey(user), JSON.stringify(list));
+};
+
+const formatRelativeTime = (iso) => {
+  if (!iso) return "";
+  const then = new Date(iso);
+  if (Number.isNaN(then.getTime())) return "";
+  const sec = Math.max(0, Math.floor((Date.now() - then.getTime()) / 1000));
+  if (sec < 60) return "Just now";
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min} min ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr} hour${hr === 1 ? "" : "s"} ago`;
+  const day = Math.floor(hr / 24);
+  if (day < 7) return `${day} day${day === 1 ? "" : "s"} ago`;
+  return then.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+};
+
+const cleanAlertMessage = (description) =>
+  String(description || "").replace(/\s*Logged At:.*$/i, "").trim();
 
 const HeaderProfileAvatar = ({ imageUrl, variant = "button", className = "" }) => {
   const [imgFailed, setImgFailed] = useState(false);
@@ -89,17 +107,23 @@ const HeaderProfileAvatar = ({ imageUrl, variant = "button", className = "" }) =
 
 const Header = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const { firms, selectedFirmId } = useSelector((state) => state.firm);
   const { theme, toggleTheme } = useTheme();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [notificationFilter, setNotificationFilter] = useState("all");
+  const [alertLogs, setAlertLogs] = useState([]);
+  const [alertsLoading, setAlertsLoading] = useState(false);
+  const [readAlertIds, setReadAlertIds] = useState(() => loadReadAlertIds(user));
   const [showFinancePayModal, setShowFinancePayModal] = useState(false);
   const [showLoanDepositModal, setShowLoanDepositModal] = useState(false);
   const [collectionUser, setCollectionUser] = useState(null);
   const notificationRef = useRef(null);
   const profileRef = useRef(null);
+  const isOwnerUser = isOwner(user);
+  const canViewLogs = hasPermission(user, "reports.logs");
   const ThemeIcon =
     theme === "dark"
       ? FiMoon
@@ -111,18 +135,61 @@ const Header = () => {
   const themeTitle = `Theme: ${themeLabels[theme]} — click for ${themeLabels[nextTheme[theme]]}`;
   const profileImageUrl = resolveImageUrl(user?.own_profile_img);
   const displayName =
-    [user?.own_first_name, user?.own_last_name].filter(Boolean).join(" ") || "Owner";
-  const unreadNotifications = dummyNotifications.filter((notification) => !notification.read).length;
-  const readNotifications = dummyNotifications.filter((notification) => notification.read).length;
-  const filteredNotifications = dummyNotifications.filter((notification) => {
+    [user?.own_first_name, user?.own_last_name].filter(Boolean).join(" ") ||
+    (isOwnerUser ? "Owner" : "Staff");
+
+  const notifications = useMemo(() => {
+    return alertLogs.map((log) => {
+      const id = String(log.id);
+      const message = cleanAlertMessage(log.description);
+      return {
+        id,
+        title: log.subject || "Activity",
+        message,
+        actor: log.login_user || "",
+        firmName: log.firm_name || "",
+        time: formatRelativeTime(log.created_at) || log.date || "",
+        read: readAlertIds.has(id),
+      };
+    });
+  }, [alertLogs, readAlertIds]);
+
+  const unreadNotifications = notifications.filter((notification) => !notification.read).length;
+  const readNotifications = notifications.filter((notification) => notification.read).length;
+  const filteredNotifications = notifications.filter((notification) => {
     if (notificationFilter === "read") return notification.read;
     if (notificationFilter === "unread") return !notification.read;
     return true;
   });
 
+  const fetchAlerts = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setAlertsLoading(true);
+    try {
+      const response = await getHeaderAlerts({
+        firmId: selectedFirmId || "all",
+        limit: ALERT_LIMIT,
+      });
+      setAlertLogs(response?.data || []);
+    } catch {
+      setAlertLogs([]);
+    } finally {
+      if (!silent) setAlertsLoading(false);
+    }
+  }, [selectedFirmId]);
+
   useEffect(() => {
     dispatch(loadFirmsDropdown());
   }, [dispatch]);
+
+  useEffect(() => {
+    setReadAlertIds(loadReadAlertIds(user));
+  }, [user]);
+
+  useEffect(() => {
+    fetchAlerts();
+    const timer = setInterval(() => fetchAlerts({ silent: true }), ALERT_POLL_MS);
+    return () => clearInterval(timer);
+  }, [fetchAlerts]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -159,9 +226,39 @@ const Header = () => {
     dispatch(setSelectedFirmId(e.target.value));
   };
 
+  const persistReadIds = (nextIds) => {
+    setReadAlertIds(nextIds);
+    saveReadAlertIds(user, nextIds);
+  };
+
+  const markAlertRead = (alertId) => {
+    const nextIds = new Set(readAlertIds);
+    nextIds.add(String(alertId));
+    persistReadIds(nextIds);
+  };
+
+  const markAllAlertsRead = (e) => {
+    e.stopPropagation();
+    const nextIds = new Set(readAlertIds);
+    notifications.forEach((notification) => nextIds.add(String(notification.id)));
+    persistReadIds(nextIds);
+  };
+
+  const handleNotificationClick = (notification) => {
+    markAlertRead(notification.id);
+    setIsNotificationOpen(false);
+    if (canViewLogs) {
+      navigate("/logs");
+    }
+  };
+
   const toggleNotifications = () => {
     setIsProfileOpen(false);
-    setIsNotificationOpen((prevState) => !prevState);
+    setIsNotificationOpen((prevState) => {
+      const next = !prevState;
+      if (next) fetchAlerts();
+      return next;
+    });
   };
 
   const toggleProfileMenu = () => {
@@ -277,36 +374,69 @@ const Header = () => {
                     </div>
                   </div>
 
-                  <div className="mt-2">
+                  <div className="mt-2 d-flex align-items-center justify-content-between gap-2">
                     <small className="text-muted">
-                      {dummyNotifications.length} total, {readNotifications} read and {unreadNotifications} unread notifications
+                      {notifications.length} total, {readNotifications} read and {unreadNotifications} unread
+                      {isOwnerUser ? " (all activity)" : " (my activity)"}
                     </small>
+                    {unreadNotifications > 0 && (
+                      <button
+                        type="button"
+                        className="notification-mark-all-btn"
+                        onClick={markAllAlertsRead}
+                      >
+                        Mark all read
+                      </button>
+                    )}
                   </div>
                 </div>
 
                 <div className="notification-list">
-                  {filteredNotifications.length > 0 ? (
+                  {alertsLoading && notifications.length === 0 ? (
+                    <div className="notification-empty-state">Loading notifications...</div>
+                  ) : filteredNotifications.length > 0 ? (
                     filteredNotifications.map((notification) => (
                       <button
                         key={notification.id}
                         type="button"
                         className={`notification-item ${notification.read ? "" : "unread"}`}
-                        onClick={() => setIsNotificationOpen(false)}
+                        onClick={() => handleNotificationClick(notification)}
                       >
                         <span className="notification-dot" />
                         <div className="notification-content">
                           <p className="notification-title mb-1">{notification.title}</p>
-                          <p className="notification-message mb-1">{notification.message}</p>
-                          <small className="notification-time">{notification.time}</small>
+                          {isOwnerUser && notification.actor ? (
+                            <p className="notification-actor mb-1">{notification.actor}</p>
+                          ) : null}
+                          {notification.message ? (
+                            <p className="notification-message mb-1">{notification.message}</p>
+                          ) : null}
+                          <small className="notification-time">
+                            {notification.time}
+                            {selectedFirmId === "all" && notification.firmName
+                              ? ` · ${notification.firmName}`
+                              : ""}
+                          </small>
                         </div>
                       </button>
                     ))
                   ) : (
                     <div className="notification-empty-state">
-                      No {notificationFilter} notifications found.
+                      No {notificationFilter === "all" ? "" : `${notificationFilter} `}notifications found.
                     </div>
                   )}
                 </div>
+                {canViewLogs && (
+                  <div className="notification-footer">
+                    <Link
+                      to="/logs"
+                      className="notification-footer-link"
+                      onClick={() => setIsNotificationOpen(false)}
+                    >
+                      View all logs
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
           </div>
