@@ -13,8 +13,26 @@ import {
   getFieldTestValue,
   TRANSACTION_TEST_ROWS,
 } from '../../../utils/formTemplate/formTemplateTestData';
+import {
+  SAMPLE_CUSTOMER_PHOTO_DATA_URL,
+  SAMPLE_FIRM_LOGO_DATA_URL,
+} from '../../../utils/formTemplate/formTemplatePreviewAssets';
 
-const FormTemplatePreview = ({ config, firmName, scale = 0.72, testData: testDataProp, transactionRows: transactionRowsProp }) => {
+const CUSTOMER_PHOTO_FIELD_ID = 'customer_photo';
+
+const FormTemplatePreview = ({
+  config,
+  firmName,
+  scale = 0.72,
+  testData: testDataProp,
+  transactionRows: transactionRowsProp,
+  leftLogoUrl = null,
+  rightLogoUrl = null,
+  customerPhotoUrl = null,
+  firmFormHeader = '',
+  firmFormFooter = '',
+  useSampleAssets = true,
+}) => {
   const page = useMemo(() => getPageStyle(config), [config]);
   const testData = useMemo(
     () => testDataProp || buildFormTemplateTestData(firmName),
@@ -28,6 +46,33 @@ const FormTemplatePreview = ({ config, firmName, scale = 0.72, testData: testDat
 
   const sections = getSortedSections(config).filter((s) => s.enabled);
   const showLogos = config.layout?.showLeftLogo || config.layout?.showRightLogo;
+  const layout = config.layout || {};
+  const showCustomerPhoto = layout.showCustomerPhoto !== false;
+  const resolvedLeftLogo =
+    leftLogoUrl || (useSampleAssets && layout.showLeftLogo ? SAMPLE_FIRM_LOGO_DATA_URL : null);
+  const resolvedRightLogo =
+    rightLogoUrl || (useSampleAssets && layout.showRightLogo ? SAMPLE_FIRM_LOGO_DATA_URL : null);
+  const resolvedCustomerPhoto =
+    showCustomerPhoto && (customerPhotoUrl || (useSampleAssets ? SAMPLE_CUSTOMER_PHOTO_DATA_URL : null));
+
+  const renderFieldValue = (field) => {
+    if (field.id === CUSTOMER_PHOTO_FIELD_ID) {
+      if (!showCustomerPhoto) {
+        return '—';
+      }
+      if (!resolvedCustomerPhoto) {
+        return getFieldTestValue(field.id, testData);
+      }
+      return (
+        <img
+          src={resolvedCustomerPhoto}
+          alt="Customer"
+          className="form-custom-a4-customer-photo"
+        />
+      );
+    }
+    return getFieldTestValue(field.id, testData);
+  };
 
   return (
     <div className="form-custom-a4-viewport">
@@ -44,13 +89,27 @@ const FormTemplatePreview = ({ config, firmName, scale = 0.72, testData: testDat
         {showLogos ? (
           <div className="form-custom-a4-logos">
             {config.layout?.showLeftLogo ? (
-              <div className="form-custom-a4-logo-placeholder">LOGO</div>
+              resolvedLeftLogo ? (
+                <img src={resolvedLeftLogo} alt="Left logo" className="form-custom-a4-logo-img" />
+              ) : (
+                <div className="form-custom-a4-logo-placeholder">LOGO</div>
+              )
             ) : (
               <span />
             )}
             {config.layout?.showRightLogo ? (
-              <div className="form-custom-a4-logo-placeholder">LOGO</div>
+              resolvedRightLogo ? (
+                <img src={resolvedRightLogo} alt="Right logo" className="form-custom-a4-logo-img" />
+              ) : (
+                <div className="form-custom-a4-logo-placeholder">LOGO</div>
+              )
             ) : null}
+          </div>
+        ) : null}
+
+        {layout.useFirmFormHeader && firmFormHeader ? (
+          <div className="form-custom-a4-firm-header">
+            {replaceTemplateVariables(firmFormHeader, testData)}
           </div>
         ) : null}
 
@@ -123,7 +182,7 @@ const FormTemplatePreview = ({ config, firmName, scale = 0.72, testData: testDat
                         }
                       >
                         <span className="label">{field.label}</span>
-                        <span className="value">{getFieldTestValue(field.id, testData)}</span>
+                        <span className="value">{renderFieldValue(field)}</span>
                       </div>
                     ))}
                   </div>
@@ -163,7 +222,11 @@ const FormTemplatePreview = ({ config, firmName, scale = 0.72, testData: testDat
           <div className="form-custom-a4-qr">QR</div>
         ) : null}
 
-        {config.footerNote ? (
+        {layout.useFirmFormFooter && firmFormFooter ? (
+          <footer className="form-custom-a4-footer">
+            {replaceTemplateVariables(firmFormFooter, testData)}
+          </footer>
+        ) : config.footerNote ? (
           <footer className="form-custom-a4-footer">
             {replaceTemplateVariables(config.footerNote, testData)}
           </footer>

@@ -14,7 +14,52 @@ import {
   TRANSACTION_TEST_ROWS,
 } from './formTemplateTestData';
 
+const CUSTOMER_PHOTO_FIELD_ID = 'customer_photo';
+const LOGO_WIDTH = 72;
+const LOGO_HEIGHT = 72;
+const PDF_IMAGE_DATA_URL = /^data:image\/jpe?g;base64,/i;
+
+const sanitizePdfImage = (dataUrl) =>
+  dataUrl && PDF_IMAGE_DATA_URL.test(dataUrl) ? dataUrl : null;
+
 pdfMake.vfs = pdfFonts.vfs || pdfFonts.default?.vfs || pdfFonts;
+
+const buildLogoRow = (layout, leftLogoKey, rightLogoKey) => {
+  const showLeft = Boolean(layout?.showLeftLogo);
+  const showRight = Boolean(layout?.showRightLogo);
+  if (!showLeft && !showRight) return null;
+  if (showLeft && !leftLogoKey && showRight && !rightLogoKey) return null;
+
+  const columns = [];
+
+  if (showLeft) {
+    columns.push(
+      leftLogoKey
+        ? { image: leftLogoKey, width: LOGO_WIDTH, height: LOGO_HEIGHT }
+        : { width: LOGO_WIDTH, text: '' }
+    );
+  }
+
+  columns.push({ width: '*', text: '' });
+
+  if (showRight) {
+    columns.push(
+      rightLogoKey
+        ? {
+            image: rightLogoKey,
+            width: LOGO_WIDTH,
+            height: LOGO_HEIGHT,
+            alignment: 'right',
+          }
+        : { width: LOGO_WIDTH, text: '' }
+    );
+  }
+
+  return {
+    columns,
+    margin: [0, 0, 0, 8],
+  };
+};
 
 const hexToRgb = (hex) => {
   const h = String(hex || '#000000').replace('#', '');
@@ -25,30 +70,96 @@ const hexToRgb = (hex) => {
 const cellFill = (field, theme) =>
   field.backgroundColor ? hexToRgb(field.backgroundColor) : null;
 
-const buildFieldCell = (field, formData, theme, compact = false) => ({
+const buildCustomerPhotoValue = (field, formData, customerPhotoKey, theme, compact = false) => {
+  if (customerPhotoKey) {
+    return {
+      image: customerPhotoKey,
+      width: compact ? 56 : 72,
+      height: compact ? 70 : 90,
+      margin: [0, 4, 0, 0],
+    };
+  }
+
+  return {
+    text: getFormFieldValue(field.id, formData),
+    style: compact ? 'fieldValueSmall' : 'fieldValue',
+    color: hexToRgb(theme.textColor),
+    margin: [0, 2, 0, 0],
+  };
+};
+
+const buildCustomerPhotoInjectBlock = (customerPhotoKey, theme) => ({
+  columns: [
+    {
+      width: 84,
+      stack: [
+        {
+          text: 'Customer Photo',
+          style: 'fieldLabelSmall',
+          color: hexToRgb(theme.mutedTextColor),
+        },
+        {
+          image: customerPhotoKey,
+          width: 72,
+          height: 90,
+          margin: [0, 4, 0, 0],
+        },
+      ],
+    },
+    { width: '*', text: '' },
+  ],
+  margin: [0, 0, 0, 6],
+});
+
+const buildFieldCell = (field, formData, theme, compact = false, customerPhotoKey = null) => ({
   stack: [
     {
       text: field.label,
       style: compact ? 'fieldLabelSmall' : 'fieldLabel',
       color: hexToRgb(theme.mutedTextColor),
     },
-    {
-      text: getFormFieldValue(field.id, formData),
-      style: compact ? 'fieldValueSmall' : 'fieldValue',
-      color: hexToRgb(theme.textColor),
-      margin: [0, 2, 0, 0],
-    },
+    field.id === CUSTOMER_PHOTO_FIELD_ID
+      ? buildCustomerPhotoValue(field, formData, customerPhotoKey, theme, compact)
+      : {
+          text: getFormFieldValue(field.id, formData),
+          style: compact ? 'fieldValueSmall' : 'fieldValue',
+          color: hexToRgb(theme.textColor),
+          margin: [0, 2, 0, 0],
+        },
   ],
   fillColor: cellFill(field, theme),
   margin: [2, 2, 2, 2],
 });
 
-const buildSectionFieldTables = (section, formData, theme) => {
+const buildSectionFieldTables = (section, formData, theme, customerPhotoKey = null) => {
   const tables = [];
+  const enabledFields = getSortedFields(section).filter((field) => field.enabled);
+  const hasPhotoField = enabledFields.some((field) => field.id === CUSTOMER_PHOTO_FIELD_ID);
+
+  if (
+    customerPhotoKey &&
+    section.id === 'customer_details' &&
+    !hasPhotoField
+  ) {
+    tables.push(buildCustomerPhotoInjectBlock(customerPhotoKey, theme));
+  }
 
   groupFieldsByLayout(section.fields).forEach((group) => {
     if (group.layout === 'full') {
       const field = group.fields[0];
+      const valueCell =
+        field.id === CUSTOMER_PHOTO_FIELD_ID
+          ? {
+              stack: [buildCustomerPhotoValue(field, formData, customerPhotoKey, theme)],
+              fillColor: cellFill(field, theme),
+            }
+          : {
+              text: getFormFieldValue(field.id, formData),
+              style: 'fieldValue',
+              color: hexToRgb(theme.textColor),
+              fillColor: cellFill(field, theme),
+            };
+
       tables.push({
         table: {
           widths: ['32%', '*'],
@@ -60,12 +171,7 @@ const buildSectionFieldTables = (section, formData, theme) => {
                 color: hexToRgb(theme.mutedTextColor),
                 fillColor: cellFill(field, theme),
               },
-              {
-                text: getFormFieldValue(field.id, formData),
-                style: 'fieldValue',
-                color: hexToRgb(theme.textColor),
-                fillColor: cellFill(field, theme),
-              },
+              valueCell,
             ],
           ],
         },
@@ -86,7 +192,9 @@ const buildSectionFieldTables = (section, formData, theme) => {
         table: {
           widths,
           body: [
-            group.fields.map((field) => buildFieldCell(field, formData, theme, true)),
+            group.fields.map((field) =>
+              buildFieldCell(field, formData, theme, true, customerPhotoKey)
+            ),
           ],
         },
         layout: 'noBorders',
@@ -98,7 +206,7 @@ const buildSectionFieldTables = (section, formData, theme) => {
     // half — 2 columns side by side
     const cells = group.fields.map((field) => ({
       width: '*',
-      ...buildFieldCell(field, formData, theme),
+      ...buildFieldCell(field, formData, theme, false, customerPhotoKey),
     }));
     while (cells.length < 2) {
       cells.push({ width: '*', text: '' });
@@ -121,11 +229,43 @@ export const buildFormTemplatePdfDefinition = (
   const normalized = config;
   const formData = options.formData || buildFormTemplateTestData(firmName);
   const transactionRows = options.transactionRows || TRANSACTION_TEST_ROWS;
+  const layout = normalized.layout || {};
+  const pdfImages = {};
+
+  const registerPdfImage = (key, dataUrl) => {
+    const safe = sanitizePdfImage(dataUrl);
+    if (!safe) return null;
+    pdfImages[key] = safe;
+    return key;
+  };
+
+  const leftLogoKey = registerPdfImage('firmLogoLeft', options.leftLogoDataUrl);
+  const rightLogoKey = registerPdfImage('firmLogoRight', options.rightLogoDataUrl);
+  const customerPhotoKey = registerPdfImage(
+    'customerPhoto',
+    layout.showCustomerPhoto === false ? null : options.customerPhotoDataUrl || null
+  );
+  const firmFormHeader = options.formHeader || options.firmFormHeader || '';
+  const firmFormFooter = options.formFooter || options.firmFormFooter || '';
   const { theme, fontPt } = getPageStyle(normalized);
   const size = normalized.pageSize || 'A4';
   const orientation = normalized.orientation || 'portrait';
 
   const content = [];
+
+  const logoRow = buildLogoRow(layout, leftLogoKey, rightLogoKey);
+  if (logoRow) {
+    content.push(logoRow);
+  }
+
+  if (layout.useFirmFormHeader && firmFormHeader) {
+    content.push({
+      text: replaceTemplateVariables(firmFormHeader, formData),
+      style: 'note',
+      alignment: 'center',
+      margin: [0, 0, 0, 8],
+    });
+  }
 
   content.push({
     text: normalized.title || 'FORM 8',
@@ -210,7 +350,7 @@ export const buildFormTemplatePdfDefinition = (
         return;
       }
 
-      buildSectionFieldTables(section, formData, theme).forEach((block) => {
+      buildSectionFieldTables(section, formData, theme, customerPhotoKey).forEach((block) => {
         content.push(block);
       });
     });
@@ -251,9 +391,13 @@ export const buildFormTemplatePdfDefinition = (
     margin: [0, 12, 0, 0],
   });
 
-  if (normalized.footerNote) {
+  const footerText =
+    layout.useFirmFormFooter && firmFormFooter
+      ? firmFormFooter
+      : normalized.footerNote;
+  if (footerText) {
     content.push({
-      text: replaceTemplateVariables(normalized.footerNote, formData),
+      text: replaceTemplateVariables(footerText, formData),
       style: 'note',
       alignment: 'center',
       margin: [0, 16, 0, 0],
@@ -274,6 +418,7 @@ export const buildFormTemplatePdfDefinition = (
     pageOrientation: orientation,
     pageMargins: [40, 40, 40, 40],
     background: () => null,
+    ...(Object.keys(pdfImages).length ? { images: pdfImages } : {}),
     content,
     defaultStyle: {
       fontSize: fontPt,

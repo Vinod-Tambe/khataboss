@@ -4,13 +4,14 @@ import moment from "moment";
 import "daterangepicker";
 import "daterangepicker/daterangepicker.css";
 import DayBookTable from "./DayBookTable";
+import DayBookProcessingTable from "./DayBookProcessingTable";
 import DayBookSummary from "./DayBookSummary";
 import DayBookMobileView from "./DayBookMobileView";
 import { getDaybookEntries } from "../../api/daybookApi";
 import { useSelector } from "react-redux";
 import { getFirmsDropdown } from "../../api/firmApi";
 import { showToast } from "../../components/common/ToastAlert";
-import { DAYBOOK_SECTIONS } from "./dayBookUtils";
+import { DAYBOOK_SECTIONS, isProcessingDaybookSection } from "./dayBookUtils";
 import {
   downloadDayBookPdf,
   getDayBookPdfBlob,
@@ -142,6 +143,33 @@ const Daybook = () => {
   };
 
   const keyedDaybookData = (daybookResponse.daybook_data || []).reduce((acc, item) => {
+    if (isProcessingDaybookSection(item.title)) {
+      const totals = (item.data || []).reduce(
+        (t, d) => ({
+          total_process_amt: t.total_process_amt + (parseFloat(d.db_process_amt) || 0),
+          total_charge_amt: t.total_charge_amt + (parseFloat(d.db_charge_amt) || 0),
+          total_amt: t.total_amt + (parseFloat(d.db_total_amt) || 0),
+          total_cash_amt: 0,
+          total_bank_amt: 0,
+          total_online_amt: 0,
+          total_card_amt: 0,
+          total_disc_amt: 0,
+        }),
+        {
+          total_process_amt: 0,
+          total_charge_amt: 0,
+          total_amt: 0,
+          total_cash_amt: 0,
+          total_bank_amt: 0,
+          total_online_amt: 0,
+          total_card_amt: 0,
+          total_disc_amt: 0,
+        }
+      );
+      acc[item.title] = totals;
+      return acc;
+    }
+
     const totals = (item.data || []).reduce((t, d) => ({
       total_cash_amt: t.total_cash_amt + (parseFloat(d.db_cash_amt) || 0),
       total_bank_amt: t.total_bank_amt + (parseFloat(d.db_bank_amt) || 0),
@@ -396,15 +424,23 @@ const Daybook = () => {
           {/* Screen desktop tables */}
           <div className="daybook-desktop-screen d-none d-md-block no-print">
             {displayedPanels.length > 0 ? (
-              displayedPanels.map((panel) => (
-                <DayBookTable
-                  key={panel.title}
-                  title={panel.title}
-                  colorClass={panel.colorClass}
-                  amtColor={panel.amtColor}
-                  data={panel.data}
-                />
-              ))
+              displayedPanels.map((panel) =>
+                isProcessingDaybookSection(panel.title) ? (
+                  <DayBookProcessingTable
+                    key={panel.title}
+                    title={panel.title}
+                    data={panel.data}
+                  />
+                ) : (
+                  <DayBookTable
+                    key={panel.title}
+                    title={panel.title}
+                    colorClass={panel.colorClass}
+                    amtColor={panel.amtColor}
+                    data={panel.data}
+                  />
+                )
+              )
             ) : (
               <div className="text-center text-muted py-4">
                 No records found for the selected period.
@@ -430,16 +466,25 @@ const Daybook = () => {
           {/* Print-only desktop layout (all rows, no DataTables paging) */}
           <div className="daybook-print-area">
             {availablePanels.length > 0 ? (
-              availablePanels.map((panel) => (
-                <DayBookTable
-                  key={`print-${panel.title}`}
-                  title={panel.title}
-                  colorClass={panel.colorClass}
-                  amtColor={panel.amtColor}
-                  data={panel.data}
-                  isPrint
-                />
-              ))
+              availablePanels.map((panel) =>
+                isProcessingDaybookSection(panel.title) ? (
+                  <DayBookProcessingTable
+                    key={`print-${panel.title}`}
+                    title={panel.title}
+                    data={panel.data}
+                    isPrint
+                  />
+                ) : (
+                  <DayBookTable
+                    key={`print-${panel.title}`}
+                    title={panel.title}
+                    colorClass={panel.colorClass}
+                    amtColor={panel.amtColor}
+                    data={panel.data}
+                    isPrint
+                  />
+                )
+              )
             ) : (
               <div className="text-center text-muted py-4">
                 No records found for the selected period.

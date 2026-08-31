@@ -21,6 +21,7 @@ import { getStatusBadgeMeta } from '../../utils/listFormatters';
 import {
   calculateInterestForPeriod,
   getLoanInterestSummary,
+  resolveLoanInterestEndDate,
 } from '../../utils/loanInterest';
 import ImageModal from '../common/ImageModal';
 import { resolveImageUrl } from '../../utils/imageHelpers';
@@ -50,6 +51,7 @@ const statusBadgeClass = (status = '', solid = false) => {
     if (s === 'TRANSFERRED') return 'bg-info text-white fw-bold';
     if (s === 'ADDED') return 'bg-primary text-white fw-bold';
     if (s === 'FIRST MONTH INT PAID') return 'bg-primary text-white fw-bold';
+    if (s === 'PROCESSING RECEIVED') return 'bg-success text-white fw-bold';
     if (s === 'RECEIVED' || s === 'ACTIVE' || s === 'PAID' || s === 'COMPLETED') return 'bg-success text-white fw-bold';
     return 'bg-secondary text-white fw-bold';
   }
@@ -57,6 +59,7 @@ const statusBadgeClass = (status = '', solid = false) => {
   if (s === 'RELEASED' || s === 'CLOSED') return 'bg-danger-subtle text-danger border border-danger fw-bold';
   if (s === 'AUCTION') return 'bg-warning-subtle text-dark border border-warning fw-bold';
   if (s === 'FIRST MONTH INT PAID') return 'bg-primary-subtle text-primary border border-primary fw-bold';
+  if (s === 'PROCESSING RECEIVED') return 'bg-success-subtle text-success border border-success fw-bold';
   if (s === 'RECEIVED' || s === 'ACTIVE' || s === 'PAID' || s === 'COMPLETED') return 'bg-success-subtle text-success border border-success fw-bold';
   if (s === 'ADDED') return 'bg-primary-subtle text-primary border border-primary fw-bold';
   if (s === 'TRANSFERRED') return 'bg-info-subtle text-info border border-info fw-bold';
@@ -430,7 +433,7 @@ const DepositInfoTable = ({
                 <td className="text-success fw-bold">{Number(row.extraAmt || 0).toFixed(2)}</td>
                 <td className="text-success fw-bold">{Number(row.total || 0).toFixed(2)}</td>
                 <td>
-                  {!row.isFirstMonthInterest && (
+                  {!row.isFirstMonthInterest && !row.isProcessingReceived && (
                     <button
                       type="button"
                       className="btn btn-sm btn-link text-warning p-0"
@@ -443,7 +446,7 @@ const DepositInfoTable = ({
                 </td>
                 {canDeleteDeposit ? (
                   <td>
-                    {row.depId && !row.isFirstMonthInterest ? (
+                    {row.depId && !row.isFirstMonthInterest && !row.isProcessingReceived ? (
                       <button
                         type="button"
                         className="btn btn-sm btn-outline-danger"
@@ -1037,15 +1040,15 @@ const LoanMobileView = ({
             {depositDataRows.map((row, idx) => (
               <LoanMobileAccordionItem
                 key={idx}
-                title={row.isFirstMonthInterest ? `1st Month Int · ${formatAmt(row.total)}` : `Deposit · ${formatAmt(row.total)}`}
+                title={row.isFirstMonthInterest ? `1st Month Int · ${formatAmt(row.total)}` : row.isProcessingReceived ? `Processing · ${formatAmt(row.total)}` : `Deposit · ${formatAmt(row.total)}`}
                 subtitle={row.date}
                 badge={row.status}
                 badgeClassName={statusBadgeClass(row.status)}
                 defaultOpen={false}
-                onShare={row.isFirstMonthInterest ? undefined : () => onShareDeposit?.(row)}
+                onShare={row.isFirstMonthInterest || row.isProcessingReceived ? undefined : () => onShareDeposit?.(row)}
               >
                 <LoanMobileDetailRows
-                  title={row.isFirstMonthInterest ? 'First Month Interest' : 'Deposit Amount'}
+                  title={row.isFirstMonthInterest ? 'First Month Interest' : row.isProcessingReceived ? `Processing Received · ${row.refNo || ''}` : 'Deposit Amount'}
                   rows={[
                     { label: 'Principal', value: formatAmt(row.principal), className: 'text-success' },
                     { label: 'Interest', value: formatAmt(row.sInterest), className: 'text-success' },
@@ -1064,7 +1067,7 @@ const LoanMobileView = ({
                     { label: 'Card', value: formatAmt(row.cardAmt), className: 'text-warning' },
                   ]}
                 />
-                {canDeleteDeposit && row.depId && !row.isFirstMonthInterest && (
+                {canDeleteDeposit && row.depId && !row.isFirstMonthInterest && !row.isProcessingReceived && (
                   <div className="text-center mt-2">
                     <button
                       type="button"
@@ -1570,6 +1573,7 @@ const LoanInfo = () => {
 
   const startDate = moment(loanDetails.girv_start_date);
   const today = moment();
+  const interestEndDate = resolveLoanInterestEndDate(loanDetails, today);
   const serverSummary = loanDetails.interest_summary;
   const interestSummary = serverSummary || getLoanInterestSummary(loanDetails, today);
   const {
@@ -1611,8 +1615,8 @@ const LoanInfo = () => {
     extraAmt: 0,
     total: originalPrincipal + origInterest - firstMonthInterest,
     startDate: startDate.format('DD-MM-YYYY'),
-    endDate: today.format('DD-MM-YYYY'),
-    timePeriod: formatTimePeriod(startDate, today),
+    endDate: interestEndDate.format('DD-MM-YYYY'),
+    timePeriod: formatTimePeriod(startDate, interestEndDate),
     valuation: totalValuation, // Overall valuation
     profitLoss: overallProfitLoss, // Overall profit/loss
     status: loanDetails.girv_status || 'ACTIVE',
@@ -1634,15 +1638,17 @@ const LoanInfo = () => {
       const apPrin = parseFloat(ap.ap_prin_amt) || 0;
       const apRoi = parseFloat(ap.ap_roi) || 0;
       const apStartDate = moment(ap.ap_trans_date);
-      const apInterest = calculateInterestForPeriod(
-        apPrin,
-        apRoi,
-        ap.ap_trans_date,
-        today,
-        interestMethod,
-        compoundFreq,
-        roiType
-      );
+      const apInterest = currentTotalPrincipal > 0
+        ? calculateInterestForPeriod(
+            apPrin,
+            apRoi,
+            ap.ap_trans_date,
+            interestEndDate,
+            interestMethod,
+            compoundFreq,
+            roiType
+          )
+        : 0;
       const cashAmt = parseFloat(ap.ap_cash_amt) || 0;
       const bankAmt = parseFloat(ap.ap_bank_amt) || 0;
       const onlineAmt = parseFloat(ap.ap_online_amt) || 0;
@@ -1657,8 +1663,8 @@ const LoanInfo = () => {
         extraAmt: 0,
         total: apPrin + apInterest,
         startDate: apStartDate.format('DD-MM-YYYY'),
-        endDate: today.format('DD-MM-YYYY'),
-        timePeriod: formatTimePeriod(apStartDate, today),
+        endDate: interestEndDate.format('DD-MM-YYYY'),
+        timePeriod: formatTimePeriod(apStartDate, interestEndDate),
         valuation: '-',
         profitLoss: '-',
         status: 'ADDED',
@@ -1722,6 +1728,42 @@ const LoanInfo = () => {
       cardAmt: 0,
       transAmt: firstMonthInterest,
     });
+  }
+
+  // Processing + charge received at loan create (journal — not a girvi_deposit row)
+  const processAmt = parseFloat(loanDetails.girv_process_amt) || 0;
+  const chargeAmt = parseFloat(loanDetails.girv_charge_amt) || 0;
+  const processingTotal = parseFloat((processAmt + chargeAmt).toFixed(2));
+  const loanRef =
+    loanDetails.girv_unique_code ||
+    loanDetails.girv_loan_no ||
+    (loanDetails.girv_id ? `LN-${loanDetails.girv_id}` : '');
+
+  if (processingTotal > 0) {
+    const insertAt = depositDataRows.findIndex((row) => row.isFirstMonthInterest);
+    const processingRow = {
+      principal: 0,
+      sInterest: 0,
+      discount: 0,
+      extraAmt: 0,
+      total: processingTotal,
+      date: startDate.format('DD-MM-YYYY'),
+      status: 'PROCESSING RECEIVED',
+      isProcessingReceived: true,
+      refNo: loanRef,
+      processAmt,
+      chargeAmt,
+      cashAmt: 0,
+      bankAmt: 0,
+      onlineAmt: 0,
+      cardAmt: 0,
+      transAmt: processingTotal,
+    };
+    if (insertAt >= 0) {
+      depositDataRows.splice(insertAt + 1, 0, processingRow);
+    } else {
+      depositDataRows.unshift(processingRow);
+    }
   }
 
   // Process Releases Rows

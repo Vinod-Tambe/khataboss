@@ -2,6 +2,8 @@ import { getAgreementTemplate } from '../../api/agreementTemplateApi';
 import { normalizeAgreementConfig } from '../../utils/formTemplate/agreementTemplateConfig';
 import { buildFormTemplateLoanData } from '../../utils/formTemplate/buildFormTemplateLoanData';
 import { downloadFormTemplatePdf } from '../../utils/formTemplate/buildFormTemplatePdf';
+import { buildLiveFormTemplatePdfOptions } from '../../utils/formTemplate/buildFormTemplatePdfOptions';
+import resolveFirmForPdf, { mergeCustomerForPdf } from '../../utils/formTemplate/resolveFirmForPdf';
 
 export const downloadLoanAgreementPdf = async (loanDetails, customer = null) => {
   if (!loanDetails) {
@@ -20,16 +22,22 @@ export const downloadLoanAgreementPdf = async (loanDetails, customer = null) => 
   }
 
   const config = normalizeAgreementConfig(template.config, 'Loan');
+  const firm = await resolveFirmForPdf(firmId, loanDetails.firm || {});
+  const resolvedCustomer = mergeCustomerForPdf(loanDetails?.user, customer);
   const { formData, transactionRows, firmName, loanRef } = buildFormTemplateLoanData(
     loanDetails,
-    customer
+    resolvedCustomer
   );
-
-  const fileName = downloadFormTemplatePdf(config, firmName || template.firmName, {
+  const pdfOptions = await buildLiveFormTemplatePdfOptions({
+    firm,
+    customer: resolvedCustomer,
     formData,
     transactionRows,
     loanRef,
+    config,
   });
+
+  const fileName = downloadFormTemplatePdf(config, firmName || template.firmName, pdfOptions);
 
   return fileName;
 };

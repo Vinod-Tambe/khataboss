@@ -144,8 +144,7 @@ const UpdateInterestModal = ({
           ) : (
             <>
               <p className="text-muted small mb-3">
-                Interest method and option can only be changed on active loans with no deposits,
-                releases, or additional principal entries.
+                Update rate of interest, method, and option for this active loan.
               </p>
 
               <div className="row g-3">

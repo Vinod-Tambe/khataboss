@@ -14,6 +14,7 @@ import {
 import { toast } from "react-hot-toast";
 import List from "../common/List";
 import { getFormTemplates, updateFormTemplate } from "../../api/formTemplateApi";
+import { getFirms } from "../../api/firmApi";
 import FormTemplatePreview from "./formTemplate/FormTemplatePreview";
 import DraggableList from "./formTemplate/DraggableList";
 import {
@@ -27,6 +28,11 @@ import {
   openFormTemplatePdfPreview,
   downloadFormTemplatePdf,
 } from "../../utils/formTemplate/buildFormTemplatePdf";
+import { buildPreviewFormTemplatePdfOptions } from "../../utils/formTemplate/buildFormTemplatePdfOptions";
+import {
+  resolveFirmLeftLogoUrl,
+  resolveFirmRightLogoUrl,
+} from "../../utils/formTemplate/loadFirmAssetsForPdf";
 import "../../css/FormCustomization.css";
 
 const EDITOR_TABS = [
@@ -61,6 +67,7 @@ const STATUS_OPTIONS = [
 const LAYOUT_FIELDS = [
   { key: "showLeftLogo", label: "Show left logo" },
   { key: "showRightLogo", label: "Show right logo" },
+  { key: "showCustomerPhoto", label: "Show customer photo" },
   { key: "showOwnerSign", label: "Show owner signature" },
   { key: "showQrCode", label: "Show QR code" },
   { key: "useFirmFormHeader", label: "Use firm form header" },
@@ -69,9 +76,11 @@ const LAYOUT_FIELDS = [
 
 const FormCustomizationPage = () => {
   const [templates, setTemplates] = useState([]);
+  const [firmsById, setFirmsById] = useState({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [editingFirmId, setEditingFirmId] = useState(null);
   const [editingFirmName, setEditingFirmName] = useState("");
   const [formConfig, setFormConfig] = useState(null);
   const [status, setStatus] = useState("Active");
@@ -92,12 +101,30 @@ const FormCustomizationPage = () => {
     }
   }, []);
 
+  const loadFirms = useCallback(async () => {
+    try {
+      const res = await getFirms();
+      const map = {};
+      (Array.isArray(res?.data) ? res.data : []).forEach((firm) => {
+        if (firm?.firm_id != null) map[firm.firm_id] = firm;
+      });
+      setFirmsById(map);
+    } catch {
+      setFirmsById({});
+    }
+  }, []);
+
+  useEffect(() => {
+    loadFirms();
+  }, [loadFirms]);
+
   useEffect(() => {
     loadTemplates();
   }, [loadTemplates]);
 
   const handleEdit = (row) => {
     setEditingId(row.uuid || row.id);
+    setEditingFirmId(row.firmId ?? null);
     setEditingFirmName(row.firmName || "");
     setFormConfig(normalizeFormConfig(row.config));
     setStatus(row.status || "Active");
@@ -129,6 +156,7 @@ const FormCustomizationPage = () => {
       }
     }
     setEditingId(null);
+    setEditingFirmId(null);
     setEditingFirmName("");
     setFormConfig(null);
     setStatus("Active");
@@ -220,19 +248,29 @@ const FormCustomizationPage = () => {
     }
   };
 
-  const handlePdfPreview = () => {
+  const editingFirm = editingFirmId != null ? firmsById[editingFirmId] : null;
+
+  const handlePdfPreview = async () => {
     if (!formConfig) return;
     try {
-      openFormTemplatePdfPreview(normalizeFormConfig(formConfig), editingFirmName);
+      const pdfOptions = await buildPreviewFormTemplatePdfOptions({
+        firm: editingFirm,
+        config: normalizeFormConfig(formConfig),
+      });
+      openFormTemplatePdfPreview(normalizeFormConfig(formConfig), editingFirmName, pdfOptions);
     } catch (err) {
       toast.error(err.message || "Could not open PDF preview");
     }
   };
 
-  const handlePdfDownload = () => {
+  const handlePdfDownload = async () => {
     if (!formConfig) return;
     try {
-      downloadFormTemplatePdf(normalizeFormConfig(formConfig), editingFirmName);
+      const pdfOptions = await buildPreviewFormTemplatePdfOptions({
+        firm: editingFirm,
+        config: normalizeFormConfig(formConfig),
+      });
+      downloadFormTemplatePdf(normalizeFormConfig(formConfig), editingFirmName, pdfOptions);
     } catch (err) {
       toast.error(err.message || "Could not download PDF");
     }
@@ -798,6 +836,10 @@ const FormCustomizationPage = () => {
                 config={formConfig ? normalizeFormConfig(formConfig) : null}
                 firmName={editingFirmName}
                 scale={0.55}
+                leftLogoUrl={resolveFirmLeftLogoUrl(editingFirm)}
+                rightLogoUrl={resolveFirmRightLogoUrl(editingFirm)}
+                firmFormHeader={editingFirm?.firm_form_header || ""}
+                firmFormFooter={editingFirm?.firm_form_footer || ""}
               />
             </div>
           </aside>

@@ -193,6 +193,7 @@ const UserHomeMobileLists = ({
                     { label: "T.Period", value: row.timePeriod },
                     { label: "Principal", value: row.principal },
                     { label: "Interest", value: row.interest },
+                    { label: "Processing", value: row.processing },
                     { label: "Final Pay", value: row.finalPay },
                     { label: "Profit/Loss", value: row.profitLoss },
                     {

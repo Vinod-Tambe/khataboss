@@ -80,7 +80,7 @@ const EmiExportActions = ({ disabled, onPrint, onPdf, onWhatsApp, whatsAppLoadin
     </div>
 );
 
-const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, onPayInterest, onHistory, isLoading, financeData, initialFinance }) => {
+const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, onPayInterest, onHistory, isLoading, financeData, initialFinance, customer = null }) => {
     const { can } = usePermissions();
     const canAgreement = can('finance.agreement') || can('finance.view');
     const [searchQuery, setSearchQuery] = useState('');
@@ -206,7 +206,7 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, on
             const fileName = await downloadFinanceAgreementPdf({
                 financeData,
                 initialFinance,
-                customer: initialFinance?.user,
+                customer,
                 emiRows: filteredData,
             });
             toast.success(`Finance agreement downloaded: ${fileName}`);

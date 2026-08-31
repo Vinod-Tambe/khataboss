@@ -1,8 +1,6 @@
-import appConfig, {
-  apiPublicUrl,
-  r2PublicUrl,
-  isCloudflareAccessEnabled,
-} from "../config/appConfig";
+import axios from 'axios';
+import appConfig, { apiPublicUrl, r2PublicUrl, isCloudflareAccessEnabled } from "../config/appConfig";
+import { getImageDataUrl as fetchImageDataUrlFromApi } from "../api/mediaApi";
 
 /** Cloudflare R2 public URL (custom domain or R2 dev URL). */
 const R2_PUBLIC_URL = (r2PublicUrl || appConfig.r2PublicUrl || "").replace(/\/$/, "");
@@ -53,6 +51,222 @@ export function resolveImageUrl(img) {
     return resolvePathToUrl(img);
   }
   if (img.path) return resolvePathToUrl(img.path);
+  return null;
+}
+
+/** Raw storage path for backend media API (owner/... or uploads/...). */
+export function resolveImageStoragePath(img) {
+  if (!img) return null;
+  if (typeof img === "string") {
+    const path = String(img).replace(/^\/+/, "");
+    if (path.startsWith("owner/") || path.startsWith("uploads/")) return path;
+    if (path.startsWith("http") || path.startsWith("blob:")) {
+      return extractStoragePathFromUrl(path);
+    }
+    return path.includes("/") ? path : null;
+  }
+  if (img.path) return resolveImageStoragePath(img.path);
+  return null;
+}
+
+export function extractStoragePathFromUrl(url) {
+  if (!url) return null;
+  const str = String(url).replace(/^\/+/, "");
+
+  if (str.startsWith("owner/") || str.startsWith("uploads/")) {
+    return str;
+  }
+
+  if (R2_PUBLIC_URL && str.startsWith(R2_PUBLIC_URL)) {
+    return str.slice(R2_PUBLIC_URL.length).replace(/^\/+/, "");
+  }
+
+  const apiOrigin = apiPublicUrl.replace(/\/$/, "");
+  if (str.startsWith(apiOrigin)) {
+    return str.slice(apiOrigin.length).replace(/^\/+/, "");
+  }
+
+  if (str.includes("owner/")) {
+    const idx = str.indexOf("owner/");
+    return str.slice(idx);
+  }
+
+  if (str.includes("/uploads/")) {
+    const idx = str.indexOf("/uploads/");
+    return str.slice(idx + 1);
+  }
+
+  return null;
+}
+
+/** Resolve customer profile image URL from common API shapes. */
+export function resolveCustomerProfileImage(user) {
+  if (!user) return null;
+  return (
+    resolveImageUrl(user.user_profile_img) ||
+    resolveImageUrl(user.user_image) ||
+    resolveImageUrl(user.ur_image) ||
+    null
+  );
+}
+
+export function resolveCustomerProfileImagePath(user) {
+  if (!user) return null;
+  return (
+    resolveImageStoragePath(user.user_profile_img) ||
+    resolveImageStoragePath(user.user_image) ||
+    resolveImageStoragePath(user.ur_image) ||
+    null
+  );
+}
+
+/** Fetch remote image as data URL for pdfMake embedding. */
+const blobToDataUrl = (blob) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () =>
+      resolve(typeof reader.result === "string" ? reader.result : null);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+
+const loadImageViaCanvas = (url) => rasterizeToJpegDataUrl(url);
+
+const PDF_JPEG_DATA_URL = /^data:image\/jpe?g;base64,/i;
+
+const loadImageElement = (src) =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Image load failed"));
+    img.src = src;
+  });
+
+const rasterizeToJpegDataUrl = async (src, maxDim = 800) => {
+  const img = await loadImageElement(src);
+  let width = img.naturalWidth || img.width || 1;
+  let height = img.naturalHeight || img.height || 1;
+
+  if (width > maxDim || height > maxDim) {
+    const scale = maxDim / Math.max(width, height);
+    width = Math.max(1, Math.round(width * scale));
+    height = Math.max(1, Math.round(height * scale));
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas unavailable");
+
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, width, height);
+  ctx.drawImage(img, 0, 0, width, height);
+
+  return canvas.toDataURL("image/jpeg", 0.92);
+};
+
+/**
+ * pdfMake only accepts real JPEG/PNG bytes — always re-encode to JPEG via canvas.
+ * Fixes webp/mislabeled files from API (e.g. data:image/png with webp bytes).
+ */
+export async function normalizeImageDataUrlForPdf(dataUrl) {
+  if (!dataUrl || typeof dataUrl !== "string") return null;
+  if (PDF_JPEG_DATA_URL.test(dataUrl)) {
+    try {
+      return await rasterizeToJpegDataUrl(dataUrl);
+    } catch {
+      return null;
+    }
+  }
+  if (!dataUrl.startsWith("data:") && !dataUrl.startsWith("http") && !dataUrl.startsWith("blob:")) {
+    return null;
+  }
+  try {
+    return await rasterizeToJpegDataUrl(dataUrl);
+  } catch {
+    return null;
+  }
+}
+
+const fetchBlobWithAuth = async (url) => {
+  const token = typeof sessionStorage !== "undefined" ? sessionStorage.getItem("token") : null;
+  const response = await axios.get(url, {
+    responseType: "blob",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  return response.data;
+};
+
+export async function fetchImageDataUrl(url, storedPath = null) {
+  if (!url && !storedPath) return null;
+  if (url && String(url).startsWith("data:")) {
+    return normalizeImageDataUrlForPdf(url);
+  }
+
+  const path =
+    storedPath ||
+    (url ? extractStoragePathFromUrl(url) : null) ||
+    null;
+
+  if (path) {
+    try {
+      const dataUrl = await fetchImageDataUrlFromApi(path);
+      if (dataUrl) return normalizeImageDataUrlForPdf(dataUrl);
+    } catch {
+      // fall through to direct fetch strategies
+    }
+  }
+
+  if (!url) return null;
+
+  const apiOrigin = apiPublicUrl.replace(/\/$/, "");
+  const isApiHosted =
+    String(url).startsWith(apiOrigin) ||
+    String(url).startsWith("/uploads/") ||
+    String(url).includes("/uploads/");
+
+  const strategies = [];
+
+  if (isApiHosted) {
+    strategies.push(async () => {
+      const absoluteUrl = String(url).startsWith("http")
+        ? url
+        : `${apiOrigin}${String(url).startsWith("/") ? url : `/${url}`}`;
+      const blob = await fetchBlobWithAuth(absoluteUrl);
+      if (!blob?.size) throw new Error("Empty image");
+      return blobToDataUrl(blob);
+    });
+  }
+
+  strategies.push(async () => {
+    const response = await fetch(url, { mode: "cors", credentials: "omit" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const blob = await response.blob();
+    if (!blob?.size) throw new Error("Empty image");
+    return blobToDataUrl(blob);
+  });
+
+  strategies.push(async () => {
+    const response = await fetch(url, { mode: "cors", credentials: "include" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const blob = await response.blob();
+    if (!blob?.size) throw new Error("Empty image");
+    return blobToDataUrl(blob);
+  });
+
+  strategies.push(() => loadImageViaCanvas(url));
+
+  for (const strategy of strategies) {
+    try {
+      const dataUrl = await strategy();
+      if (dataUrl) return normalizeImageDataUrlForPdf(dataUrl);
+    } catch {
+      // try next strategy
+    }
+  }
+
   return null;
 }
 

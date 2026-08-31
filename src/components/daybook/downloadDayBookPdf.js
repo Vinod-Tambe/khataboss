@@ -3,8 +3,11 @@ import * as pdfFonts from 'pdfmake/build/vfs_fonts';
 import {
   calculateDayBookSummary,
   calculateSectionTotals,
+  calculateProcessingSectionTotals,
   formatCurrency,
   getRowAmounts,
+  getProcessingRowAmounts,
+  isProcessingDaybookSection,
 } from './dayBookUtils';
 
 pdfMake.vfs = pdfFonts.vfs || pdfFonts.default?.vfs || pdfFonts;
@@ -24,6 +27,76 @@ const COLORS = {
 };
 
 const money = (val) => formatCurrency(val);
+
+const buildProcessingSectionTable = (title, data = []) => {
+  const totals = calculateProcessingSectionTotals(data);
+  const body = [
+    [
+      { text: 'DATE', style: 'tableHeader', alignment: 'left' },
+      { text: 'FIRM', style: 'tableHeader', alignment: 'left' },
+      { text: 'CUSTOMER NAME', style: 'tableHeader', alignment: 'left' },
+      { text: 'REF NO', style: 'tableHeader', alignment: 'left' },
+      { text: 'TYPE', style: 'tableHeader', alignment: 'left' },
+      { text: 'PROCESS', style: 'tableHeader', alignment: 'right' },
+      { text: 'CHARGE', style: 'tableHeader', alignment: 'right' },
+      { text: 'TOTAL', style: 'tableHeader', alignment: 'right' },
+    ],
+  ];
+
+  data.forEach((item) => {
+    const row = getProcessingRowAmounts(item);
+    body.push([
+      { text: item.db_date || '-', style: 'tableCell' },
+      { text: item.db_firm || '-', style: 'tableCell' },
+      { text: item.db_customer_name || '-', style: 'accountName' },
+      { text: item.db_ref_no || '-', style: 'tableCell' },
+      { text: item.db_ref_type || '-', style: 'tableCell' },
+      { text: money(row.process), style: 'tableCell', alignment: 'right', color: COLORS.dr },
+      { text: money(row.charge), style: 'tableCell', alignment: 'right', color: COLORS.dr },
+      { text: money(row.total), style: 'tableCellBold', alignment: 'right', color: COLORS.dr },
+    ]);
+  });
+
+  const footerIndex = body.length;
+  body.push([
+    { text: 'TOTAL AMT :', style: 'tableFooter', colSpan: 5, alignment: 'right' },
+    {},
+    {},
+    {},
+    {},
+    { text: money(totals.process), style: 'tableFooter', alignment: 'right', color: COLORS.dr },
+    { text: money(totals.charge), style: 'tableFooter', alignment: 'right', color: COLORS.dr },
+    { text: money(totals.total), style: 'tableFooter', alignment: 'right', color: COLORS.dr },
+  ]);
+
+  return {
+    stack: [
+      {
+        text: title,
+        style: 'sectionTitle',
+        margin: [0, 0, 0, 6],
+      },
+      {
+        table: {
+          headerRows: 1,
+          widths: [55, 70, '*', 70, 45, 48, 48, 55],
+          body,
+          dontBreakRows: true,
+        },
+        layout: {
+          fillColor: (rowIndex) => {
+            if (rowIndex === 0) return COLORS.headerBg;
+            if (rowIndex === footerIndex) return COLORS.footerBg;
+            return null;
+          },
+          hLineColor: () => COLORS.border,
+          vLineColor: () => COLORS.border,
+        },
+      },
+    ],
+    margin: [0, 0, 0, 10],
+  };
+};
 
 const buildSectionTable = (title, data = [], amtTone = 'cr') => {
   const totals = calculateSectionTotals(data);
@@ -243,7 +316,11 @@ const buildDocDefinition = ({
     });
   } else {
     panels.forEach((panel) => {
-      content.push(buildSectionTable(panel.title, panel.data, panel.amtTone));
+      if (isProcessingDaybookSection(panel.title)) {
+        content.push(buildProcessingSectionTable(panel.title, panel.data));
+      } else {
+        content.push(buildSectionTable(panel.title, panel.data, panel.amtTone));
+      }
     });
   }
 

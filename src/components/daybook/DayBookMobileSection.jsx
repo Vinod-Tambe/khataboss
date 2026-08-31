@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import DayBookMobileCard from "./DayBookMobileCard";
-import { calculateSectionTotals, formatCurrency } from "./dayBookUtils";
+import DayBookProcessingMobileCard from "./DayBookProcessingMobileCard";
+import { calculateSectionTotals, calculateProcessingSectionTotals, formatCurrency, isProcessingDaybookSection } from "./dayBookUtils";
 
 const DayBookMobileSection = ({
   title,
@@ -14,7 +15,10 @@ const DayBookMobileSection = ({
 }) => {
   const [search, setSearch] = useState("");
   const [totalsOpen, setTotalsOpen] = useState(false);
-  const totals = calculateSectionTotals(data);
+  const isProcessingSection = isProcessingDaybookSection(title);
+  const totals = isProcessingSection
+    ? calculateProcessingSectionTotals(data)
+    : calculateSectionTotals(data);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -23,7 +27,15 @@ const DayBookMobileSection = ({
       const name = (item.db_customer_name || "").toLowerCase();
       const firm = (item.db_firm || "").toLowerCase();
       const date = (item.db_date || "").toLowerCase();
-      return name.includes(q) || firm.includes(q) || date.includes(q);
+      const ref = (item.db_ref_no || "").toLowerCase();
+      const type = (item.db_ref_type || "").toLowerCase();
+      return (
+        name.includes(q) ||
+        firm.includes(q) ||
+        date.includes(q) ||
+        ref.includes(q) ||
+        type.includes(q)
+      );
     });
   }, [data, search]);
 
@@ -54,7 +66,7 @@ const DayBookMobileSection = ({
             <input
               type="search"
               className="form-control form-control-sm daybook-mobile-panel__search"
-              placeholder="Search name, firm, date"
+              placeholder="Search name, firm, date, ref"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -64,6 +76,17 @@ const DayBookMobileSection = ({
             {filtered.length > 0 ? (
               filtered.map((item, index) => {
                 const cardKey = `${title}-${item.db_user_uuid || index}-${item.db_date || ""}-${index}`;
+                if (isProcessingSection) {
+                  return (
+                    <DayBookProcessingMobileCard
+                      key={cardKey}
+                      item={item}
+                      cardKey={cardKey}
+                      expanded={expandedCardKey === cardKey}
+                      onToggle={onToggleCard}
+                    />
+                  );
+                }
                 return (
                   <DayBookMobileCard
                     key={cardKey}
@@ -92,7 +115,7 @@ const DayBookMobileSection = ({
               </span>
               <span className="daybook-mobile-section__totals-right">
                 <strong className={amtTone === "dr" ? "is-dr" : "is-cr"}>
-                  {formatCurrency(totals.total)}
+                  {formatCurrency(isProcessingSection ? totals.total : totals.total)}
                 </strong>
                 <i className={`bi daybook-collapse-icon ${totalsOpen ? "bi-chevron-up" : "bi-chevron-down"}`} aria-hidden="true"></i>
               </span>
@@ -100,32 +123,51 @@ const DayBookMobileSection = ({
 
             {totalsOpen && (
               <div className="daybook-mobile-totals-grid">
-                <div>
-                  <span>Cash</span>
-                  <strong>{formatCurrency(totals.cash)}</strong>
-                </div>
-                <div>
-                  <span>Bank</span>
-                  <strong>{formatCurrency(totals.bank)}</strong>
-                </div>
-                <div>
-                  <span>Online</span>
-                  <strong>{formatCurrency(totals.online)}</strong>
-                </div>
-                <div>
-                  <span>Card</span>
-                  <strong>{formatCurrency(totals.card)}</strong>
-                </div>
-                <div>
-                  <span>Disc</span>
-                  <strong>{formatCurrency(totals.disc)}</strong>
-                </div>
-                <div className="is-full">
-                  <span>Total</span>
-                  <strong className={amtTone === "dr" ? "is-dr" : "is-cr"}>
-                    {formatCurrency(totals.total)}
-                  </strong>
-                </div>
+                {isProcessingSection ? (
+                  <>
+                    <div>
+                      <span>Process</span>
+                      <strong className="is-dr">{formatCurrency(totals.process)}</strong>
+                    </div>
+                    <div>
+                      <span>Charge</span>
+                      <strong className="is-dr">{formatCurrency(totals.charge)}</strong>
+                    </div>
+                    <div className="is-full">
+                      <span>Total</span>
+                      <strong className="is-dr">{formatCurrency(totals.total)}</strong>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <span>Cash</span>
+                      <strong>{formatCurrency(totals.cash)}</strong>
+                    </div>
+                    <div>
+                      <span>Bank</span>
+                      <strong>{formatCurrency(totals.bank)}</strong>
+                    </div>
+                    <div>
+                      <span>Online</span>
+                      <strong>{formatCurrency(totals.online)}</strong>
+                    </div>
+                    <div>
+                      <span>Card</span>
+                      <strong>{formatCurrency(totals.card)}</strong>
+                    </div>
+                    <div>
+                      <span>Disc</span>
+                      <strong>{formatCurrency(totals.disc)}</strong>
+                    </div>
+                    <div className="is-full">
+                      <span>Total</span>
+                      <strong className={amtTone === "dr" ? "is-dr" : "is-cr"}>
+                        {formatCurrency(totals.total)}
+                      </strong>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>

@@ -144,6 +144,23 @@ export const calculateInterestForPeriod = (
 export const isFirstMonthInterestEnabled = (loan) =>
   loan?.girv_first_int === 'Y' || loan?.girv_first_int === true;
 
+/** Last date interest should accrue — stops after full principal is deposited. */
+export const resolveLoanInterestEndDate = (data, asOfDate = moment()) => {
+  const today = moment(asOfDate);
+  const currentTotalPrincipal = parseFloat(data?.girv_prin_amt) || 0;
+  if (currentTotalPrincipal > 0 || !data?.deposits?.length) return today;
+
+  const principalDepositDates = data.deposits
+    .filter((dep) => (parseFloat(dep.dep_prin_amt) || 0) > 0)
+    .map((dep) => toCalendarDay(dep.dep_trans_date))
+    .filter(Boolean);
+  if (!principalDepositDates.length) return today;
+
+  return principalDepositDates.reduce((latest, date) =>
+    date.isAfter(latest) ? date : latest
+  );
+};
+
 /**
  * Full pending interest breakdown for a loan (includes AP + first-month prepaid).
  */
@@ -188,18 +205,20 @@ export const getLoanInterestSummary = (data, asOfDate = moment()) => {
   const interestMethod = data.girv_interest_method || 'simple';
   const compoundFreq = data.girv_compound_freq || 'monthly';
 
+  const interestEndDate = resolveLoanInterestEndDate(data, today);
+
   const origInterest = calculateInterestForPeriod(
     originalPrincipal,
     roi,
     data.girv_start_date,
-    today,
+    interestEndDate,
     interestMethod,
     compoundFreq,
     roiType
   );
 
   let additionalInterestTotal = 0;
-  if (data.additionalPrincipals?.length) {
+  if (currentTotalPrincipal > 0 && data.additionalPrincipals?.length) {
     data.additionalPrincipals.forEach((ap) => {
       const apPrin = parseFloat(ap.ap_prin_amt) || 0;
       const apRoi = parseFloat(ap.ap_roi) || roi;
@@ -207,7 +226,7 @@ export const getLoanInterestSummary = (data, asOfDate = moment()) => {
         apPrin,
         apRoi,
         ap.ap_trans_date,
-        today,
+        interestEndDate,
         interestMethod,
         compoundFreq,
         roiType

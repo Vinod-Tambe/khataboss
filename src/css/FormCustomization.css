@@ -529,6 +529,30 @@
   color: var(--ft-muted);
 }
 
+.form-custom-a4-logo-img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+}
+
+.form-custom-a4-customer-photo {
+  display: block;
+  width: 72px;
+  height: 90px;
+  object-fit: cover;
+  border: 1px solid var(--ft-border);
+  margin-top: 4px;
+  background: #f9fafb;
+}
+
+.form-custom-a4-firm-header {
+  text-align: center;
+  font-size: calc(var(--ft-font-pt, 11pt) - 1pt);
+  color: var(--ft-muted);
+  margin-bottom: 8px;
+  white-space: pre-wrap;
+}
+
 .form-custom-a4-header {
   text-align: center;
   background: var(--ft-header-bg);

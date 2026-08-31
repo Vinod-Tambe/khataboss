@@ -24,6 +24,7 @@
   "layout": {
     "showLeftLogo": true,
     "showRightLogo": false,
+    "showCustomerPhoto": true,
     "showOwnerSign": true,
     "showQrCode": false,
     "useFirmFormHeader": true,
@@ -54,6 +55,7 @@
         { "id": "customer_address", "label": "Address", "enabled": true, "fieldLayout": "full" },
         { "id": "customer_mobile", "label": "Mobile No.", "enabled": true, "fieldLayout": "half" },
         { "id": "customer_aadhaar", "label": "Aadhaar / ID Proof", "enabled": true, "fieldLayout": "half" },
+        { "id": "customer_photo", "label": "Customer Photo", "enabled": true, "fieldLayout": "half" },
         { "id": "customer_pan", "label": "PAN", "enabled": false, "fieldLayout": "half" }
       ]
     },

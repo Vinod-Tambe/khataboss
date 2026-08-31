@@ -24,6 +24,7 @@
   "layout": {
     "showLeftLogo": true,
     "showRightLogo": false,
+    "showCustomerPhoto": true,
     "showOwnerSign": true,
     "showQrCode": false,
     "useFirmFormHeader": true,

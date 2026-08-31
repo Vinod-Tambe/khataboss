@@ -14,6 +14,27 @@ export const getRowAmounts = (item = {}) => {
   return { cash, bank, online, card, disc, total };
 };
 
+export const getProcessingRowAmounts = (item = {}) => {
+  const process = parseFloat(item.db_process_amt) || 0;
+  const charge = parseFloat(item.db_charge_amt) || 0;
+  const total = parseFloat(item.db_total_amt) || process + charge;
+  return { process, charge, total };
+};
+
+export const calculateProcessingSectionTotals = (data = []) =>
+  data.reduce(
+    (acc, item) => {
+      const row = getProcessingRowAmounts(item);
+      acc.process += row.process;
+      acc.charge += row.charge;
+      acc.total += row.total;
+      return acc;
+    },
+    { process: 0, charge: 0, total: 0 }
+  );
+
+export const isProcessingDaybookSection = (title) => title === "PROCESSING AMOUNT";
+
 export const calculateSectionTotals = (data = []) =>
   data.reduce(
     (acc, item) => {
@@ -221,6 +242,11 @@ export const DAYBOOK_SECTIONS = [
     title: "LOAN ADDED",
     colorClass: "bg-purple",
     amtTone: "cr",
+  },
+  {
+    title: "PROCESSING AMOUNT",
+    colorClass: "bg-success",
+    amtTone: "dr",
   },
   {
     title: "ADDITIONAL LOAN PRINCIPAL",

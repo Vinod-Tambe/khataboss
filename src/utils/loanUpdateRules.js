@@ -20,7 +20,7 @@ export const getLoanUpdateRules = (loan) => {
     isActive,
     isClosed,
     canUpdateFinancial: isActive && !hasTransactions,
-    canUpdateInterest: isActive && !hasTransactions,
+    canUpdateInterest: isActive,
     canUpdateLoan: isActive && !hasTransactions,
     canUpdateDetails: isActive || (!isClosed && hasTransactions),
   };
@@ -30,16 +30,13 @@ export const getInterestUpdateBlockReason = (loan, hasEditPermission = true) => 
   if (!loan) return 'Loan details are not available.';
   if (!hasEditPermission) return 'You do not have permission to update loan interest settings.';
 
-  const { status, hasTransactions, isActive, isClosed } = getLoanUpdateRules(loan);
+  const { status, isActive, isClosed } = getLoanUpdateRules(loan);
 
   if (isClosed) {
     return `Interest settings cannot be changed because this loan is ${status.toLowerCase()}.`;
   }
   if (!isActive) {
     return `Interest settings can only be updated on active loans. Current status: ${status}.`;
-  }
-  if (hasTransactions) {
-    return 'Interest settings cannot be changed after deposits, releases, or additional principal entries exist.';
   }
 
   return null;

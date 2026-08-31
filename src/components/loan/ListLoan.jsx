@@ -191,6 +191,12 @@ const ListLoan = ({ status = "ALL", global = false }) => {
         render: (data) => formatListAmtOrDash(data),
       },
       {
+        key: "girv_processing_amt",
+        title: "Processing",
+        sum: true,
+        render: (data) => formatListAmtOrDash(data),
+      },
+      {
         key: "girv_total_due",
         title: "Final Pay",
         sum: true,

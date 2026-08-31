@@ -177,6 +177,7 @@ const Finance = () => {
                             isLoading={loading}
                             financeData={financeData}
                             initialFinance={initialFinance}
+                            customer={selectedUser}
                         />
                     </div>
                 ) : (

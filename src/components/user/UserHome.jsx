@@ -110,6 +110,7 @@ const UserHome = () => {
             loanNo: l.girv_unique_code || l.girv_loan_no || `Loan-${l.girv_id}`,
             principal: formatAmt(getLoanPrincipalAmount(l)),
             interest: metrics.interest != null ? formatAmt(metrics.interest) : "-",
+            processing: metrics.processing != null ? formatAmt(metrics.processing) : "-",
             finalPay: metrics.finalPay != null ? formatAmt(metrics.finalPay) : "-",
             profitLoss: formatProfitLossText(metrics.profitLoss),
             type: l.girv_type ? String(l.girv_type).toUpperCase() : "-",
@@ -222,6 +223,7 @@ const UserHome = () => {
     { header: "T.Period", key: "timePeriod" },
     { header: "Principal", key: "principal" },
     { header: "Interest", key: "interest" },
+    { header: "Processing", key: "processing" },
     { header: "Final Pay", key: "finalPay" },
     { header: "Profit/Loss", key: "profitLoss" },
   ];

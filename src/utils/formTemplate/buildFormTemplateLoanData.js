@@ -267,7 +267,7 @@ export const buildFormTemplateLoanData = (loanDetails, customer = null) => {
     customer_mobile: user.user_mobile_no || '—',
     customer_aadhaar: formatAadhaar(user.user_adhaar_no),
     customer_pan: user.user_pan_no || '—',
-    customer_photo: user.user_profile_img || user.user_image ? 'On file' : '—',
+    customer_photo: user.user_profile_img || user.user_image || user.ur_image ? 'Photo attached' : '—',
     owner_name_address: redemption.redeeming_person !== '—' && loanDetails.girv_status === 'RELEASED'
       ? redemption.redeeming_person
       : 'Same as pawner',

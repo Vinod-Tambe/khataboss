@@ -152,6 +152,13 @@ export const getFinanceTimePeriod = (finance) => {
   return formatTimePeriod(start, end);
 };
 
+export const getLoanProcessingAmount = (loan) => {
+  const processAmt = parseFloat(loan?.girv_process_amt) || 0;
+  const chargeAmt = parseFloat(loan?.girv_charge_amt) || 0;
+  const total = parseFloat((processAmt + chargeAmt).toFixed(2));
+  return total > 0 ? total : null;
+};
+
 export const getLoanListMetrics = (loan) => {
   const summary = loan?.interest_summary;
   if (!summary) {
@@ -160,6 +167,7 @@ export const getLoanListMetrics = (loan) => {
       interest: null,
       finalPay: null,
       profitLoss: loan?.profit_loss ?? null,
+      processing: getLoanProcessingAmount(loan),
     };
   }
 
@@ -179,7 +187,7 @@ export const getLoanListMetrics = (loan) => {
     }
   }
 
-  return { principal, interest, finalPay, profitLoss };
+  return { principal, interest, finalPay, profitLoss, processing: getLoanProcessingAmount(loan) };
 };
 
 export const getLoanPrincipalAmount = (loan) => getLoanListMetrics(loan).principal;
@@ -252,6 +260,7 @@ export const normalizeLoanListRow = (loan) => {
     girv_display_principal: getLoanPrincipalAmount(loan) ?? loan.girv_prin_amt,
     girv_total_interest: metrics.interest,
     girv_total_due: metrics.finalPay,
+    girv_processing_amt: metrics.processing,
     profit_loss: metrics.profitLoss,
     girv_customer_name: customerName || "-",
     girv_customer_mobile: loan.user?.user_mobile_no || "-",
