@@ -147,19 +147,13 @@ const Daybook = () => {
     if (isProcessingDaybookSection(item.title)) {
       const totals = (item.data || []).reduce(
         (t, d) => ({
-          total_process_amt: t.total_process_amt + (parseFloat(d.db_process_amt) || 0),
-          total_charge_amt: t.total_charge_amt + (parseFloat(d.db_charge_amt) || 0),
-          total_amt: t.total_amt + (parseFloat(d.db_total_amt) || 0),
-          total_cash_amt: 0,
-          total_bank_amt: 0,
-          total_online_amt: 0,
-          total_card_amt: 0,
-          total_disc_amt: 0,
+          total_cash_amt: t.total_cash_amt + (parseFloat(d.db_cash_amt) || 0),
+          total_bank_amt: t.total_bank_amt + (parseFloat(d.db_bank_amt) || 0),
+          total_online_amt: t.total_online_amt + (parseFloat(d.db_online_amt) || 0),
+          total_card_amt: t.total_card_amt + (parseFloat(d.db_card_amt) || 0),
+          total_disc_amt: t.total_disc_amt + (parseFloat(d.db_disc_amt) || 0),
         }),
         {
-          total_process_amt: 0,
-          total_charge_amt: 0,
-          total_amt: 0,
           total_cash_amt: 0,
           total_bank_amt: 0,
           total_online_amt: 0,
@@ -167,6 +161,12 @@ const Daybook = () => {
           total_disc_amt: 0,
         }
       );
+
+      totals.total_amt =
+        totals.total_cash_amt +
+        totals.total_bank_amt +
+        totals.total_online_amt +
+        totals.total_card_amt;
       acc[item.title] = totals;
       return acc;
     }
@@ -174,17 +174,13 @@ const Daybook = () => {
     if (isFirstMonthInterestDaybookSection(item.title)) {
       const totals = (item.data || []).reduce(
         (t, d) => ({
-          total_interest_amt: t.total_interest_amt + (parseFloat(d.db_interest_amt) || 0),
-          total_amt: t.total_amt + (parseFloat(d.db_interest_amt) || 0),
-          total_cash_amt: 0,
-          total_bank_amt: 0,
-          total_online_amt: 0,
-          total_card_amt: 0,
-          total_disc_amt: 0,
+          total_cash_amt: t.total_cash_amt + (parseFloat(d.db_cash_amt) || 0),
+          total_bank_amt: t.total_bank_amt + (parseFloat(d.db_bank_amt) || 0),
+          total_online_amt: t.total_online_amt + (parseFloat(d.db_online_amt) || 0),
+          total_card_amt: t.total_card_amt + (parseFloat(d.db_card_amt) || 0),
+          total_disc_amt: t.total_disc_amt + (parseFloat(d.db_disc_amt) || 0),
         }),
         {
-          total_interest_amt: 0,
-          total_amt: 0,
           total_cash_amt: 0,
           total_bank_amt: 0,
           total_online_amt: 0,
@@ -192,6 +188,12 @@ const Daybook = () => {
           total_disc_amt: 0,
         }
       );
+
+      totals.total_amt =
+        totals.total_cash_amt +
+        totals.total_bank_amt +
+        totals.total_online_amt +
+        totals.total_card_amt;
       acc[item.title] = totals;
       return acc;
     }

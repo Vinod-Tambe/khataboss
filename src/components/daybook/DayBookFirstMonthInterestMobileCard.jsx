@@ -9,7 +9,7 @@ import { formatCurrency, getFirstMonthInterestRowAmounts } from "./dayBookUtils"
 const DayBookFirstMonthInterestMobileCard = ({ item, cardKey, expanded, onToggle }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { interest, total } = getFirstMonthInterestRowAmounts(item);
+  const { cash, bank, online, card, disc, total } = getFirstMonthInterestRowAmounts(item);
 
   const handleCustomerClick = async () => {
     if (!item.db_user_uuid) return;
@@ -75,9 +75,25 @@ const DayBookFirstMonthInterestMobileCard = ({ item, cardKey, expanded, onToggle
               <span>Type</span>
               <strong>{item.db_ref_type || "-"}</strong>
             </div>
-            <div className="is-full">
-              <span>Interest</span>
-              <strong className="is-dr">{formatCurrency(interest)}</strong>
+            <div>
+              <span>Cash</span>
+              <strong className="is-dr">{formatCurrency(cash)}</strong>
+            </div>
+            <div>
+              <span>Bank</span>
+              <strong className="is-dr">{formatCurrency(bank)}</strong>
+            </div>
+            <div>
+              <span>Online</span>
+              <strong className="is-dr">{formatCurrency(online)}</strong>
+            </div>
+            <div>
+              <span>Card</span>
+              <strong className="is-dr">{formatCurrency(card)}</strong>
+            </div>
+            <div>
+              <span>Disc</span>
+              <strong className="is-dr">{formatCurrency(disc)}</strong>
             </div>
           </div>
         </div>

@@ -104,16 +104,22 @@ const DayBookProcessingTable = ({ title, data = [], isPrint = false }) => {
               <th className="bg-pink border border-dark">CUSTOMER NAME</th>
               <th className="bg-pink border border-dark">REF NO</th>
               <th className="bg-pink border border-dark">TYPE</th>
-              <th className="bg-pink border border-dark">PROCESS</th>
-              <th className="bg-pink border border-dark">CHARGE</th>
+              <th className="bg-pink border border-dark">CASH</th>
+              <th className="bg-pink border border-dark">BANK</th>
+              <th className="bg-pink border border-dark">ONLINE</th>
+              <th className="bg-pink border border-dark">CARD</th>
+              <th className="bg-pink border border-dark">DISC</th>
               <th className="bg-pink border border-dark">TOTAL</th>
             </tr>
           </thead>
           <tbody>
             {data.map((item, index) => {
-              const processAmt = parseFloat(item.db_process_amt) || 0;
-              const chargeAmt = parseFloat(item.db_charge_amt) || 0;
-              const totalAmt = parseFloat(item.db_total_amt) || processAmt + chargeAmt;
+              const cash = parseFloat(item.db_cash_amt) || 0;
+              const bank = parseFloat(item.db_bank_amt) || 0;
+              const online = parseFloat(item.db_online_amt) || 0;
+              const card = parseFloat(item.db_card_amt) || 0;
+              const disc = parseFloat(item.db_disc_amt) || 0;
+              const total = cash + bank + online + card;
 
               return (
                 <tr key={index}>
@@ -132,11 +138,12 @@ const DayBookProcessingTable = ({ title, data = [], isPrint = false }) => {
                     {item.db_ref_no || "-"}
                   </td>
                   <td className="border border-dark">{item.db_ref_type || "-"}</td>
-                  <td className="text-end border border-dark text-success">{processAmt.toFixed(2)}</td>
-                  <td className="text-end border border-dark text-success">{chargeAmt.toFixed(2)}</td>
-                  <td className="text-end fw-bold border border-dark text-success">
-                    {totalAmt.toFixed(2)}
-                  </td>
+                  <td className="text-end border border-dark text-success">{cash.toFixed(2)}</td>
+                  <td className="text-end border border-dark text-success">{bank.toFixed(2)}</td>
+                  <td className="text-end border border-dark text-success">{online.toFixed(2)}</td>
+                  <td className="text-end border border-dark text-success">{card.toFixed(2)}</td>
+                  <td className="text-end border border-dark text-success">{disc.toFixed(2)}</td>
+                  <td className="text-end border border-dark text-success fw-bold">{total.toFixed(2)}</td>
                 </tr>
               );
             })}
@@ -146,11 +153,20 @@ const DayBookProcessingTable = ({ title, data = [], isPrint = false }) => {
               <th className="text-end bg-cust-info border border-dark" colSpan={5}>
                 TOTAL AMT :
               </th>
-              <th className="text-end bg-cust-info border border-dark text-success">
-                {totals.process.toFixed(2)}
+              <th className="text-end fw-bold bg-cust-info border border-dark text-success">
+                {totals.cash.toFixed(2)}
               </th>
-              <th className="text-end bg-cust-info border border-dark text-success">
-                {totals.charge.toFixed(2)}
+              <th className="text-end fw-bold bg-cust-info border border-dark text-success">
+                {totals.bank.toFixed(2)}
+              </th>
+              <th className="text-end fw-bold bg-cust-info border border-dark text-success">
+                {totals.online.toFixed(2)}
+              </th>
+              <th className="text-end fw-bold bg-cust-info border border-dark text-success">
+                {totals.card.toFixed(2)}
+              </th>
+              <th className="text-end fw-bold bg-cust-info border border-dark text-success">
+                {totals.disc.toFixed(2)}
               </th>
               <th className="text-end fw-bold bg-cust-info border border-dark text-success">
                 {totals.total.toFixed(2)}

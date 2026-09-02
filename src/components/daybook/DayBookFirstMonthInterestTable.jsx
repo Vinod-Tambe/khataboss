@@ -98,12 +98,22 @@ const DayBookFirstMonthInterestTable = ({ title, data = [], isPrint = false }) =
               <th className="bg-pink border border-dark">CUSTOMER NAME</th>
               <th className="bg-pink border border-dark">REF NO</th>
               <th className="bg-pink border border-dark">TYPE</th>
-              <th className="bg-pink border border-dark">INTEREST</th>
+              <th className="bg-pink border border-dark">CASH</th>
+              <th className="bg-pink border border-dark">BANK</th>
+              <th className="bg-pink border border-dark">ONLINE</th>
+              <th className="bg-pink border border-dark">CARD</th>
+              <th className="bg-pink border border-dark">DISC</th>
+              <th className="bg-pink border border-dark">TOTAL</th>
             </tr>
           </thead>
           <tbody>
             {data.map((item, index) => {
-              const interestAmt = parseFloat(item.db_interest_amt) || 0;
+              const cash = parseFloat(item.db_cash_amt) || 0;
+              const bank = parseFloat(item.db_bank_amt) || 0;
+              const online = parseFloat(item.db_online_amt) || 0;
+              const card = parseFloat(item.db_card_amt) || 0;
+              const disc = parseFloat(item.db_disc_amt) || 0;
+              const total = cash + bank + online + card;
 
               return (
                 <tr key={index}>
@@ -122,7 +132,12 @@ const DayBookFirstMonthInterestTable = ({ title, data = [], isPrint = false }) =
                     {item.db_ref_no || "-"}
                   </td>
                   <td className="border border-dark">{item.db_ref_type || "-"}</td>
-                  <td className="text-end border border-dark text-success">{interestAmt.toFixed(2)}</td>
+                  <td className="text-end border border-dark text-success">{cash.toFixed(2)}</td>
+                  <td className="text-end border border-dark text-success">{bank.toFixed(2)}</td>
+                  <td className="text-end border border-dark text-success">{online.toFixed(2)}</td>
+                  <td className="text-end border border-dark text-success">{card.toFixed(2)}</td>
+                  <td className="text-end border border-dark text-success">{disc.toFixed(2)}</td>
+                  <td className="text-end border border-dark text-success fw-bold">{total.toFixed(2)}</td>
                 </tr>
               );
             })}
@@ -131,6 +146,21 @@ const DayBookFirstMonthInterestTable = ({ title, data = [], isPrint = false }) =
             <tr>
               <th className="text-end bg-cust-info border border-dark" colSpan={5}>
                 TOTAL AMT :
+              </th>
+              <th className="text-end fw-bold bg-cust-info border border-dark text-success">
+                {totals.cash.toFixed(2)}
+              </th>
+              <th className="text-end fw-bold bg-cust-info border border-dark text-success">
+                {totals.bank.toFixed(2)}
+              </th>
+              <th className="text-end fw-bold bg-cust-info border border-dark text-success">
+                {totals.online.toFixed(2)}
+              </th>
+              <th className="text-end fw-bold bg-cust-info border border-dark text-success">
+                {totals.card.toFixed(2)}
+              </th>
+              <th className="text-end fw-bold bg-cust-info border border-dark text-success">
+                {totals.disc.toFixed(2)}
               </th>
               <th className="text-end fw-bold bg-cust-info border border-dark text-success">
                 {totals.total.toFixed(2)}

@@ -15,46 +15,66 @@ export const getRowAmounts = (item = {}) => {
 };
 
 export const getProcessingRowAmounts = (item = {}) => {
+  const cash = parseFloat(item.db_cash_amt) || 0;
+  const bank = parseFloat(item.db_bank_amt) || 0;
+  const online = parseFloat(item.db_online_amt) || 0;
+  const card = parseFloat(item.db_card_amt) || 0;
+  const disc = parseFloat(item.db_disc_amt) || 0;
   const process = parseFloat(item.db_process_amt) || 0;
   const charge = parseFloat(item.db_charge_amt) || 0;
-  const total = parseFloat(item.db_total_amt) || process + charge;
-  return { process, charge, total };
+  const total = parseFloat(item.db_total_amt) || cash + bank + online + card || process + charge;
+  return { cash, bank, online, card, disc, process, charge, total };
 };
 
 export const calculateProcessingSectionTotals = (data = []) =>
   data.reduce(
     (acc, item) => {
       const row = getProcessingRowAmounts(item);
+      acc.cash += row.cash;
+      acc.bank += row.bank;
+      acc.online += row.online;
+      acc.card += row.card;
+      acc.disc += row.disc;
       acc.process += row.process;
       acc.charge += row.charge;
       acc.total += row.total;
       return acc;
     },
-    { process: 0, charge: 0, total: 0 }
+    { cash: 0, bank: 0, online: 0, card: 0, disc: 0, process: 0, charge: 0, total: 0 }
   );
 
 export const getFirstMonthInterestRowAmounts = (item = {}) => {
-  const interest = parseFloat(item.db_interest_amt) || 0;
-  return { interest, total: interest };
+  const cash = parseFloat(item.db_cash_amt) || 0;
+  const bank = parseFloat(item.db_bank_amt) || 0;
+  const online = parseFloat(item.db_online_amt) || 0;
+  const card = parseFloat(item.db_card_amt) || 0;
+  const disc = parseFloat(item.db_disc_amt) || 0;
+  const interest = parseFloat(item.db_interest_amt) || cash + bank + online + card;
+  const total = cash + bank + online + card;
+  return { cash, bank, online, card, disc, interest, total };
 };
 
 export const calculateFirstMonthInterestSectionTotals = (data = []) =>
   data.reduce(
     (acc, item) => {
       const row = getFirstMonthInterestRowAmounts(item);
+      acc.cash += row.cash;
+      acc.bank += row.bank;
+      acc.online += row.online;
+      acc.card += row.card;
+      acc.disc += row.disc;
       acc.interest += row.interest;
       acc.total += row.total;
       return acc;
     },
-    { interest: 0, total: 0 }
+    { cash: 0, bank: 0, online: 0, card: 0, disc: 0, interest: 0, total: 0 }
   );
 
 export const isProcessingDaybookSection = (title) => title === "PROCESSING AMOUNT";
 
 export const isFirstMonthInterestDaybookSection = (title) => title === "FIRST MONTH INTEREST";
 
-export const isInformationalDaybookSection = (title) =>
-  isProcessingDaybookSection(title) || isFirstMonthInterestDaybookSection(title);
+export const isInformationalDaybookSection = () => false;
 
 export const calculateSectionTotals = (data = []) =>
   data.reduce(
@@ -86,48 +106,62 @@ export const calculateDayBookSummary = (DayBookData = {}, opening_data = {}) => 
   const Release_loan_data = DayBookData?.["RELEASE LOAN"] || {};
   const Auction_loan_data = DayBookData?.["AUCTION LOAN"] || {};
   const Transfer_loan_out_data = DayBookData?.["TRANSFER LOAN OUT"] || {};
+  const First_month_interest_data = DayBookData?.["FIRST MONTH INTEREST"] || {};
+  const Processing_amount_data = DayBookData?.["PROCESSING AMOUNT"] || {};
 
   const total_today_cash_in_amt =
     parseFloat(Finance_emi_deposit_data.total_cash_amt || 0) +
     parseFloat(Loan_deposit_data.total_cash_amt || 0) +
     parseFloat(Release_loan_data.total_cash_amt || 0) +
     parseFloat(Auction_loan_data.total_cash_amt || 0) +
-    parseFloat(Transfer_loan_out_data.total_cash_amt || 0);
+    parseFloat(Transfer_loan_out_data.total_cash_amt || 0) +
+    parseFloat(First_month_interest_data.total_cash_amt || 0) +
+    parseFloat(Processing_amount_data.total_cash_amt || 0);
 
   const total_today_bank_in_amt =
     parseFloat(Finance_emi_deposit_data.total_bank_amt || 0) +
     parseFloat(Loan_deposit_data.total_bank_amt || 0) +
     parseFloat(Release_loan_data.total_bank_amt || 0) +
     parseFloat(Auction_loan_data.total_bank_amt || 0) +
-    parseFloat(Transfer_loan_out_data.total_bank_amt || 0);
+    parseFloat(Transfer_loan_out_data.total_bank_amt || 0) +
+    parseFloat(First_month_interest_data.total_bank_amt || 0) +
+    parseFloat(Processing_amount_data.total_bank_amt || 0);
 
   const total_today_online_in_amt =
     parseFloat(Finance_emi_deposit_data.total_online_amt || 0) +
     parseFloat(Loan_deposit_data.total_online_amt || 0) +
     parseFloat(Release_loan_data.total_online_amt || 0) +
     parseFloat(Auction_loan_data.total_online_amt || 0) +
-    parseFloat(Transfer_loan_out_data.total_online_amt || 0);
+    parseFloat(Transfer_loan_out_data.total_online_amt || 0) +
+    parseFloat(First_month_interest_data.total_online_amt || 0) +
+    parseFloat(Processing_amount_data.total_online_amt || 0);
 
   const total_today_card_in_amt =
     parseFloat(Finance_emi_deposit_data.total_card_amt || 0) +
     parseFloat(Loan_deposit_data.total_card_amt || 0) +
     parseFloat(Release_loan_data.total_card_amt || 0) +
     parseFloat(Auction_loan_data.total_card_amt || 0) +
-    parseFloat(Transfer_loan_out_data.total_card_amt || 0);
+    parseFloat(Transfer_loan_out_data.total_card_amt || 0) +
+    parseFloat(First_month_interest_data.total_card_amt || 0) +
+    parseFloat(Processing_amount_data.total_card_amt || 0);
 
   const total_today_disc_in_amt =
     parseFloat(Finance_emi_deposit_data.total_disc_amt || 0) +
     parseFloat(Loan_deposit_data.total_disc_amt || 0) +
     parseFloat(Release_loan_data.total_disc_amt || 0) +
     parseFloat(Auction_loan_data.total_disc_amt || 0) +
-    parseFloat(Transfer_loan_out_data.total_disc_amt || 0);
+    parseFloat(Transfer_loan_out_data.total_disc_amt || 0) +
+    parseFloat(First_month_interest_data.total_disc_amt || 0) +
+    parseFloat(Processing_amount_data.total_disc_amt || 0);
 
   const total_today_in_amt =
     parseFloat(Finance_emi_deposit_data.total_amt || 0) +
     parseFloat(Loan_deposit_data.total_amt || 0) +
     parseFloat(Release_loan_data.total_amt || 0) +
     parseFloat(Auction_loan_data.total_amt || 0) +
-    parseFloat(Transfer_loan_out_data.total_amt || 0);
+    parseFloat(Transfer_loan_out_data.total_amt || 0) +
+    parseFloat(First_month_interest_data.total_amt || 0) +
+    parseFloat(Processing_amount_data.total_amt || 0);
 
   const Finance_added_data = DayBookData?.["FINANCE ADDED"] || {};
   const Finance_emi_rollback_data = DayBookData?.["FINANCE EMI ROLLBACK"] || {};

@@ -40,8 +40,11 @@ const buildProcessingSectionTable = (title, data = []) => {
       { text: 'CUSTOMER NAME', style: 'tableHeader', alignment: 'left' },
       { text: 'REF NO', style: 'tableHeader', alignment: 'left' },
       { text: 'TYPE', style: 'tableHeader', alignment: 'left' },
-      { text: 'PROCESS', style: 'tableHeader', alignment: 'right' },
-      { text: 'CHARGE', style: 'tableHeader', alignment: 'right' },
+      { text: 'CASH', style: 'tableHeader', alignment: 'right' },
+      { text: 'BANK', style: 'tableHeader', alignment: 'right' },
+      { text: 'ONLINE', style: 'tableHeader', alignment: 'right' },
+      { text: 'CARD', style: 'tableHeader', alignment: 'right' },
+      { text: 'DISC', style: 'tableHeader', alignment: 'right' },
       { text: 'TOTAL', style: 'tableHeader', alignment: 'right' },
     ],
   ];
@@ -54,8 +57,11 @@ const buildProcessingSectionTable = (title, data = []) => {
       { text: item.db_customer_name || '-', style: 'accountName' },
       { text: item.db_ref_no || '-', style: 'tableCell' },
       { text: item.db_ref_type || '-', style: 'tableCell' },
-      { text: money(row.process), style: 'tableCell', alignment: 'right', color: COLORS.dr },
-      { text: money(row.charge), style: 'tableCell', alignment: 'right', color: COLORS.dr },
+      { text: money(row.cash), style: 'tableCell', alignment: 'right', color: COLORS.dr },
+      { text: money(row.bank), style: 'tableCell', alignment: 'right', color: COLORS.dr },
+      { text: money(row.online), style: 'tableCell', alignment: 'right', color: COLORS.dr },
+      { text: money(row.card), style: 'tableCell', alignment: 'right', color: COLORS.dr },
+      { text: money(row.disc), style: 'tableCell', alignment: 'right', color: COLORS.dr },
       { text: money(row.total), style: 'tableCellBold', alignment: 'right', color: COLORS.dr },
     ]);
   });
@@ -67,8 +73,11 @@ const buildProcessingSectionTable = (title, data = []) => {
     {},
     {},
     {},
-    { text: money(totals.process), style: 'tableFooter', alignment: 'right', color: COLORS.dr },
-    { text: money(totals.charge), style: 'tableFooter', alignment: 'right', color: COLORS.dr },
+    { text: money(totals.cash), style: 'tableFooter', alignment: 'right', color: COLORS.dr },
+    { text: money(totals.bank), style: 'tableFooter', alignment: 'right', color: COLORS.dr },
+    { text: money(totals.online), style: 'tableFooter', alignment: 'right', color: COLORS.dr },
+    { text: money(totals.card), style: 'tableFooter', alignment: 'right', color: COLORS.dr },
+    { text: money(totals.disc), style: 'tableFooter', alignment: 'right', color: COLORS.dr },
     { text: money(totals.total), style: 'tableFooter', alignment: 'right', color: COLORS.dr },
   ]);
 
@@ -82,7 +91,7 @@ const buildProcessingSectionTable = (title, data = []) => {
       {
         table: {
           headerRows: 1,
-          widths: [55, 70, '*', 70, 45, 48, 48, 55],
+          widths: [50, 60, '*', 60, 40, 42, 42, 42, 42, 38, 48],
           body,
           dontBreakRows: true,
         },
@@ -110,7 +119,12 @@ const buildFirstMonthInterestSectionTable = (title, data = []) => {
       { text: 'CUSTOMER NAME', style: 'tableHeader', alignment: 'left' },
       { text: 'REF NO', style: 'tableHeader', alignment: 'left' },
       { text: 'TYPE', style: 'tableHeader', alignment: 'left' },
-      { text: 'INTEREST', style: 'tableHeader', alignment: 'right' },
+      { text: 'CASH', style: 'tableHeader', alignment: 'right' },
+      { text: 'BANK', style: 'tableHeader', alignment: 'right' },
+      { text: 'ONLINE', style: 'tableHeader', alignment: 'right' },
+      { text: 'CARD', style: 'tableHeader', alignment: 'right' },
+      { text: 'DISC', style: 'tableHeader', alignment: 'right' },
+      { text: 'TOTAL', style: 'tableHeader', alignment: 'right' },
     ],
   ];
 
@@ -122,7 +136,12 @@ const buildFirstMonthInterestSectionTable = (title, data = []) => {
       { text: item.db_customer_name || '-', style: 'accountName' },
       { text: item.db_ref_no || '-', style: 'tableCell' },
       { text: item.db_ref_type || '-', style: 'tableCell' },
-      { text: money(row.interest), style: 'tableCellBold', alignment: 'right', color: COLORS.dr },
+      { text: money(row.cash), style: 'tableCell', alignment: 'right', color: COLORS.dr },
+      { text: money(row.bank), style: 'tableCell', alignment: 'right', color: COLORS.dr },
+      { text: money(row.online), style: 'tableCell', alignment: 'right', color: COLORS.dr },
+      { text: money(row.card), style: 'tableCell', alignment: 'right', color: COLORS.dr },
+      { text: money(row.disc), style: 'tableCell', alignment: 'right', color: COLORS.dr },
+      { text: money(row.total), style: 'tableCellBold', alignment: 'right', color: COLORS.dr },
     ]);
   });
 
@@ -133,6 +152,11 @@ const buildFirstMonthInterestSectionTable = (title, data = []) => {
     {},
     {},
     {},
+    { text: money(totals.cash), style: 'tableFooter', alignment: 'right', color: COLORS.dr },
+    { text: money(totals.bank), style: 'tableFooter', alignment: 'right', color: COLORS.dr },
+    { text: money(totals.online), style: 'tableFooter', alignment: 'right', color: COLORS.dr },
+    { text: money(totals.card), style: 'tableFooter', alignment: 'right', color: COLORS.dr },
+    { text: money(totals.disc), style: 'tableFooter', alignment: 'right', color: COLORS.dr },
     { text: money(totals.total), style: 'tableFooter', alignment: 'right', color: COLORS.dr },
   ]);
 
@@ -146,7 +170,7 @@ const buildFirstMonthInterestSectionTable = (title, data = []) => {
       {
         table: {
           headerRows: 1,
-          widths: [55, 70, '*', 70, 45, 55],
+          widths: [50, 60, '*', 60, 40, 42, 42, 42, 42, 38, 48],
           body,
           dontBreakRows: true,
         },

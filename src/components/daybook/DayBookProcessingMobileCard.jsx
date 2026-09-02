@@ -9,7 +9,7 @@ import { formatCurrency, getProcessingRowAmounts } from "./dayBookUtils";
 const DayBookProcessingMobileCard = ({ item, cardKey, expanded, onToggle }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { process, charge, total } = getProcessingRowAmounts(item);
+  const { cash, bank, online, card, disc, process, charge, total } = getProcessingRowAmounts(item);
 
   const handleCustomerClick = async () => {
     if (!item.db_user_uuid) return;
@@ -89,9 +89,25 @@ const DayBookProcessingMobileCard = ({ item, cardKey, expanded, onToggle }) => {
               <span>Charge</span>
               <strong className="is-dr">{formatCurrency(charge)}</strong>
             </div>
-            <div className="is-full">
-              <span>Total</span>
-              <strong className="is-dr">{formatCurrency(total)}</strong>
+            <div>
+              <span>Cash</span>
+              <strong className="is-dr">{formatCurrency(cash)}</strong>
+            </div>
+            <div>
+              <span>Bank</span>
+              <strong className="is-dr">{formatCurrency(bank)}</strong>
+            </div>
+            <div>
+              <span>Online</span>
+              <strong className="is-dr">{formatCurrency(online)}</strong>
+            </div>
+            <div>
+              <span>Card</span>
+              <strong className="is-dr">{formatCurrency(card)}</strong>
+            </div>
+            <div>
+              <span>Disc</span>
+              <strong className="is-dr">{formatCurrency(disc)}</strong>
             </div>
           </div>
         </div>

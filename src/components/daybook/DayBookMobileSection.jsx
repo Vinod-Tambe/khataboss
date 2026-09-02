@@ -148,12 +148,24 @@ const DayBookMobileSection = ({
                 {isProcessingSection ? (
                   <>
                     <div>
-                      <span>Process</span>
-                      <strong className="is-dr">{formatCurrency(totals.process)}</strong>
+                      <span>Cash</span>
+                      <strong className="is-dr">{formatCurrency(totals.cash)}</strong>
                     </div>
                     <div>
-                      <span>Charge</span>
-                      <strong className="is-dr">{formatCurrency(totals.charge)}</strong>
+                      <span>Bank</span>
+                      <strong className="is-dr">{formatCurrency(totals.bank)}</strong>
+                    </div>
+                    <div>
+                      <span>Online</span>
+                      <strong className="is-dr">{formatCurrency(totals.online)}</strong>
+                    </div>
+                    <div>
+                      <span>Card</span>
+                      <strong className="is-dr">{formatCurrency(totals.card)}</strong>
+                    </div>
+                    <div>
+                      <span>Disc</span>
+                      <strong className="is-dr">{formatCurrency(totals.disc)}</strong>
                     </div>
                     <div className="is-full">
                       <span>Total</span>
@@ -161,10 +173,32 @@ const DayBookMobileSection = ({
                     </div>
                   </>
                 ) : isFirstMonthInterestSection ? (
-                  <div className="is-full">
-                    <span>Interest</span>
-                    <strong className="is-dr">{formatCurrency(totals.total)}</strong>
-                  </div>
+                  <>
+                    <div>
+                      <span>Cash</span>
+                      <strong className="is-dr">{formatCurrency(totals.cash)}</strong>
+                    </div>
+                    <div>
+                      <span>Bank</span>
+                      <strong className="is-dr">{formatCurrency(totals.bank)}</strong>
+                    </div>
+                    <div>
+                      <span>Online</span>
+                      <strong className="is-dr">{formatCurrency(totals.online)}</strong>
+                    </div>
+                    <div>
+                      <span>Card</span>
+                      <strong className="is-dr">{formatCurrency(totals.card)}</strong>
+                    </div>
+                    <div>
+                      <span>Disc</span>
+                      <strong className="is-dr">{formatCurrency(totals.disc)}</strong>
+                    </div>
+                    <div className="is-full">
+                      <span>Total</span>
+                      <strong className="is-dr">{formatCurrency(totals.total)}</strong>
+                    </div>
+                  </>
                 ) : (
                   <>
                     <div>
