@@ -101,10 +101,29 @@
   --success-alt: #6d28d9;
   --layout-brand: #c2185b;
   --light: #fff0f7;
+  --layout-sidebar-bg: #ffffff;
   --layout-sidebar-border: #f0d4e2;
+  --layout-sidebar-text: #4a2048;
+  --layout-sidebar-icon: #c2185b;
+  --layout-sidebar-muted-text: #6d28d9;
+  --layout-sidebar-hover-bg: #fff0f7;
+  --layout-sidebar-hover-text: #a1005b;
   --layout-sidebar-active-bg: rgba(194, 24, 91, 0.12);
+  --layout-sidebar-active-text: #a1005b;
+  --layout-sidebar-active-border: #e60000;
   --layout-sidebar-sub-active-bg: rgba(109, 40, 217, 0.12);
+  --layout-sidebar-brand-text: #c2185b;
+  --layout-sidebar-brand-icon: #c2185b;
   --layout-scrollbar-thumb: rgba(161, 0, 91, 0.35);
+  --layout-footer-bg: #ffffff;
+  --layout-footer-text: #6b4a5c;
+  --layout-footer-strong: #4a0e4e;
+  --layout-footer-link: #a1005b;
+  --layout-footer-link-hover: #c2185b;
+  --layout-footer-border: #f0d4e2;
+  --layout-footer-accent: #e60000;
+  --layout-footer-bottom-nav-bg: #ffffff;
+  --layout-footer-bottom-nav-shadow: 0 -4px 16px rgba(161, 0, 91, 0.1);
 
   /* Login gradient language */
   --login-page-bg: #faf2f6;
@@ -187,7 +206,7 @@
 [data-theme="system"] .logo-title h1,
 [data-theme="system"] .sidebar-brand,
 [data-theme="system"] .sidebar-brand h1 {
-  color: #c2185b;
+  color: var(--layout-sidebar-brand-text);
   background: linear-gradient(135deg, #4a0e4e, #a1005b, #e60000);
   -webkit-background-clip: text;
   background-clip: text;
@@ -195,10 +214,10 @@
 }
 
 [data-theme="system"] .sidebar-brand svg {
-  color: #c2185b;
+  color: var(--layout-sidebar-brand-icon);
   stroke: currentColor;
   fill: none;
-  -webkit-text-fill-color: #c2185b;
+  -webkit-text-fill-color: currentColor;
   background: none;
 }
 
@@ -224,33 +243,13 @@
   border-right: 1px solid var(--layout-sidebar-border);
 }
 
-[data-theme="system"] .sidebar-menu > li:hover > a,
-[data-theme="system"] .sidebar-menu > li:hover > .submenu-toggle {
-  background: #fff0f7;
-  color: #a1005b;
+[data-theme="system"] .sidebar-profile {
+  background: transparent;
 }
 
 [data-theme="system"] .sidebar-menu > li > a.active,
 [data-theme="system"] .sidebar-menu > li > .submenu-toggle.active {
   background: linear-gradient(90deg, rgba(161, 0, 91, 0.14), rgba(230, 0, 0, 0.08));
-  color: #a1005b;
-  border-left-color: #e60000;
-}
-
-/* Submenu uses violet — distinct from magenta parent items */
-[data-theme="system"] .submenu li a {
-  color: #6d28d9;
-}
-
-[data-theme="system"] .submenu li a:hover {
-  background: #f3e8ff;
-  color: #5b21b6;
-}
-
-[data-theme="system"] .submenu li a.sub-active {
-  background: rgba(109, 40, 217, 0.12);
-  color: #5b21b6;
-  border-left-color: #7c3aed;
 }
 
 /* Cards — brighter borders & soft tinted shadows */
@@ -410,14 +409,10 @@
   color: #e60000 !important;
 }
 
+[data-theme="system"] .app-footer,
 [data-theme="system"] .bottom-nav {
   background: linear-gradient(180deg, #ffffff 0%, #fff7fb 100%);
-  border-top-color: var(--layout-header-border);
-}
-
-[data-theme="system"] .bottom-nav-item.active {
-  color: #a1005b;
-  background: rgba(161, 0, 91, 0.12);
+  border-top-color: var(--layout-footer-border, var(--layout-header-border));
 }
 
 /* Extra green utility overrides used across pages */

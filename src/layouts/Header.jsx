@@ -66,6 +66,14 @@ const formatRelativeTime = (iso) => {
 const cleanAlertMessage = (description) =>
   String(description || "").replace(/\s*Logged At:.*$/i, "").trim();
 
+const extractNotificationEntityName = (log) => {
+  const description = String(log.description || "");
+  const quoted = description.match(/"([^"]+)"/);
+  if (quoted?.[1]) return quoted[1].trim();
+  if (log.ref_no) return log.ref_no;
+  return "";
+};
+
 const HeaderProfileAvatar = ({ imageUrl, variant = "button", className = "" }) => {
   const [imgFailed, setImgFailed] = useState(false);
   const isDropdown = variant === "dropdown";
@@ -145,6 +153,7 @@ const Header = () => {
       return {
         id,
         title: log.subject || "Activity",
+        entityName: extractNotificationEntityName(log),
         message,
         actor: log.login_user || "",
         firmName: log.firm_name || "",
@@ -241,6 +250,18 @@ const Header = () => {
     e.stopPropagation();
     const nextIds = new Set(readAlertIds);
     notifications.forEach((notification) => nextIds.add(String(notification.id)));
+    persistReadIds(nextIds);
+  };
+
+  const toggleAlertRead = (e, notification) => {
+    e.stopPropagation();
+    const nextIds = new Set(readAlertIds);
+    const id = String(notification.id);
+    if (notification.read) {
+      nextIds.delete(id);
+    } else {
+      nextIds.add(id);
+    }
     persistReadIds(nextIds);
   };
 
@@ -402,12 +423,20 @@ const Header = () => {
                         className={`notification-item ${notification.read ? "" : "unread"}`}
                         onClick={() => handleNotificationClick(notification)}
                       >
-                        <span className="notification-dot" />
+                        <span
+                          className={`notification-dot ${notification.read ? "is-read" : "is-unread"}`}
+                          role="status"
+                          aria-label={notification.read ? "Read — click to mark unread" : "Unread — click to mark read"}
+                          title={notification.read ? "Mark as unread" : "Mark as read"}
+                          onClick={(e) => toggleAlertRead(e, notification)}
+                        />
                         <div className="notification-content">
-                          <p className="notification-title mb-1">{notification.title}</p>
-                          {isOwnerUser && notification.actor ? (
-                            <p className="notification-actor mb-1">{notification.actor}</p>
-                          ) : null}
+                          <div className="notification-summary-row">
+                            <span className="notification-entity-name" title={notification.entityName}>
+                              {notification.entityName || "—"}
+                            </span>
+                            <span className="notification-action">{notification.title}</span>
+                          </div>
                           {notification.message ? (
                             <p className="notification-message mb-1">{notification.message}</p>
                           ) : null}

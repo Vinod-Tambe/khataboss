@@ -1,7 +1,15 @@
 import React, { useMemo, useState } from "react";
 import DayBookMobileCard from "./DayBookMobileCard";
 import DayBookProcessingMobileCard from "./DayBookProcessingMobileCard";
-import { calculateSectionTotals, calculateProcessingSectionTotals, formatCurrency, isProcessingDaybookSection } from "./dayBookUtils";
+import DayBookFirstMonthInterestMobileCard from "./DayBookFirstMonthInterestMobileCard";
+import {
+  calculateSectionTotals,
+  calculateProcessingSectionTotals,
+  calculateFirstMonthInterestSectionTotals,
+  formatCurrency,
+  isProcessingDaybookSection,
+  isFirstMonthInterestDaybookSection,
+} from "./dayBookUtils";
 
 const DayBookMobileSection = ({
   title,
@@ -16,9 +24,12 @@ const DayBookMobileSection = ({
   const [search, setSearch] = useState("");
   const [totalsOpen, setTotalsOpen] = useState(false);
   const isProcessingSection = isProcessingDaybookSection(title);
+  const isFirstMonthInterestSection = isFirstMonthInterestDaybookSection(title);
   const totals = isProcessingSection
     ? calculateProcessingSectionTotals(data)
-    : calculateSectionTotals(data);
+    : isFirstMonthInterestSection
+      ? calculateFirstMonthInterestSectionTotals(data)
+      : calculateSectionTotals(data);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -87,6 +98,17 @@ const DayBookMobileSection = ({
                     />
                   );
                 }
+                if (isFirstMonthInterestSection) {
+                  return (
+                    <DayBookFirstMonthInterestMobileCard
+                      key={cardKey}
+                      item={item}
+                      cardKey={cardKey}
+                      expanded={expandedCardKey === cardKey}
+                      onToggle={onToggleCard}
+                    />
+                  );
+                }
                 return (
                   <DayBookMobileCard
                     key={cardKey}
@@ -115,7 +137,7 @@ const DayBookMobileSection = ({
               </span>
               <span className="daybook-mobile-section__totals-right">
                 <strong className={amtTone === "dr" ? "is-dr" : "is-cr"}>
-                  {formatCurrency(isProcessingSection ? totals.total : totals.total)}
+                  {formatCurrency(totals.total)}
                 </strong>
                 <i className={`bi daybook-collapse-icon ${totalsOpen ? "bi-chevron-up" : "bi-chevron-down"}`} aria-hidden="true"></i>
               </span>
@@ -138,6 +160,11 @@ const DayBookMobileSection = ({
                       <strong className="is-dr">{formatCurrency(totals.total)}</strong>
                     </div>
                   </>
+                ) : isFirstMonthInterestSection ? (
+                  <div className="is-full">
+                    <span>Interest</span>
+                    <strong className="is-dr">{formatCurrency(totals.total)}</strong>
+                  </div>
                 ) : (
                   <>
                     <div>

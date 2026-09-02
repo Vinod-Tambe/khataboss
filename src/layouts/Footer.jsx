@@ -9,7 +9,7 @@ const Footer = () => {
         <div className="app-footer-desktop__left">
           <i className="bi bi-c-circle"></i>
           <span>
-            {new Date().getFullYear()}. made with <span className="text-danger">❤️</span> by{" "}
+            {new Date().getFullYear()}. made with <span className="app-footer-desktop__accent">❤️</span> by{" "}
             <strong>Vinod Tambe!</strong>
           </span>
         </div>

@@ -33,7 +33,28 @@ export const calculateProcessingSectionTotals = (data = []) =>
     { process: 0, charge: 0, total: 0 }
   );
 
+export const getFirstMonthInterestRowAmounts = (item = {}) => {
+  const interest = parseFloat(item.db_interest_amt) || 0;
+  return { interest, total: interest };
+};
+
+export const calculateFirstMonthInterestSectionTotals = (data = []) =>
+  data.reduce(
+    (acc, item) => {
+      const row = getFirstMonthInterestRowAmounts(item);
+      acc.interest += row.interest;
+      acc.total += row.total;
+      return acc;
+    },
+    { interest: 0, total: 0 }
+  );
+
 export const isProcessingDaybookSection = (title) => title === "PROCESSING AMOUNT";
+
+export const isFirstMonthInterestDaybookSection = (title) => title === "FIRST MONTH INTEREST";
+
+export const isInformationalDaybookSection = (title) =>
+  isProcessingDaybookSection(title) || isFirstMonthInterestDaybookSection(title);
 
 export const calculateSectionTotals = (data = []) =>
   data.reduce(
@@ -246,6 +267,11 @@ export const DAYBOOK_SECTIONS = [
   {
     title: "PROCESSING AMOUNT",
     colorClass: "bg-success",
+    amtTone: "dr",
+  },
+  {
+    title: "FIRST MONTH INTEREST",
+    colorClass: "bg-primary",
     amtTone: "dr",
   },
   {

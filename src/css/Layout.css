@@ -59,9 +59,9 @@
 /* Desktop app footer */
 .app-footer {
   width: 100%;
-  background: var(--bs-dark, #212529);
-  color: #f8f9fa;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--layout-footer-bg, var(--layout-header-bg));
+  color: var(--layout-footer-text, var(--layout-muted-text));
+  border-top: 1px solid var(--layout-footer-border, var(--layout-header-border));
 }
 
 .app-footer-desktop {
@@ -88,15 +88,24 @@
   gap: 8px;
   font-size: 0.875rem;
   line-height: 1.4;
+  color: var(--layout-footer-text, var(--layout-muted-text));
+}
+
+.app-footer-desktop__left strong {
+  color: var(--layout-footer-strong, var(--layout-title-text));
+}
+
+.app-footer-desktop__accent {
+  color: var(--layout-footer-accent, #dc3545);
 }
 
 .app-footer-desktop__right a {
-  color: #f8f9fa;
+  color: var(--layout-footer-link, var(--layout-sidebar-brand-text, var(--layout-brand)));
   text-decoration: none;
 }
 
 .app-footer-desktop__right a:hover {
-  color: #ffffff;
+  color: var(--layout-footer-link-hover, var(--layout-footer-link));
   text-decoration: underline;
 }
 
@@ -153,7 +162,7 @@
 
 /* LEFT — shared brand color with sidebar logo */
 .logo-title {
-  color: var(--layout-brand);
+  color: var(--layout-sidebar-brand-text, var(--layout-brand));
   font-weight: 700;
   margin: 0;
   min-width: 0;
@@ -161,7 +170,7 @@
 
 .logo-title:hover,
 .logo-title:focus-visible {
-  color: var(--layout-brand);
+  color: var(--layout-sidebar-brand-text, var(--layout-brand));
   opacity: 0.88;
 }
 
@@ -787,12 +796,62 @@
   height: 10px;
   margin-top: 6px;
   border-radius: 50%;
-  background: var(--layout-notification-dot);
   flex-shrink: 0;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.notification-dot.is-unread {
+  background: var(--layout-notification-dot);
+  border: 2px solid var(--layout-notification-dot);
+}
+
+.notification-dot.is-read {
+  background: transparent;
+  border: 2px solid var(--layout-time-text);
+  opacity: 0.45;
+}
+
+.notification-dot.is-read:hover {
+  opacity: 0.75;
+  border-color: var(--layout-filter-active-text);
+}
+
+.notification-dot.is-unread:hover {
+  opacity: 0.85;
 }
 
 .notification-content {
   min-width: 0;
+  flex: 1;
+}
+
+.notification-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.notification-entity-name {
+  color: var(--layout-title-text);
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.notification-action {
+  color: var(--layout-filter-active-text, #1d4ed8);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-align: right;
 }
 
 .notification-title {
@@ -832,7 +891,7 @@
 .notification-mark-all-btn {
   border: none;
   background: transparent;
-  color: var(--layout-filter-active-bg, #0d6efd);
+  color: var(--layout-filter-active-text, #1d4ed8);
   font-size: 12px;
   font-weight: 600;
   padding: 0;
@@ -841,6 +900,8 @@
 
 .notification-mark-all-btn:hover {
   text-decoration: underline;
+  color: var(--layout-filter-active-text, #1d4ed8);
+  opacity: 0.85;
 }
 
 .notification-footer {
@@ -854,11 +915,13 @@
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
-  color: var(--layout-filter-active-bg, #0d6efd);
+  color: var(--layout-filter-active-text, #1d4ed8);
 }
 
 .notification-footer-link:hover {
   text-decoration: underline;
+  color: var(--layout-filter-active-text, #1d4ed8);
+  opacity: 0.85;
 }
 
 .profile-dropdown {
@@ -1006,6 +1069,14 @@
   .notification-item {
     padding: 12px;
     gap: 10px;
+  }
+
+  .notification-entity-name {
+    font-size: 13px;
+  }
+
+  .notification-action {
+    font-size: 11px;
   }
 
   .notification-title {
@@ -1167,7 +1238,7 @@
 
 .sidebar {
   width: 200px;
-  background: var(--color-white);
+  background: var(--layout-sidebar-bg, var(--color-white));
   --bs-offcanvas-width: 200px;
 }
 
@@ -1177,7 +1248,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  color: var(--layout-brand);
+  color: var(--layout-sidebar-brand-text, var(--layout-brand));
+  background: var(--layout-sidebar-bg, var(--color-white));
   flex-shrink: 0;
   min-height: 56px;
 }
@@ -1188,17 +1260,17 @@
   gap: 10px;
   min-width: 0;
   flex: 1;
-  color: var(--layout-brand);
+  color: var(--layout-sidebar-brand-text, var(--layout-brand));
 }
 
 .sidebar-brand:hover,
 .sidebar-brand:focus-visible {
-  color: var(--layout-brand);
+  color: var(--layout-sidebar-brand-text, var(--layout-brand));
   opacity: 0.88;
 }
 
 .sidebar-brand svg {
-  color: inherit;
+  color: var(--layout-sidebar-brand-icon, var(--layout-sidebar-brand-text, var(--layout-brand)));
   flex-shrink: 0;
 }
 
@@ -1231,6 +1303,9 @@
   margin: 8px 10px 4px;
   width: calc(100% - 20px);
   font-size: 0.9rem;
+  background: var(--layout-sidebar-hover-bg, var(--light));
+  color: var(--layout-sidebar-text, var(--color-black));
+  border-color: var(--layout-sidebar-border);
 }
 
 .sidebar-menu-border {
@@ -1249,29 +1324,44 @@
   align-items: center;
   gap: 12px;
   padding: 12px 18px;
-  color: var(--color-black);
+  color: var(--layout-sidebar-text, var(--color-black));
   text-decoration: none;
   transition: all 0.25s ease;
   font-size: 17px;
 }
 
-.sidebar-menu svg {
+.sidebar-menu svg,
+.sidebar-menu .arrow {
   font-size: 1.2rem;
   flex-shrink: 0;
+  color: var(--layout-sidebar-icon, var(--layout-sidebar-text, var(--color-black)));
+  stroke: currentColor;
 }
 
 .sidebar-menu>li:hover>a,
 .sidebar-menu>li:hover>.submenu-toggle {
-  background: var(--light);
-  color: var(--success);
+  background: var(--layout-sidebar-hover-bg, var(--light));
+  color: var(--layout-sidebar-hover-text, var(--success));
+}
+
+.sidebar-menu>li:hover svg,
+.sidebar-menu>li:hover .arrow {
+  color: var(--layout-sidebar-hover-text, var(--success));
 }
 
 .sidebar-menu>li>a.active,
 .sidebar-menu>li>.submenu-toggle.active {
   background: var(--layout-sidebar-active-bg);
-  color: var(--success);
+  color: var(--layout-sidebar-active-text, var(--success));
   font-weight: 600;
-  border-left: 4px solid var(--success);
+  border-left: 4px solid var(--layout-sidebar-active-border, var(--success));
+}
+
+.sidebar-menu>li>a.active svg,
+.sidebar-menu>li>.submenu-toggle.active svg,
+.sidebar-menu>li>a.active .arrow,
+.sidebar-menu>li>.submenu-toggle.active .arrow {
+  color: var(--layout-sidebar-active-text, var(--success));
 }
 
 .submenu-toggle {
@@ -1300,22 +1390,22 @@
   display: flex;
   align-items: center;
   padding: 12px 0px 10px 20px;
-  color: var(--success-alt);
+  color: var(--layout-sidebar-muted-text, var(--success-alt));
   text-decoration: none;
   font-size: 16px;
   transition: all 0.25s ease;
 }
 
 .submenu li a:hover {
-  background: var(--light);
-  color: var(--success);
+  background: var(--layout-sidebar-hover-bg, var(--light));
+  color: var(--layout-sidebar-hover-text, var(--success));
 }
 
 .submenu li a.sub-active {
   background: var(--layout-sidebar-sub-active-bg);
-  color: var(--success);
+  color: var(--layout-sidebar-active-text, var(--success));
   font-weight: 600;
-  border-left: 4px solid var(--success);
+  border-left: 4px solid var(--layout-sidebar-active-border, var(--success));
 }
 
 /* Scrollbar - Show only on hover or scroll */
@@ -1442,12 +1532,12 @@
 
 .bottom-nav {
   align-items: stretch;
-  background: var(--color-white);
-  border-top: 1px solid var(--layout-header-border);
+  background: var(--layout-footer-bottom-nav-bg, var(--layout-header-bg));
+  border-top: 1px solid var(--layout-footer-border, var(--layout-header-border));
   border-top-left-radius: 16px;
   border-top-right-radius: 16px;
   bottom: 0;
-  box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.08);
+  box-shadow: var(--layout-footer-bottom-nav-shadow, 0 -4px 16px rgba(15, 23, 42, 0.08));
   display: flex;
   justify-content: space-around;
   left: 0;
@@ -1469,7 +1559,7 @@
   min-height: 48px;
   padding: 4px 2px;
   text-decoration: none;
-  color: var(--layout-muted-text, #6b7280);
+  color: var(--layout-footer-text, var(--layout-muted-text, #6b7280));
   border-radius: 12px;
   transition: color 0.15s ease, background-color 0.15s ease;
 }
@@ -1491,7 +1581,7 @@
 }
 
 .bottom-nav-item.active {
-  color: var(--layout-brand, var(--success));
+  color: var(--layout-sidebar-active-text, var(--layout-brand, var(--success)));
   background: var(--layout-sidebar-active-bg);
   font-weight: 700;
 }

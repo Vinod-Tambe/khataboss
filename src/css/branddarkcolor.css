@@ -124,10 +124,29 @@
   --success-alt: #f9a8d4;
   --layout-brand: #f9a8d4;
   --light: #2a1230;
+  --layout-sidebar-bg: #1a0a1e;
   --layout-sidebar-border: #4a2048;
+  --layout-sidebar-text: #e8d0dc;
+  --layout-sidebar-icon: #f9a8d4;
+  --layout-sidebar-muted-text: #c4b5fd;
+  --layout-sidebar-hover-bg: rgba(161, 0, 91, 0.14);
+  --layout-sidebar-hover-text: #f9a8d4;
   --layout-sidebar-active-bg: rgba(161, 0, 91, 0.22);
+  --layout-sidebar-active-text: #f9a8d4;
+  --layout-sidebar-active-border: #e60000;
   --layout-sidebar-sub-active-bg: rgba(109, 40, 217, 0.22);
+  --layout-sidebar-brand-text: #f9a8d4;
+  --layout-sidebar-brand-icon: #f9a8d4;
   --layout-scrollbar-thumb: rgba(240, 163, 208, 0.35);
+  --layout-footer-bg: #1a0a1e;
+  --layout-footer-text: #c4a8b8;
+  --layout-footer-strong: #fce7f3;
+  --layout-footer-link: #f9a8d4;
+  --layout-footer-link-hover: #f0abfc;
+  --layout-footer-border: #4a2048;
+  --layout-footer-accent: #ff6b6b;
+  --layout-footer-bottom-nav-bg: #1a0a1e;
+  --layout-footer-bottom-nav-shadow: 0 -4px 16px rgba(0, 0, 0, 0.35);
 
   /* Login */
   --login-page-bg: #140818;
@@ -210,7 +229,7 @@
 [data-theme="brand-dark"] .logo-title h1,
 [data-theme="brand-dark"] .sidebar-brand,
 [data-theme="brand-dark"] .sidebar-brand h1 {
-  color: #f9a8d4;
+  color: var(--layout-sidebar-brand-text);
   background: linear-gradient(135deg, #f0abfc, #f9a8d4, #fca5a5);
   -webkit-background-clip: text;
   background-clip: text;
@@ -218,10 +237,10 @@
 }
 
 [data-theme="brand-dark"] .sidebar-brand svg {
-  color: #f9a8d4;
+  color: var(--layout-sidebar-brand-icon);
   stroke: currentColor;
   fill: none;
-  -webkit-text-fill-color: #f9a8d4;
+  -webkit-text-fill-color: currentColor;
   background: none;
 }
 
@@ -246,32 +265,21 @@
   border-right: 1px solid var(--layout-sidebar-border);
 }
 
-[data-theme="brand-dark"] .sidebar-menu > li:hover > a,
-[data-theme="brand-dark"] .sidebar-menu > li:hover > .submenu-toggle {
-  background: rgba(161, 0, 91, 0.14);
-  color: #f9a8d4;
+[data-theme="brand-dark"] .sidebar-profile {
+  background: transparent;
 }
 
 [data-theme="brand-dark"] .sidebar-menu > li > a.active,
 [data-theme="brand-dark"] .sidebar-menu > li > .submenu-toggle.active {
   background: linear-gradient(90deg, rgba(161, 0, 91, 0.24), rgba(230, 0, 0, 0.12));
-  color: #f9a8d4;
-  border-left-color: #e60000;
-}
-
-[data-theme="brand-dark"] .submenu li a {
-  color: #c4b5fd;
-}
-
-[data-theme="brand-dark"] .submenu li a:hover {
-  background: rgba(109, 40, 217, 0.18);
-  color: #ddd6fe;
 }
 
 [data-theme="brand-dark"] .submenu li a.sub-active {
-  background: rgba(109, 40, 217, 0.22);
-  color: #ddd6fe;
   border-left-color: #7c3aed;
+}
+
+[data-theme="brand-dark"] .sidebar-close-btn {
+  color: var(--layout-sidebar-brand-icon);
 }
 
 [data-theme="brand-dark"] .info-card {
@@ -417,19 +425,11 @@
   color: #fca5a5 !important;
 }
 
+[data-theme="brand-dark"] .app-footer,
 [data-theme="brand-dark"] .bottom-nav {
   background: linear-gradient(180deg, #1a0a1e 0%, #221028 100%);
-  border-top-color: var(--layout-header-border);
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.35);
-}
-
-[data-theme="brand-dark"] .bottom-nav-item {
-  color: var(--layout-muted-text);
-}
-
-[data-theme="brand-dark"] .bottom-nav-item.active {
-  color: #f9a8d4;
-  background: rgba(161, 0, 91, 0.22);
+  border-top-color: var(--layout-footer-border, var(--layout-header-border));
+  box-shadow: var(--layout-footer-bottom-nav-shadow);
 }
 
 [data-theme="brand-dark"] .text-green,
@@ -479,31 +479,6 @@
 
 [data-theme="brand-dark"] .lang {
   color: #e8d0dc;
-}
-
-/* ========== Sidebar — default, hover, icons ========== */
-[data-theme="brand-dark"] .sidebar-menu > li > a,
-[data-theme="brand-dark"] .sidebar-menu > li > .submenu-toggle {
-  color: #e8d0dc;
-}
-
-[data-theme="brand-dark"] .sidebar-menu svg,
-[data-theme="brand-dark"] .sidebar-menu .arrow {
-  color: #f9a8d4;
-  stroke: currentColor;
-}
-
-[data-theme="brand-dark"] .sidebar-close-btn {
-  color: #f9a8d4;
-}
-
-[data-theme="brand-dark"] .sidebar-menu > li:hover > a,
-[data-theme="brand-dark"] .sidebar-menu > li:hover > .submenu-toggle {
-  color: #f9a8d4;
-}
-
-[data-theme="brand-dark"] .sidebar-menu > li:hover svg {
-  color: #f0abfc;
 }
 
 /* ========== Home dashboard cards & icons ========== */
@@ -680,11 +655,6 @@
 }
 
 /* Bottom nav icons */
-[data-theme="brand-dark"] .bottom-nav-item svg {
+[data-theme="brand-dark"] .bottom-nav-item i {
   color: inherit;
-  stroke: currentColor;
-}
-
-[data-theme="brand-dark"] .bottom-nav-item.active svg {
-  color: #f9a8d4;
 }

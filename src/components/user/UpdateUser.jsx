@@ -23,6 +23,17 @@ import { getUser, updateUser } from '../../api/userApi';
 import { NOMINEE_RELATION_OPTIONS } from '../../constants/customerFormOptions';
 import { setSelectedUser } from '../../store/slices/userSlice';
 
+const formatCustomerDateTime = (value) => {
+    if (!value) return '-';
+    const parsed = moment(value);
+    return parsed.isValid() ? parsed.format('DD MMM YYYY, hh:mm A') : '-';
+};
+
+const buildCustomerAudit = (user = {}) => ({
+    customerCode: user.user_unique_code || (user.user_id ? `C${user.user_id}` : ''),
+    updatedAt: user.user_updated_at || null,
+});
+
 const UpdateUser = () => {
     const { uuid } = useParams();
     const navigate = useNavigate();
@@ -43,7 +54,7 @@ const UpdateUser = () => {
 
     const [firms, setFirms] = useState([]);
     const [loading, setLoading] = useState(false);
-
+    const [customerAudit, setCustomerAudit] = useState(buildCustomerAudit());
 
     const [formData, setFormData] = useState({
         firstName: '', lastName: '', fatherName: '', motherName: '', spouseName: '',
@@ -82,6 +93,7 @@ const UpdateUser = () => {
                 const user = response.data;
 
                 if (user) {
+                    setCustomerAudit(buildCustomerAudit(user));
                     setFormData({
                         firstName: user.user_first_name || '',
                         lastName: user.user_last_name || '',
@@ -273,6 +285,7 @@ const UpdateUser = () => {
             toast.success(result.message || 'Customer updated successfully!');
 
             if (result.data) {
+                setCustomerAudit(buildCustomerAudit(result.data));
                 dispatch(setSelectedUser(result.data));
                 navigate('/user/home');
                 return;
@@ -524,9 +537,35 @@ const UpdateUser = () => {
         </>
     );
 
+    const renderCustomerAudit = () => {
+        if (!customerAudit.customerCode && !customerAudit.updatedAt) return null;
+
+        return (
+            <div className="update-customer-audit d-flex flex-column align-items-start align-items-md-end gap-2">
+                {customerAudit.customerCode && (
+                    <span className="badge rounded-pill bg-primary-subtle border border-primary text-primary px-3 py-2">
+                        <span className="fw-bold">Cust ID:</span>{' '}
+                        <span className="fw-semibold">{customerAudit.customerCode}</span>
+                    </span>
+                )}
+                {customerAudit.updatedAt && (
+                    <span className="badge rounded-pill bg-info-subtle border border-info text-info px-3 py-2">
+                        <span className="fw-bold">Last Updated:</span>{' '}
+                        <span className="fw-semibold">
+                            {formatCustomerDateTime(customerAudit.updatedAt)}
+                        </span>
+                    </span>
+                )}
+            </div>
+        );
+    };
+
     const renderContent = () => (
         <div className="card p-4 shadow-sm border-0">
-            <h4 className="card-title text-center fw-bold pb-md-0 mb-4">Update Customer Records</h4>
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+                <h4 className="card-title fw-bold mb-0">Update Customer Records</h4>
+                {renderCustomerAudit()}
+            </div>
             {!isMobile ? (
                 <>
                     {renderStep1()}

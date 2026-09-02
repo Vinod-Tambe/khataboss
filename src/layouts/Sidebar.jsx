@@ -287,7 +287,7 @@ const Sidebar = () => {
 
         <div className="flex-grow-1 overflow-hidden d-flex flex-column">
           <select
-            className="form-select sidebar-firm-select bg-secondary-subtle p-2 cursor-pointer border-secondary d-block d-lg-none"
+            className="form-select sidebar-firm-select p-2 cursor-pointer d-block d-lg-none"
             aria-label="Firm selection"
             value={selectedFirmId}
             onChange={handleFirmChange}

@@ -102,10 +102,29 @@
   --success-alt: #4f9079;
   --layout-brand: #4f9081;
   --light: #f2f4f8;
+  --layout-sidebar-bg: #ffffff;
   --layout-sidebar-border: #eee;
+  --layout-sidebar-text: #3d4f4a;
+  --layout-sidebar-icon: #4f9081;
+  --layout-sidebar-muted-text: #5a7a72;
+  --layout-sidebar-hover-bg: #f2f4f8;
+  --layout-sidebar-hover-text: #4f9081;
   --layout-sidebar-active-bg: rgba(91, 79, 144, 0.1);
+  --layout-sidebar-active-text: #4f9081;
+  --layout-sidebar-active-border: #4f9081;
   --layout-sidebar-sub-active-bg: rgba(92, 174, 157, 0.1);
+  --layout-sidebar-brand-text: #4f9081;
+  --layout-sidebar-brand-icon: #4f9081;
   --layout-scrollbar-thumb: rgba(0, 0, 0, 0.3);
+  --layout-footer-bg: #ffffff;
+  --layout-footer-text: #6b7280;
+  --layout-footer-strong: #3d4f4a;
+  --layout-footer-link: #4f9081;
+  --layout-footer-link-hover: #3d7266;
+  --layout-footer-border: #e6e6f0;
+  --layout-footer-accent: #dc3545;
+  --layout-footer-bottom-nav-bg: #ffffff;
+  --layout-footer-bottom-nav-shadow: 0 -4px 16px rgba(15, 23, 42, 0.08);
 
   /* Login */
   --login-page-bg: #f8f9fa;
