@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="KhataBoss">
+  <defs>
+    <linearGradient id="kbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#70016e"/>
+      <stop offset="55%" stop-color="#a1005b"/>
+      <stop offset="100%" stop-color="#e60000"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#kbGrad)"/>
+  <g fill="#ffffff">
+    <rect x="148" y="118" width="216" height="276" rx="24" fill="#ffffff" opacity="0.95"/>
+    <rect x="176" y="156" width="160" height="18" rx="9" fill="url(#kbGrad)"/>
+    <rect x="176" y="196" width="132" height="14" rx="7" fill="#c4a8b8"/>
+    <rect x="176" y="228" width="148" height="14" rx="7" fill="#c4a8b8"/>
+    <rect x="176" y="260" width="120" height="14" rx="7" fill="#c4a8b8"/>
+    <rect x="176" y="292" width="140" height="14" rx="7" fill="#c4a8b8"/>
+    <rect x="176" y="324" width="108" height="14" rx="7" fill="#c4a8b8"/>
+    <circle cx="332" cy="156" r="10" fill="url(#kbGrad)"/>
+  </g>
+</svg>

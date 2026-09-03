@@ -126,13 +126,36 @@
   --layout-footer-bottom-nav-bg: #ffffff;
   --layout-footer-bottom-nav-shadow: 0 -4px 16px rgba(15, 23, 42, 0.08);
 
-  /* Login */
-  --login-page-bg: #f8f9fa;
-  --login-panel-bg: rgb(248 249 250);
-  --login-gradient: linear-gradient(135deg, #70016e, #e60000);
-  --login-gradient-reverse: linear-gradient(135deg, #e60000, #70016e);
-  --login-input-bg: #eee;
-  --login-input-text: #333;
+  /* App brand logo (header / sidebar / login) */
+  --brand-logo-bg-start: #3d7266;
+  --brand-logo-bg-mid: #4f9081;
+  --brand-logo-bg-end: #5cb8a5;
+  --brand-logo-paper: #ffffff;
+  --brand-logo-line: #b8d9d0;
+  --brand-logo-accent: #2d6b5f;
+
+  /* Login — derived from brand palette */
+  --login-page-bg: #f4f7f6;
+  --login-card-bg: #ffffff;
+  --login-panel-bg: #ffffff;
+  --login-gradient: linear-gradient(135deg, var(--brand-logo-bg-start), var(--brand-logo-bg-mid), var(--brand-logo-bg-end));
+  --login-gradient-reverse: linear-gradient(135deg, var(--brand-logo-bg-end), var(--brand-logo-bg-mid), var(--brand-logo-bg-start));
+  --login-input-bg: #eef5f3;
+  --login-input-text: #2d4a44;
+  --login-text: #2d4a44;
+  --login-muted-text: #5f7a73;
+  --login-border: #c5ddd6;
+  --login-collapse-bg: #ffffff;
+  --login-collapse-text: #2d4a44;
+  --login-nav-text: #5f7a73;
+  --login-left-text: #ffffff;
+  --login-shadow: 0 1rem 3rem rgba(79, 144, 129, 0.18);
+  --login-focus-ring: rgba(79, 144, 129, 0.28);
+  --login-btn-collapse-bg: rgba(255, 255, 255, 0.14);
+  --login-anim-color-1: #d4ebe5;
+  --login-anim-color-2: #b8ddd4;
+  --login-anim-color-3: #9fcec3;
+  --login-orb-opacity: 0.38;
 
   /* Home */
   --home-card-glass: rgba(255, 255, 255, 0.85);

@@ -148,13 +148,36 @@
   --layout-footer-bottom-nav-bg: #1a0a1e;
   --layout-footer-bottom-nav-shadow: 0 -4px 16px rgba(0, 0, 0, 0.35);
 
-  /* Login */
+  /* App brand logo (header / sidebar / login) */
+  --brand-logo-bg-start: #2a1230;
+  --brand-logo-bg-mid: #7c1d6a;
+  --brand-logo-bg-end: #e60000;
+  --brand-logo-paper: #fdf2f8;
+  --brand-logo-line: #c4a8b8;
+  --brand-logo-accent: #f0abfc;
+
+  /* Login — derived from brand palette */
   --login-page-bg: #140818;
+  --login-card-bg: #221028;
   --login-panel-bg: #221028;
-  --login-gradient: linear-gradient(135deg, #4a0e4e, #a1005b, #e60000);
-  --login-gradient-reverse: linear-gradient(135deg, #e60000, #a1005b, #4a0e4e);
+  --login-gradient: linear-gradient(135deg, var(--brand-logo-bg-start), var(--brand-logo-bg-mid), var(--brand-logo-bg-end));
+  --login-gradient-reverse: linear-gradient(135deg, var(--brand-logo-bg-end), var(--brand-logo-bg-mid), var(--brand-logo-bg-start));
   --login-input-bg: #321438;
   --login-input-text: #f5e6f0;
+  --login-text: #f5e6f0;
+  --login-muted-text: #c4a8b8;
+  --login-border: #4a2048;
+  --login-collapse-bg: #2a1230;
+  --login-collapse-text: #f5e6f0;
+  --login-nav-text: #c4a8b8;
+  --login-left-text: #ffffff;
+  --login-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.5);
+  --login-focus-ring: rgba(240, 171, 252, 0.28);
+  --login-btn-collapse-bg: rgba(255, 255, 255, 0.1);
+  --login-anim-color-1: #3a1840;
+  --login-anim-color-2: #5c2458;
+  --login-anim-color-3: #7a1f45;
+  --login-orb-opacity: 0.36;
 
   /* Home */
   --home-card-glass: rgba(34, 16, 40, 0.92);
@@ -225,15 +248,20 @@
   border-bottom-color: var(--layout-header-border);
 }
 
-[data-theme="brand-dark"] .logo-title,
 [data-theme="brand-dark"] .logo-title h1,
-[data-theme="brand-dark"] .sidebar-brand,
 [data-theme="brand-dark"] .sidebar-brand h1 {
   color: var(--layout-sidebar-brand-text);
   background: linear-gradient(135deg, #f0abfc, #f9a8d4, #fca5a5);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+[data-theme="brand-dark"] .logo-title .app-brand-logo,
+[data-theme="brand-dark"] .sidebar-brand .app-brand-logo {
+  -webkit-text-fill-color: initial;
+  background: none;
+  opacity: 1;
 }
 
 [data-theme="brand-dark"] .sidebar-brand svg {

@@ -55,6 +55,8 @@ const getRowId = (row, index) =>
   row?.purity_uuid ||
   row?.purity_id ||
   row?.ml_id ||
+  row?.own_uuid ||
+  row?.own_id ||
   index;
 
 const pickColumn = (columns, key) => {

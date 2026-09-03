@@ -2,10 +2,30 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import List from "../common/List";
-import { getAccounts, deleteAccount, getAccountTotals } from "../../api/accountApi";
+import { getAccounts, deleteAccount } from "../../api/accountApi";
 import { toast } from "react-hot-toast";
 import moment from "moment";
 import usePermissions from "../../hooks/usePermissions";
+
+const computeAccountTotals = (accountList = []) => {
+  let debitTotal = 0;
+  let creditTotal = 0;
+
+  for (const account of accountList) {
+    const balance = parseFloat(account.acc_cash_balance || 0);
+    if (account.acc_balance_type === "DR") {
+      debitTotal += balance;
+    } else if (account.acc_balance_type === "CR") {
+      creditTotal += balance;
+    }
+  }
+
+  return {
+    debitTotal,
+    creditTotal,
+    difference: Math.abs(debitTotal - creditTotal),
+  };
+};
 
 const AccountList = () => {
   const { can } = usePermissions();
@@ -21,12 +41,10 @@ const AccountList = () => {
     try {
       setLoading(true);
       const firmFilter = selectedFirmId === 'all' ? null : selectedFirmId;
-      const [accountsResponse, totalsResponse] = await Promise.all([
-        getAccounts(firmFilter),
-        getAccountTotals(firmFilter)
-      ]);
-      setAccounts(accountsResponse.data || []);
-      setTotals(totalsResponse.data || { debitTotal: 0, creditTotal: 0, difference: 0 });
+      const accountsResponse = await getAccounts(firmFilter);
+      const rows = accountsResponse.data || [];
+      setAccounts(rows);
+      setTotals(computeAccountTotals(rows));
     } catch (error) {
       console.error("Error fetching accounts:", error);
       toast.error("Failed to load accounts");
@@ -34,6 +52,20 @@ const AccountList = () => {
       setLoading(false);
     }
   }, [selectedFirmId]);
+
+  const handleFilteredRowsChange = useCallback((filteredRows = []) => {
+    setTotals((prev) => {
+      const next = computeAccountTotals(filteredRows);
+      if (
+        prev.debitTotal === next.debitTotal &&
+        prev.creditTotal === next.creditTotal &&
+        prev.difference === next.difference
+      ) {
+        return prev;
+      }
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     fetchAccounts();
@@ -77,7 +109,7 @@ const AccountList = () => {
       dateFilter: true,
       render: (val) => val ? moment(val).format("DD/MM/YYYY") : "N/A"
     },
-    { key: "acc_cash_balance", title: "Account Balance", orderable: true, searchable: true, sum: true },
+    { key: "acc_cash_balance", title: "Opening Balance", orderable: true, searchable: true, sum: true },
     { key: "acc_balance_type", title: "Balance Type", orderable: true, searchable: true },
     { key: "acc_bank_no", title: "Bank Account Number", orderable: false, searchable: true },
     { key: "acc_ifsc_code", title: "IFSC Code", orderable: true, searchable: true },
@@ -130,6 +162,8 @@ const AccountList = () => {
           primaryKey="acc_name"
           subtitleKey="acc_opening_date"
           amountKey="acc_cash_balance"
+          applyDefaultDateFilter={false}
+          onFilteredRowsChange={handleFilteredRowsChange}
           onEdit={canEdit ? handleEdit : undefined}
           onDelete={canDelete ? handleDelete : undefined}
           onPrint={handlePrint}

@@ -101,6 +101,52 @@ body {
     min-height: 200px;
 }
 
+.dashboard-chart-title {
+    font-size: 1.05rem !important;
+}
+
+.dashboard-chart-select {
+    border-radius: 8px !important;
+    cursor: pointer;
+    min-width: 168px;
+}
+
+.dashboard-chart-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.dashboard-chart-summary__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: var(--home-track-bg, #f1f5f9);
+    border: 1px solid var(--home-tooltip-border, #e2e8f0);
+    font-size: 12px;
+    color: var(--home-muted-text, #64748b);
+}
+
+.dashboard-chart-summary__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--summary-accent, #3b82f6);
+    flex-shrink: 0;
+}
+
+.dashboard-chart-summary__label {
+    font-weight: 600;
+}
+
+.dashboard-chart-summary__value {
+    color: var(--home-tooltip-text, #0f172a);
+    font-size: 13px;
+}
+
 .apexcharts-canvas,
 .apexcharts-canvas svg {
     width: 100% !important;

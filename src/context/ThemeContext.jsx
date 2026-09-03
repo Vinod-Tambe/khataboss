@@ -2,7 +2,7 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const ThemeContext = createContext();
 
-export const THEMES = ['light', 'dark', 'system', 'brand-dark'];
+export const THEMES = ['light', 'dark', 'system', 'brand-dark', 'fintech'];
 
 const getInitialTheme = () => {
   if (typeof window === 'undefined') {

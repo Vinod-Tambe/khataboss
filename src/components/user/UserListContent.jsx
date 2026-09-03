@@ -29,7 +29,7 @@ const UserListContent = ({
     hasView={hasView}
     loading={loading}
     deleteConfirmMessage={(row) =>
-      `Are you sure you want to delete customer: ${row?.user_first_name} ${row?.user_last_name}?`
+      `Delete customer "${row?.user_first_name} ${row?.user_last_name}"?\n\nAll loans, finance records, payments, deposits, releases, and related journal entries will also be deleted.`
     }
   />
 );

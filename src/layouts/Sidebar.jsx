@@ -34,7 +34,8 @@ import {
   FiRepeat,
   FiUserCheck,
 } from "react-icons/fi";
-import { FaBook, FaBookOpen, FaBalanceScale } from "react-icons/fa";
+import { FaBook, FaBalanceScale } from "react-icons/fa";
+import AppBrandLogo from "../components/common/AppBrandLogo";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../store/slices/authSlice";
 import { setSelectedFirmId } from "../store/slices/firmSlice";
@@ -272,7 +273,7 @@ const Sidebar = () => {
             onClick={closeSidebarOnMobile}
             aria-label="Go to home"
           >
-            <FaBookOpen size={36} />
+            <AppBrandLogo size={36} />
             <div>
               <h1 className="fw-bold fs-4 mb-0">KhataBoss</h1>
             </div>

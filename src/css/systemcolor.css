@@ -125,13 +125,36 @@
   --layout-footer-bottom-nav-bg: #ffffff;
   --layout-footer-bottom-nav-shadow: 0 -4px 16px rgba(161, 0, 91, 0.1);
 
-  /* Login gradient language */
+  /* App brand logo (header / sidebar / login) */
+  --brand-logo-bg-start: #4a0e4e;
+  --brand-logo-bg-mid: #a1005b;
+  --brand-logo-bg-end: #e60000;
+  --brand-logo-paper: #ffffff;
+  --brand-logo-line: #f0b8d0;
+  --brand-logo-accent: #c2185b;
+
+  /* Login — derived from brand palette */
   --login-page-bg: #faf2f6;
+  --login-card-bg: #ffffff;
   --login-panel-bg: #ffffff;
-  --login-gradient: linear-gradient(135deg, #4a0e4e, #a1005b, #e60000);
-  --login-gradient-reverse: linear-gradient(135deg, #e60000, #a1005b, #4a0e4e);
-  --login-input-bg: #f2f2f2;
+  --login-gradient: linear-gradient(135deg, var(--brand-logo-bg-start), var(--brand-logo-bg-mid), var(--brand-logo-bg-end));
+  --login-gradient-reverse: linear-gradient(135deg, var(--brand-logo-bg-end), var(--brand-logo-bg-mid), var(--brand-logo-bg-start));
+  --login-input-bg: #fdf2f8;
   --login-input-text: #1a1a1b;
+  --login-text: #1a1a1b;
+  --login-muted-text: #6b7280;
+  --login-border: #f0d4e2;
+  --login-collapse-bg: #fdf2f8;
+  --login-collapse-text: #1a1a1b;
+  --login-nav-text: #6b7280;
+  --login-left-text: #ffffff;
+  --login-shadow: 0 1rem 3rem rgba(161, 0, 91, 0.15);
+  --login-focus-ring: rgba(161, 0, 91, 0.22);
+  --login-btn-collapse-bg: rgba(255, 255, 255, 0.14);
+  --login-anim-color-1: #fce4f3;
+  --login-anim-color-2: #f8d6ef;
+  --login-anim-color-3: #ffd6d6;
+  --login-orb-opacity: 0.42;
 
   /* Home */
   --home-card-glass: rgba(255, 255, 255, 0.95);
@@ -202,15 +225,20 @@
   border-bottom-color: var(--layout-header-border);
 }
 
-[data-theme="system"] .logo-title,
 [data-theme="system"] .logo-title h1,
-[data-theme="system"] .sidebar-brand,
 [data-theme="system"] .sidebar-brand h1 {
   color: var(--layout-sidebar-brand-text);
   background: linear-gradient(135deg, #4a0e4e, #a1005b, #e60000);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+[data-theme="system"] .logo-title .app-brand-logo,
+[data-theme="system"] .sidebar-brand .app-brand-logo {
+  -webkit-text-fill-color: initial;
+  background: none;
+  opacity: 1;
 }
 
 [data-theme="system"] .sidebar-brand svg {

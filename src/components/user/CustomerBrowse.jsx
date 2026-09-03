@@ -94,7 +94,7 @@ const CustomerBrowse = ({ initialView = "grid" }) => {
     }
 
     const isConfirmed = await ConfirmAlert(
-      `Are you sure you want to delete customer: ${user.user_first_name} ${user.user_last_name}?`
+      `Delete customer "${user.user_first_name} ${user.user_last_name}"?\n\nAll loans, finance records, payments, deposits, releases, and related journal entries will also be deleted.`
     );
     if (!isConfirmed) return;
 

@@ -54,12 +54,19 @@ const List = ({
   showMobileList = true,
   /** When false, do not auto-filter rows to current FY on load (loan/finance lists show all). */
   applyDefaultDateFilter = true,
+  /** Called when filtered row set changes (search + date filter applied). */
+  onFilteredRowsChange,
 }) => {
   const tableRef = useRef(null);
   const dateRef = useRef(null);
+  const onFilteredRowsChangeRef = useRef(onFilteredRowsChange);
   const [dateRange, setDateRange] = useState({ startDate: null, endDate: null });
   const [tableInstance, setTableInstance] = useState(null);
   const [confirmState, setConfirmState] = useState({ show: false, rowData: null });
+
+  useEffect(() => {
+    onFilteredRowsChangeRef.current = onFilteredRowsChange;
+  }, [onFilteredRowsChange]);
 
   // ─── Date Range Picker ────────────────────────────────────────
   useEffect(() => {
@@ -143,6 +150,26 @@ const List = ({
       const value = row[key];
       if (value === undefined || value === null || value === "") return null;
       return value;
+    };
+
+    const sumApiValues = (apiData) => {
+      let total = 0;
+      if (!apiData || apiData.length === 0) return 0;
+      for (let i = 0; i < apiData.length; i++) {
+        total += intVal(apiData[i]);
+      }
+      return total;
+    };
+
+    const notifyFilteredRows = (api) => {
+      const callback = onFilteredRowsChangeRef.current;
+      if (typeof callback !== "function") return;
+      const filteredRows = [];
+      api.rows({ search: "applied" }).every(function () {
+        filteredRows.push(this.data());
+        return true;
+      });
+      callback(filteredRows);
     };
 
     const dtColumns = columns.map((col) => {
@@ -283,25 +310,27 @@ const List = ({
 
         footerCallback: showFooter
           ? function () {
-            const api = this.api();
+            try {
+              const api = this.api();
 
-            columns.forEach((col, idx) => {
-              if (!col.sum) return;
+              columns.forEach((col, idx) => {
+                if (!col.sum) return;
 
-              const colData = api.column(idx).data();
-              if (!colData) return;
-              
-              const total = colData.reduce((a, b) => intVal(a) + intVal(b), 0);
+                const colData = api.column(idx, { search: "applied" }).data();
+                const total = sumApiValues(colData);
 
-              const formatted = total.toLocaleString("en-IN", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
+                const formatted = total.toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                });
+
+                const display = total === 0 ? "0.00" : formatted;
+
+                $(api.column(idx).footer()).html(`<strong>${display}</strong>`);
               });
-
-              const display = total === 0 ? "0.00" : formatted;
-
-              $(api.column(idx).footer()).html(`<strong>${display}</strong>`);
-            });
+            } catch (err) {
+              console.error("Footer callback error:", err);
+            }
           }
           : undefined,
 
@@ -481,6 +510,13 @@ const List = ({
           }
         },
       });
+
+      if (typeof onFilteredRowsChangeRef.current === "function") {
+        dt.on("draw.dt", function () {
+          notifyFilteredRows(dt);
+        });
+        notifyFilteredRows(dt);
+      }
 
       setTableInstance(dt);
 

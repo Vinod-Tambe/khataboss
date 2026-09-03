@@ -7,9 +7,15 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import reportWebVitals from './reportWebVitals';
 
+const THEMES = ['light', 'dark', 'system', 'brand-dark', 'fintech'];
 const savedTheme = localStorage.getItem('theme') || 'light';
-document.documentElement.setAttribute('data-theme', savedTheme);
-document.documentElement.setAttribute('data-bs-theme', savedTheme);
+const initialTheme = THEMES.includes(savedTheme) ? savedTheme : 'light';
+
+document.documentElement.setAttribute('data-theme', initialTheme);
+document.documentElement.setAttribute(
+  'data-bs-theme',
+  initialTheme === 'dark' || initialTheme === 'brand-dark' ? 'dark' : 'light'
+);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 

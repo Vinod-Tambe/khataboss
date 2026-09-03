@@ -11,19 +11,22 @@ import { getHeaderAlerts } from "../api/logsApi";
 import { hasPermission, isOwner } from "../utils/permissions";
 import FinanceCollectionModal from "../components/finance/FinanceCollectionModal";
 import LoanCollectionModal from "../components/loan/LoanCollectionModal";
+import AppBrandLogo from "../components/common/AppBrandLogo";
 
 const themeLabels = {
   light: "Light",
   dark: "Dark",
   system: "Brand",
   "brand-dark": "Brand Dark",
+  fintech: "Fintech Blue",
 };
 
 const nextTheme = {
   light: "dark",
   dark: "system",
   system: "brand-dark",
-  "brand-dark": "light",
+  "brand-dark": "fintech",
+  fintech: "light",
 };
 
 const ALERT_POLL_MS = 60000;
@@ -139,7 +142,9 @@ const Header = () => {
         ? FiMonitor
         : theme === "brand-dark"
           ? FiDroplet
-          : FiSun;
+          : theme === "fintech"
+            ? FiBriefcase
+            : FiSun;
   const themeTitle = `Theme: ${themeLabels[theme]} — click for ${themeLabels[nextTheme[theme]]}`;
   const profileImageUrl = resolveImageUrl(user?.own_profile_img);
   const displayName =
@@ -316,6 +321,7 @@ const Header = () => {
           </button>
 
           <Link to="/home" className="logo-title text-decoration-none" aria-label="Go to home">
+            <AppBrandLogo size={32} />
             <h1 className="p-0 m-0">KhataBoss</h1>
           </Link>
         </div>

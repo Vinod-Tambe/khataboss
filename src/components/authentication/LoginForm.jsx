@@ -7,6 +7,7 @@ import { sendOtp } from "../../api/authApi";
 import { useDispatch, useSelector } from "react-redux";
 import { login as reduxLogin, loginWithOtp as reduxLoginWithOtp } from "../../store/slices/authSlice";
 import { otpExpirySeconds } from "../../config/appConfig";
+import AppBrandLogo from "../common/AppBrandLogo";
 
 
 const TypingEffect = ({ texts = [], speed = 100, pause = 1500 }) => {
@@ -44,6 +45,68 @@ const TypingEffect = ({ texts = [], speed = 100, pause = 1500 }) => {
     </span>
   );
 };
+
+// Balls stay in outer viewport edges — not over the centered login card
+// 14 on all screens + 12 desktop-only (≥992px) = 26 total on desktop
+const LOGIN_BALLS_MOBILE = [
+  { size: 10, top: "4%", left: "3%", delay: 0, duration: 14, tone: 1 },
+  { size: 8, top: "6%", left: "92%", delay: 1.1, duration: 12, tone: 2 },
+  { size: 10, top: "94%", left: "4%", delay: 2.2, duration: 16, tone: 3 },
+  { size: 9, top: "96%", left: "90%", delay: 0.7, duration: 13, tone: 1 },
+  { size: 8, top: "38%", left: "2%", delay: 1.8, duration: 11, tone: 2 },
+  { size: 8, top: "54%", left: "94%", delay: 2.5, duration: 15, tone: 3 },
+  { size: 9, top: "16%", left: "5%", delay: 0.4, duration: 12, tone: 1 },
+  { size: 9, top: "84%", left: "93%", delay: 1.5, duration: 14, tone: 2 },
+  { size: 7, top: "24%", left: "96%", delay: 2.0, duration: 13, tone: 3 },
+  { size: 7, top: "72%", left: "2%", delay: 0.9, duration: 12, tone: 1 },
+  { size: 8, top: "12%", left: "88%", delay: 1.3, duration: 14, tone: 2 },
+  { size: 8, top: "78%", left: "8%", delay: 2.6, duration: 15, tone: 3 },
+  { size: 7, top: "48%", left: "1%", delay: 1.0, duration: 11, tone: 1 },
+  { size: 7, top: "62%", left: "97%", delay: 2.8, duration: 13, tone: 2 },
+];
+
+const LOGIN_BALLS_DESKTOP = [
+  { size: 24, top: "10%", left: "4%", delay: 0, duration: 18, tone: 1 },
+  { size: 20, top: "30%", left: "6%", delay: 1.2, duration: 16, tone: 2 },
+  { size: 26, top: "48%", left: "3%", delay: 2.4, duration: 20, tone: 3 },
+  { size: 22, top: "66%", left: "5%", delay: 0.6, duration: 17, tone: 1 },
+  { size: 18, top: "84%", left: "4%", delay: 1.8, duration: 15, tone: 2 },
+  { size: 22, top: "8%", left: "94%", delay: 1.4, duration: 16, tone: 3 },
+  { size: 26, top: "26%", left: "92%", delay: 2.1, duration: 19, tone: 1 },
+  { size: 20, top: "44%", left: "96%", delay: 0.3, duration: 15, tone: 2 },
+  { size: 24, top: "62%", left: "93%", delay: 1.7, duration: 18, tone: 3 },
+  { size: 19, top: "80%", left: "95%", delay: 2.8, duration: 16, tone: 1 },
+  { size: 18, top: "4%", left: "26%", delay: 2.3, duration: 15, tone: 2 },
+  { size: 17, top: "96%", left: "72%", delay: 1.3, duration: 16, tone: 3 },
+];
+
+const LOGIN_FEATURE_ITEMS = [
+  {
+    title: "Best Account Management",
+    description:
+      "Keep cash, bank, and customer accounts in one place. No separate notebooks — see every balance clearly, anytime you need it.",
+  },
+  {
+    title: "Ready Report One Click",
+    description:
+      "Get Daybook, Trial Balance, Balance Sheet, and loan reports in one click. Print or share instantly and save hours of manual work.",
+  },
+  {
+    title: "Efficient Data Management",
+    description:
+      "Manage girvi loans, EMI finance, customer details, and daily entries easily. All your office records stay organised in one software.",
+  },
+  {
+    title: "Secure Transactions",
+    description:
+      "Only authorised users can log in and work on your data. Every entry is saved safely so your accounts stay correct and trustworthy.",
+  },
+];
+
+const LOGIN_FLOATING_BALLS = [
+  ...LOGIN_BALLS_MOBILE.map((ball) => ({ ...ball, desktopOnly: false })),
+  ...LOGIN_BALLS_DESKTOP.map((ball) => ({ ...ball, desktopOnly: true })),
+];
 
 const LoginForm = () => {
   const [activeTab, setActiveTab] = useState("username");
@@ -190,10 +253,35 @@ const LoginForm = () => {
 
   return (
     <div className="login-container container-fluid auth-wrapper d-flex align-items-center justify-content-center">
-      <div className="row w-100 bg-light rounded-4 overflow-hidden login-div">
+      <div className="login-animated-bg" aria-hidden="true">
+        <span className="login-animated-bg__orb login-animated-bg__orb--1" />
+        <span className="login-animated-bg__orb login-animated-bg__orb--2" />
+        <span className="login-animated-bg__orb login-animated-bg__orb--3" />
+        <span className="login-animated-bg__orb login-animated-bg__orb--4 login-animated-bg__orb--desktop-only" />
+        {LOGIN_FLOATING_BALLS.map((ball, index) => (
+          <span
+            key={`login-ball-${index}`}
+            className={`login-animated-bg__ball login-animated-bg__ball--tone-${ball.tone}${
+              ball.desktopOnly ? " login-animated-bg__ball--desktop-only" : ""
+            }`}
+            style={{
+              width: `${ball.size}px`,
+              height: `${ball.size}px`,
+              top: ball.top,
+              left: ball.left,
+              "--ball-size": `${ball.size}px`,
+              "--ball-dur": `${ball.duration}s`,
+              "--ball-delay": `${ball.delay}s`,
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="row w-100 rounded-4 overflow-hidden login-div">
         <div className="col-lg-6 d-none d-lg-flex flex-column left-panel">
-          <div className="mb-2 logo-text fw-bold fs-2">
-            <i className="bi bi-journal-text me-2 fs-2"></i>KhataBoss
+          <div className="mb-2 logo-text fw-bold fs-2 d-flex align-items-center gap-2">
+            <AppBrandLogo size={40} />
+            <span>KhataBoss</span>
           </div>
           <h1>Welcome To Your</h1>
           <h1>
@@ -202,21 +290,16 @@ const LoginForm = () => {
             </strong>
           </h1>
           <div className="overflow-scroll-wrapper flex-grow-1 pe-2">
-            {[
-              "Best Account Management",
-              "Ready Report One Click",
-              "Efficient Data Management",
-              "Secure Transactions",
-            ].map((text, idx) => {
+            {LOGIN_FEATURE_ITEMS.map((item, idx) => {
               const id = `collapseExample${idx}`;
               return (
                 <div className="info mb-1" key={idx}>
                   <button className="btn btn-secondary btn-collapse-custom" type="button" onClick={() => toggleCollapse(id)}>
-                    <span className="dot"></span> {text}{" "}
+                    <span className="dot"></span> {item.title}{" "}
                     <i className={`bi collapse-icon ${collapseStates[id] ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
                   </button>
                   <div className="collapse" id={id}>
-                    <div className="card card-body text-dark">Placeholder content for {text}.</div>
+                    <div className="card card-body login-collapse-card">{item.description}</div>
                   </div>
                 </div>
               );
@@ -231,22 +314,21 @@ const LoginForm = () => {
           </div>
         </div>
 
-        <div className="col-lg-6 d-flex align-items-center bg-white p-5 pt-4">
+        <div className="col-lg-6 d-flex align-items-center login-panel-right p-5 pt-4">
           <div className="w-100">
-            <h2 className="text-center mb-2 text-dark">
-              <div className="mx-auto d-flex align-items-center justify-content-center border border-secondary rounded-circle"
-                style={{ width: "60px", height: "60px" }}>
-                <i className="bi bi-journal-text fs-4"></i>
+            <h2 className="text-center mb-2 login-title">
+              <div className="mx-auto d-flex align-items-center justify-content-center login-icon-wrap">
+                <AppBrandLogo size={48} />
               </div>
             </h2>
 
-            <h2 className="text-center mb-3 text-dark fw-bold">Sign in to KhataBoss</h2>
+            <h2 className="text-center mb-3 login-heading fw-bold">Sign in to KhataBoss</h2>
 
             <ul className="nav nav-pills justify-content-center mb-3">
               {["username", "otp", "finger"].map((tab) => (
                 <li className="nav-item" key={tab}>
                   <button
-                    className={`nav-link fw-bold text-secondary ${activeTab === tab ? "active" : ""}`}
+                    className={`nav-link fw-bold ${activeTab === tab ? "active" : ""}`}
                     onClick={() => setActiveTab(tab)}
                   >
                     {tab === "username" ? "Login Id" : tab === "otp" ? "Login with OTP" : "Fingerprint"}
@@ -286,7 +368,7 @@ const LoginForm = () => {
                       />
                       <button
                         type="button"
-                        className="btn btn-sm position-absolute top-50 end-0 translate-middle-y me-2"
+                        className="btn btn-sm position-absolute top-50 end-0 translate-middle-y me-2 password-toggle-btn"
                         onClick={() => setShowPassword(!showPassword)}
                         tabIndex={-1}
                       >
@@ -373,9 +455,9 @@ const LoginForm = () => {
                           {resendTimer > 0 ? (
                             <span className="text-muted small">Resend OTP in <strong>{resendTimer}s</strong></span>
                           ) : (
-                            <button 
-                              type="button" 
-                              className="btn btn-link btn-sm text-secondary text-decoration-none fw-bold"
+                            <button
+                              type="button"
+                              className="btn btn-link btn-sm login-muted text-decoration-none fw-bold"
                               onClick={handleSendOtp}
                               disabled={otpSending}
                             >
@@ -400,9 +482,9 @@ const LoginForm = () => {
                         </button>
 
                         <div className="text-center">
-                          <button 
-                            type="button" 
-                            className="btn btn-link btn-sm text-muted text-decoration-none"
+                          <button
+                            type="button"
+                            className="btn btn-link btn-sm login-muted text-decoration-none"
                             onClick={() => setOtpSent(false)}
                           >
                             <i className="bi bi-arrow-left me-1"></i> Change Login ID / Mobile
@@ -418,7 +500,7 @@ const LoginForm = () => {
                 <div className="tab-pane fade text-center show active">
                   <form>
                     <p className="mb-4">Place your finger on the sensor to log in</p>
-                    <i className="bi bi-fingerprint text-secondary" style={{ fontSize: "4rem" }}></i>
+                    <i className="bi bi-fingerprint login-muted" style={{ fontSize: "4rem" }}></i>
                     <div className="mt-3">
                       <button
                         type="button"
@@ -435,10 +517,10 @@ const LoginForm = () => {
 
             <div className="text-center mt-3">
               <div className="d-flex justify-content-center gap-3">
-                <Link to="#" className="text-dark fs-4"><i className="bi bi-facebook"></i></Link>
-                <Link to="#" className="text-dark fs-4"><i className="bi bi-google"></i></Link>
-                <Link to="#" className="text-dark fs-4"><i className="bi bi-twitter"></i></Link>
-                <Link to="#" className="text-dark fs-4"><i className="bi bi-linkedin"></i></Link>
+                <Link to="#" className="login-social-link fs-4"><i className="bi bi-facebook"></i></Link>
+                <Link to="#" className="login-social-link fs-4"><i className="bi bi-google"></i></Link>
+                <Link to="#" className="login-social-link fs-4"><i className="bi bi-twitter"></i></Link>
+                <Link to="#" className="login-social-link fs-4"><i className="bi bi-linkedin"></i></Link>
               </div>
             </div>
           </div>

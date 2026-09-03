@@ -162,10 +162,48 @@
 
 /* LEFT — shared brand color with sidebar logo */
 .logo-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   color: var(--layout-sidebar-brand-text, var(--layout-brand));
   font-weight: 700;
   margin: 0;
   min-width: 0;
+}
+
+.app-brand-logo {
+  display: block;
+  flex: 0 0 auto;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  max-width: 36px;
+  max-height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: none !important;
+  -webkit-text-fill-color: initial !important;
+  background-clip: border-box !important;
+}
+
+.logo-title .app-brand-logo {
+  width: 32px;
+  height: 32px;
+  max-width: 32px;
+  max-height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+}
+
+.sidebar-brand .app-brand-logo {
+  width: 36px;
+  height: 36px;
+  max-width: 36px;
+  max-height: 36px;
+  min-width: 36px;
+  min-height: 36px;
 }
 
 .logo-title:hover,
@@ -1004,6 +1042,15 @@
     min-width: 0;
   }
 
+  .logo-title .app-brand-logo {
+    width: 28px !important;
+    height: 28px !important;
+    max-width: 28px !important;
+    max-height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+  }
+
   .logo-title h1 {
     font-size: 1.2rem;
     letter-spacing: -0.01em;
@@ -1441,6 +1488,15 @@
 
   .sidebar-brand {
     gap: 8px;
+  }
+
+  .sidebar-brand .app-brand-logo {
+    width: 28px !important;
+    height: 28px !important;
+    max-width: 28px !important;
+    max-height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
   }
 
   .sidebar-brand svg {
