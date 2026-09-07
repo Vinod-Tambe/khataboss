@@ -355,6 +355,19 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
                     toast.error('Fine + Collect must equal total rollback amount');
                     return;
                 }
+                const cashAmt = parseFloat(formData.fm_cash_amt) || 0;
+                const nonCashAmt =
+                    (parseFloat(formData.fm_bank_amt) || 0) +
+                    (parseFloat(formData.fm_online_amt) || 0) +
+                    (parseFloat(formData.fm_card_amt) || 0);
+                if (collect > 0 && cashAmt + 0.01 < collect) {
+                    toast.error(`Collect rollback (₹${collect.toFixed(2)}) must be via Cash`);
+                    return;
+                }
+                if (collect > 0 && nonCashAmt > fine + 0.01) {
+                    toast.error('Collect rollback must use Cash only; non-cash is for Fine portion only');
+                    return;
+                }
             }
         }
 
@@ -375,6 +388,19 @@ const PaymentForm = ({ initialType = 'PAID', finance, onSuccess }) => {
             }
             if (transAmt > pendingFineTotal + 0.01) {
                 toast.error(`Maximum fine/collect amount is ${pendingFineTotal.toFixed(2)}`);
+                return;
+            }
+            const cashAmt = parseFloat(formData.fm_cash_amt) || 0;
+            const nonCashAmt =
+                (parseFloat(formData.fm_bank_amt) || 0) +
+                (parseFloat(formData.fm_online_amt) || 0) +
+                (parseFloat(formData.fm_card_amt) || 0);
+            if (collect > 0 && cashAmt + 0.01 < collect) {
+                toast.error(`Collect amount (₹${collect.toFixed(2)}) must be paid via Cash`);
+                return;
+            }
+            if (collect > 0 && nonCashAmt > fine + 0.01) {
+                toast.error('Collect must be paid in Cash only; use Bank/Online/Card for Fine portion only');
                 return;
             }
         }
