@@ -13,7 +13,13 @@ import {
 import { toast } from "react-hot-toast";
 import List from "../common/List";
 import MessageBodyEditor, { stripHtml } from "./MessageBodyEditor";
+import {
+  getBodyPlainLength,
+  normalizeBodyForChannel,
+  sanitizeBodyForSave,
+} from "./templateBodyUtils";
 import TemplatePreview from "./TemplatePreview";
+import TemplateTestSend from "./TemplateTestSend";
 import WhatsAppSettingsModal from "./WhatsAppSettingsModal";
 import EmailSettingsModal from "./EmailSettingsModal";
 import { getMessageTemplates, updateMessageTemplate } from "../../api/smsApi";
@@ -79,6 +85,11 @@ const SmsPage = () => {
   const [waModalOpen, setWaModalOpen] = useState(false);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
 
+  const editingTemplate = useMemo(
+    () => templates.find((t) => t.id === editingId || t.uuid === editingId) || null,
+    [templates, editingId]
+  );
+
   const loadTemplates = useCallback(async () => {
     if (!firmId) {
       setTemplates([]);
@@ -106,7 +117,7 @@ const SmsPage = () => {
     );
   }, [templates]);
 
-  const bodyLength = stripHtml(formData.body).length;
+  const bodyLength = getBodyPlainLength(formData.body, activeChannel);
   const smsParts = Math.max(1, Math.ceil(bodyLength / 160));
   const previewAttachments = [
     ...existingAttachments,
@@ -167,7 +178,7 @@ const SmsPage = () => {
       category: row.category,
       language: row.language,
       subject: row.subject || "",
-      body: row.body,
+      body: normalizeBodyForChannel(row.body, row.channel),
       channel: row.channel,
       hasAttachment: Boolean(row.hasAttachment),
     });
@@ -187,12 +198,20 @@ const SmsPage = () => {
       toast.error("Select a template from the list to edit");
       return;
     }
-    if (!stripHtml(formData.body).trim()) {
+    if (!getBodyPlainLength(formData.body, activeChannel)) {
       toast.error("Message body is required");
       return;
     }
     if (activeChannel === "email" && !formData.subject.trim()) {
       toast.error("Email subject is required");
+      return;
+    }
+
+    let bodyToSave;
+    try {
+      bodyToSave = sanitizeBodyForSave(formData.body, activeChannel);
+    } catch (err) {
+      toast.error(err.message || "Invalid template format for this channel");
       return;
     }
 
@@ -203,7 +222,7 @@ const SmsPage = () => {
     fd.append("category", formData.category);
     fd.append("language", formData.language);
     fd.append("subject", activeChannel === "email" ? formData.subject.trim() : "");
-    fd.append("body", formData.body);
+    fd.append("body", bodyToSave);
     fd.append(
       "hasAttachment",
       String(formData.hasAttachment || newFiles.length > 0 || existingAttachments.length > 0)
@@ -473,7 +492,15 @@ const SmsPage = () => {
                     value={formData.body}
                     onChange={handleBodyChange}
                     variables={VARIABLES}
-                    placeholder="Write your message template..."
+                    channel={activeChannel}
+                    firmName={firmName}
+                    placeholder={
+                      activeChannel === "email"
+                        ? "Write HTML email content..."
+                        : activeChannel === "whatsapp"
+                          ? "Write WhatsApp message with *bold* and _italic_..."
+                          : "Write plain SMS text..."
+                    }
                   />
                   {activeChannel === "sms" ? (
                     <div className={`sms-char-count ${bodyLength > 160 ? "is-warn" : ""}`}>
@@ -522,6 +549,19 @@ const SmsPage = () => {
                   </div>
                 ) : null}
               </div>
+
+              <TemplateTestSend
+                firmId={firmId}
+                channel={activeChannel}
+                subject={formData.subject}
+                body={formData.body}
+                templateName={formData.name}
+                templateKey={editingTemplate?.key}
+                templateUuid={editingId}
+                newFiles={newFiles}
+                attachmentCount={previewAttachments.length}
+                disabled={!editingId || saving}
+              />
 
               <div className="sms-form-actions">
                 <button type="button" className="btn btn-sms-discard" onClick={handleDiscard}>

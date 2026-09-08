@@ -12,6 +12,10 @@ import {
   FiBarChart2,
 } from "react-icons/fi";
 import { plainToHtml, stripHtml } from "./MessageBodyEditor";
+import {
+  buildEmailFooterPreviewHtml,
+  whatsAppTextToPreviewHtml,
+} from "./templateBodyUtils";
 
 const SAMPLE_VARS = {
   1: "Jane Doe",
@@ -21,6 +25,22 @@ const SAMPLE_VARS = {
 
 export const fillTemplatePreview = (text = "") =>
   text.replace(/\{\{(\d+)\}\}/g, (_, n) => SAMPLE_VARS[n] || `{{${n}}}`);
+
+/** Preview WhatsApp *bold*, _italic_, horizontal lines, newlines, and auto-footer. */
+export const whatsAppMarkdownToHtml = (text = "", options = {}) => {
+  const filled = fillTemplatePreview(text || "");
+  const { includeFooter = false, firmName = "" } = options;
+  return whatsAppTextToPreviewHtml(filled, { includeFooter, firmName });
+};
+
+const WhatsAppPreviewHtml = ({ body, emptyText, firmName, showFooter = true }) => {
+  const html = whatsAppMarkdownToHtml(body, { includeFooter: showFooter, firmName });
+  const hasText = stripHtml(html).trim().length > 0;
+  if (!hasText) {
+    return <span className="sms-preview-empty">{emptyText}</span>;
+  }
+  return <div className="sms-preview-html wa-preview-body" dangerouslySetInnerHTML={{ __html: html }} />;
+};
 
 const PreviewHtml = ({ body, emptyText }) => {
   const html = fillTemplatePreview(plainToHtml(body || ""));
@@ -85,7 +105,12 @@ const WhatsAppPreview = ({ body, firmName, attachments, hasAttachment }) => (
     <div className="wa-chat">
       <div className="wa-date-chip">Today</div>
       <div className="wa-bubble">
-        <PreviewHtml body={body} emptyText="Start typing to preview your WhatsApp message…" />
+        <WhatsAppPreviewHtml
+          body={body}
+          firmName={firmName}
+          showFooter
+          emptyText="Start typing to preview your WhatsApp message…"
+        />
         <AttachmentChip attachments={attachments} hasAttachment={hasAttachment} />
         <span className="wa-time">9:15 AM ✓✓</span>
       </div>
@@ -100,7 +125,7 @@ const WhatsAppPreview = ({ body, firmName, attachments, hasAttachment }) => (
   </PhoneShell>
 );
 
-const SmsPreview = ({ body, firmName }) => (
+const SmsPreview = ({ body, firmName, attachments, hasAttachment }) => (
   <PhoneShell screenClassName="sms-imessage" channelLabel="SMS preview">
     <div className="im-header">
       <FiArrowLeft size={14} className="im-back" />
@@ -113,6 +138,7 @@ const SmsPreview = ({ body, firmName }) => (
     <div className="im-chat">
       <div className="im-bubble">
         <PreviewHtml body={body} emptyText="Start typing to preview your SMS…" />
+        <AttachmentChip attachments={attachments} hasAttachment={hasAttachment} />
       </div>
     </div>
     <div className="im-composer">
@@ -124,7 +150,12 @@ const SmsPreview = ({ body, firmName }) => (
   </PhoneShell>
 );
 
-const EmailPreview = ({ body, subject, firmName, attachments, hasAttachment }) => (
+const EmailPreview = ({ body, subject, firmName, attachments, hasAttachment }) => {
+  const bodyHtml = fillTemplatePreview(plainToHtml(body || ""));
+  const footerHtml = buildEmailFooterPreviewHtml(firmName);
+  const hasText = stripHtml(bodyHtml).trim().length > 0;
+
+  return (
   <PhoneShell screenClassName="email-preview" channelLabel="Email preview">
     <div className="email-header">
       <div className="email-toolbar">
@@ -149,15 +180,28 @@ const EmailPreview = ({ body, subject, firmName, attachments, hasAttachment }) =
       </div>
     </div>
     <div className="email-body">
-      <PreviewHtml body={body} emptyText="Start typing to preview your email…" />
+      {hasText ? (
+        <div className="sms-preview-html" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+      ) : (
+        <span className="sms-preview-empty">Start typing to preview your email…</span>
+      )}
+      <div className="sms-preview-html" dangerouslySetInnerHTML={{ __html: footerHtml }} />
       <AttachmentChip attachments={attachments} hasAttachment={hasAttachment} />
     </div>
   </PhoneShell>
-);
+  );
+};
 
 const TemplatePreview = ({ channel, body, subject, firmName, attachments, hasAttachment }) => {
   if (channel === "sms") {
-    return <SmsPreview body={body} firmName={firmName} />;
+    return (
+      <SmsPreview
+        body={body}
+        firmName={firmName}
+        attachments={attachments}
+        hasAttachment={hasAttachment}
+      />
+    );
   }
   if (channel === "email") {
     return (

@@ -112,6 +112,29 @@ export const testEmailSettings = async (payload = {}) => {
   }
 };
 
+export const testMessageTemplate = async (payload = {}, files = []) => {
+  try {
+    const hasFiles = Array.isArray(files) && files.length > 0;
+    if (hasFiles) {
+      const formData = new FormData();
+      Object.entries(payload).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formData.append(key, typeof value === "object" ? JSON.stringify(value) : String(value));
+        }
+      });
+      files.forEach((file) => formData.append("attachments", file));
+      const response = await axiosInstance.post("/messaging/templates/test", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return response.data;
+    }
+    const response = await axiosInstance.post("/messaging/templates/test", payload);
+    return response.data;
+  } catch (error) {
+    throw new Error(errMsg(error));
+  }
+};
+
 export const clearEmailSettings = async () => {
   try {
     const response = await axiosInstance.delete('/messaging/email/settings');

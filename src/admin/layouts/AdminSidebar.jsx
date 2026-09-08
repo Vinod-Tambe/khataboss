@@ -3,7 +3,7 @@ import { Offcanvas } from 'bootstrap';
 import PerfectScrollbar from 'perfect-scrollbar';
 import 'perfect-scrollbar/css/perfect-scrollbar.css';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
-import { FiHome, FiUsers, FiUserPlus, FiList, FiLogOut, FiChevronDown } from 'react-icons/fi';
+import { FiHome, FiUsers, FiUserPlus, FiList, FiLogOut, FiChevronDown, FiGrid } from 'react-icons/fi';
 import AppBrandLogo from '../../components/common/AppBrandLogo';
 import { useDispatch } from 'react-redux';
 import { logoutAdmin } from '../../store/slices/adminAuthSlice';
@@ -23,7 +23,7 @@ const AdminSidebar = () => {
         subItems: [
           { label: 'Add Owner', path: '/admin/owners/new', icon: <FiUserPlus /> },
           { label: 'Owner List', path: '/admin/owners/grid', icon: <FiList /> },
-          { label: 'Owner Table', path: '/admin/owners/list', icon: <FiList /> },
+          { label: 'Owner Table', path: '/admin/owners/list', icon: <FiGrid /> },
         ],
       },
       { id: 'logout', label: 'Sign Out', icon: <FiLogOut /> },
@@ -115,8 +115,10 @@ const AdminSidebar = () => {
                         className={`submenu-toggle ${openSubmenus[item.id] ? 'active' : ''}`}
                         onClick={() => toggleSubmenu(item.id)}
                       >
-                        {item.icon}
-                        <span>{item.label}</span>
+                        <span className="submenu-toggle__main">
+                          <span className="menu-icon">{item.icon}</span>
+                          <span className="menu-label">{item.label}</span>
+                        </span>
                         <FiChevronDown
                           className={`arrow ${openSubmenus[item.id] ? 'rotated' : ''}`}
                         />
@@ -124,14 +126,18 @@ const AdminSidebar = () => {
 
                       <ul className={`submenu collapse ${openSubmenus[item.id] ? 'show' : ''}`}>
                         {item.subItems.map((sub, idx) => (
-                          <li key={idx}>
+                          <li key={sub.path || `${item.id}-${idx}`}>
                             <NavLink
                               to={sub.path}
                               className={({ isActive }) => (isActive ? 'active sub-active' : '')}
                               onClick={closeSidebarOnMobile}
                             >
-                              {sub.icon && <span className="sub-icon me-3">{sub.icon}</span>}
-                              <span>{sub.label}</span>
+                              {sub.icon ? (
+                                <span className="sub-icon" aria-hidden="true">
+                                  {sub.icon}
+                                </span>
+                              ) : null}
+                              <span className="sub-label">{sub.label}</span>
                             </NavLink>
                           </li>
                         ))}
@@ -146,8 +152,8 @@ const AdminSidebar = () => {
                         closeSidebarOnMobile();
                       }}
                     >
-                      {item.icon}
-                      <span>{item.label}</span>
+                      <span className="menu-icon">{item.icon}</span>
+                      <span className="menu-label">{item.label}</span>
                     </button>
                   ) : (
                     <NavLink
@@ -156,8 +162,8 @@ const AdminSidebar = () => {
                       onClick={closeSidebarOnMobile}
                       end={item.path === '/admin/dashboard'}
                     >
-                      {item.icon}
-                      <span>{item.label}</span>
+                      <span className="menu-icon">{item.icon}</span>
+                      <span className="menu-label">{item.label}</span>
                     </NavLink>
                   )}
                 </li>

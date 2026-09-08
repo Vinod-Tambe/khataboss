@@ -33,6 +33,11 @@ import {
   FiArrowUpRight,
   FiRepeat,
   FiUserCheck,
+  FiPieChart,
+  FiLayers,
+  FiGrid,
+  FiEdit,
+  FiPackage,
 } from "react-icons/fi";
 import { FaBook, FaBalanceScale } from "react-icons/fa";
 import AppBrandLogo from "../components/common/AppBrandLogo";
@@ -121,7 +126,7 @@ const Sidebar = () => {
         anyOf: ["user.view", "user.create"],
         subItems: [
           { label: "Add Customer", path: "/user/add", icon: <FiUserPlus />, permission: "user.create" },
-          { label: "All Customer", path: "/user/grid", icon: <FiList />, permission: "user.view" },
+          { label: "All Customer", path: "/user/grid", icon: <FiUsers />, permission: "user.view" },
           { label: "Auction Customer List", path: "/user/auction-list", icon: <FiAward />, permission: "loan.auction" },
         ],
       },
@@ -135,7 +140,7 @@ const Sidebar = () => {
           { label: "Comp Finance List", path: "/finance/completed-list", icon: <FiCheckSquare />, permission: "finance.view" },
           { label: "Close Finance List", path: "/finance/close-list", icon: <FiLock />, permission: "finance.view" },
           { label: "Today Pending EMI", path: "/finance/today-pending-emi", icon: <FiClock />, permission: "finance.view" },
-          { label: "All Finance List", path: "/finance/all-list", icon: <FiList />, permission: "finance.view" },
+          { label: "All Finance List", path: "/finance/all-list", icon: <FiGrid />, permission: "finance.view" },
         ],
       },
       {
@@ -158,7 +163,7 @@ const Sidebar = () => {
         anyOf: ["moneyLender.view", "moneyLender.create"],
         subItems: [
           { label: "Add Money Lender", path: "/money-lender/add", icon: <FiPlusCircle />, permission: "moneyLender.create" },
-          { label: "Money Lender List", path: "/money-lender/list", icon: <FiList />, permission: "moneyLender.view" },
+          { label: "Money Lender List", path: "/money-lender/list", icon: <FiBriefcase />, permission: "moneyLender.view" },
         ],
       },
       {
@@ -168,7 +173,7 @@ const Sidebar = () => {
         anyOf: ["staff.view", "staff.create"],
         subItems: [
           { label: "Add Staff", path: "/staff/add", icon: <FiUserPlus />, permission: "staff.create" },
-          { label: "Staff List", path: "/staff/grid", icon: <FiList />, permission: "staff.view" },
+          { label: "Staff List", path: "/staff/grid", icon: <FiUserCheck />, permission: "staff.view" },
         ],
       },
       {
@@ -181,11 +186,11 @@ const Sidebar = () => {
       {
         id: "ledger",
         label: "Ledger",
-        icon: <FiClipboard />,
+        icon: <FiLayers />,
         permission: "account.view",
         subItems: [
           { label: "Loan Ledger", path: "/ledger/loan", icon: <FiFileText />, permission: "loan.view" },
-          { label: "Loan Item", path: "/ledger/loan-item", icon: <FiFileText />, permission: "loan.view" },
+          { label: "Loan Item", path: "/ledger/loan-item", icon: <FiPackage />, permission: "loan.view" },
         ],
       },
       {
@@ -205,18 +210,18 @@ const Sidebar = () => {
       {
         id: "profit-loss",
         label: "P/L Report",
-        icon: <FiTrendingUp />,
+        icon: <FiPieChart />,
         path: "/profit-loss",
         permission: "reports.profitLoss",
       },
       {
         id: "firm",
         label: "Firm",
-        icon: <FiBriefcase />,
+        icon: <FiGrid />,
         anyOf: ["firm.view", "firm.create"],
         subItems: [
           { label: "Add Firm", path: "/firm/add", icon: <FiPlusCircle />, permission: "firm.create" },
-          { label: "Firm List", path: "/firm/list", icon: <FiList />, permission: "firm.view" },
+          { label: "Firm List", path: "/firm/list", icon: <FiGrid />, permission: "firm.view" },
         ],
       },
       { id: "sms", label: "SMS", icon: <FiMessageSquare />, path: "/sms", anyOf: ["sms.view", "sms.manage"] },
@@ -235,7 +240,7 @@ const Sidebar = () => {
           { label: "Rate", path: "/rate", icon: <FiTrendingUp />, permission: "settings.manage" },
           { label: "Purity", path: "/purity", icon: <FiAward />, permission: "settings.manage" },
           { label: "Backup", path: "/backup", icon: <FiDatabase />, permission: "settings.manage" },
-          { label: "Form Customization", path: "/settings/form-customization", icon: <FiFileText />, permission: "settings.manage" },
+          { label: "Form Customization", path: "/settings/form-customization", icon: <FiEdit />, permission: "settings.manage" },
           { label: "Agreement Customization", path: "/settings/agreement-customization", icon: <FiFileText />, permission: "settings.manage" },
           { label: "KYC Integration", path: "/settings/kyc-integration", icon: <FiShield />, permission: "settings.manage" },
           // Always allow self password update (no permission key)
@@ -310,8 +315,10 @@ const Sidebar = () => {
                         className={`submenu-toggle ${openSubmenus[item.id] ? "active" : ""}`}
                         onClick={() => toggleSubmenu(item.id)}
                       >
-                        {item.icon}
-                        <span>{item.label}</span>
+                        <span className="submenu-toggle__main">
+                          <span className="menu-icon">{item.icon}</span>
+                          <span className="menu-label">{item.label}</span>
+                        </span>
                         <FiChevronDown
                           className={`arrow ${openSubmenus[item.id] ? "rotated" : ""}`}
                         />
@@ -319,7 +326,7 @@ const Sidebar = () => {
 
                       <ul className={`submenu collapse ${openSubmenus[item.id] ? "show" : ""}`}>
                         {item.subItems.map((sub, idx) => (
-                          <li key={idx}>
+                          <li key={sub.path || `${item.id}-${idx}`}>
                             <NavLink
                               to={sub.path}
                               className={({ isActive }) =>
@@ -327,8 +334,12 @@ const Sidebar = () => {
                               }
                               onClick={closeSidebarOnMobile}
                             >
-                              {sub.icon && <span className="sub-icon me-3">{sub.icon}</span>}
-                              <span>{sub.label}</span>
+                              {sub.icon ? (
+                                <span className="sub-icon" aria-hidden="true">
+                                  {sub.icon}
+                                </span>
+                              ) : null}
+                              <span className="sub-label">{sub.label}</span>
                             </NavLink>
                           </li>
                         ))}
@@ -343,8 +354,8 @@ const Sidebar = () => {
                         closeSidebarOnMobile();
                       }}
                     >
-                      {item.icon}
-                      <span>{item.label}</span>
+                      <span className="menu-icon">{item.icon}</span>
+                      <span className="menu-label">{item.label}</span>
                     </NavLink>
                   )}
                 </li>
