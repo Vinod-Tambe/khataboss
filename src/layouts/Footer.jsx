@@ -1,7 +1,10 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
+import usePlatformBranding from "../hooks/usePlatformBranding";
 
 const Footer = () => {
+  const { companyName, helpPhone } = usePlatformBranding();
+
   return (
     <footer className="app-footer mb-5 mb-md-0">
       {/* Desktop Footer */}
@@ -10,15 +13,17 @@ const Footer = () => {
           <i className="bi bi-c-circle"></i>
           <span>
             {new Date().getFullYear()}. made with <span className="app-footer-desktop__accent">❤️</span> by{" "}
-            <strong>Vinod Tambe!</strong>
+            <strong>{companyName}</strong>
           </span>
         </div>
 
         <div className="app-footer-desktop__right">
-          <a href="tel:9579082528">
-            <i className="bi bi-telephone me-2"></i>
-            Help: <span className="ms-1">9579082528</span>
-          </a>
+          {helpPhone ? (
+            <a href={`tel:${helpPhone}`}>
+              <i className="bi bi-telephone me-2"></i>
+              Help: <span className="ms-1">{helpPhone}</span>
+            </a>
+          ) : null}
         </div>
       </div>
 

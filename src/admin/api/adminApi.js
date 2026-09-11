@@ -21,6 +21,14 @@ export const getAdminProfile = async () => {
   };
 };
 
+export const updateAdminProfile = async (payload) => {
+  const response = await adminAxiosInstance.patch('/admin/auth/profile', payload);
+  return {
+    data: response.data?.data || response.data,
+    message: response.data?.message,
+  };
+};
+
 export const getAdminDashboard = async () => {
   const response = await adminAxiosInstance.get('/admin/dashboard');
   return {

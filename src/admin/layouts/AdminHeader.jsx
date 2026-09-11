@@ -143,6 +143,14 @@ const AdminHeader = () => {
                 </div>
                 <Link
                   className="dropdown-item d-flex align-items-center gap-2"
+                  to="/admin/profile"
+                  onClick={closeProfileMenu}
+                >
+                  <FiUser size={16} />
+                  <span>My Profile</span>
+                </Link>
+                <Link
+                  className="dropdown-item d-flex align-items-center gap-2"
                   to="/"
                   onClick={closeProfileMenu}
                 >

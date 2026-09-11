@@ -1,3 +1,107 @@
+/* Subscription expiry reminder */
+.subscription-expiry-banner {
+  position: sticky;
+  top: 56px;
+  z-index: 1020;
+  width: 100%;
+  background: linear-gradient(90deg, #fff7ed 0%, #ffedd5 100%);
+  border-bottom: 1px solid #fdba74;
+  color: #9a3412;
+  padding: 0.55rem 1rem;
+}
+
+.subscription-expiry-banner--urgent {
+  background: linear-gradient(90deg, #fef2f2 0%, #fee2e2 100%);
+  border-bottom-color: #fca5a5;
+  color: #991b1b;
+}
+
+.subscription-expiry-banner__content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.subscription-expiry-banner__countdown {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid currentColor;
+  font-size: 0.78rem;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.02em;
+}
+
+.subscription-expiry-header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  color: #c2410c;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.header-expiry-slot {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: auto;
+  margin-right: 4px;
+}
+
+.subscription-expiry-header-badge--inline {
+  margin-left: 2px;
+  max-width: calc(100vw - 180px);
+  overflow: hidden;
+}
+
+.subscription-expiry-header-badge__timer {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.subscription-expiry-header-badge--urgent {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+@media (max-width: 767.98px) {
+  .subscription-expiry-banner {
+    top: 52px;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .subscription-expiry-banner__message {
+    font-size: 0.8rem;
+  }
+
+  .subscription-expiry-header-badge {
+    font-size: 0.62rem;
+    padding: 0.2rem 0.45rem;
+  }
+}
+
 /* Layout Wrapper */
 .layout-wrapper {
   display: flex;

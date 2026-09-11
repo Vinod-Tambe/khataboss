@@ -5,6 +5,12 @@ export const getDaybookEntries = async (filters = {}) => {
     const response = await axiosInstance.get('/daybook', { params: filters });
     return response.data;
   } catch (error) {
-    throw error.response ? error.response.data : new Error('Network Error');
+    const data = error.response?.data;
+    const message =
+      data?.message ||
+      data?.error ||
+      error.message ||
+      'Failed to fetch daybook';
+    throw new Error(message);
   }
 };

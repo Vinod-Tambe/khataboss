@@ -443,3 +443,33 @@
   background-color: #2563eb !important;
   border-color: #2563eb !important;
 }
+
+[data-theme="fintech"] .dashboard-news-panel,
+[data-theme="fintech"] .dashboard-quick-actions {
+  background: var(--home-card-bg) !important;
+  border-color: var(--home-card-border) !important;
+}
+
+[data-theme="fintech"] .dashboard-news-panel__header {
+  border-bottom-color: var(--home-card-border);
+}
+
+[data-theme="fintech"] .announcement-feed-item {
+  background: color-mix(in srgb, var(--ann-type-bg, #e7f1ff) 35%, var(--home-card-bg));
+  border-color: var(--ann-type-border, var(--home-card-border));
+}
+
+[data-theme="fintech"] .announcement-feed-item__type-badge {
+  background: var(--home-card-bg);
+  border-color: var(--ann-type-border, var(--home-card-border));
+}
+
+[data-theme="fintech"] .announcement-feed-item__title,
+[data-theme="fintech"] .announcement-feed-item__body {
+  color: var(--color-black-soft, #1e293b);
+}
+
+[data-theme="fintech"] .announcement-feed-item__meta,
+[data-theme="fintech"] .dashboard-news-empty {
+  color: var(--home-muted-text) !important;
+}

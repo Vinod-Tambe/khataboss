@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { adminLogin, getAdminProfile } from '../../admin/api/adminApi';
+import { adminLogin, getAdminProfile, updateAdminProfile as updateAdminProfileApi } from '../../admin/api/adminApi';
 
 const initialState = {
   user: JSON.parse(localStorage.getItem('adminUser') || 'null'),
@@ -29,6 +29,19 @@ export const fetchAdminProfile = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await getAdminProfile();
+      localStorage.setItem('adminUser', JSON.stringify(response.data));
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const updateAdminProfile = createAsyncThunk(
+  'adminAuth/updateProfile',
+  async (payload, { rejectWithValue }) => {
+    try {
+      const response = await updateAdminProfileApi(payload);
       localStorage.setItem('adminUser', JSON.stringify(response.data));
       return response.data;
     } catch (error) {
@@ -79,6 +92,9 @@ const adminAuthSlice = createSlice({
       })
       .addCase(fetchAdminProfile.rejected, (state) => {
         state.profileLoading = false;
+      })
+      .addCase(updateAdminProfile.fulfilled, (state, action) => {
+        state.user = action.payload;
       });
   },
 });

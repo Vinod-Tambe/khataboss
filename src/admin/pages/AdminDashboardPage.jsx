@@ -103,7 +103,11 @@ const AdminDashboardPage = () => {
                         {owner.own_status}
                       </span>
                     </td>
-                    <td>{owner.own_created_at ? new Date(owner.own_created_at).toLocaleDateString() : '-'}</td>
+                    <td>
+                      {owner.own_created_at
+                        ? `${String(new Date(owner.own_created_at).getDate()).padStart(2, '0')}/${String(new Date(owner.own_created_at).getMonth() + 1).padStart(2, '0')}/${new Date(owner.own_created_at).getFullYear()}`
+                        : '-'}
+                    </td>
                   </tr>
                 ))
               )}

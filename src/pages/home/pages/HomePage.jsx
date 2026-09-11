@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import InfoCards from '../../../components/home/InfoCards'
-import ActionCards from '../../../components/home/ActionCards'
+import DashboardHomeSection from '../../../components/home/DashboardHomeSection'
+import AnnouncementPopup from '../../../components/home/AnnouncementPopup'
 import DashboardCharts from '../../../components/home/DashboardCharts'
 import { getOwnerDashboard } from '../../../api/dashboardApi'
 import { getFirmsDropdown } from '../../../api/firmApi'
@@ -52,7 +53,8 @@ const HomePage = () => {
   }, [selectedFirmId]);
 
   return (
-    <div>
+    <div className="dashboard-page">
+      <AnnouncementPopup />
       {error && (
         <div className="alert alert-warning py-2 mb-3" role="alert">
           {error}
@@ -61,7 +63,7 @@ const HomePage = () => {
 
       <InfoCards cards={dashboard?.cards} loading={loading} />
 
-      <ActionCards
+      <DashboardHomeSection
         firms={firms}
         selectedFirmId={selectedFirmId}
       />

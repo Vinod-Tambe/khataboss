@@ -3,20 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { deleteOwner, getOwners } from '../api/ownerApi';
 import { resolveImageUrl } from '../../utils/imageHelpers';
+import { formatAdminDate } from '../utils/dateHelpers';
 
 const DEFAULT_AVATAR = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
 
 const formatOwnerName = (owner) =>
   [owner?.own_first_name, owner?.own_middle_name, owner?.own_last_name].filter(Boolean).join(' ');
-
-const formatDate = (value) => {
-  if (!value) return '';
-  try {
-    return new Date(value).toLocaleDateString('en-IN');
-  } catch {
-    return '';
-  }
-};
 
 const resolveOwnerImageUrl = (img) => resolveImageUrl(img) || DEFAULT_AVATAR;
 
@@ -199,9 +191,10 @@ const OwnerGridPage = () => {
                   >
                     <i className="bi bi-trash" />
                   </button>
-                  <p className="ms-auto mb-0 text-secondary">
-                    - {formatDate(owner.own_created_at || owner.own_add_date)}
-                  </p>
+                  <div className="ms-auto mb-0 text-secondary small text-end">
+                    <div>Start Date: {formatAdminDate(owner.own_start_date)}</div>
+                    <div>Expiry Date: {formatAdminDate(owner.own_expiry_date)}</div>
+                  </div>
                 </div>
               </div>
             </div>

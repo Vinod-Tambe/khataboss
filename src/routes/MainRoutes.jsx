@@ -1,4 +1,10 @@
+import { useEffect, useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import SubscriptionExpiryLoginModal from '../components/common/SubscriptionExpiryLoginModal';
+import {
+  clearSubscriptionExpiryLoginNotice,
+  readSubscriptionExpiryLoginNotice,
+} from '../utils/subscriptionExpiry';
 import Sidebar from '../layouts/Sidebar';
 import Header from '../layouts/Header';
 import HomeRoutes from '../pages/home/HomeRoutes';
@@ -26,10 +32,29 @@ import KycIntegrationPage from '../components/settings/KycIntegrationPage';
 import FormCustomizationPage from '../components/settings/FormCustomizationPage';
 import AgreementCustomizationPage from '../components/settings/AgreementCustomizationPage';
 import PermissionRoute from './PermissionRoute';
-
 const MainRoutes = () => {
+  const [loginExpiryNotice, setLoginExpiryNotice] = useState(null);
+
+  useEffect(() => {
+    const notice = readSubscriptionExpiryLoginNotice();
+    if (notice?.message) {
+      setLoginExpiryNotice(notice);
+    }
+  }, []);
+
+  const handleExpiryModalContinue = () => {
+    clearSubscriptionExpiryLoginNotice();
+    setLoginExpiryNotice(null);
+  };
+
   return (
     <div className="layout-wrapper">
+      <SubscriptionExpiryLoginModal
+        show={Boolean(loginExpiryNotice?.message)}
+        message={loginExpiryNotice?.message || ''}
+        isUrgent={Boolean(loginExpiryNotice?.isUrgent)}
+        onContinue={handleExpiryModalContinue}
+      />
       <Header />
       <div className="main-content">
         <Sidebar />

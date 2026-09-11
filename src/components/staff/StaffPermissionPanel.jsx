@@ -12,6 +12,7 @@ const StaffPermissionPanel = ({
   saving = false,
   onSave,
   onChange,
+  hideSaveButton = false,
 }) => {
   const grouped = groupCatalogByModule(catalog);
 
@@ -139,25 +140,27 @@ const StaffPermissionPanel = ({
         })}
       </div>
 
-      <div className="d-flex justify-content-end mt-3 pt-3 border-top">
-        <button
-          type="button"
-          className="btn btn-success px-4 fw-bold"
-          onClick={onSave}
-          disabled={saving}
-        >
-          {saving ? (
-            <>
-              <span className="spinner-border spinner-border-sm me-2" role="status" />
-              Saving...
-            </>
-          ) : (
-            <>
-              <i className="bi bi-shield-lock-fill me-2"></i>Save Permissions
-            </>
-          )}
-        </button>
-      </div>
+      {!hideSaveButton && (
+        <div className="d-flex justify-content-end mt-3 pt-3 border-top">
+          <button
+            type="button"
+            className="btn btn-success px-4 fw-bold"
+            onClick={onSave}
+            disabled={saving}
+          >
+            {saving ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <i className="bi bi-shield-lock-fill me-2"></i>Save Permissions
+              </>
+            )}
+          </button>
+        </div>
+      )}
     </>
   );
 };

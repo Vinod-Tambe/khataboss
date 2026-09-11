@@ -160,6 +160,8 @@
   /* Home */
   --home-card-glass: rgba(255, 255, 255, 0.85);
   --home-card-border: rgba(255, 255, 255, 0.4);
+  --action-card-border: #dee2e6;
+  --action-card-border-hover: #ced4da;
   --home-card-bg: #fff;
   --home-muted-text: #4b5563;
   --home-tooltip-bg: #ffffff;

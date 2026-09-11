@@ -686,3 +686,45 @@
 [data-theme="brand-dark"] .bottom-nav-item i {
   color: inherit;
 }
+
+[data-theme="brand-dark"] .dashboard-news-panel,
+[data-theme="brand-dark"] .dashboard-quick-actions {
+  background-color: var(--home-card-bg) !important;
+  border-color: var(--app-border, var(--home-card-border)) !important;
+  color: #f5e6f0;
+}
+
+[data-theme="brand-dark"] .dashboard-news-panel__header {
+  border-bottom-color: var(--app-border, var(--home-card-border));
+}
+
+[data-theme="brand-dark"] .dashboard-news-panel__badge {
+  color: var(--text-brown, #f9a8d4);
+  background: color-mix(in srgb, var(--text-brown, #f9a8d4) 18%, var(--home-card-bg));
+  border-color: var(--home-card-border);
+}
+
+[data-theme="brand-dark"] .announcement-feed-item {
+  background: color-mix(in srgb, var(--ann-type-bg, #3b1f4a) 24%, var(--home-card-bg));
+  border-color: var(--ann-type-border, var(--home-card-border));
+}
+
+[data-theme="brand-dark"] .announcement-feed-item__type-badge {
+  background: var(--home-card-bg);
+  border-color: var(--ann-type-border, var(--home-card-border));
+}
+
+[data-theme="brand-dark"] .announcement-feed-item__title,
+[data-theme="brand-dark"] .announcement-feed-item__body {
+  color: #f5e6f0;
+}
+
+[data-theme="brand-dark"] .announcement-feed-item__meta,
+[data-theme="brand-dark"] .dashboard-news-empty {
+  color: #c4a8b8 !important;
+}
+
+[data-theme="brand-dark"] .announcement-feed-item__footer-date,
+[data-theme="brand-dark"] .announcement-feed-item__footer-name {
+  color: #f5e6f0;
+}

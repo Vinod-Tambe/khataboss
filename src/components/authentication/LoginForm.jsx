@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { login as reduxLogin, loginWithOtp as reduxLoginWithOtp } from "../../store/slices/authSlice";
 import { otpExpirySeconds } from "../../config/appConfig";
 import AppBrandLogo from "../common/AppBrandLogo";
+import { storeSubscriptionExpiryLoginNotice } from "../../utils/subscriptionExpiry";
 
 
 const TypingEffect = ({ texts = [], speed = 100, pause = 1500 }) => {
@@ -158,6 +159,13 @@ const LoginForm = () => {
 
   const navigate = useNavigate();
 
+  const completeLogin = (payload, message) => {
+    showToast(message, "success");
+    const user = payload?.user || payload?.owner || payload;
+    storeSubscriptionExpiryLoginNotice(user);
+    navigate("/home");
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
 
@@ -169,8 +177,7 @@ const LoginForm = () => {
     try {
       const resultAction = await dispatch(reduxLogin({ login_id: loginId, password }));
       if (reduxLogin.fulfilled.match(resultAction)) {
-        showToast(resultAction.payload.message, "success");
-        navigate("/home");
+        completeLogin(resultAction.payload, resultAction.payload.message);
       } else {
         showToast(resultAction.payload, "error");
       }
@@ -215,8 +222,7 @@ const LoginForm = () => {
     try {
       const resultAction = await dispatch(reduxLoginWithOtp({ own_login_id: otpLoginId, otp }));
       if (reduxLoginWithOtp.fulfilled.match(resultAction)) {
-        showToast(resultAction.payload.message, "success");
-        navigate("/home");
+        completeLogin(resultAction.payload, resultAction.payload.message);
       } else {
         showToast(resultAction.payload, "error");
       }
@@ -526,6 +532,7 @@ const LoginForm = () => {
           </div>
         </div>
       </div>
+
     </div>
   );
 };

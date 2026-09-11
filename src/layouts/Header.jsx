@@ -12,6 +12,7 @@ import { hasPermission, isOwner } from "../utils/permissions";
 import FinanceCollectionModal from "../components/finance/FinanceCollectionModal";
 import LoanCollectionModal from "../components/loan/LoanCollectionModal";
 import AppBrandLogo from "../components/common/AppBrandLogo";
+import useSubscriptionExpiry from "../hooks/useSubscriptionExpiry";
 
 const themeLabels = {
   light: "Light",
@@ -135,6 +136,7 @@ const Header = () => {
   const profileRef = useRef(null);
   const isOwnerUser = isOwner(user);
   const canViewLogs = hasPermission(user, "reports.logs");
+  const { showCountdown, countdownLabel, isUrgent } = useSubscriptionExpiry();
   const ThemeIcon =
     theme === "dark"
       ? FiMoon
@@ -324,6 +326,15 @@ const Header = () => {
             <AppBrandLogo size={32} />
             <h1 className="p-0 m-0">KhataBoss</h1>
           </Link>
+          {showCountdown && countdownLabel ? (
+            <span
+              className={`subscription-expiry-header-badge subscription-expiry-header-badge--inline d-md-none ${isUrgent ? 'subscription-expiry-header-badge--urgent' : ''}`}
+              title="Subscription expires soon"
+            >
+              <i className="bi bi-hourglass-split" aria-hidden="true" />
+              <span className="subscription-expiry-header-badge__timer">{countdownLabel}</span>
+            </span>
+          ) : null}
         </div>
 
         {/* CENTER: Search Bar (desktop only) */}
@@ -333,6 +344,18 @@ const Header = () => {
             onOpenLoanDeposit={openLoanDeposit}
           />
         </div>
+
+        {showCountdown && countdownLabel ? (
+          <div className="header-expiry-slot d-none d-md-flex">
+            <span
+              className={`subscription-expiry-header-badge ${isUrgent ? 'subscription-expiry-header-badge--urgent' : ''}`}
+              title="Subscription expires soon — renew to continue access"
+            >
+              <i className="bi bi-hourglass-split" aria-hidden="true" />
+              <span className="subscription-expiry-header-badge__timer">{countdownLabel}</span>
+            </span>
+          </div>
+        ) : null}
 
         {/* RIGHT: User Actions */}
         <div className="header-right">

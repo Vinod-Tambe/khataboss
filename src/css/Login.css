@@ -257,6 +257,24 @@ body:has(.login-container),
   }
 }
 
+.subscription-expiry-login-modal .modal-content {
+  border: 1px solid #fdba74;
+  box-shadow: 0 12px 40px rgba(154, 52, 18, 0.15);
+}
+
+.subscription-expiry-login-modal__header--urgent {
+  background: #fef2f2;
+  border-bottom-color: #fca5a5;
+  color: #991b1b;
+}
+
+.subscription-expiry-login-modal__body {
+  color: #9a3412;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  padding: 1.25rem 1.5rem;
+}
+
 .login-container .login-div {
   position: relative;
   z-index: 2;

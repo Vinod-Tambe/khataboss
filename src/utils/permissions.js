@@ -1,4 +1,4 @@
-/** Owner always has full access. Staff uses granted permission keys. */
+/** Owner and staff both use permission keys granted by super-admin (owner modules / staff RBAC). */
 
 export const isOwner = (user) => {
   if (!user) return false;
@@ -7,21 +7,20 @@ export const isOwner = (user) => {
   return user.role === "OWNER" || !user.role;
 };
 
+const resolvePermissionKeys = (user) =>
+  Array.isArray(user?.permissions) ? user.permissions : [];
+
 export const hasPermission = (user, permissionKey) => {
   if (!permissionKey) return true;
-  if (isOwner(user)) return true;
-  const perms = user?.permissions;
-  return Array.isArray(perms) && perms.includes(permissionKey);
+  return resolvePermissionKeys(user).includes(permissionKey);
 };
 
 export const hasAnyPermission = (user, keys = []) => {
-  if (isOwner(user)) return true;
   if (!keys.length) return true;
   return keys.some((key) => hasPermission(user, key));
 };
 
 export const hasAllPermissions = (user, keys = []) => {
-  if (isOwner(user)) return true;
   if (!keys.length) return true;
   return keys.every((key) => hasPermission(user, key));
 };
@@ -31,8 +30,6 @@ export const hasAllPermissions = (user, keys = []) => {
  * Item shape: { permission?: string, anyOf?: string[], subItems?: [...] }
  */
 export const filterMenuByPermissions = (items, user) => {
-  if (isOwner(user)) return items;
-
   return items
     .map((item) => {
       if (item.id === "logout" || item.id === "home") return item;

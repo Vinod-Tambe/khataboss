@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCurrentUser } from '../store/slices/authSlice';
+import { userNeedsSubscriptionRefresh } from '../utils/subscriptionExpiry';
 
 /**
  * Authenticated routes wrapper.
@@ -15,10 +16,15 @@ const ProtectedRoute = ({ children }) => {
   const fetchedRef = useRef(false);
 
   useEffect(() => {
-    if (!isAuthenticated || !token || fetchedRef.current) return;
-    fetchedRef.current = true;
+    if (!isAuthenticated || !token) return;
     dispatch(fetchCurrentUser());
+    fetchedRef.current = true;
   }, [dispatch, isAuthenticated, token]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !token || !userNeedsSubscriptionRefresh(user)) return;
+    dispatch(fetchCurrentUser());
+  }, [dispatch, isAuthenticated, token, user]);
 
   if (!isAuthenticated || !token) {
     return <Navigate to="/" state={{ from: location }} replace />;

@@ -38,7 +38,10 @@ const OwnerListPage = () => {
         own_status: owner.own_status ?? 'Inactive',
         own_city: owner.own_city ?? '',
         own_state: owner.own_state ?? '',
+        own_start_date: owner.own_start_date || '',
+        own_expiry_date: owner.own_expiry_date || '',
         own_created_at: owner.own_created_at || owner.own_add_date || '',
+        own_updated_at: owner.own_updated_at || '',
       }));
       setOwners(rows);
       setSummary({
@@ -153,11 +156,32 @@ const OwnerListPage = () => {
       { key: 'own_city', title: 'City', orderable: true, searchable: true },
       { key: 'own_state', title: 'State', orderable: true, searchable: true },
       {
-        key: 'own_created_at',
-        title: 'Created Date',
+        key: 'own_start_date',
+        title: 'Start Date',
         orderable: true,
         searchable: true,
-        render: (val) => (val ? moment(val).format('DD/MM/YYYY') : 'N/A'),
+        render: (val) => (val ? moment(val).format('DD/MM/YYYY') : '—'),
+      },
+      {
+        key: 'own_expiry_date',
+        title: 'Expiry Date',
+        orderable: true,
+        searchable: true,
+        render: (val) => (val ? moment(val).format('DD/MM/YYYY') : '—'),
+      },
+      {
+        key: 'own_created_at',
+        title: 'Created At',
+        orderable: true,
+        searchable: true,
+        render: (val) => (val ? moment(val).format('DD/MM/YYYY, hh:mm A') : '—'),
+      },
+      {
+        key: 'own_updated_at',
+        title: 'Updated At',
+        orderable: true,
+        searchable: true,
+        render: (val) => (val ? moment(val).format('DD/MM/YYYY, hh:mm A') : '—'),
       },
       {
         key: 'own_uuid',
@@ -210,7 +234,11 @@ const OwnerListPage = () => {
     e.preventDefault();
     if (!resetTarget) return;
     try {
-      await resetOwnerPassword(resetTarget.own_uuid, newPassword, confirmPassword);
+      await resetOwnerPassword(resetTarget.own_uuid, {
+        own_login_id: resetTarget.own_login_id,
+        new_password: newPassword,
+        confirm_password: confirmPassword,
+      });
       toast.success('Password reset successfully.');
       setResetTarget(null);
       setNewPassword('');

@@ -78,7 +78,13 @@ const Daybook = () => {
         showToast(res.message || "Failed to fetch daybook", "error");
       }
     } catch (err) {
-      showToast(err.message || "Failed to fetch daybook", "error");
+      const message = err?.message || "Failed to fetch daybook";
+      showToast(
+        message.includes("permission")
+          ? "Daybook module is not enabled for your account. Please contact your administrator."
+          : message,
+        "error"
+      );
     } finally {
       setLoading(false);
     }

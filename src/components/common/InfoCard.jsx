@@ -7,8 +7,8 @@ const InfoCard = ({ title, value, icon, colorClass, iconBgClass, wrapperClass = 
         <div className="card-body p-3 p-md-4">
           <div className="d-flex justify-content-between align-items-start">
             <div>
-              <p className="text-muted mb-1 fw-medium small">{title}</p>
-              <h5 className={`display-number mb-0 ${colorClass}`}>
+              <p className="text-muted mb-1 fw-medium dashboard-stat-card__label">{title}</p>
+              <h5 className={`display-number dashboard-stat-card__value mb-0 ${colorClass}`}>
                 {value}
               </h5>
             </div>

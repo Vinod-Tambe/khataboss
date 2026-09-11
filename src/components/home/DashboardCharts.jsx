@@ -2,6 +2,26 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Chart from 'react-apexcharts';
 import { useTheme } from '../../context/ThemeContext';
 
+const resolveDashboardChartFont = () => {
+  const w = typeof window !== 'undefined' ? window.innerWidth : 1200;
+  if (w >= 1920) return { sm: 13, base: 14, md: 15, lg: 17, xl: 19 };
+  if (w >= 1400) return { sm: 12, base: 13, md: 14, lg: 16, xl: 18 };
+  if (w >= 992) return { sm: 11, base: 12, md: 13, lg: 15, xl: 17 };
+  return { sm: 10, base: 11, md: 12, lg: 13, xl: 15 };
+};
+
+const useDashboardChartFont = () => {
+  const [chartFont, setChartFont] = useState(resolveDashboardChartFont);
+
+  useEffect(() => {
+    const onResize = () => setChartFont(resolveDashboardChartFont());
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  return chartFont;
+};
+
 const EMPTY_COUNTS = {
   weekly: { categories: ['Week 1', 'Week 2', 'Week 3', 'Week 4'], loans: [0, 0, 0, 0], finance: [0, 0, 0, 0] },
   monthly: { categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], loans: Array(12).fill(0), finance: Array(12).fill(0) },
@@ -54,6 +74,7 @@ const ChartSummary = ({ items }) => (
 );
 
 const DashboardCharts = ({ charts, loading }) => {
+  const chartFont = useDashboardChartFont();
   const { theme } = useTheme();
   const isBrandDark = theme === 'brand-dark';
   const isFintech = theme === 'fintech';
@@ -133,13 +154,13 @@ const DashboardCharts = ({ charts, loading }) => {
     legend: {
       position: 'bottom',
       horizontalAlign: 'center',
-      fontSize: '13px',
+      fontSize: `${chartFont.md}px`,
       fontWeight: 600,
       labels: { colors: chartLabelColor },
       markers: { width: 10, height: 10, radius: 3 },
     },
     tooltip: { theme: chartTheme },
-  }), [chartGridColor, chartLabelColor, chartTheme, loading]);
+  }), [chartFont.md, chartGridColor, chartLabelColor, chartTheme, loading]);
 
   const countChartOptions = useMemo(() => ({
     ...baseChartOptions,
@@ -156,7 +177,7 @@ const DashboardCharts = ({ charts, loading }) => {
       formatter: formatCountLabel,
       offsetY: -18,
       style: {
-        fontSize: '11px',
+        fontSize: `${chartFont.sm}px`,
         fontWeight: 700,
         colors: [chartValueColor],
       },
@@ -165,7 +186,7 @@ const DashboardCharts = ({ charts, loading }) => {
     xaxis: {
       categories: currentCountSlice.categories || [],
       labels: {
-        style: { colors: chartLabelColor, fontSize: '11px', fontWeight: 600 },
+        style: { colors: chartLabelColor, fontSize: `${chartFont.sm}px`, fontWeight: 600 },
         rotate: countView === 'monthly' ? -35 : 0,
         trim: true,
       },
@@ -177,12 +198,12 @@ const DashboardCharts = ({ charts, loading }) => {
       forceNiceScale: true,
       tickAmount: 5,
       labels: {
-        style: { colors: chartLabelColor, fontSize: '11px' },
+        style: { colors: chartLabelColor, fontSize: `${chartFont.sm}px` },
         formatter: (value) => Math.round(value),
       },
       title: {
         text: 'Number of accounts',
-        style: { color: chartLabelColor, fontSize: '11px', fontWeight: 600 },
+        style: { color: chartLabelColor, fontSize: `${chartFont.sm}px`, fontWeight: 600 },
       },
     },
     colors: [loanColor, financeColor],
@@ -190,7 +211,7 @@ const DashboardCharts = ({ charts, loading }) => {
       ...baseChartOptions.tooltip,
       y: { formatter: (value) => `${Number(value || 0)} account(s)` },
     },
-  }), [baseChartOptions, chartLabelColor, chartValueColor, countView, currentCountSlice.categories, loanColor, financeColor]);
+  }), [baseChartOptions, chartFont.sm, chartLabelColor, chartValueColor, countView, currentCountSlice.categories, loanColor, financeColor]);
 
   const countChartSeries = useMemo(() => ([
     { name: 'New Loans', data: currentCountSlice.loans || [] },
@@ -212,7 +233,7 @@ const DashboardCharts = ({ charts, loading }) => {
       formatter: (value) => (Number(value) > 0 ? formatRupeeShort(value) : ''),
       offsetY: -18,
       style: {
-        fontSize: '10px',
+        fontSize: `${chartFont.base}px`,
         fontWeight: 700,
         colors: [chartValueColor],
       },
@@ -221,7 +242,7 @@ const DashboardCharts = ({ charts, loading }) => {
     xaxis: {
       categories: currentAmountSlice.categories || [],
       labels: {
-        style: { colors: chartLabelColor, fontSize: '11px', fontWeight: 600 },
+        style: { colors: chartLabelColor, fontSize: `${chartFont.sm}px`, fontWeight: 600 },
         rotate: amountView === 'monthly' ? -35 : 0,
         trim: true,
       },
@@ -232,12 +253,12 @@ const DashboardCharts = ({ charts, loading }) => {
       min: 0,
       forceNiceScale: true,
       labels: {
-        style: { colors: chartLabelColor, fontSize: '11px' },
+        style: { colors: chartLabelColor, fontSize: `${chartFont.sm}px` },
         formatter: formatRupeeShort,
       },
       title: {
         text: 'Amount (₹)',
-        style: { color: chartLabelColor, fontSize: '11px', fontWeight: 600 },
+        style: { color: chartLabelColor, fontSize: `${chartFont.sm}px`, fontWeight: 600 },
       },
     },
     colors: [loanColor, financeColor],
@@ -245,7 +266,7 @@ const DashboardCharts = ({ charts, loading }) => {
       ...baseChartOptions.tooltip,
       y: { formatter: (value) => formatRupeeFull(value) },
     },
-  }), [amountView, baseChartOptions, chartLabelColor, chartValueColor, currentAmountSlice.categories, loanColor, financeColor]);
+  }), [amountView, baseChartOptions, chartFont.base, chartFont.sm, chartLabelColor, chartValueColor, currentAmountSlice.categories, loanColor, financeColor]);
 
   const amountChartSeries = useMemo(() => ([
     { name: 'Loan Amount', data: currentAmountSlice.loans || [] },
@@ -265,13 +286,13 @@ const DashboardCharts = ({ charts, loading }) => {
             show: true,
             name: {
               show: true,
-              fontSize: '13px',
+              fontSize: `${chartFont.md}px`,
               color: chartLabelColor,
               offsetY: 18,
             },
             value: {
               show: true,
-              fontSize: '16px',
+              fontSize: `${chartFont.lg}px`,
               fontWeight: 700,
               color: chartValueColor,
               offsetY: -2,
@@ -281,7 +302,7 @@ const DashboardCharts = ({ charts, loading }) => {
               show: true,
               showAlways: true,
               label: 'Total',
-              fontSize: '13px',
+              fontSize: `${chartFont.md}px`,
               color: chartLabelColor,
               formatter: () => formatRupeeShort(profitAmount + discountAmount),
             },
@@ -293,7 +314,7 @@ const DashboardCharts = ({ charts, loading }) => {
       enabled: true,
       formatter: (_value, opts) => formatRupeeShort(opts.w.config.series[opts.seriesIndex]),
       style: {
-        fontSize: '12px',
+        fontSize: `${chartFont.base}px`,
         fontWeight: 700,
         colors: ['#ffffff'],
       },
@@ -311,7 +332,7 @@ const DashboardCharts = ({ charts, loading }) => {
       ...baseChartOptions.tooltip,
       y: { formatter: (value) => formatRupeeFull(value) },
     },
-  }), [baseChartOptions, chartLabelColor, chartValueColor, discountAmount, interestColor, discountColor, isDark, profitAmount]);
+  }), [baseChartOptions, chartFont.base, chartFont.lg, chartFont.md, chartLabelColor, chartValueColor, discountAmount, interestColor, discountColor, isDark, profitAmount]);
 
   const profitChartSeries = useMemo(
     () => [profitAmount, discountAmount],
@@ -339,7 +360,7 @@ const DashboardCharts = ({ charts, loading }) => {
       formatter: (value) => (Number(value) > 0 ? formatRupeeShort(value) : ''),
       offsetY: -18,
       style: {
-        fontSize: '10px',
+        fontSize: `${chartFont.base}px`,
         fontWeight: 700,
         colors: [chartValueColor],
       },
@@ -347,19 +368,19 @@ const DashboardCharts = ({ charts, loading }) => {
     xaxis: {
       categories: collectionCategories,
       labels: {
-        style: { colors: chartLabelColor, fontSize: '11px', fontWeight: 600 },
+        style: { colors: chartLabelColor, fontSize: `${chartFont.sm}px`, fontWeight: 600 },
       },
       axisBorder: { show: false },
       axisTicks: { show: false },
     },
     yaxis: {
       labels: {
-        style: { colors: chartLabelColor, fontSize: '11px' },
+        style: { colors: chartLabelColor, fontSize: `${chartFont.sm}px` },
         formatter: formatRupeeShort,
       },
       title: {
         text: 'Collection amount (₹)',
-        style: { color: chartLabelColor, fontSize: '11px', fontWeight: 600 },
+        style: { color: chartLabelColor, fontSize: `${chartFont.sm}px`, fontWeight: 600 },
       },
     },
     colors: [loanColor, financeColor],
@@ -369,7 +390,7 @@ const DashboardCharts = ({ charts, loading }) => {
       intersect: false,
       y: { formatter: (value) => formatRupeeFull(value) },
     },
-  }), [baseChartOptions, chartLabelColor, chartValueColor, collectionCategories, loanColor, financeColor]);
+  }), [baseChartOptions, chartFont.base, chartFont.sm, chartLabelColor, chartValueColor, collectionCategories, loanColor, financeColor]);
 
   const collectionChartSeries = useMemo(() => ([
     { name: 'Loan Collection', data: last7DaysData.map((item) => item.loan || 0) },

@@ -32,28 +32,45 @@ axiosInstance.interceptors.response.use(
       error.message = 'Server is down, please contact administrator';
     }
 
+    const responseData = error.response?.data;
+    const isSubscriptionExpired =
+      error.response?.status === 403 &&
+      (responseData?.code === 'SUBSCRIPTION_EXPIRED' ||
+        String(responseData?.message || responseData?.error || '').toLowerCase().includes('subscription has expired'));
+
+    if (isSubscriptionExpired) {
+      const apiMessage =
+        responseData?.message ||
+        responseData?.error ||
+        'Your KhataBoss subscription has expired. Please contact your administrator to renew.';
+
+      await LogoutAlert(apiMessage);
+
+      localStorage.removeItem('user');
+      sessionStorage.removeItem('token');
+      localStorage.removeItem('token');
+      window.location.href = '/';
+      return Promise.reject(error);
+    }
+
     const isTokenError = error.response && (
       (error.response.status === 401 &&
         error.config &&
         error.config.url &&
         !error.config.url.includes('/auth/login') &&
         !error.config.url.includes('/auth/verify-otp')) ||
-      (error.response.data && error.response.data.error === "Access denied. No token provided.")
+      (responseData && responseData.error === "Access denied. No token provided.")
     );
 
     if (isTokenError) {
-      // Extract API message if available
-      const apiMessage = error.response?.data?.message || error.response?.data?.error;
+      const apiMessage = responseData?.message || responseData?.error;
 
-      // Handle unauthorized (session expired)
       await LogoutAlert(apiMessage);
 
       localStorage.removeItem('user');
       sessionStorage.removeItem('token');
-
-      // Clear legacy token if exists
       localStorage.removeItem('token');
-      window.location.href = '/'; // Redirect to login
+      window.location.href = '/';
     }
     return Promise.reject(error);
   }

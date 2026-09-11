@@ -6,6 +6,10 @@ import OwnerListPage from '../pages/OwnerListPage';
 import OwnerGridPage from '../pages/OwnerGridPage';
 import OwnerDetailsPage from '../pages/OwnerDetailsPage';
 import OwnerFormPage from '../pages/OwnerFormPage';
+import PlanGridPage from '../pages/PlanGridPage';
+import PlanFormPage from '../pages/PlanFormPage';
+import AnnouncementPage from '../pages/AnnouncementPage';
+import AdminProfilePage from '../pages/AdminProfilePage';
 
 const AdminRoutes = () => (
   <Routes>
@@ -18,6 +22,12 @@ const AdminRoutes = () => (
       <Route path="owners/new" element={<OwnerFormPage />} />
       <Route path="owners/details/:uuid" element={<OwnerDetailsPage />} />
       <Route path="owners/:uuid/edit" element={<OwnerFormPage />} />
+      <Route path="plans" element={<Navigate to="grid" replace />} />
+      <Route path="plans/grid" element={<PlanGridPage />} />
+      <Route path="plans/new" element={<PlanFormPage />} />
+      <Route path="plans/edit/:uuid" element={<PlanFormPage />} />
+      <Route path="news" element={<AnnouncementPage />} />
+      <Route path="profile" element={<AdminProfilePage />} />
       <Route path="*" element={<Navigate to="dashboard" replace />} />
     </Route>
   </Routes>
