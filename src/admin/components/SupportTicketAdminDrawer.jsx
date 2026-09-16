@@ -161,6 +161,7 @@ const SupportTicketAdminDrawer = ({ ticketUuid, show, onHide, onUpdated, refresh
         )}
 
         {!loading && ticket && (
+          <>
           <form onSubmit={handleSave} className="support-board-drawer__form">
             <div className="p-3 border-bottom">
               <div className="small text-muted mb-2">
@@ -274,9 +275,9 @@ const SupportTicketAdminDrawer = ({ ticketUuid, show, onHide, onUpdated, refresh
                 {saving ? 'Saving…' : 'Save ticket'}
               </button>
             </div>
+          </form>
 
             <div className="p-3 support-ticket-drawer__activity">
-              <h6 className="support-detail-section__title mb-2">Activity & comments</h6>
               <SupportCommentThread
                 comments={ticket.comments || []}
                 currentRole="Admin"
@@ -287,7 +288,7 @@ const SupportTicketAdminDrawer = ({ ticketUuid, show, onHide, onUpdated, refresh
                 submitting={submittingComment}
               />
             </div>
-          </form>
+          </>
         )}
       </Offcanvas.Body>
     </Offcanvas>

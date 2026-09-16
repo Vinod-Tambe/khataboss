@@ -165,7 +165,7 @@ const SupportTicketOwnerDrawer = ({
 
           {!loading && ticket && (
             <div className="support-ticket-drawer__form">
-              <div className="p-3 border-bottom support-ticket-drawer__section">
+              <div className="p-3 border-bottom support-ticket-drawer__section support-ticket-drawer__section--ticket">
                 <SupportInlineEditableField
                   value={ticket.st_title}
                   editable={canEdit}
@@ -211,8 +211,7 @@ const SupportTicketOwnerDrawer = ({
                 />
               </div>
 
-              <div className="p-3 support-ticket-drawer__activity">
-                <h6 className="support-detail-section__title mb-2">Activity & comments</h6>
+              <div className="p-3 support-ticket-drawer__activity support-ticket-drawer__activity--owner">
                 <SupportCommentThread
                   comments={ticket.comments || []}
                   currentRole="Owner"

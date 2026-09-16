@@ -1179,6 +1179,18 @@
   border-top: 1px solid var(--app-border, #e8ecef);
 }
 
+.support-activity__composer--top {
+  padding-top: 0;
+  border-top: none;
+  margin-top: 0;
+}
+
+.support-activity__history-title {
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+  border-top: 1px solid var(--app-border, #e8ecef);
+}
+
 .support-comment-compose {
   position: relative;
   border: 1px solid var(--app-border, #dee2e6);
@@ -2017,6 +2029,22 @@
   background: color-mix(in srgb, var(--app-border, #eef1f4) 28%, var(--home-card-bg, #fff));
 }
 
+.support-ticket-drawer__activity--owner {
+  background: color-mix(in srgb, var(--app-border, #eef1f4) 20%, var(--home-card-bg, #fff));
+}
+
+.support-ticket-drawer__activity--owner .support-activity__composer--top {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--app-border, #e8ecef);
+}
+
+.support-ticket-drawer__activity--owner .support-activity__history-title {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+
 .support-ticket-drawer__activity .support-activity__composer {
   margin-top: 0.75rem;
   padding: 0.75rem;
@@ -2024,6 +2052,10 @@
   border-top: 1px solid var(--app-border, #e8ecef);
   background: var(--home-card-bg, #fff);
   border-radius: 12px;
+}
+
+.support-ticket-drawer__activity .support-activity__composer--top {
+  margin-top: 0;
 }
 
 .support-board-drawer__form {

@@ -153,11 +153,46 @@ const SupportCommentThread = ({
 
   return (
     <div className="support-comments support-activity">
+      <form onSubmit={handleAdd} className="support-activity__composer support-activity__composer--top mb-3">
+        <label className="form-label fw-bold small text-muted mb-1">Add comment</label>
+        <SupportCommentComposer
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+          disabled={submitting}
+          newImages={newImages}
+          maxCount={SUPPORT_COMMENT_MAX_IMAGES}
+          onAddNew={(item) => setNewImages((prev) => [...prev, item])}
+          onRemoveNew={(index) => {
+            setNewImages((prev) => {
+              const next = [...prev];
+              const removed = next[index];
+              if (removed?.preview?.startsWith('blob:')) {
+                URL.revokeObjectURL(removed.preview);
+              }
+              next.splice(index, 1);
+              return next;
+            });
+          }}
+          onPreview={setLightboxUrl}
+        />
+        <button
+          type="submit"
+          className="btn btn-primary mt-2 px-4 fw-bold"
+          disabled={submitting || !canPost}
+        >
+          {submitting ? 'Sending…' : 'Post comment'}
+        </button>
+      </form>
+
+      <h6 className="support-activity__history-title small fw-bold text-muted mb-2">
+        Activity & comment history
+      </h6>
+
       {comments.length === 0 && (
-        <p className="text-muted small mb-3">No activity yet. Post an update or attach images below.</p>
+        <p className="text-muted small mb-3">No activity yet.</p>
       )}
 
-      <ul className="list-unstyled support-activity__feed mb-3">
+      <ul className="list-unstyled support-activity__feed mb-0">
         {comments.map((comment) => {
           const isHistory = isSupportActivityHistory(comment);
           const displayBody = isHistory
@@ -369,37 +404,6 @@ const SupportCommentThread = ({
           );
         })}
       </ul>
-
-      <form onSubmit={handleAdd} className="support-activity__composer">
-        <label className="form-label fw-bold small text-muted mb-1">Add comment</label>
-        <SupportCommentComposer
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          disabled={submitting}
-          newImages={newImages}
-          maxCount={SUPPORT_COMMENT_MAX_IMAGES}
-          onAddNew={(item) => setNewImages((prev) => [...prev, item])}
-          onRemoveNew={(index) => {
-            setNewImages((prev) => {
-              const next = [...prev];
-              const removed = next[index];
-              if (removed?.preview?.startsWith('blob:')) {
-                URL.revokeObjectURL(removed.preview);
-              }
-              next.splice(index, 1);
-              return next;
-            });
-          }}
-          onPreview={setLightboxUrl}
-        />
-        <button
-          type="submit"
-          className="btn btn-primary mt-2 px-4 fw-bold"
-          disabled={submitting || !canPost}
-        >
-          {submitting ? 'Sending…' : 'Post comment'}
-        </button>
-      </form>
 
       {lightboxUrl && (
         <div
