@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import { Offcanvas } from "bootstrap";
@@ -47,10 +47,10 @@ import { logout } from "../store/slices/authSlice";
 import { setSelectedFirmId } from "../store/slices/firmSlice";
 import { filterMenuByPermissions, isOwner } from "../utils/permissions";
 
-const BOTTOM_MENU_IDS = new Set(["support", "logout"]);
-
 const Sidebar = () => {
   const [openSubmenus, setOpenSubmenus] = useState({});
+  const primaryScrollRef = useRef(null);
+  const scrollbarRef = useRef(null);
   const dispatch = useDispatch();
   const { firms, selectedFirmId } = useSelector((state) => state.firm);
   const user = useSelector((state) => state.auth.user);
@@ -65,34 +65,39 @@ const Sidebar = () => {
   };
 
   useEffect(() => {
-    const ps = new PerfectScrollbar("#sidebar-menu-scroll", {
+    const container = primaryScrollRef.current;
+    if (!container) return undefined;
+
+    const ps = new PerfectScrollbar(container, {
       suppressScrollX: true,
       wheelPropagation: false,
     });
+    scrollbarRef.current = ps;
 
-    const rail = document.querySelector("#sidebar-menu-scroll .ps__rail-y");
+    const rail = container.querySelector(".ps__rail-y");
     if (rail) rail.style.opacity = "0";
 
-    const container = document.getElementById("sidebar-menu-scroll");
-    if (container) {
-      container.addEventListener("mouseenter", () => {
-        if (rail) rail.style.opacity = "0.6";
-      });
+    const showRail = () => {
+      if (rail) rail.style.opacity = "0.6";
+    };
+    const hideRail = () => {
+      if (rail) rail.style.opacity = "0";
+    };
 
-      container.addEventListener("mouseleave", () => {
-        if (rail) rail.style.opacity = "0";
-      });
+    container.addEventListener("mouseenter", showRail);
+    container.addEventListener("mouseleave", hideRail);
+    container.addEventListener("ps-scroll-y", () => {
+      showRail();
+      clearTimeout(container.scrollTimeout);
+      container.scrollTimeout = setTimeout(hideRail, 1500);
+    });
 
-      container.addEventListener("ps-scroll-y", () => {
-        if (rail) rail.style.opacity = "0.6";
-        clearTimeout(container.scrollTimeout);
-        container.scrollTimeout = setTimeout(() => {
-          if (rail) rail.style.opacity = "0";
-        }, 1500);
-      });
-    }
-
-    return () => ps.destroy();
+    return () => {
+      container.removeEventListener("mouseenter", showRail);
+      container.removeEventListener("mouseleave", hideRail);
+      scrollbarRef.current = null;
+      ps.destroy();
+    };
   }, []);
 
   const toggleSubmenu = (id) => {
@@ -268,17 +273,19 @@ const Sidebar = () => {
     return filtered.filter((item) => !item.ownerOnly);
   }, [allMenuItems, user]);
 
-  const primaryMenuItems = useMemo(
-    () => menuItems.filter((item) => !BOTTOM_MENU_IDS.has(item.id)),
+  const scrollableMenuItems = useMemo(
+    () => menuItems.filter((item) => item.id !== "logout"),
     [menuItems]
   );
 
-  const bottomMenuItems = useMemo(() => {
-    const order = ["support", "logout"];
-    return order
-      .map((id) => menuItems.find((item) => item.id === id))
-      .filter(Boolean);
-  }, [menuItems]);
+  const logoutMenuItem = useMemo(
+    () => menuItems.find((item) => item.id === "logout"),
+    [menuItems]
+  );
+
+  useEffect(() => {
+    scrollbarRef.current?.update();
+  }, [openSubmenus, scrollableMenuItems.length]);
 
   const closeSidebarOnMobile = () => {
     if (window.innerWidth >= 992) return;
@@ -361,7 +368,7 @@ const Sidebar = () => {
           ></button>
         </div>
 
-        <div className="flex-grow-1 overflow-hidden d-flex flex-column">
+        <div className="flex-grow-1 overflow-hidden d-flex flex-column min-h-0">
           <select
             className="form-select sidebar-firm-select p-2 cursor-pointer d-block d-lg-none"
             aria-label="Firm selection"
@@ -375,13 +382,19 @@ const Sidebar = () => {
               </option>
             ))}
           </select>
-          <div id="sidebar-menu-scroll" className="h-100 sidebar-menu-scroll">
-            <ul className="sidebar-menu sidebar-menu--primary">
-              {primaryMenuItems.map(renderMenuItem)}
-            </ul>
-            {bottomMenuItems.length > 0 && (
+          <div className="sidebar-menu-scroll flex-grow-1 min-h-0">
+            <div
+              ref={primaryScrollRef}
+              id="sidebar-menu-primary-scroll"
+              className="sidebar-menu-primary-scroll"
+            >
+              <ul className="sidebar-menu">
+                {scrollableMenuItems.map(renderMenuItem)}
+              </ul>
+            </div>
+            {logoutMenuItem && (
               <ul className="sidebar-menu sidebar-menu--bottom">
-                {bottomMenuItems.map(renderMenuItem)}
+                {renderMenuItem(logoutMenuItem)}
               </ul>
             )}
           </div>

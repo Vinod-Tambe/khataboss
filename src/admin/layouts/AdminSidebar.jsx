@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Offcanvas } from 'bootstrap';
 import PerfectScrollbar from 'perfect-scrollbar';
 import 'perfect-scrollbar/css/perfect-scrollbar.css';
@@ -12,6 +12,8 @@ const AdminSidebar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [openSubmenus, setOpenSubmenus] = useState({ owners: true });
+  const menuScrollRef = useRef(null);
+  const scrollbarRef = useRef(null);
 
   const menuItems = useMemo(
     () => [
@@ -48,35 +50,44 @@ const AdminSidebar = () => {
   };
 
   useEffect(() => {
-    const ps = new PerfectScrollbar('#sidebar-menu-scroll', {
+    const container = menuScrollRef.current;
+    if (!container) return undefined;
+
+    const ps = new PerfectScrollbar(container, {
       suppressScrollX: true,
       wheelPropagation: false,
     });
+    scrollbarRef.current = ps;
 
-    const rail = document.querySelector('#sidebar-menu-scroll .ps__rail-y');
+    const rail = container.querySelector('.ps__rail-y');
     if (rail) rail.style.opacity = '0';
 
-    const container = document.getElementById('sidebar-menu-scroll');
-    if (container) {
-      container.addEventListener('mouseenter', () => {
-        if (rail) rail.style.opacity = '0.6';
-      });
+    const showRail = () => {
+      if (rail) rail.style.opacity = '0.6';
+    };
+    const hideRail = () => {
+      if (rail) rail.style.opacity = '0';
+    };
 
-      container.addEventListener('mouseleave', () => {
-        if (rail) rail.style.opacity = '0';
-      });
+    container.addEventListener('mouseenter', showRail);
+    container.addEventListener('mouseleave', hideRail);
+    container.addEventListener('ps-scroll-y', () => {
+      showRail();
+      clearTimeout(container.scrollTimeout);
+      container.scrollTimeout = setTimeout(hideRail, 1500);
+    });
 
-      container.addEventListener('ps-scroll-y', () => {
-        if (rail) rail.style.opacity = '0.6';
-        clearTimeout(container.scrollTimeout);
-        container.scrollTimeout = setTimeout(() => {
-          if (rail) rail.style.opacity = '0';
-        }, 1500);
-      });
-    }
-
-    return () => ps.destroy();
+    return () => {
+      container.removeEventListener('mouseenter', showRail);
+      container.removeEventListener('mouseleave', hideRail);
+      scrollbarRef.current = null;
+      ps.destroy();
+    };
   }, []);
+
+  useEffect(() => {
+    scrollbarRef.current?.update();
+  }, [openSubmenus, menuItems.length]);
 
   const handleLogout = (e) => {
     e.preventDefault();
@@ -116,8 +127,12 @@ const AdminSidebar = () => {
           />
         </div>
 
-        <div className="flex-grow-1 overflow-hidden d-flex flex-column">
-          <div id="sidebar-menu-scroll" className="h-100">
+        <div className="flex-grow-1 overflow-hidden d-flex flex-column min-h-0">
+          <div
+            ref={menuScrollRef}
+            id="sidebar-menu-scroll"
+            className="sidebar-menu-primary-scroll flex-grow-1 min-h-0"
+          >
             <ul className="sidebar-menu">
               {menuItems.map((item) => (
                 <li key={item.id} className={`p-1 ${item.subItems ? 'has-submenu' : ''}`}>
