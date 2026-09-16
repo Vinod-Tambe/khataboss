@@ -367,7 +367,7 @@ const UserHomeRoutes = () => {
           </div>
         </div>
       </div>
-      <div className="card p-3 pt-2 shadow-sm">
+      <div className="card p-3 pt-2 shadow-sm app-module-panel">
         {/* ================= ROUTES ================= */}
         <Routes>
           <Route path="/*" element={<UserHome />} />

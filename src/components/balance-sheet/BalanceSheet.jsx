@@ -129,7 +129,7 @@ const BalanceSheet = () => {
     };
 
     return (
-        <div className="card p-3 pt-1 shadow-sm balance-sheet-page">
+        <div className="card p-3 pt-1 shadow-sm balance-sheet-page app-module-panel">
             <div className="row align-items-center mt-2 g-2">
                 <div className="col-6 col-md-3 no-print">
                     <select 

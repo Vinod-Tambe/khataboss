@@ -330,7 +330,7 @@ const Daybook = () => {
   };
 
   return (
-    <div className="card p-3 pt-1 shadow-sm mb-4 daybook-page">
+    <div className="card p-3 pt-1 shadow-sm mb-4 daybook-page app-module-panel">
       <div className="row align-items-center mt-2 g-2 daybook-filters">
         <div className="col-12 col-md-3 text-center text-md-start">
           <h3 className="text-brown fw-bold mb-0 responsive-text daybook-title">

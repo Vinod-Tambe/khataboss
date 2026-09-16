@@ -70,7 +70,7 @@
 
 .admin-stat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 16px;
 }
 
@@ -78,11 +78,19 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  min-width: 0;
+  box-sizing: border-box;
   background: var(--home-card-bg, #ffffff);
-  border: 1px solid var(--home-card-border, #e2e8f0);
+  border: 1px solid var(--home-tooltip-border, #e2e8f0);
   border-radius: 20px;
   padding: 20px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .admin-stat-card,
+[data-theme="brand-dark"] .admin-stat-card {
+  border-color: var(--app-border, rgba(255, 255, 255, 0.12));
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 .admin-stat-icon {
@@ -106,6 +114,14 @@
   color: var(--home-muted-text, #64748b);
   font-weight: 600;
   margin-top: 4px;
+}
+
+.admin-dashboard-charts__panel {
+  min-height: 100%;
+}
+
+.admin-dashboard-charts__panel .apexcharts-canvas {
+  margin: 0 auto;
 }
 
 .admin-table thead th {

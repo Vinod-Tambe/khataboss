@@ -14,7 +14,7 @@ const AdminLayout = () => (
         className="content-area mt-0 mt-md-3 d-flex flex-column"
         style={{ minHeight: 'calc(100vh - 56px)' }}
       >
-        <div className="container-fluid flex-grow-1 pb-3 pb-md-4">
+        <div className="container-fluid flex-grow-1 pb-3 pb-md-4 module-container">
           <Outlet />
         </div>
         <AdminFooter />

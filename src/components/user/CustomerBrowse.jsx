@@ -141,7 +141,7 @@ const CustomerBrowse = ({ initialView = "grid" }) => {
     navigate(nextView === "list" ? "/user/list" : "/user/grid", { replace: true });
   };
   return (
-    <div className="card p-3 pt-2 shadow-sm position-relative">
+    <div className="card p-3 pt-2 shadow-sm position-relative app-module-panel">
       <div className="row pt-2 pb-3 align-items-center g-2">
         <div className="col-12 col-md-9">
           <div className="input-group">

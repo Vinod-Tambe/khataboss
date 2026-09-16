@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAdminDashboard } from '../api/adminApi';
+import AdminDashboardCharts from '../components/AdminDashboardCharts';
 
 const formatOwnerName = (owner) =>
   [owner?.own_first_name, owner?.own_middle_name, owner?.own_last_name].filter(Boolean).join(' ');
@@ -37,19 +38,25 @@ const AdminDashboardPage = () => {
     return <div className="alert alert-danger">{error}</div>;
   }
 
+  const ticketSummary = stats?.supportAudit?.summary || {};
+
   const cards = [
     { label: 'Total Owners', value: stats?.totalOwners || 0, icon: 'bi-people', color: '#2563eb' },
     { label: 'Active Owners', value: stats?.activeOwners || 0, icon: 'bi-check-circle', color: '#059669' },
     { label: 'Inactive Owners', value: stats?.inactiveOwners || 0, icon: 'bi-pause-circle', color: '#d97706' },
-    { label: 'New This Month', value: stats?.newOwnersThisMonth || 0, icon: 'bi-graph-up-arrow', color: '#7c3aed' },
+    { label: 'Total Plans', value: stats?.totalPlans || 0, icon: 'bi-layers', color: '#7c3aed' },
+    { label: 'Total Tickets', value: ticketSummary.totalTickets || 0, icon: 'bi-ticket-perforated', color: '#6366f1' },
+    { label: 'Delivered Tickets', value: ticketSummary.deliveredTickets || 0, icon: 'bi-check2-all', color: '#0d9488' },
+    { label: 'Pending Tickets', value: ticketSummary.openTickets || 0, icon: 'bi-hourglass-split', color: '#dc2626' },
+    { label: 'Active Plans', value: stats?.activePlans || 0, icon: 'bi-patch-check', color: '#0891b2' },
   ];
 
   return (
-    <div>
+    <div className="card p-3 pt-2 shadow-sm app-module-panel">
       <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <div>
           <h2 className="admin-page-title mb-1">Dashboard</h2>
-          <p className="text-muted mb-0">Overview of all registered owners on KhataBoss</p>
+          <p className="text-muted mb-0">Owners, plans, and support tickets overview</p>
         </div>
         <Link to="/admin/owners/new" className="btn btn-primary">
           <i className="bi bi-person-plus me-1" />
@@ -70,6 +77,8 @@ const AdminDashboardPage = () => {
           </div>
         ))}
       </div>
+
+      <AdminDashboardCharts charts={stats?.charts} />
 
       <div className="admin-panel">
         <div className="d-flex justify-content-between align-items-center mb-3">

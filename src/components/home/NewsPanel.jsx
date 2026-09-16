@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { getAnnouncementFeed } from '../../api/announcementApi';
 import usePlatformBranding from '../../hooks/usePlatformBranding';
+import AnnouncementDetailModal from './AnnouncementDetailModal';
 import AnnouncementFeedItem from './AnnouncementFeedItem';
 
 const FEED_REFRESH_MS = 60 * 1000;
@@ -9,6 +10,7 @@ const NewsPanel = () => {
   const { companyName } = usePlatformBranding();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   const loadFeed = useCallback(async () => {
     try {
@@ -29,6 +31,7 @@ const NewsPanel = () => {
   }, [loadFeed]);
 
   return (
+    <>
     <div className="dashboard-news-panel">
       <div className="dashboard-news-panel__header">
         <h5 className="mb-0 fw-bold text-brown">
@@ -54,10 +57,18 @@ const NewsPanel = () => {
         )}
 
         {!loading && items.map((item) => (
-          <AnnouncementFeedItem key={item.ann_uuid} item={item} compact />
+          <AnnouncementFeedItem
+            key={item.ann_uuid}
+            item={item}
+            compact
+            onOpen={setSelectedItem}
+          />
         ))}
       </div>
+
     </div>
+    <AnnouncementDetailModal item={selectedItem} onClose={() => setSelectedItem(null)} />
+    </>
   );
 };
 

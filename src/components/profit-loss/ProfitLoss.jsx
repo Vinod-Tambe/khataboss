@@ -225,7 +225,7 @@ const ProfitLoss = () => {
   const capitalAccount = getAccountById(accounts, "capital");
 
   return (
-    <div className="card p-3 pt-1 shadow-sm profit-loss-page">
+    <div className="card p-3 pt-1 shadow-sm profit-loss-page app-module-panel">
       <div className="row align-items-center mt-2">
         <div className="col-md-3 d-none d-md-flex mt-2 no-print">
           <input

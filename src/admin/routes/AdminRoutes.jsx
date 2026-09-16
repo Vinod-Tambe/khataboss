@@ -10,6 +10,9 @@ import PlanGridPage from '../pages/PlanGridPage';
 import PlanFormPage from '../pages/PlanFormPage';
 import AnnouncementPage from '../pages/AnnouncementPage';
 import AdminProfilePage from '../pages/AdminProfilePage';
+import SupportTicketBoardPage from '../pages/SupportTicketBoardPage';
+import SupportTicketGridPage from '../pages/SupportTicketGridPage';
+import SupportTicketDetailPage from '../pages/SupportTicketDetailPage';
 
 const AdminRoutes = () => (
   <Routes>
@@ -27,6 +30,9 @@ const AdminRoutes = () => (
       <Route path="plans/new" element={<PlanFormPage />} />
       <Route path="plans/edit/:uuid" element={<PlanFormPage />} />
       <Route path="news" element={<AnnouncementPage />} />
+      <Route path="support" element={<SupportTicketBoardPage />} />
+      <Route path="support/list" element={<SupportTicketGridPage />} />
+      <Route path="support/:uuid" element={<SupportTicketDetailPage />} />
       <Route path="profile" element={<AdminProfilePage />} />
       <Route path="*" element={<Navigate to="dashboard" replace />} />
     </Route>

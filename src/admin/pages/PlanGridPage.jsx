@@ -84,7 +84,7 @@ const PlanGridPage = () => {
   };
 
   return (
-    <div className="card p-3 pt-2 shadow-sm">
+    <div className="card p-3 pt-2 shadow-sm app-module-panel">
       <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
           <h2 className="admin-page-title mb-1">Subscription Plans</h2>

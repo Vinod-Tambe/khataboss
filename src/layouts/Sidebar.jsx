@@ -38,13 +38,16 @@ import {
   FiGrid,
   FiEdit,
   FiPackage,
+  FiLifeBuoy,
 } from "react-icons/fi";
 import { FaBook, FaBalanceScale } from "react-icons/fa";
 import AppBrandLogo from "../components/common/AppBrandLogo";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../store/slices/authSlice";
 import { setSelectedFirmId } from "../store/slices/firmSlice";
-import { filterMenuByPermissions } from "../utils/permissions";
+import { filterMenuByPermissions, isOwner } from "../utils/permissions";
+
+const BOTTOM_MENU_IDS = new Set(["support", "logout"]);
 
 const Sidebar = () => {
   const [openSubmenus, setOpenSubmenus] = useState({});
@@ -247,18 +250,35 @@ const Sidebar = () => {
           { label: "Update Password", path: "/settings/update-password", icon: <FiLock /> },
         ],
       },
+      {
+        id: "support",
+        label: "Support",
+        icon: <FiLifeBuoy />,
+        path: "/support",
+        ownerOnly: true,
+      },
       { id: "logout", label: "Sign Out", icon: <FiLogOut />, path: "/logout" },
     ],
     []
   );
 
   const menuItems = useMemo(() => {
-    const role = user?.role;
-    const isOwnerUser = !role || role === "OWNER";
     const filtered = filterMenuByPermissions(allMenuItems, user);
-    if (isOwnerUser) return filtered;
+    if (isOwner(user)) return filtered;
     return filtered.filter((item) => !item.ownerOnly);
   }, [allMenuItems, user]);
+
+  const primaryMenuItems = useMemo(
+    () => menuItems.filter((item) => !BOTTOM_MENU_IDS.has(item.id)),
+    [menuItems]
+  );
+
+  const bottomMenuItems = useMemo(() => {
+    const order = ["support", "logout"];
+    return order
+      .map((id) => menuItems.find((item) => item.id === id))
+      .filter(Boolean);
+  }, [menuItems]);
 
   const closeSidebarOnMobile = () => {
     if (window.innerWidth >= 992) return;
@@ -267,6 +287,56 @@ const Sidebar = () => {
     const instance = Offcanvas.getInstance(el);
     if (instance) instance.hide();
   };
+
+  const renderMenuItem = (item) => (
+    <li key={item.id} className={`p-1 ${item.subItems ? "has-submenu" : ""}`}>
+      {item.subItems ? (
+        <>
+          <div
+            className={`submenu-toggle ${openSubmenus[item.id] ? "active" : ""}`}
+            onClick={() => toggleSubmenu(item.id)}
+          >
+            <span className="submenu-toggle__main">
+              <span className="menu-icon">{item.icon}</span>
+              <span className="menu-label">{item.label}</span>
+            </span>
+            <FiChevronDown className={`arrow ${openSubmenus[item.id] ? "rotated" : ""}`} />
+          </div>
+
+          <ul className={`submenu collapse ${openSubmenus[item.id] ? "show" : ""}`}>
+            {item.subItems.map((sub, idx) => (
+              <li key={sub.path || `${item.id}-${idx}`}>
+                <NavLink
+                  to={sub.path}
+                  className={({ isActive }) => (isActive ? "active sub-active" : "")}
+                  onClick={closeSidebarOnMobile}
+                >
+                  {sub.icon ? (
+                    <span className="sub-icon" aria-hidden="true">
+                      {sub.icon}
+                    </span>
+                  ) : null}
+                  <span className="sub-label">{sub.label}</span>
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : (
+        <NavLink
+          to={item.path}
+          className={({ isActive }) => (isActive ? "active" : "")}
+          onClick={(e) => {
+            if (item.id === "logout") handleLogout(e);
+            closeSidebarOnMobile();
+          }}
+        >
+          <span className="menu-icon">{item.icon}</span>
+          <span className="menu-label">{item.label}</span>
+        </NavLink>
+      )}
+    </li>
+  );
 
   return (
     <div className="offcanvas offcanvas-start sidebar" id="sidebar" tabIndex={-1}>
@@ -305,62 +375,15 @@ const Sidebar = () => {
               </option>
             ))}
           </select>
-          <div id="sidebar-menu-scroll" className="h-100">
-            <ul className="sidebar-menu">
-              {menuItems.map((item) => (
-                <li key={item.id} className={`p-1 ${item.subItems ? "has-submenu" : ""}`}>
-                  {item.subItems ? (
-                    <>
-                      <div
-                        className={`submenu-toggle ${openSubmenus[item.id] ? "active" : ""}`}
-                        onClick={() => toggleSubmenu(item.id)}
-                      >
-                        <span className="submenu-toggle__main">
-                          <span className="menu-icon">{item.icon}</span>
-                          <span className="menu-label">{item.label}</span>
-                        </span>
-                        <FiChevronDown
-                          className={`arrow ${openSubmenus[item.id] ? "rotated" : ""}`}
-                        />
-                      </div>
-
-                      <ul className={`submenu collapse ${openSubmenus[item.id] ? "show" : ""}`}>
-                        {item.subItems.map((sub, idx) => (
-                          <li key={sub.path || `${item.id}-${idx}`}>
-                            <NavLink
-                              to={sub.path}
-                              className={({ isActive }) =>
-                                isActive ? "active sub-active" : ""
-                              }
-                              onClick={closeSidebarOnMobile}
-                            >
-                              {sub.icon ? (
-                                <span className="sub-icon" aria-hidden="true">
-                                  {sub.icon}
-                                </span>
-                              ) : null}
-                              <span className="sub-label">{sub.label}</span>
-                            </NavLink>
-                          </li>
-                        ))}
-                      </ul>
-                    </>
-                  ) : (
-                    <NavLink
-                      to={item.path}
-                      className={({ isActive }) => (isActive ? "active" : "")}
-                      onClick={(e) => {
-                        if (item.id === "logout") handleLogout(e);
-                        closeSidebarOnMobile();
-                      }}
-                    >
-                      <span className="menu-icon">{item.icon}</span>
-                      <span className="menu-label">{item.label}</span>
-                    </NavLink>
-                  )}
-                </li>
-              ))}
+          <div id="sidebar-menu-scroll" className="h-100 sidebar-menu-scroll">
+            <ul className="sidebar-menu sidebar-menu--primary">
+              {primaryMenuItems.map(renderMenuItem)}
             </ul>
+            {bottomMenuItems.length > 0 && (
+              <ul className="sidebar-menu sidebar-menu--bottom">
+                {bottomMenuItems.map(renderMenuItem)}
+              </ul>
+            )}
           </div>
         </div>
       </div>

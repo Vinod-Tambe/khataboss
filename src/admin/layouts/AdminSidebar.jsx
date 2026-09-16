@@ -3,7 +3,7 @@ import { Offcanvas } from 'bootstrap';
 import PerfectScrollbar from 'perfect-scrollbar';
 import 'perfect-scrollbar/css/perfect-scrollbar.css';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
-import { FiHome, FiUsers, FiUserPlus, FiList, FiLogOut, FiChevronDown, FiGrid, FiLayers, FiPlusCircle, FiBell, FiUser } from 'react-icons/fi';
+import { FiHome, FiUsers, FiUserPlus, FiList, FiLogOut, FiChevronDown, FiGrid, FiLayers, FiPlusCircle, FiBell, FiUser, FiLifeBuoy } from 'react-icons/fi';
 import AppBrandLogo from '../../components/common/AppBrandLogo';
 import { useDispatch } from 'react-redux';
 import { logoutAdmin } from '../../store/slices/adminAuthSlice';
@@ -36,6 +36,7 @@ const AdminSidebar = () => {
         ],
       },
       { id: 'news', label: 'Owner News', icon: <FiBell />, path: '/admin/news' },
+      { id: 'support', label: 'Support board', icon: <FiLifeBuoy />, path: '/admin/support' },
       { id: 'profile', label: 'My Profile', icon: <FiUser />, path: '/admin/profile' },
       { id: 'logout', label: 'Sign Out', icon: <FiLogOut /> },
     ],

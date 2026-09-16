@@ -169,7 +169,7 @@ const AccountDetails = () => {
         : `${moment(endDate).year() - 1} - ${moment(endDate).year()}`;
 
     return (
-        <div className="card p-3 pt-1 shadow-sm">
+        <div className="card p-3 pt-1 shadow-sm app-module-panel">
             <div className="row align-items-center mt-2">
                 <div className="col-md-3 col-12 mt-2">
                     <input

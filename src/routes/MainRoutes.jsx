@@ -32,6 +32,8 @@ import KycIntegrationPage from '../components/settings/KycIntegrationPage';
 import FormCustomizationPage from '../components/settings/FormCustomizationPage';
 import AgreementCustomizationPage from '../components/settings/AgreementCustomizationPage';
 import PermissionRoute from './PermissionRoute';
+import OwnerOnlyRoute from './OwnerOnlyRoute';
+import SupportRoutes from '../pages/support/SupportRoutes';
 const MainRoutes = () => {
   const [loginExpiryNotice, setLoginExpiryNotice] = useState(null);
 
@@ -59,7 +61,7 @@ const MainRoutes = () => {
       <div className="main-content">
         <Sidebar />
         <main className="content-area mt-0 mt-md-3 d-flex flex-column" style={{ minHeight: 'calc(100vh - 56px)' }}>
-          <div className="container-fluid flex-grow-1 pb-3 pb-md-4">
+          <div className="container-fluid flex-grow-1 pb-3 pb-md-4 module-container">
             <Routes>
               <Route
                 path="/firm/*"
@@ -198,6 +200,14 @@ const MainRoutes = () => {
                 }
               />
               <Route path="/profile" element={<OwnerProfile />} />
+              <Route
+                path="/support/*"
+                element={
+                  <OwnerOnlyRoute>
+                    <SupportRoutes />
+                  </OwnerOnlyRoute>
+                }
+              />
               <Route
                 path="/settings/kyc-integration"
                 element={

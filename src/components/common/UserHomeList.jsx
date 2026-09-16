@@ -15,7 +15,7 @@ const UserHomeList = ({ title, icon, data, columns }) => {
   const tableColumns = columns || defaultColumns;
 
   return (
-    <div className="card p-3 pt-1 shadow-sm mb-4">
+    <div className="card p-3 pt-1 shadow-sm mb-4 app-module-panel">
       <h5 className="mb-2 text-center text-brown p-0 m-0 fw-semibold mt-2 d-flex align-items-center justify-content-center gap-2">
         {icon && <i className={`bi ${icon}`}></i>}
         <span>{title}</span>

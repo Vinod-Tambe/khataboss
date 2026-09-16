@@ -602,7 +602,7 @@ const List = ({
     <>
       {/* Desktop / tablet table */}
       <div className="d-none d-md-block">
-        <div className="card p-3 pt-1 shadow-sm">
+        <div className="card p-3 pt-1 shadow-sm app-module-panel">
           <Confirm
             show={confirmState.show}
             onHide={handleCloseConfirm}

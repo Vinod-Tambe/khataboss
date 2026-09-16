@@ -75,7 +75,7 @@ const OwnerGridPage = () => {
   };
 
   return (
-    <div className="card p-3 pt-2 shadow-sm">
+    <div className="card p-3 pt-2 shadow-sm app-module-panel">
       <div className="row pt-2 pb-3 align-items-center">
         <div className="col-9">
           <div className="input-group">

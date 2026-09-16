@@ -32,6 +32,7 @@ export const hasAllPermissions = (user, keys = []) => {
 export const filterMenuByPermissions = (items, user) => {
   return items
     .map((item) => {
+      if (item.ownerOnly && !isOwner(user)) return null;
       if (item.id === "logout" || item.id === "home") return item;
 
       if (item.subItems?.length) {
