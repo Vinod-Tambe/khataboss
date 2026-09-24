@@ -8,12 +8,17 @@ import { getBalanceSheetEntries } from '../../api/balanceSheetApi';
 import {
   downloadBalanceSheetPdf,
   getBalanceSheetPdfBlob,
-  getBalanceSheetShareText,
 } from './downloadBalanceSheetPdf';
 import '../../css/BalanceSheet.css';
+import { toast } from 'react-toastify';
+import {
+  resolveWhatsAppFirmId,
+  sendReportWhatsAppPdf,
+} from '../../utils/dispatchWhatsAppReport';
 
 const BalanceSheet = () => {
     const { selectedFirmId } = useSelector((state) => state.firm);
+    const authUser = useSelector((state) => state.auth.user);
     
     // Calculate current financial year (April to March)
     const { fyStart, fyEnd, currentFY } = useMemo(() => {
@@ -31,6 +36,7 @@ const BalanceSheet = () => {
     const [selectedFirm, setSelectedFirm] = useState(selectedFirmId === 'all' ? "" : selectedFirmId);
     const [balanceSheetData, setBalanceSheetData] = useState({ assets: [], liabilities: [] });
     const [loading, setLoading] = useState(false);
+    const [sharingWhatsApp, setSharingWhatsApp] = useState(false);
     const [dateRange, setDateRange] = useState({
         startDate: fyStart.format("YYYY-MM-DD"),
         endDate: fyEnd.format("YYYY-MM-DD")
@@ -105,27 +111,30 @@ const BalanceSheet = () => {
     };
 
     const handleWhatsAppShare = async () => {
-        if (loading) return;
-        const shareText = getBalanceSheetShareText(pdfOptions);
+        if (loading || sharingWhatsApp) return;
+        setSharingWhatsApp(true);
         const fileName = `Balance_Sheet_${formattedStart}_to_${formattedEnd}.pdf`.replace(/\//g, '-');
+        const periodText = `${formattedStart} to ${formattedEnd}`;
+        const firmId = resolveWhatsAppFirmId(selectedFirm, firms, selectedFirmId);
 
         try {
             const blob = await getBalanceSheetPdfBlob(pdfOptions);
-            const file = new File([blob], fileName, { type: 'application/pdf' });
-
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                    files: [file],
-                    title: 'Balance Sheet',
-                    text: shareText,
-                });
-                return;
-            }
+            const { message } = await sendReportWhatsAppPdf({
+                reportType: 'balanceSheet',
+                firmId,
+                authUser,
+                pdfBlob: blob,
+                fileName,
+                reportLabel: 'Balance Sheet',
+                periodText,
+            });
+            toast.success(message);
         } catch (error) {
-            console.error('WhatsApp share via file failed:', error);
+            console.error('WhatsApp share failed:', error);
+            toast.error(error.message || 'Failed to send WhatsApp message.');
+        } finally {
+            setSharingWhatsApp(false);
         }
-
-        window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank', 'noopener,noreferrer');
     };
 
     return (
@@ -242,7 +251,7 @@ const BalanceSheet = () => {
                         type="button"
                         className="btn balance-sheet-action-btn balance-sheet-action-whatsapp"
                         onClick={handleWhatsAppShare}
-                        disabled={loading}
+                        disabled={loading || sharingWhatsApp}
                         title="WhatsApp Share"
                         aria-label="WhatsApp Share"
                     >

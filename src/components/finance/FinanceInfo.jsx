@@ -13,8 +13,8 @@ import usePermissions from '../../hooks/usePermissions';
 import {
     sendWhatsAppPdfOnly,
     getFinanceDispatchContext,
-    buildFinanceReceiptVars,
-    FINANCE_RECEIPT_TEMPLATE,
+    buildFinanceStatementVars,
+    FINANCE_STATEMENT_TEMPLATE,
 } from '../../utils/dispatchWhatsAppReceipt';
 import '../../css/Finance.css';
 import { buildFinanceInterestSummary } from '../../utils/financeInterest';
@@ -230,10 +230,10 @@ const FinanceInfo = ({ data = [], onPayment, onRollback, onClose, onPaidFine, on
                 firmId: ctx.firmId,
                 toPhone: ctx.toPhone,
                 toEmail: ctx.toEmail,
-                templateKey: FINANCE_RECEIPT_TEMPLATE,
-                vars: buildFinanceReceiptVars(
+                templateKey: FINANCE_STATEMENT_TEMPLATE,
+                vars: buildFinanceStatementVars(
                     initialFinance,
-                    totals.pendingAmt ?? totals.paidAmt ?? 0,
+                    'EMI Schedule',
                     moment().format('DD-MMM-YY')
                 ),
                 pdfBlob: blob,

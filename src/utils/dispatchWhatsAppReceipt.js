@@ -3,6 +3,37 @@ import { dispatchMessage } from '../api/smsApi';
 import { getCustomerWhatsAppNo } from './customerFormatters';
 
 export const FINANCE_RECEIPT_TEMPLATE = 'finance_collection_receipt';
+export const FINANCE_PAYMENT_TEMPLATE = 'finance_payment_received';
+export const FINANCE_STATEMENT_TEMPLATE = 'finance_statement';
+export const LOAN_DOCUMENT_TEMPLATE = 'loan_document';
+
+/** Normalize 10-digit Indian mobile for API (backend adds country code). */
+export function normalizeDispatchPhone(phone) {
+  let digits = String(phone || '').replace(/\D/g, '');
+  if (digits.length === 12 && digits.startsWith('91')) digits = digits.slice(2);
+  if (digits.length === 11 && digits.startsWith('0')) digits = digits.slice(1);
+  return digits.length === 10 ? digits : digits;
+}
+
+/** Open WhatsApp chat to a number (fallback when no PDF context). */
+export function openWhatsAppChat(phone) {
+  const normalized = normalizeDispatchPhone(phone);
+  if (normalized.length !== 10) {
+    throw new Error('Valid customer mobile or WhatsApp number is required.');
+  }
+  window.open(`https://wa.me/91${normalized}`, '_blank', 'noopener,noreferrer');
+}
+
+const formatInr = (value) => {
+  const n = Number(value) || 0;
+  return `₹ ${n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
+const formatMsgDate = (value) => {
+  if (!value) return moment().format('DD-MMM-YY');
+  const m = moment(value);
+  return m.isValid() ? m.format('DD-MMM-YY') : String(value);
+};
 
 export const LOAN_RECEIPT_TEMPLATE_BY_TYPE = {
   deposit: 'loan_deposit',
@@ -46,10 +77,12 @@ export async function tryDispatchReceipt({
     return { dispatched: false, reason: 'missing_contact' };
   }
 
+  const normalizedPhone = toPhone ? normalizeDispatchPhone(toPhone) : '';
+
   const formData = new FormData();
   formData.append('firmId', String(firmId));
   formData.append('templateKey', templateKey);
-  if (toPhone) formData.append('toPhone', String(toPhone));
+  if (normalizedPhone) formData.append('toPhone', normalizedPhone);
   if (toEmail) formData.append('toEmail', String(toEmail));
   formData.append('vars', JSON.stringify(vars || {}));
   if (pdfBlob && fileName) {
@@ -60,22 +93,27 @@ export async function tryDispatchReceipt({
   }
 
   const res = await dispatchMessage(formData);
-  const wa = res.data?.whatsapp;
-  const em = res.data?.email;
+  const payload = res?.data && typeof res.data === 'object' && ('whatsapp' in res.data || 'email' in res.data)
+    ? res.data
+    : res;
+  const wa = payload?.whatsapp;
+  const em = payload?.email;
 
   if (wa?.success || em?.success) {
-    return { dispatched: true, result: res.data };
+    return { dispatched: true, result: payload };
   }
 
   return {
     dispatched: false,
-    reason: wa?.message || em?.message || res.message || 'send_failed',
-    result: res.data,
+    reason: wa?.message || em?.message || res?.message || 'send_failed',
+    result: payload,
   };
 }
 
 /**
  * Send PDF on WhatsApp via backend only — no redirect, no navigator.share.
+ * Use for customer-facing documents (loan/finance receipts, invoices): pass customer mobile via getCustomerWhatsAppNo.
+ * For internal reports (daybook, balance sheet, etc.) use sendReportWhatsAppPdf instead.
  * @throws {Error} with user-friendly message on failure
  */
 export async function sendWhatsAppPdfOnly({
@@ -134,7 +172,55 @@ export function buildFinanceReceiptVars(initialFinance, amount, transDate) {
   return {
     1: ctx.customerName,
     2: ctx.regNo,
-    3: String(amount ?? 0),
-    4: transDate || moment().format('DD-MMM-YY'),
+    3: formatInr(amount),
+    4: formatMsgDate(transDate),
+  };
+}
+
+/** Loan receipt WhatsApp vars (deposit / release / add principal). */
+export function buildLoanReceiptVars(customer, loanDetails, amount, transDate, loanRefOverride) {
+  const customerName = customer?.user_first_name
+    ? `${customer.user_first_name} ${customer.user_last_name || ''}`.trim()
+    : 'Customer';
+  const loanNo =
+    loanRefOverride ||
+    loanDetails?.girv_unique_code ||
+    loanDetails?.girv_loan_no ||
+    loanDetails?.girv_id ||
+    'N/A';
+  return {
+    1: customerName,
+    2: String(loanNo),
+    3: formatInr(amount),
+    4: formatMsgDate(transDate),
+  };
+}
+
+/** Form 8, agreement, or other loan PDF sent on WhatsApp. */
+export function buildLoanDocumentVars(customer, loanDetails, documentLabel, transDate) {
+  const customerName = customer?.user_first_name
+    ? `${customer.user_first_name} ${customer.user_last_name || ''}`.trim()
+    : 'Customer';
+  const loanNo =
+    loanDetails?.girv_unique_code ||
+    loanDetails?.girv_loan_no ||
+    loanDetails?.girv_id ||
+    'N/A';
+  return {
+    1: customerName,
+    2: String(loanNo),
+    3: String(documentLabel || 'Loan Document'),
+    4: formatMsgDate(transDate || loanDetails?.girv_start_date),
+  };
+}
+
+/** EMI schedule / payment history PDF vars. */
+export function buildFinanceStatementVars(initialFinance, statementLabel, transDate) {
+  const ctx = getFinanceDispatchContext(initialFinance);
+  return {
+    1: ctx.customerName,
+    2: ctx.regNo,
+    3: String(statementLabel || 'Finance Statement'),
+    4: formatMsgDate(transDate),
   };
 }

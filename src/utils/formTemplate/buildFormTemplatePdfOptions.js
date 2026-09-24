@@ -1,13 +1,17 @@
 import loadCustomerPhotoForPdf from './loadCustomerPhotoForPdf';
 import loadFirmAssetsForPdf from './loadFirmAssetsForPdf';
+import loadLoanStockImagesForPdf from './loadLoanStockImagesForPdf';
 import { mergeCustomerForPdf } from './resolveFirmForPdf';
 import { normalizeImageDataUrlForPdf } from '../imageHelpers';
 import {
   SAMPLE_CUSTOMER_PHOTO_DATA_URL,
   SAMPLE_FIRM_LOGO_DATA_URL,
 } from './formTemplatePreviewAssets';
+import { STOCK_ITEM_TEST_ROWS } from './formTemplateTestData';
 
 const shouldShowCustomerPhoto = (config) => config?.layout?.showCustomerPhoto !== false;
+
+const shouldShowStockItemImages = (config) => config?.layout?.showStockItemImages !== false;
 
 const preparePdfImageOptions = async (options) => {
   const [customerPhotoDataUrl, leftLogoDataUrl, rightLogoDataUrl] = await Promise.all([
@@ -33,20 +37,26 @@ export async function buildLiveFormTemplatePdfOptions({
   formData = null,
   transactionRows = null,
   loanRef = null,
+  loanItems = null,
   config = null,
 } = {}) {
   const showCustomerPhoto = shouldShowCustomerPhoto(config);
+  const showStockItemImages = shouldShowStockItemImages(config);
   const resolvedCustomer = mergeCustomerForPdf(customer);
 
-  const [customerPhotoDataUrl, firmAssets] = await Promise.all([
+  const [customerPhotoDataUrl, firmAssets, stockItemRows] = await Promise.all([
     showCustomerPhoto ? loadCustomerPhotoForPdf(resolvedCustomer) : Promise.resolve(null),
     loadFirmAssetsForPdf(firm),
+    showStockItemImages && loanItems?.length
+      ? loadLoanStockImagesForPdf(loanItems)
+      : Promise.resolve(null),
   ]);
 
   return await preparePdfImageOptions({
     ...(formData ? { formData } : {}),
     ...(transactionRows ? { transactionRows } : {}),
     ...(loanRef ? { loanRef } : {}),
+    ...(stockItemRows?.length ? { stockItemRows } : {}),
     customerPhotoDataUrl,
     ...firmAssets,
   });
@@ -64,11 +74,13 @@ export async function buildPreviewFormTemplatePdfOptions({
   useSampleLogos = true,
 } = {}) {
   const showCustomerPhoto = shouldShowCustomerPhoto(config);
+  const showStockItemImages = shouldShowStockItemImages(config);
   const firmAssets = await loadFirmAssetsForPdf(firm);
 
   return await preparePdfImageOptions({
     ...(formData ? { formData } : {}),
     ...(transactionRows ? { transactionRows } : {}),
+    ...(showStockItemImages ? { stockItemRows: STOCK_ITEM_TEST_ROWS } : {}),
     customerPhotoDataUrl:
       showCustomerPhoto && useSampleCustomerPhoto ? SAMPLE_CUSTOMER_PHOTO_DATA_URL : null,
     leftLogoDataUrl:

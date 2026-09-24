@@ -12,8 +12,8 @@ import {
 import {
     sendWhatsAppPdfOnly,
     getFinanceDispatchContext,
-    buildFinanceReceiptVars,
-    FINANCE_RECEIPT_TEMPLATE,
+    buildFinanceStatementVars,
+    FINANCE_STATEMENT_TEMPLATE,
 } from '../../utils/dispatchWhatsAppReceipt';
 import '../../css/Finance.css';
 import { formatFinanceTransTypeLabel, formatFinanceTransDetail } from '../../utils/financeHistoryFormat';
@@ -159,10 +159,10 @@ const FinanceHistory = ({ data = [], isLoading, financeData, initialFinance }) =
                 firmId: ctx.firmId,
                 toPhone: ctx.toPhone,
                 toEmail: ctx.toEmail,
-                templateKey: FINANCE_RECEIPT_TEMPLATE,
-                vars: buildFinanceReceiptVars(
+                templateKey: FINANCE_STATEMENT_TEMPLATE,
+                vars: buildFinanceStatementVars(
                     initialFinance,
-                    totals.transAmt ?? 0,
+                    'Payment History',
                     moment().format('DD-MMM-YY')
                 ),
                 pdfBlob: blob,

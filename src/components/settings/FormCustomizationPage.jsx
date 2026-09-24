@@ -68,6 +68,7 @@ const LAYOUT_FIELDS = [
   { key: "showLeftLogo", label: "Show left logo" },
   { key: "showRightLogo", label: "Show right logo" },
   { key: "showCustomerPhoto", label: "Show customer photo" },
+  { key: "showStockItemImages", label: "Show stock item details with images" },
   { key: "showOwnerSign", label: "Show owner signature" },
   { key: "showQrCode", label: "Show QR code" },
   { key: "useFirmFormHeader", label: "Use firm form header" },

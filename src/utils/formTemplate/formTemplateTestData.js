@@ -1,4 +1,5 @@
 import moment from 'moment';
+import { SAMPLE_FIRM_LOGO_DATA_URL } from './formTemplatePreviewAssets';
 
 export const buildFormTemplateTestData = (firmName = 'Sample Firm') => ({
   firm_name: firmName,
@@ -93,5 +94,20 @@ export const TRANSACTION_TEST_ROWS = [
     txn_type: 'Deposit',
     txn_amount: '7,250.00',
     txn_narration: 'Partial payment',
+  },
+];
+
+export const STOCK_ITEM_TEST_ROWS = [
+  {
+    imageKey: 'stockItem0',
+    metal: 'GOLD',
+    item_name: 'Gold necklace with pendant',
+    quantity: '1',
+    gs_weight: '45.250 GM',
+    nt_weight: '42.100 GM',
+    purity: '22K (916)',
+    fine_weight: '38.50',
+    valuation: '2,85,000.00',
+    previewImageUrl: SAMPLE_FIRM_LOGO_DATA_URL,
   },
 ];

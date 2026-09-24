@@ -25,6 +25,7 @@
     "showLeftLogo": true,
     "showRightLogo": false,
     "showCustomerPhoto": true,
+    "showStockItemImages": true,
     "showOwnerSign": true,
     "showQrCode": false,
     "useFirmFormHeader": true,

@@ -13,7 +13,7 @@ import {
     sendWhatsAppPdfOnly,
     getFinanceDispatchContext,
     buildFinanceReceiptVars,
-    FINANCE_RECEIPT_TEMPLATE,
+    FINANCE_PAYMENT_TEMPLATE,
 } from '../../utils/dispatchWhatsAppReceipt';
 
 const HistoryReceiptModal = ({ show, onHide, historyData, initialFinance }) => {
@@ -68,7 +68,7 @@ const HistoryReceiptModal = ({ show, onHide, historyData, initialFinance }) => {
                 firmId: ctx.firmId,
                 toPhone: ctx.toPhone,
                 toEmail: ctx.toEmail,
-                templateKey: FINANCE_RECEIPT_TEMPLATE,
+                templateKey: FINANCE_PAYMENT_TEMPLATE,
                 vars: buildFinanceReceiptVars(initialFinance, historyData.fm_trans_amt || 0, payDate),
                 pdfBlob: blob,
                 fileName,

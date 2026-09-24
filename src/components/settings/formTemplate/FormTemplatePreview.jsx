@@ -12,6 +12,7 @@ import {
   buildFormTemplateTestData,
   getFieldTestValue,
   TRANSACTION_TEST_ROWS,
+  STOCK_ITEM_TEST_ROWS,
 } from '../../../utils/formTemplate/formTemplateTestData';
 import {
   SAMPLE_CUSTOMER_PHOTO_DATA_URL,
@@ -32,6 +33,7 @@ const FormTemplatePreview = ({
   firmFormHeader = '',
   firmFormFooter = '',
   useSampleAssets = true,
+  stockItemRows: stockItemRowsProp = null,
 }) => {
   const page = useMemo(() => getPageStyle(config), [config]);
   const testData = useMemo(
@@ -44,9 +46,13 @@ const FormTemplatePreview = ({
     return <div className="form-custom-a4-empty">Select a template to preview</div>;
   }
 
+  const layout = config.layout || {};
+  const showStockItemImages = layout.showStockItemImages !== false;
+  const stockItemRows =
+    stockItemRowsProp || (showStockItemImages ? STOCK_ITEM_TEST_ROWS : null);
+
   const sections = getSortedSections(config).filter((s) => s.enabled);
   const showLogos = config.layout?.showLeftLogo || config.layout?.showRightLogo;
-  const layout = config.layout || {};
   const showCustomerPhoto = layout.showCustomerPhoto !== false;
   const resolvedLeftLogo =
     leftLogoUrl || (useSampleAssets && layout.showLeftLogo ? SAMPLE_FIRM_LOGO_DATA_URL : null);
@@ -54,6 +60,53 @@ const FormTemplatePreview = ({
     rightLogoUrl || (useSampleAssets && layout.showRightLogo ? SAMPLE_FIRM_LOGO_DATA_URL : null);
   const resolvedCustomerPhoto =
     showCustomerPhoto && (customerPhotoUrl || (useSampleAssets ? SAMPLE_CUSTOMER_PHOTO_DATA_URL : null));
+
+  const renderStockItemsTable = () => {
+    if (!showStockItemImages || !stockItemRows?.length) return null;
+    return (
+      <>
+        <p className="form-custom-a4-stock-label">Stock / Item Details (with images)</p>
+        <table className="form-custom-a4-table form-custom-a4-stock-table">
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Metal</th>
+              <th>Item Name</th>
+              <th>Qty</th>
+              <th>Gross Wt</th>
+              <th>Net Wt</th>
+              <th>Purity</th>
+              <th>Valuation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {stockItemRows.map((row, idx) => (
+              <tr key={row.imageKey || idx}>
+                <td>
+                  {row.previewImageUrl ? (
+                    <img
+                      src={row.previewImageUrl}
+                      alt={row.item_name || 'Item'}
+                      className="form-custom-a4-stock-thumb"
+                    />
+                  ) : (
+                    '—'
+                  )}
+                </td>
+                <td>{row.metal ?? '—'}</td>
+                <td>{row.item_name ?? '—'}</td>
+                <td>{row.quantity ?? '—'}</td>
+                <td>{row.gs_weight ?? '—'}</td>
+                <td>{row.nt_weight ?? '—'}</td>
+                <td>{row.purity ?? '—'}</td>
+                <td>{row.valuation ?? '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </>
+    );
+  };
 
   const renderFieldValue = (field) => {
     if (field.id === CUSTOMER_PHOTO_FIELD_ID) {
@@ -187,6 +240,7 @@ const FormTemplatePreview = ({
                     ))}
                   </div>
                 ))}
+                {section.id === 'item_details' ? renderStockItemsTable() : null}
               </div>
             )}
           </section>

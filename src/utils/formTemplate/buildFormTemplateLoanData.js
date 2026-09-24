@@ -27,6 +27,21 @@ const formatAadhaar = (value) => {
   return String(value);
 };
 
+const getLoanItems = (loan) => {
+  if (!loan) return [];
+  const candidates = [
+    loan.items,
+    loan.stocks,
+    loan.stock_items,
+    loan.Items,
+    loan.girviItems,
+  ];
+  for (const list of candidates) {
+    if (Array.isArray(list) && list.length > 0) return list;
+  }
+  return Array.isArray(loan.items) ? loan.items : [];
+};
+
 const buildItemSummary = (items = []) => {
   if (!items.length) return '—';
   return items
@@ -202,12 +217,12 @@ export const buildForm8PaymentRows = (loanDetails, interestSummary) => {
  */
 export const buildFormTemplateLoanData = (loanDetails, customer = null) => {
   if (!loanDetails) {
-    return { formData: {}, transactionRows: [], firmName: '' };
+    return { formData: {}, transactionRows: [], firmName: '', loanItems: [] };
   }
 
   const firm = loanDetails.firm || {};
   const user = customer || loanDetails.user || {};
-  const items = loanDetails.items || [];
+  const items = getLoanItems(loanDetails);
   const today = moment();
   const startDate = moment(loanDetails.girv_start_date);
   const interestSummary = loanDetails.interest_summary || getLoanInterestSummary(loanDetails, today);
@@ -307,6 +322,7 @@ export const buildFormTemplateLoanData = (loanDetails, customer = null) => {
     transactionRows: buildForm8PaymentRows(loanDetails, interestSummary),
     firmName: firm.firm_name || '',
     loanRef: formData.loan_no,
+    loanItems: items,
   };
 };
 

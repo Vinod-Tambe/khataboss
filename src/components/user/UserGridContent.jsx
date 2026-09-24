@@ -4,7 +4,10 @@ import {
   getCustomerEmail,
   getCustomerFirmName,
   getCustomerPhone,
+  getCustomerWhatsAppNo,
 } from "../../utils/customerFormatters";
+import { openWhatsAppChat } from "../../utils/dispatchWhatsAppReceipt";
+import { toast } from "react-toastify";
 import CustomerAddressTooltip from "./CustomerAddressTooltip";
 import { resolveImageUrl } from "../../utils/imageHelpers";
 
@@ -94,7 +97,19 @@ const UserGridContent = ({
                 >
                   {user.user_unique_code || user.user_id}
                 </button>
-                <button type="button" className="btn me-2 bg-success-subtle border-secondary rounded-circle">
+                <button
+                  type="button"
+                  className="btn me-2 bg-success-subtle border-secondary rounded-circle"
+                  title="Open WhatsApp chat"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    try {
+                      openWhatsAppChat(getCustomerWhatsAppNo(user));
+                    } catch (err) {
+                      toast.error(err.message || "Customer has no WhatsApp number.");
+                    }
+                  }}
+                >
                   <i className="bi bi-whatsapp" />
                 </button>
                 <button type="button" className="btn me-2 bg-primary-subtle border-secondary rounded-circle">

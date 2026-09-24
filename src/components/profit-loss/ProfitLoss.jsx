@@ -13,14 +13,19 @@ import { buildProfitLossAccounts, getAccountById } from "./profitLossData";
 import {
   downloadProfitLossPdf,
   getProfitLossPdfBlob,
-  getProfitLossShareText,
 } from "./downloadProfitLossPdf";
 import { getFirmsDropdown } from "../../api/firmApi";
 import { getProfitLossEntries } from "../../api/profitLossApi";
+import { toast } from "react-toastify";
+import {
+  resolveWhatsAppFirmId,
+  sendReportWhatsAppPdf,
+} from "../../utils/dispatchWhatsAppReport";
 import "../../css/ProfitLoss.css";
 
 const ProfitLoss = () => {
   const { selectedFirmId } = useSelector((state) => state.firm);
+  const authUser = useSelector((state) => state.auth.user);
   const dateRef = useRef(null);
   const mobileDateRef = useRef(null);
   const [firms, setFirms] = useState([]);
@@ -31,6 +36,7 @@ const ProfitLoss = () => {
   const [scheduleIII, setScheduleIII] = useState(null);
   const [compliance, setCompliance] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [sharingWhatsApp, setSharingWhatsApp] = useState(false);
 
   const { fyStart, fyEnd } = useMemo(() => {
     const currentYear = moment().year();
@@ -189,35 +195,30 @@ const ProfitLoss = () => {
   };
 
   const handleWhatsAppShare = async () => {
-    if (loading || !accounts.length) return;
-    const shareText = getProfitLossShareText(pdfOptions);
-    const fileName =
-      `Profit_Loss_${formattedStart}_to_${formattedEnd}.pdf`.replace(
-        /\//g,
-        "-"
-      );
+    if (loading || !accounts.length || sharingWhatsApp) return;
+    setSharingWhatsApp(true);
+    const fileName = `Profit_Loss_${formattedStart}_to_${formattedEnd}.pdf`.replace(/\//g, "-");
+    const periodText = `${formattedStart} to ${formattedEnd}`;
+    const firmId = resolveWhatsAppFirmId(selectedFirm, firms, selectedFirmId);
 
     try {
       const blob = await getProfitLossPdfBlob(pdfOptions);
-      const file = new File([blob], fileName, { type: "application/pdf" });
-
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: "Profit & Loss",
-          text: shareText,
-        });
-        return;
-      }
+      const { message } = await sendReportWhatsAppPdf({
+        reportType: "profitLoss",
+        firmId,
+        authUser,
+        pdfBlob: blob,
+        fileName,
+        reportLabel: "Profit & Loss",
+        periodText,
+      });
+      toast.success(message);
     } catch (error) {
       console.error("WhatsApp share failed:", error);
+      toast.error(error.message || "Failed to send WhatsApp message.");
+    } finally {
+      setSharingWhatsApp(false);
     }
-
-    window.open(
-      `https://wa.me/?text=${encodeURIComponent(shareText)}`,
-      "_blank",
-      "noopener,noreferrer"
-    );
   };
 
   const tradingAccount = getAccountById(accounts, "trading");
@@ -361,7 +362,7 @@ const ProfitLoss = () => {
                 type="button"
                 className="btn profit-loss-action-btn profit-loss-action-whatsapp"
                 onClick={handleWhatsAppShare}
-                disabled={loading || !accounts.length}
+                disabled={loading || !accounts.length || sharingWhatsApp}
                 title="WhatsApp Share"
                 aria-label="WhatsApp Share"
               >

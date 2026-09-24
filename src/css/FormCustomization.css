@@ -545,6 +545,24 @@
   background: #f9fafb;
 }
 
+.form-custom-a4-stock-label {
+  font-size: calc(var(--ft-font-pt, 11pt) - 1pt);
+  color: var(--ft-muted);
+  margin: 8px 0 4px;
+}
+
+.form-custom-a4-stock-table {
+  margin-top: 4px;
+}
+
+.form-custom-a4-stock-thumb {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border: 1px solid var(--ft-border);
+  background: #f9fafb;
+}
+
 .form-custom-a4-firm-header {
   text-align: center;
   font-size: calc(var(--ft-font-pt, 11pt) - 1pt);

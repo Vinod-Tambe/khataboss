@@ -16,14 +16,18 @@ import { DAYBOOK_SECTIONS, isProcessingDaybookSection, isFirstMonthInterestDaybo
 import {
   downloadDayBookPdf,
   getDayBookPdfBlob,
-  getDayBookShareText,
 } from "./downloadDayBookPdf";
+import {
+  resolveWhatsAppFirmId,
+  sendReportWhatsAppPdf,
+} from "../../utils/dispatchWhatsAppReport";
 import "../../css/DayBook.css";
 
 const Daybook = () => {
   const dateRef = useRef(null);
   const mobileDateRef = useRef(null);
   const { selectedFirmId } = useSelector((state) => state.firm);
+  const authUser = useSelector((state) => state.auth.user);
   const [firms, setFirms] = useState([]);
   const [selectedFirm, setSelectedFirm] = useState(selectedFirmId === 'all' ? "" : selectedFirmId);
 
@@ -49,6 +53,7 @@ const Daybook = () => {
   });
   const [daybookResponse, setDaybookResponse] = useState({ daybook_data: [], summary: {} });
   const [loading, setLoading] = useState(false);
+  const [sharingWhatsApp, setSharingWhatsApp] = useState(false);
   const [selectedPanel, setSelectedPanel] = useState("");
 
   useEffect(() => {
@@ -269,27 +274,30 @@ const Daybook = () => {
   };
 
   const handleWhatsAppShare = async () => {
-    if (loading) return;
-    const shareText = getDayBookShareText(pdfOptions);
+    if (loading || sharingWhatsApp) return;
+    setSharingWhatsApp(true);
     const fileName = `Daily_Dairy_${formattedStart}_to_${formattedEnd}.pdf`.replace(/\//g, '-');
+    const periodText = `${formattedStart} to ${formattedEnd}`;
+    const firmId = resolveWhatsAppFirmId(selectedFirm, firms, selectedFirmId);
 
     try {
       const blob = await getDayBookPdfBlob(pdfOptions);
-      const file = new File([blob], fileName, { type: 'application/pdf' });
-
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: 'Daily Dairy',
-          text: shareText,
-        });
-        return;
-      }
+      const { message } = await sendReportWhatsAppPdf({
+        reportType: 'daybook',
+        firmId,
+        authUser,
+        pdfBlob: blob,
+        fileName,
+        reportLabel: 'Daybook',
+        periodText,
+      });
+      showToast(message, 'success');
     } catch (error) {
-      console.error('WhatsApp share via file failed:', error);
+      console.error('WhatsApp share failed:', error);
+      showToast(error.message || 'Failed to send WhatsApp message.', 'error');
+    } finally {
+      setSharingWhatsApp(false);
     }
-
-    window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank', 'noopener,noreferrer');
   };
 
   const renderPanelTable = (panel, { print = false } = {}) => {
@@ -561,7 +569,7 @@ const Daybook = () => {
             type="button"
             className="btn daybook-action-btn daybook-action-whatsapp"
             onClick={handleWhatsAppShare}
-            disabled={loading}
+            disabled={loading || sharingWhatsApp}
             title="WhatsApp Share"
             aria-label="WhatsApp Share"
           >

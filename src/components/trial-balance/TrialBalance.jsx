@@ -10,18 +10,24 @@ import { getTrialBalanceEntries } from '../../api/trialBalanceApi';
 import {
   downloadTrialBalancePdf,
   getTrialBalancePdfBlob,
-  getTrialBalanceShareText,
 } from './downloadTrialBalancePdf';
 import '../../css/TrialBalance.css';
+import { toast } from 'react-toastify';
+import {
+  resolveWhatsAppFirmId,
+  sendReportWhatsAppPdf,
+} from '../../utils/dispatchWhatsAppReport';
 
 const TrialBalance = () => {
   const { selectedFirmId } = useSelector((state) => state.firm);
+  const authUser = useSelector((state) => state.auth.user);
   const dateRef = useRef(null);
   const mobileDateRef = useRef(null);
   const [firms, setFirms] = useState([]);
   const [selectedFirm, setSelectedFirm] = useState(selectedFirmId === 'all' ? "" : selectedFirmId);
   const [trialBalanceData, setTrialBalanceData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [sharingWhatsApp, setSharingWhatsApp] = useState(false);
   // Calculate current financial year (April to March)
   const { fyStart, fyEnd } = useMemo(() => {
     const currentYear = moment().year();
@@ -156,28 +162,30 @@ const TrialBalance = () => {
   };
 
   const handleWhatsAppShare = async () => {
-    if (loading) return;
-    const shareText = getTrialBalanceShareText(pdfOptions);
+    if (loading || sharingWhatsApp) return;
+    setSharingWhatsApp(true);
     const fileName = `Trial_Balance_${formattedStart}_to_${formattedEnd}.pdf`.replace(/\//g, '-');
+    const periodText = `${formattedStart} to ${formattedEnd}`;
+    const firmId = resolveWhatsAppFirmId(selectedFirm, firms, selectedFirmId);
 
     try {
       const blob = await getTrialBalancePdfBlob(pdfOptions);
-      const file = new File([blob], fileName, { type: 'application/pdf' });
-
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: 'Trial Balance',
-          text: shareText,
-        });
-        return;
-      }
+      const { message } = await sendReportWhatsAppPdf({
+        reportType: 'trialBalance',
+        firmId,
+        authUser,
+        pdfBlob: blob,
+        fileName,
+        reportLabel: 'Trial Balance',
+        periodText,
+      });
+      toast.success(message);
     } catch (error) {
-      console.error('WhatsApp share via file failed:', error);
+      console.error('WhatsApp share failed:', error);
+      toast.error(error.message || 'Failed to send WhatsApp message.');
+    } finally {
+      setSharingWhatsApp(false);
     }
-
-    // Fallback: open WhatsApp with summary text
-    window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -278,7 +286,7 @@ const TrialBalance = () => {
             type="button"
             className="btn trial-balance-action-btn trial-balance-action-whatsapp"
             onClick={handleWhatsAppShare}
-            disabled={loading}
+            disabled={loading || sharingWhatsApp}
             title="WhatsApp Share"
             aria-label="WhatsApp Share"
           >

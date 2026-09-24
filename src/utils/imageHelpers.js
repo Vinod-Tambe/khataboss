@@ -44,10 +44,21 @@ function resolvePathToUrl(pathValue) {
   return `${LEGACY_BASE_URL.replace(/\/$/, "")}/${path.startsWith("uploads/") ? path : `uploads/${path}`}`;
 }
 
+const parseJsonImageString = (value) => {
+  if (typeof value !== "string" || !value.startsWith("{")) return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+};
+
 export function resolveImageUrl(img) {
   if (!img) return null;
   if (typeof img === "string") {
     if (img.startsWith("http") || img.startsWith("blob:")) return img;
+    const parsed = parseJsonImageString(img);
+    if (parsed !== img) return resolveImageUrl(parsed);
     return resolvePathToUrl(img);
   }
   if (img.path) return resolvePathToUrl(img.path);
@@ -58,6 +69,8 @@ export function resolveImageUrl(img) {
 export function resolveImageStoragePath(img) {
   if (!img) return null;
   if (typeof img === "string") {
+    const parsed = parseJsonImageString(img);
+    if (parsed !== img) return resolveImageStoragePath(parsed);
     const path = String(img).replace(/^\/+/, "");
     if (path.startsWith("owner/") || path.startsWith("uploads/")) return path;
     if (path.startsWith("http") || path.startsWith("blob:")) {
@@ -118,6 +131,23 @@ export function resolveCustomerProfileImagePath(user) {
     resolveImageStoragePath(user.ur_image) ||
     null
   );
+}
+
+/** Resolve loan/stock row image for display or PDF fetch. */
+export function resolveStockItemImageRef(item) {
+  if (!item) return { url: null, path: null };
+  const raw = item.st_image ?? item;
+  const url =
+    resolveImageUrl(raw) ||
+    resolveImageUrl(item.st_image_url) ||
+    resolveImageUrl(item.image_url) ||
+    null;
+  const path =
+    resolveImageStoragePath(raw) ||
+    resolveImageStoragePath(item.st_image_url) ||
+    resolveImageStoragePath(item.image_url) ||
+    (url ? extractStoragePathFromUrl(url) : null);
+  return { url, path };
 }
 
 /** Fetch remote image as data URL for pdfMake embedding. */

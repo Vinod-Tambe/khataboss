@@ -6,8 +6,14 @@ import DepositModal from './modal/DepositModal';
 import TransactionModal from './modal/TransactionModal';
 import LoanRecordReceiptModal from './LoanRecordReceiptModal';
 import { downloadLoanInvoicePdf } from './invoice/downloadLoanInvoicePdf';
-import { downloadLoanForm8Pdf } from './downloadLoanForm8Pdf';
-import { downloadLoanAgreementPdf } from './downloadLoanAgreementPdf';
+import { downloadLoanForm8Pdf, getLoanForm8PdfBlob } from './downloadLoanForm8Pdf';
+import { downloadLoanAgreementPdf, getLoanAgreementPdfBlob } from './downloadLoanAgreementPdf';
+import { getCustomerWhatsAppNo } from '../../utils/customerFormatters';
+import {
+  sendWhatsAppPdfOnly,
+  buildLoanDocumentVars,
+  LOAN_DOCUMENT_TEMPLATE,
+} from '../../utils/dispatchWhatsAppReceipt';
 import { getGirviById, deleteGirvi } from '../../api/girviApi';
 import { deleteRelease, getReleaseUsers } from '../../api/releaseApi';
 import ReleaseUserListSection from './ReleaseUserListSection';
@@ -543,7 +549,9 @@ const ActionFooter = ({
   onUpdateClick,
   onDepositClick,
   onForm8Click,
+  onForm8WhatsAppClick,
   onAgreementClick,
+  onAgreementWhatsAppClick,
   onTransactionClick,
   onInvoiceClick,
   onLogsClick,
@@ -557,29 +565,55 @@ const ActionFooter = ({
   isInvoiceDownloading,
   isForm8Downloading,
   isAgreementDownloading,
+  isForm8WhatsAppSharing,
+  isAgreementWhatsAppSharing,
   isDeletingLoan,
 }) => (
   <div className="action-footer mt-4">
     <div className="d-flex flex-wrap gap-2 justify-content-center">
       {canForm8 && (
-        <button
-          className="btn btn-sm text-nowrap blue-btn"
-          onClick={onForm8Click}
-          disabled={isForm8Downloading}
-        >
-          <i className={`bi ${isForm8Downloading ? 'bi-hourglass-split' : 'bi-file-text'} text-primary me-1`}></i>
-          {isForm8Downloading ? 'Downloading...' : 'FORM 8'}
-        </button>
+        <>
+          <button
+            className="btn btn-sm text-nowrap blue-btn"
+            onClick={onForm8Click}
+            disabled={isForm8Downloading || isForm8WhatsAppSharing}
+          >
+            <i className={`bi ${isForm8Downloading ? 'bi-hourglass-split' : 'bi-file-text'} text-primary me-1`}></i>
+            {isForm8Downloading ? 'Downloading...' : 'FORM 8'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm text-nowrap blue-btn"
+            title="Send Form 8 PDF on WhatsApp"
+            onClick={onForm8WhatsAppClick}
+            disabled={isForm8WhatsAppSharing || isForm8Downloading}
+          >
+            <i className={`bi ${isForm8WhatsAppSharing ? 'bi-hourglass-split' : 'bi-whatsapp'} text-success me-1`}></i>
+            {isForm8WhatsAppSharing ? 'Sending...' : 'Form 8 WA'}
+          </button>
+        </>
       )}
       {canAgreement && (
-        <button
-          className="btn btn-sm text-nowrap blue-btn"
-          onClick={onAgreementClick}
-          disabled={isAgreementDownloading}
-        >
-          <i className={`bi ${isAgreementDownloading ? 'bi-hourglass-split' : 'bi-file-earmark-text'} text-primary me-1`}></i>
-          {isAgreementDownloading ? 'Downloading...' : 'Agreement'}
-        </button>
+        <>
+          <button
+            className="btn btn-sm text-nowrap blue-btn"
+            onClick={onAgreementClick}
+            disabled={isAgreementDownloading || isAgreementWhatsAppSharing}
+          >
+            <i className={`bi ${isAgreementDownloading ? 'bi-hourglass-split' : 'bi-file-earmark-text'} text-primary me-1`}></i>
+            {isAgreementDownloading ? 'Downloading...' : 'Agreement'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm text-nowrap blue-btn"
+            title="Send loan agreement PDF on WhatsApp"
+            onClick={onAgreementWhatsAppClick}
+            disabled={isAgreementWhatsAppSharing || isAgreementDownloading}
+          >
+            <i className={`bi ${isAgreementWhatsAppSharing ? 'bi-hourglass-split' : 'bi-whatsapp'} text-success me-1`}></i>
+            {isAgreementWhatsAppSharing ? 'Sending...' : 'Agree WA'}
+          </button>
+        </>
       )}
       {isUpdateAllowed && (
         <button className="btn btn-sm text-nowrap blue-btn" onClick={onUpdateClick}>
@@ -741,13 +775,17 @@ const LoanMobileView = ({
   isInvoiceDownloading,
   isForm8Downloading,
   isAgreementDownloading,
+  isForm8WhatsAppSharing,
+  isAgreementWhatsAppSharing,
   canForm8,
   canAgreement,
   customerName = '',
   onUpdateClick,
   onDepositClick,
   onForm8Click,
+  onForm8WhatsAppClick,
   onAgreementClick,
+  onAgreementWhatsAppClick,
   onTransactionClick,
   onInvoiceClick,
   onLogsClick,
@@ -1220,26 +1258,48 @@ const LoanMobileView = ({
 
       <div className="loan-mobile-actions loan-mobile-actions--footer">
         {canForm8 && (
-          <button
-            type="button"
-            className="btn loan-mobile-action-btn"
-            onClick={onForm8Click}
-            disabled={isForm8Downloading}
-          >
-            <i className={`bi ${isForm8Downloading ? 'bi-hourglass-split' : 'bi-file-text'} text-primary`}></i>
-            {isForm8Downloading ? 'Form 8...' : 'Form 8'}
-          </button>
+          <>
+            <button
+              type="button"
+              className="btn loan-mobile-action-btn"
+              onClick={onForm8Click}
+              disabled={isForm8Downloading || isForm8WhatsAppSharing}
+            >
+              <i className={`bi ${isForm8Downloading ? 'bi-hourglass-split' : 'bi-file-text'} text-primary`}></i>
+              {isForm8Downloading ? 'Form 8...' : 'Form 8'}
+            </button>
+            <button
+              type="button"
+              className="btn loan-mobile-action-btn"
+              title="WhatsApp Form 8 PDF"
+              onClick={onForm8WhatsAppClick}
+              disabled={isForm8WhatsAppSharing || isForm8Downloading}
+            >
+              <i className={`bi ${isForm8WhatsAppSharing ? 'bi-hourglass-split' : 'bi-whatsapp'} text-success`}></i>
+            </button>
+          </>
         )}
         {canAgreement && (
-          <button
-            type="button"
-            className="btn loan-mobile-action-btn"
-            onClick={onAgreementClick}
-            disabled={isAgreementDownloading}
-          >
-            <i className={`bi ${isAgreementDownloading ? 'bi-hourglass-split' : 'bi-file-earmark-text'} text-primary`}></i>
-            {isAgreementDownloading ? 'Agreement...' : 'Agreement'}
-          </button>
+          <>
+            <button
+              type="button"
+              className="btn loan-mobile-action-btn"
+              onClick={onAgreementClick}
+              disabled={isAgreementDownloading || isAgreementWhatsAppSharing}
+            >
+              <i className={`bi ${isAgreementDownloading ? 'bi-hourglass-split' : 'bi-file-earmark-text'} text-primary`}></i>
+              {isAgreementDownloading ? 'Agree...' : 'Agree'}
+            </button>
+            <button
+              type="button"
+              className="btn loan-mobile-action-btn"
+              title="WhatsApp agreement PDF"
+              onClick={onAgreementWhatsAppClick}
+              disabled={isAgreementWhatsAppSharing || isAgreementDownloading}
+            >
+              <i className={`bi ${isAgreementWhatsAppSharing ? 'bi-hourglass-split' : 'bi-whatsapp'} text-success`}></i>
+            </button>
+          </>
         )}
         {isUpdateAllowed && (
           <button type="button" className="btn loan-mobile-action-btn" onClick={onUpdateClick}>
@@ -1296,6 +1356,8 @@ const LoanInfo = () => {
   const [isInvoiceDownloading, setIsInvoiceDownloading] = useState(false);
   const [isForm8Downloading, setIsForm8Downloading] = useState(false);
   const [isAgreementDownloading, setIsAgreementDownloading] = useState(false);
+  const [isForm8WhatsAppSharing, setIsForm8WhatsAppSharing] = useState(false);
+  const [isAgreementWhatsAppSharing, setIsAgreementWhatsAppSharing] = useState(false);
   const [loanDetails, setLoanDetails] = useState(null);
   const [releaseUserRows, setReleaseUserRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1369,6 +1431,47 @@ const LoanInfo = () => {
     } finally {
       setIsAgreementDownloading(false);
     }
+  };
+
+  const sendLoanDocumentWhatsApp = async (loadPdfPack, documentLabel, setSharing) => {
+    if (!loanDetails) return;
+    setSharing(true);
+    try {
+      const { blob, fileName, firmId } = await loadPdfPack();
+      const { message } = await sendWhatsAppPdfOnly({
+        firmId,
+        toPhone: getCustomerWhatsAppNo(selectedUser),
+        toEmail: selectedUser?.user_email_id,
+        templateKey: LOAN_DOCUMENT_TEMPLATE,
+        vars: buildLoanDocumentVars(selectedUser, loanDetails, documentLabel),
+        pdfBlob: blob,
+        fileName,
+      });
+      toast.success(message);
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || 'Failed to send WhatsApp message.');
+    } finally {
+      setSharing(false);
+    }
+  };
+
+  const handleForm8WhatsApp = () => {
+    if (!canForm8 || isForm8WhatsAppSharing) return;
+    return sendLoanDocumentWhatsApp(
+      () => getLoanForm8PdfBlob(loanDetails, selectedUser),
+      'Form 8',
+      setIsForm8WhatsAppSharing
+    );
+  };
+
+  const handleAgreementWhatsApp = () => {
+    if (!canAgreement || isAgreementWhatsAppSharing) return;
+    return sendLoanDocumentWhatsApp(
+      () => getLoanAgreementPdfBlob(loanDetails, selectedUser),
+      'Loan Agreement',
+      setIsAgreementWhatsAppSharing
+    );
   };
 
   const handleInvoiceDownload = () => {
@@ -1854,13 +1957,17 @@ const LoanInfo = () => {
         isInvoiceDownloading={isInvoiceDownloading}
         isForm8Downloading={isForm8Downloading}
         isAgreementDownloading={isAgreementDownloading}
+        isForm8WhatsAppSharing={isForm8WhatsAppSharing}
+        isAgreementWhatsAppSharing={isAgreementWhatsAppSharing}
         canForm8={canForm8}
         canAgreement={canAgreement}
         customerName={customerName}
         onUpdateClick={() => navigate('/user/home/edit-loan/' + loanDetails.girv_id)}
         onDepositClick={() => setActiveModal('deposit')}
         onForm8Click={handleForm8Download}
+        onForm8WhatsAppClick={handleForm8WhatsApp}
         onAgreementClick={handleAgreementDownload}
+        onAgreementWhatsAppClick={handleAgreementWhatsApp}
         onTransactionClick={() => setActiveModal('transaction')}
         onInvoiceClick={handleInvoiceDownload}
         onLogsClick={openLogsModal}
@@ -2049,7 +2156,9 @@ const LoanInfo = () => {
           onUpdateClick={() => navigate('/user/home/edit-loan/' + loanDetails.girv_id)}
           onDepositClick={() => setActiveModal('deposit')}
           onForm8Click={handleForm8Download}
+          onForm8WhatsAppClick={handleForm8WhatsApp}
           onAgreementClick={handleAgreementDownload}
+          onAgreementWhatsAppClick={handleAgreementWhatsApp}
           onTransactionClick={() => setActiveModal('transaction')}
           onInvoiceClick={handleInvoiceDownload}
           onLogsClick={openLogsModal}
@@ -2057,6 +2166,8 @@ const LoanInfo = () => {
           isInvoiceDownloading={isInvoiceDownloading}
           isForm8Downloading={isForm8Downloading}
           isAgreementDownloading={isAgreementDownloading}
+          isForm8WhatsAppSharing={isForm8WhatsAppSharing}
+          isAgreementWhatsAppSharing={isAgreementWhatsAppSharing}
           canForm8={canForm8}
           canAgreement={canAgreement}
           canTransact={canTransact}

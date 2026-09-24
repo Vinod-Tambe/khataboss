@@ -17,6 +17,7 @@ import {
 const CUSTOMER_PHOTO_FIELD_ID = 'customer_photo';
 const LOGO_WIDTH = 72;
 const LOGO_HEIGHT = 72;
+const STOCK_IMAGE_SIZE = 44;
 const PDF_IMAGE_DATA_URL = /^data:image\/jpe?g;base64,/i;
 
 const sanitizePdfImage = (dataUrl) =>
@@ -221,6 +222,50 @@ const buildSectionFieldTables = (section, formData, theme, customerPhotoKey = nu
   return tables;
 };
 
+const buildStockItemsTable = (stockItemRows, registerPdfImage, theme) => {
+  if (!stockItemRows?.length) return null;
+
+  const header = [
+    { text: 'Image', style: 'tableHeader', fillColor: hexToRgb(theme.tableHeaderBackground) },
+    { text: 'Metal', style: 'tableHeader', fillColor: hexToRgb(theme.tableHeaderBackground) },
+    { text: 'Item Name', style: 'tableHeader', fillColor: hexToRgb(theme.tableHeaderBackground) },
+    { text: 'Qty', style: 'tableHeader', fillColor: hexToRgb(theme.tableHeaderBackground) },
+    { text: 'Gross Wt', style: 'tableHeader', fillColor: hexToRgb(theme.tableHeaderBackground) },
+    { text: 'Net Wt', style: 'tableHeader', fillColor: hexToRgb(theme.tableHeaderBackground) },
+    { text: 'Purity', style: 'tableHeader', fillColor: hexToRgb(theme.tableHeaderBackground) },
+    { text: 'Valuation (Rs.)', style: 'tableHeader', fillColor: hexToRgb(theme.tableHeaderBackground) },
+  ];
+
+  const body = stockItemRows.map((row) => {
+    const imageKey = registerPdfImage(row.imageKey, row.imageDataUrl);
+    return [
+      imageKey
+        ? { image: imageKey, width: STOCK_IMAGE_SIZE, height: STOCK_IMAGE_SIZE, margin: [2, 2, 2, 2] }
+        : { text: '—', style: 'tableCell', alignment: 'center' },
+      { text: row.metal ?? '—', style: 'tableCell' },
+      { text: row.item_name ?? '—', style: 'tableCell' },
+      { text: row.quantity ?? '—', style: 'tableCell', alignment: 'center' },
+      { text: row.gs_weight ?? '—', style: 'tableCell', alignment: 'right' },
+      { text: row.nt_weight ?? '—', style: 'tableCell', alignment: 'right' },
+      { text: row.purity ?? '—', style: 'tableCell', alignment: 'center' },
+      { text: row.valuation ?? '—', style: 'tableCell', alignment: 'right' },
+    ];
+  });
+
+  return {
+    table: {
+      headerRows: 1,
+      widths: [48, '*', '*', 28, '*', '*', '*', '*'],
+      body: [header, ...body],
+    },
+    layout: {
+      hLineColor: () => hexToRgb(theme.borderColor),
+      vLineColor: () => hexToRgb(theme.borderColor),
+    },
+    margin: [0, 4, 0, 8],
+  };
+};
+
 export const buildFormTemplatePdfDefinition = (
   config,
   firmName = 'Sample Firm',
@@ -229,6 +274,7 @@ export const buildFormTemplatePdfDefinition = (
   const normalized = config;
   const formData = options.formData || buildFormTemplateTestData(firmName);
   const transactionRows = options.transactionRows || TRANSACTION_TEST_ROWS;
+  const stockItemRows = options.stockItemRows || null;
   const layout = normalized.layout || {};
   const pdfImages = {};
 
@@ -250,6 +296,7 @@ export const buildFormTemplatePdfDefinition = (
   const { theme, fontPt } = getPageStyle(normalized);
   const size = normalized.pageSize || 'A4';
   const orientation = normalized.orientation || 'portrait';
+  const showStockItemImages = layout.showStockItemImages !== false;
 
   const content = [];
 
@@ -347,6 +394,21 @@ export const buildFormTemplatePdfDefinition = (
           },
           margin: [0, 0, 0, 8],
         });
+        return;
+      }
+
+      if (section.id === 'item_details' && showStockItemImages && stockItemRows?.length) {
+        buildSectionFieldTables(section, formData, theme, customerPhotoKey).forEach((block) => {
+          content.push(block);
+        });
+        content.push({
+          text: 'Stock / Item Details (with images)',
+          style: 'fieldLabel',
+          color: hexToRgb(theme.mutedTextColor),
+          margin: [0, 2, 0, 4],
+        });
+        const stockTable = buildStockItemsTable(stockItemRows, registerPdfImage, theme);
+        if (stockTable) content.push(stockTable);
         return;
       }
 
@@ -453,10 +515,25 @@ export const openFormTemplatePdfPreview = (config, firmName, options = {}) => {
   pdfMake.createPdf(doc).open();
 };
 
-export const downloadFormTemplatePdf = (config, firmName, options = {}) => {
-  const doc = buildFormTemplatePdfDefinition(config, firmName, options);
+export const getFormTemplatePdfFileName = (config, firmName, options = {}) => {
   const loanRef = options.loanRef ? `_${String(options.loanRef).replace(/[^\w-]+/g, '_')}` : '';
-  const fileName = `${(config?.title || 'form').replace(/\s+/g, '_')}${loanRef}_${(firmName || 'firm').replace(/\s+/g, '_')}_${moment().format('DDMMYYYY')}.pdf`;
+  return `${(config?.title || 'form').replace(/\s+/g, '_')}${loanRef}_${(firmName || 'firm').replace(/\s+/g, '_')}_${moment().format('DDMMYYYY')}.pdf`;
+};
+
+export const getFormTemplatePdfBlob = (config, firmName, options = {}) => {
+  const doc = buildFormTemplatePdfDefinition(config, firmName, options);
+  return new Promise((resolve, reject) => {
+    try {
+      pdfMake.createPdf(doc).getBlob((blob) => resolve(blob));
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
+
+export const downloadFormTemplatePdf = (config, firmName, options = {}) => {
+  const fileName = getFormTemplatePdfFileName(config, firmName, options);
+  const doc = buildFormTemplatePdfDefinition(config, firmName, options);
   pdfMake.createPdf(doc).download(fileName);
   return fileName;
 };

@@ -13,6 +13,7 @@ import {
 import {
   sendWhatsAppPdfOnly,
   LOAN_RECEIPT_TEMPLATE_BY_TYPE,
+  buildLoanReceiptVars,
 } from '../../utils/dispatchWhatsAppReceipt';
 import { getCustomerWhatsAppNo } from '../../utils/customerFormatters';
 
@@ -71,11 +72,15 @@ const LoanRecordReceiptModal = ({
     const firmId = loanDetails?.girv_firm_id || loanDetails?.firm?.firm_id;
     const toPhone = getCustomerWhatsAppNo(customer);
     const toEmail = customer?.user_email_id;
-    const customerName = customer?.user_first_name
-      ? `${customer.user_first_name} ${customer.user_last_name || ''}`.trim()
-      : 'Customer';
-    const loanNo = loanDetails?.girv_loan_no || loanDetails?.girv_id || 'N/A';
     const templateKey = LOAN_RECEIPT_TEMPLATE_BY_TYPE[type] || 'loan_created';
+    const amount =
+      record?.total ??
+      record?.rel_payable_amt ??
+      record?.dep_payable_amt ??
+      record?.principal ??
+      record?.amount;
+    const transDate =
+      record?.date || record?.rel_trans_date || record?.dep_trans_date || record?.ap_trans_date;
 
     try {
       const blob = await getLoanRecordPdfBlob(options);
@@ -84,12 +89,7 @@ const LoanRecordReceiptModal = ({
         toPhone,
         toEmail,
         templateKey,
-        vars: {
-          1: customerName,
-          2: String(loanNo),
-          3: String(record?.amount || record?.rel_payable_amt || record?.dep_amt || ''),
-          4: record?.date || record?.rel_trans_date || record?.dep_date || '',
-        },
+        vars: buildLoanReceiptVars(customer, loanDetails, amount, transDate),
         pdfBlob: blob,
         fileName,
       });
