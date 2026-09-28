@@ -91,7 +91,7 @@ const MainRoutes = () => {
               <Route
                 path="/account/*"
                 element={
-                  <PermissionRoute anyOf={["account.view", "account.create", "account.edit"]}>
+                  <PermissionRoute anyOf={["account.view", "account.create", "account.edit", "account.transfer"]}>
                     <AccountRoutes />
                   </PermissionRoute>
                 }

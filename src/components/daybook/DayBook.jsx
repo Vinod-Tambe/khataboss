@@ -6,13 +6,14 @@ import "daterangepicker/daterangepicker.css";
 import DayBookTable from "./DayBookTable";
 import DayBookProcessingTable from "./DayBookProcessingTable";
 import DayBookFirstMonthInterestTable from "./DayBookFirstMonthInterestTable";
+import DayBookInterAccountTransferTable from "./DayBookInterAccountTransferTable";
 import DayBookSummary from "./DayBookSummary";
 import DayBookMobileView from "./DayBookMobileView";
 import { getDaybookEntries } from "../../api/daybookApi";
 import { useSelector } from "react-redux";
 import { getFirmsDropdown } from "../../api/firmApi";
 import { showToast } from "../../components/common/ToastAlert";
-import { DAYBOOK_SECTIONS, isProcessingDaybookSection, isFirstMonthInterestDaybookSection } from "./dayBookUtils";
+import { DAYBOOK_SECTIONS, isProcessingDaybookSection, isFirstMonthInterestDaybookSection, isInterAccountTransferDaybookSection } from "./dayBookUtils";
 import {
   downloadDayBookPdf,
   getDayBookPdfBlob,
@@ -150,10 +151,6 @@ const Daybook = () => {
     };
   }, [fyStart, fyEnd]);
 
-  const getSectionData = (title) => {
-    return (daybookResponse.daybook_data || []).find(d => d.title === title) || { data: [] };
-  };
-
   const keyedDaybookData = (daybookResponse.daybook_data || []).reduce((acc, item) => {
     if (isProcessingDaybookSection(item.title)) {
       const totals = (item.data || []).reduce(
@@ -209,6 +206,22 @@ const Daybook = () => {
       return acc;
     }
 
+    if (isInterAccountTransferDaybookSection(item.title)) {
+      const totalTransfer = (item.data || []).reduce(
+        (sum, d) => sum + (parseFloat(d.db_transfer_amt) || 0),
+        0
+      );
+      acc[item.title] = {
+        total_cash_amt: 0,
+        total_bank_amt: 0,
+        total_online_amt: 0,
+        total_card_amt: 0,
+        total_disc_amt: 0,
+        total_amt: totalTransfer,
+      };
+      return acc;
+    }
+
     const totals = (item.data || []).reduce((t, d) => ({
       total_cash_amt: t.total_cash_amt + (parseFloat(d.db_cash_amt) || 0),
       total_bank_amt: t.total_bank_amt + (parseFloat(d.db_bank_amt) || 0),
@@ -232,20 +245,29 @@ const Daybook = () => {
   const formattedEnd = moment(dateRange.endDate).format("DD-MM-YYYY");
   const openingDisplay = daybookResponse.summary?.total_open_amt || "0.00";
 
-  const availablePanels = useMemo(
-    () =>
-      DAYBOOK_SECTIONS.map((section) => {
-        const data = getSectionData(section.title).data || [];
-        return {
-          ...section,
-          data,
-          count: data.length,
-          amtColor: section.amtTone === "dr" ? "text-success" : "text-danger",
-        };
-      }).filter((section) => section.count > 0),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [daybookResponse]
+  const sectionMetaByTitle = useMemo(
+    () => Object.fromEntries(DAYBOOK_SECTIONS.map((section) => [section.title, section])),
+    []
   );
+
+  const availablePanels = useMemo(() => {
+    return (daybookResponse.daybook_data || [])
+      .filter((block) => Array.isArray(block.data) && block.data.length > 0 && !block.error)
+      .map((block) => {
+        const meta = sectionMetaByTitle[block.title];
+        const amtTone =
+          meta?.amtTone ?? (block.amtColor === "text-success" ? "dr" : "cr");
+        return {
+          title: block.title,
+          colorClass: block.colorClass || meta?.colorClass || "bg-purple",
+          amtTone,
+          data: block.data,
+          count: block.data.length,
+          amtColor:
+            block.amtColor || (amtTone === "dr" ? "text-success" : "text-danger"),
+        };
+      });
+  }, [daybookResponse, sectionMetaByTitle]);
 
   const displayedPanels = useMemo(() => {
     if (!selectedPanel) return availablePanels;
@@ -317,6 +339,17 @@ const Daybook = () => {
     if (isFirstMonthInterestDaybookSection(panel.title)) {
       return (
         <DayBookFirstMonthInterestTable
+          key={key}
+          title={panel.title}
+          data={panel.data}
+          isPrint={print}
+        />
+      );
+    }
+
+    if (isInterAccountTransferDaybookSection(panel.title)) {
+      return (
+        <DayBookInterAccountTransferTable
           key={key}
           title={panel.title}
           data={panel.data}

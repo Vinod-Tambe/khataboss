@@ -10,6 +10,8 @@ import {
   updateOwner,
   updateOwnerPermissions,
   updateOwnerStatus,
+  applyOwnerTenantMigration,
+  applyOwnerTenantSeeds,
 } from '../api/ownerApi';
 import { applyPlanToOwner, getPlans } from '../api/planApi';
 import {
@@ -92,6 +94,9 @@ const OwnerDetailsPage = () => {
   const [currentPlan, setCurrentPlan] = useState(null);
   const [applyingPlan, setApplyingPlan] = useState(false);
   const [savingSubscription, setSavingSubscription] = useState(false);
+  const [applyingMigration, setApplyingMigration] = useState(false);
+  const [applyingSeeds, setApplyingSeeds] = useState(false);
+  const [tenantDbLog, setTenantDbLog] = useState('');
 
   const ownerName = useMemo(() => formatOwnerName(formData), [formData]);
 
@@ -336,6 +341,79 @@ const OwnerDetailsPage = () => {
       toast.error(error.message || 'Failed to apply plan');
     } finally {
       setApplyingPlan(false);
+    }
+  };
+
+  const formatTenantDbResult = (data) => {
+    if (!data) return '';
+    const lines = [];
+    if (Array.isArray(data.steps)) {
+      data.steps.forEach((step) => {
+        if (typeof step === 'string') {
+          lines.push(step);
+        } else if (step?.label) {
+          const mark = step.ok === false ? '✗' : '✓';
+          lines.push(`${mark} ${step.label}${step.detail ? `: ${step.detail}` : ''}`);
+        }
+      });
+    }
+    if (Array.isArray(data.warnings)) {
+      data.warnings.forEach((w) => {
+        lines.push(`⚠ ${w.label}: ${w.error}`);
+      });
+    }
+    return lines.join('\n');
+  };
+
+  const handleApplyTenantMigration = async () => {
+    if (applyingMigration || !uuid) return;
+    if (!formData.own_db) {
+      toast.error('This owner has no tenant database.');
+      return;
+    }
+    const ok = window.confirm(
+      `Apply migration (Prisma db push) to database "${formData.own_db}"?\n\nThis updates tables/columns to match the current app schema. Some changes can drop data. Continue?`
+    );
+    if (!ok) return;
+
+    try {
+      setApplyingMigration(true);
+      setTenantDbLog('');
+      const res = await applyOwnerTenantMigration(uuid);
+      setTenantDbLog(formatTenantDbResult(res.data));
+      toast.success(res.message || 'Tenant migration completed.');
+    } catch (error) {
+      toast.error(error.message || 'Tenant migration failed');
+    } finally {
+      setApplyingMigration(false);
+    }
+  };
+
+  const handleApplyTenantSeeds = async () => {
+    if (applyingSeeds || !uuid) return;
+    if (!formData.own_db) {
+      toast.error('This owner has no tenant database.');
+      return;
+    }
+    const ok = window.confirm(
+      `Apply seeds to "${formData.own_db}"?\n\nThis refreshes permissions, templates, income accounts, and serial numbers (safe to run again).`
+    );
+    if (!ok) return;
+
+    try {
+      setApplyingSeeds(true);
+      setTenantDbLog('');
+      const res = await applyOwnerTenantSeeds(uuid);
+      setTenantDbLog(formatTenantDbResult(res.data));
+      if (res.data?.warnings?.length) {
+        toast(res.message || 'Seeds finished with warnings.', { icon: '⚠️' });
+      } else {
+        toast.success(res.message || 'Tenant seeds applied.');
+      }
+    } catch (error) {
+      toast.error(error.message || 'Tenant seeds failed');
+    } finally {
+      setApplyingSeeds(false);
     }
   };
 
@@ -637,6 +715,65 @@ const OwnerDetailsPage = () => {
                           value={formatAdminDateTime(updatedAt)}
                           disabled
                         />
+                      </div>
+                      <div className="col-12">
+                        <div className="border rounded p-3 bg-light">
+                          <h6 className="fw-bold text-brown mb-2">
+                            <i className="bi bi-database-gear me-2" />
+                            Tenant database maintenance
+                          </h6>
+                          <p className="small text-muted mb-3">
+                            Update this owner&apos;s tenant DB from the admin portal — no terminal commands
+                            required. Run <strong>Apply migration</strong> after schema changes; run{' '}
+                            <strong>Apply seeds</strong> to refresh permissions and default templates.
+                          </p>
+                          <div className="d-flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              className="btn btn-outline-primary"
+                              onClick={handleApplyTenantMigration}
+                              disabled={applyingMigration || applyingSeeds || !formData.own_db}
+                            >
+                              {applyingMigration ? (
+                                <>
+                                  <span className="spinner-border spinner-border-sm me-2" role="status" />
+                                  Applying migration…
+                                </>
+                              ) : (
+                                <>
+                                  <i className="bi bi-arrow-repeat me-2" />
+                                  Apply migration
+                                </>
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-outline-success"
+                              onClick={handleApplyTenantSeeds}
+                              disabled={applyingSeeds || applyingMigration || !formData.own_db}
+                            >
+                              {applyingSeeds ? (
+                                <>
+                                  <span className="spinner-border spinner-border-sm me-2" role="status" />
+                                  Applying seeds…
+                                </>
+                              ) : (
+                                <>
+                                  <i className="bi bi-cloud-download me-2" />
+                                  Apply seeds
+                                </>
+                              )}
+                            </button>
+                          </div>
+                          {tenantDbLog ? (
+                            <pre
+                              className="small mt-3 mb-0 p-2 bg-white border rounded text-secondary"
+                              style={{ maxHeight: 160, overflow: 'auto', whiteSpace: 'pre-wrap' }}
+                            >
+                              {tenantDbLog}
+                            </pre>
+                          ) : null}
+                        </div>
                       </div>
                     </div>
                   )}

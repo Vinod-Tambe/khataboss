@@ -128,6 +128,26 @@ const Sidebar = () => {
         ],
       },
       {
+        id: "transactions",
+        label: "Transaction",
+        icon: <FiRepeat />,
+        anyOf: ["account.view", "account.transfer"],
+        subItems: [
+          {
+            label: "Inter Transfer",
+            path: "/account/transfer/add",
+            icon: <FiPlusCircle />,
+            permission: "account.transfer",
+          },
+          {
+            label: "Transaction List",
+            path: "/account/transfer/list",
+            icon: <FiList />,
+            permission: "account.view",
+          },
+        ],
+      },
+      {
         id: "users",
         label: "Customer",
         icon: <FiUsers />,

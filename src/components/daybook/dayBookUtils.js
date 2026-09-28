@@ -74,6 +74,23 @@ export const isProcessingDaybookSection = (title) => title === "PROCESSING AMOUN
 
 export const isFirstMonthInterestDaybookSection = (title) => title === "FIRST MONTH INTEREST";
 
+export const isInterAccountTransferDaybookSection = (title) =>
+  title === "INTER-ACCOUNT TRANSFER";
+
+export const getInterAccountTransferRowAmount = (item = {}) =>
+  parseFloat(item.db_transfer_amt) || 0;
+
+export const calculateInterAccountTransferSectionTotals = (data = []) =>
+  data.reduce(
+    (acc, item) => {
+      const amt = getInterAccountTransferRowAmount(item);
+      acc.transfer += amt;
+      acc.total += amt;
+      return acc;
+    },
+    { transfer: 0, total: 0 }
+  );
+
 export const isInformationalDaybookSection = () => false;
 
 export const calculateSectionTotals = (data = []) =>
@@ -347,5 +364,10 @@ export const DAYBOOK_SECTIONS = [
     title: "FINANCE EMI ROLLBACK",
     colorClass: "bg-secondary",
     amtTone: "cr",
+  },
+  {
+    title: "INTER-ACCOUNT TRANSFER",
+    colorClass: "bg-purple",
+    amtTone: "dr",
   },
 ];

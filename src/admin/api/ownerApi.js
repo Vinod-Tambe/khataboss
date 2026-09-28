@@ -84,3 +84,29 @@ export const updateOwnerPermissions = async (uuid, payload) => {
     message: response.data?.message,
   };
 };
+
+/** Sync tenant DB schema (Prisma db push) for this owner — super-admin only. */
+export const applyOwnerTenantMigration = async (uuid) => {
+  const response = await adminAxiosInstance.post(
+    `/owner/${uuid}/tenant/apply-migration`,
+    {},
+    { timeout: 120000 }
+  );
+  return {
+    data: response.data?.data,
+    message: response.data?.message,
+  };
+};
+
+/** Run idempotent tenant seeders for this owner — super-admin only. */
+export const applyOwnerTenantSeeds = async (uuid) => {
+  const response = await adminAxiosInstance.post(
+    `/owner/${uuid}/tenant/apply-seeds`,
+    {},
+    { timeout: 120000 }
+  );
+  return {
+    data: response.data?.data,
+    message: response.data?.message,
+  };
+};

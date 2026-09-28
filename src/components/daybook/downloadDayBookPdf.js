@@ -5,12 +5,15 @@ import {
   calculateSectionTotals,
   calculateProcessingSectionTotals,
   calculateFirstMonthInterestSectionTotals,
+  calculateInterAccountTransferSectionTotals,
   formatCurrency,
   getRowAmounts,
   getProcessingRowAmounts,
   getFirstMonthInterestRowAmounts,
+  getInterAccountTransferRowAmount,
   isProcessingDaybookSection,
   isFirstMonthInterestDaybookSection,
+  isInterAccountTransferDaybookSection,
 } from './dayBookUtils';
 
 pdfMake.vfs = pdfFonts.vfs || pdfFonts.default?.vfs || pdfFonts;
@@ -171,6 +174,73 @@ const buildFirstMonthInterestSectionTable = (title, data = []) => {
         table: {
           headerRows: 1,
           widths: [50, 60, '*', 60, 40, 42, 42, 42, 42, 38, 48],
+          body,
+          dontBreakRows: true,
+        },
+        layout: {
+          fillColor: (rowIndex) => {
+            if (rowIndex === 0) return COLORS.headerBg;
+            if (rowIndex === footerIndex) return COLORS.footerBg;
+            return null;
+          },
+          hLineColor: () => COLORS.border,
+          vLineColor: () => COLORS.border,
+        },
+      },
+    ],
+    margin: [0, 0, 0, 10],
+  };
+};
+
+const buildInterAccountTransferSectionTable = (title, data = []) => {
+  const totals = calculateInterAccountTransferSectionTotals(data);
+  const body = [
+    [
+      { text: 'DATE', style: 'tableHeader', alignment: 'left' },
+      { text: 'FIRM', style: 'tableHeader', alignment: 'left' },
+      { text: 'ENTRY', style: 'tableHeader', alignment: 'left' },
+      { text: 'FROM ACCOUNT', style: 'tableHeader', alignment: 'left' },
+      { text: 'TO / SPLIT DETAIL', style: 'tableHeader', alignment: 'left' },
+      { text: 'AMOUNT', style: 'tableHeader', alignment: 'right' },
+      { text: 'NARRATION', style: 'tableHeader', alignment: 'left' },
+    ],
+  ];
+
+  data.forEach((item) => {
+    const amount = getInterAccountTransferRowAmount(item);
+    body.push([
+      { text: item.db_date || '-', style: 'tableCell' },
+      { text: item.db_firm || '-', style: 'tableCell' },
+      { text: item.db_direction || '-', style: 'tableCell' },
+      { text: item.db_from_account || '-', style: 'accountName' },
+      { text: item.db_to_description || '-', style: 'tableCell' },
+      { text: money(amount), style: 'tableCellBold', alignment: 'right', color: COLORS.dr },
+      { text: item.db_narration || '-', style: 'tableCell' },
+    ]);
+  });
+
+  const footerIndex = body.length;
+  body.push([
+    { text: 'TOTAL AMT :', style: 'tableFooter', colSpan: 5, alignment: 'right' },
+    {},
+    {},
+    {},
+    {},
+    { text: money(totals.total), style: 'tableFooter', alignment: 'right', color: COLORS.dr },
+    { text: '', style: 'tableFooter' },
+  ]);
+
+  return {
+    stack: [
+      {
+        text: title,
+        style: 'sectionTitle',
+        margin: [0, 0, 0, 6],
+      },
+      {
+        table: {
+          headerRows: 1,
+          widths: [50, 55, 42, 70, '*', 52, 140],
           body,
           dontBreakRows: true,
         },
@@ -411,6 +481,8 @@ const buildDocDefinition = ({
         content.push(buildProcessingSectionTable(panel.title, panel.data));
       } else if (isFirstMonthInterestDaybookSection(panel.title)) {
         content.push(buildFirstMonthInterestSectionTable(panel.title, panel.data));
+      } else if (isInterAccountTransferDaybookSection(panel.title)) {
+        content.push(buildInterAccountTransferSectionTable(panel.title, panel.data));
       } else {
         content.push(buildSectionTable(panel.title, panel.data, panel.amtTone));
       }

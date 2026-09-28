@@ -2,13 +2,16 @@ import React, { useMemo, useState } from "react";
 import DayBookMobileCard from "./DayBookMobileCard";
 import DayBookProcessingMobileCard from "./DayBookProcessingMobileCard";
 import DayBookFirstMonthInterestMobileCard from "./DayBookFirstMonthInterestMobileCard";
+import DayBookInterAccountTransferMobileCard from "./DayBookInterAccountTransferMobileCard";
 import {
   calculateSectionTotals,
   calculateProcessingSectionTotals,
   calculateFirstMonthInterestSectionTotals,
+  calculateInterAccountTransferSectionTotals,
   formatCurrency,
   isProcessingDaybookSection,
   isFirstMonthInterestDaybookSection,
+  isInterAccountTransferDaybookSection,
 } from "./dayBookUtils";
 
 const DayBookMobileSection = ({
@@ -25,11 +28,14 @@ const DayBookMobileSection = ({
   const [totalsOpen, setTotalsOpen] = useState(false);
   const isProcessingSection = isProcessingDaybookSection(title);
   const isFirstMonthInterestSection = isFirstMonthInterestDaybookSection(title);
+  const isInterAccountTransferSection = isInterAccountTransferDaybookSection(title);
   const totals = isProcessingSection
     ? calculateProcessingSectionTotals(data)
     : isFirstMonthInterestSection
       ? calculateFirstMonthInterestSectionTotals(data)
-      : calculateSectionTotals(data);
+      : isInterAccountTransferSection
+        ? calculateInterAccountTransferSectionTotals(data)
+        : calculateSectionTotals(data);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -40,12 +46,20 @@ const DayBookMobileSection = ({
       const date = (item.db_date || "").toLowerCase();
       const ref = (item.db_ref_no || "").toLowerCase();
       const type = (item.db_ref_type || "").toLowerCase();
+      const fromAcc = (item.db_from_account || "").toLowerCase();
+      const toDesc = (item.db_to_description || "").toLowerCase();
+      const direction = (item.db_direction || "").toLowerCase();
+      const narration = (item.db_narration || "").toLowerCase();
       return (
         name.includes(q) ||
         firm.includes(q) ||
         date.includes(q) ||
         ref.includes(q) ||
-        type.includes(q)
+        type.includes(q) ||
+        fromAcc.includes(q) ||
+        toDesc.includes(q) ||
+        direction.includes(q) ||
+        narration.includes(q)
       );
     });
   }, [data, search]);
@@ -101,6 +115,17 @@ const DayBookMobileSection = ({
                 if (isFirstMonthInterestSection) {
                   return (
                     <DayBookFirstMonthInterestMobileCard
+                      key={cardKey}
+                      item={item}
+                      cardKey={cardKey}
+                      expanded={expandedCardKey === cardKey}
+                      onToggle={onToggleCard}
+                    />
+                  );
+                }
+                if (isInterAccountTransferSection) {
+                  return (
+                    <DayBookInterAccountTransferMobileCard
                       key={cardKey}
                       item={item}
                       cardKey={cardKey}
@@ -199,6 +224,11 @@ const DayBookMobileSection = ({
                       <strong className="is-dr">{formatCurrency(totals.total)}</strong>
                     </div>
                   </>
+                ) : isInterAccountTransferSection ? (
+                  <div className="is-full">
+                    <span>Transfer total</span>
+                    <strong className="is-dr">{formatCurrency(totals.total)}</strong>
+                  </div>
                 ) : (
                   <>
                     <div>
