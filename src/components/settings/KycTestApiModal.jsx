@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Modal } from "react-bootstrap";
 import {
   FiAlertCircle,
+  FiBookOpen,
   FiCheckCircle,
   FiClock,
   FiCreditCard,
@@ -14,16 +15,10 @@ import { toast } from "react-hot-toast";
 import {
   buildTestRequestPreview,
   credentialsReady,
+  getDefaultTestFormValues,
+  getExpectedTestResponse,
   mockTestApiResponse,
 } from "../../utils/kycIntegrationConfig";
-
-const defaultFormForApi = (api) => {
-  const values = {};
-  api?.fields?.forEach((field) => {
-    values[field.key] = "";
-  });
-  return values;
-};
 
 const KycTestApiModal = ({ show, onHide, provider, providerId, providerSettings, baseUrl }) => {
   const testApis = provider?.testApis || {};
@@ -33,7 +28,6 @@ const KycTestApiModal = ({ show, onHide, provider, providerId, providerSettings,
   const [formValues, setFormValues] = useState({});
   const [testing, setTesting] = useState(false);
   const [result, setResult] = useState(null);
-  const [requestPreview, setRequestPreview] = useState(null);
 
   const activeApi = testApis[activeTestType];
 
@@ -41,7 +35,6 @@ const KycTestApiModal = ({ show, onHide, provider, providerId, providerSettings,
     if (!show) {
       setTesting(false);
       setResult(null);
-      setRequestPreview(null);
       return;
     }
     if (testTypeIds.length && !testTypeIds.includes(activeTestType)) {
@@ -50,18 +43,29 @@ const KycTestApiModal = ({ show, onHide, provider, providerId, providerSettings,
   }, [show, testTypeIds, activeTestType]);
 
   useEffect(() => {
-    setFormValues(defaultFormForApi(activeApi));
+    if (!show) return;
+    setFormValues(getDefaultTestFormValues(providerId, activeTestType));
     setResult(null);
-    setRequestPreview(null);
-  }, [providerId, activeTestType, activeApi, show]);
+  }, [providerId, activeTestType, show]);
 
-  const requestSummary = useMemo(
+  const requestPreview = useMemo(
     () => buildTestRequestPreview(providerId, activeTestType, baseUrl, providerSettings, formValues),
     [providerId, activeTestType, baseUrl, providerSettings, formValues]
   );
 
+  const expectedResponse = useMemo(
+    () => getExpectedTestResponse(providerId, activeTestType),
+    [providerId, activeTestType]
+  );
+
   const setField = (key, value) => {
     setFormValues((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const fillSampleData = () => {
+    setFormValues(getDefaultTestFormValues(providerId, activeTestType));
+    setResult(null);
+    toast.success("Sample test values applied");
   };
 
   const validateForm = () => {
@@ -91,20 +95,18 @@ const KycTestApiModal = ({ show, onHide, provider, providerId, providerSettings,
 
     setTesting(true);
     setResult(null);
-    setRequestPreview(requestSummary);
 
     const mock = mockTestApiResponse(providerId, activeTestType, formValues);
     await new Promise((r) => setTimeout(r, mock.durationMs));
 
     setResult(mock);
     setTesting(false);
-    toast.success("Test completed (mock response — backend pending)");
+    toast.success("Test completed (simulated — wire backend for live calls)");
   };
 
   const handleReset = () => {
-    setFormValues(defaultFormForApi(activeApi));
+    setFormValues(getDefaultTestFormValues(providerId, activeTestType));
     setResult(null);
-    setRequestPreview(null);
   };
 
   const testTypeIcon = (typeId) => {
@@ -115,7 +117,7 @@ const KycTestApiModal = ({ show, onHide, provider, providerId, providerSettings,
   if (!provider || !testTypeIds.length) return null;
 
   return (
-    <Modal show={show} onHide={onHide} size="lg" centered scrollable className="kyc-test-modal">
+    <Modal show={show} onHide={onHide} size="xl" centered scrollable className="kyc-test-modal">
       <Modal.Header closeButton className="bg-light py-2">
         <Modal.Title className="h6 fw-bold mb-0 d-flex align-items-center gap-2">
           <FiZap className="text-warning" />
@@ -125,8 +127,8 @@ const KycTestApiModal = ({ show, onHide, provider, providerId, providerSettings,
       <Modal.Body className="p-3 p-md-4">
         <div className="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3">
           <p className="text-muted small mb-0">
-            Send a sample request with test data. Live calls will run via backend later — this shows the
-            request shape and a mock response.
+            Use provider sample values, review the exact JSON request, and compare with the documented test
+            response. Live calls will run through your backend once integrated.
           </p>
           {!credentialsReady(providerId, providerSettings) && (
             <span className="kyc-test-badge warn d-inline-flex align-items-center gap-1">
@@ -164,6 +166,13 @@ const KycTestApiModal = ({ show, onHide, provider, providerId, providerSettings,
               </code>
             </div>
 
+            {activeApi.docsNote && (
+              <div className="kyc-test-docs-note small d-flex gap-2 mb-3">
+                <FiBookOpen className="flex-shrink-0 mt-1 text-warning" size={16} />
+                <span>{activeApi.docsNote}</span>
+              </div>
+            )}
+
             <div className="row g-3 mb-3">
               {activeApi.fields.map((field) => (
                 <div className="col-12 col-md-6" key={field.key}>
@@ -185,7 +194,8 @@ const KycTestApiModal = ({ show, onHide, provider, providerId, providerSettings,
               {providerId === "sandbox" && (
                 <div className="col-12">
                   <div className="kyc-test-hint small text-muted">
-                    Consent <code>Y</code> and your saved verification reason will be included automatically.
+                    Request body includes <code>@entity</code>, <code>consent: &quot;Y&quot;</code>, and your saved
+                    verification reason automatically.
                   </div>
                 </div>
               )}
@@ -209,6 +219,14 @@ const KycTestApiModal = ({ show, onHide, provider, providerId, providerSettings,
                   </>
                 )}
               </button>
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                onClick={fillSampleData}
+                disabled={testing}
+              >
+                Use sample test data
+              </button>
               <button type="button" className="btn btn-outline-secondary" onClick={handleReset} disabled={testing}>
                 Clear
               </button>
@@ -216,40 +234,59 @@ const KycTestApiModal = ({ show, onHide, provider, providerId, providerSettings,
           </form>
         )}
 
-        {(requestPreview || result) && (
-          <div className="kyc-test-results">
-            {requestPreview && (
-              <div className="kyc-test-result-block mb-3">
-                <h6 className="fw-semibold mb-2">Request preview</h6>
-                <pre className="kyc-test-json">{JSON.stringify(requestPreview, null, 2)}</pre>
+        <div className="kyc-test-results">
+          <div className="row g-3">
+            <div className="col-12 col-lg-6">
+              <div className="kyc-test-result-block h-100">
+                <h6 className="fw-semibold mb-2">Request JSON</h6>
+                <p className="kyc-test-hint small text-muted mb-2">
+                  Headers + body as sent to {provider.label} (secrets masked).
+                </p>
+                <pre className="kyc-test-json">
+                  {requestPreview ? JSON.stringify(requestPreview, null, 2) : "{}"}
+                </pre>
               </div>
-            )}
-
-            {result && (
-              <div className={`kyc-test-result-block ${result.ok ? "success" : "error"}`}>
-                <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
-                  {result.ok ? (
-                    <FiCheckCircle className="text-success" size={18} />
-                  ) : (
-                    <FiAlertCircle className="text-danger" size={18} />
-                  )}
-                  <h6 className="fw-semibold mb-0">
-                    {result.ok ? "Mock success" : "Mock failure"} — HTTP {result.status}
-                  </h6>
-                  <span className="kyc-test-badge muted d-inline-flex align-items-center gap-1 ms-auto">
-                    <FiClock size={13} />
-                    {result.durationMs} ms
-                  </span>
-                </div>
-                <pre className="kyc-test-json">{JSON.stringify(result.body, null, 2)}</pre>
-                <div className="kyc-test-hint small text-muted mt-2">
-                  This is a simulated response. Real provider calls will go through your backend to keep
-                  secrets secure.
-                </div>
+            </div>
+            <div className="col-12 col-lg-6">
+              <div className="kyc-test-result-block expected h-100">
+                <h6 className="fw-semibold mb-2 d-flex align-items-center gap-2">
+                  <FiBookOpen size={16} className="text-warning" />
+                  Expected test response JSON
+                </h6>
+                <p className="kyc-test-hint small text-muted mb-2">
+                  Documented success sample from {provider.label} test environment.
+                </p>
+                <pre className="kyc-test-json">
+                  {expectedResponse ? JSON.stringify(expectedResponse, null, 2) : "—"}
+                </pre>
               </div>
-            )}
+            </div>
           </div>
-        )}
+
+          {result && (
+            <div className={`kyc-test-result-block mt-3 ${result.ok ? "success" : "error"}`}>
+              <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
+                {result.ok ? (
+                  <FiCheckCircle className="text-success" size={18} />
+                ) : (
+                  <FiAlertCircle className="text-danger" size={18} />
+                )}
+                <h6 className="fw-semibold mb-0">
+                  Simulated response — HTTP {result.status}
+                </h6>
+                <span className="kyc-test-badge muted d-inline-flex align-items-center gap-1 ms-auto">
+                  <FiClock size={13} />
+                  {result.durationMs} ms
+                </span>
+              </div>
+              <pre className="kyc-test-json">{JSON.stringify(result.body, null, 2)}</pre>
+              <div className="kyc-test-hint small text-muted mt-2">
+                Matches the expected test shape above. Real provider calls will go through your backend to keep
+                secrets secure.
+              </div>
+            </div>
+          )}
+        </div>
       </Modal.Body>
     </Modal>
   );

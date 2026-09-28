@@ -15,6 +15,7 @@ import AccountRoutes from '../pages/account/AccountRoutes';
 import Footer from '../layouts/Footer';
 import DayBookRoutes from '../pages/daybook/DayBookRoutes';
 import BookRoutes from '../pages/book/BookRoutes';
+import LedgerRoutes from '../pages/ledger/LedgerRoutes';
 import TrialBalanceRoutes from '../pages/trial-balance/TrialBalanceRoutes';
 import BalanceSheetRoutes from '../pages/balance-sheet/BalanceSheetRoutes';
 import ProfitLossRoutes from '../pages/profit-loss/ProfitLossRoutes';
@@ -124,6 +125,14 @@ const MainRoutes = () => {
                 element={
                   <PermissionRoute permission="account.view">
                     <BookRoutes />
+                  </PermissionRoute>
+                }
+              />
+              <Route
+                path="/ledger/*"
+                element={
+                  <PermissionRoute permission="loan.view">
+                    <LedgerRoutes />
                   </PermissionRoute>
                 }
               />

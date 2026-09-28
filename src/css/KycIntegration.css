@@ -425,6 +425,20 @@
   background: rgba(108, 117, 125, 0.05);
 }
 
+.kyc-test-result-block.expected {
+  border-color: rgba(196, 146, 42, 0.35);
+  background: rgba(196, 146, 42, 0.06);
+}
+
+.kyc-test-docs-note {
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  border: 1px dashed var(--app-border);
+  background: rgba(196, 146, 42, 0.06);
+  color: var(--app-text);
+  line-height: 1.45;
+}
+
 .kyc-test-result-block.success {
   border-color: rgba(25, 135, 84, 0.35);
   background: rgba(25, 135, 84, 0.06);

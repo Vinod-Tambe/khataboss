@@ -195,7 +195,7 @@ const Sidebar = () => {
         id: "ledger",
         label: "Ledger",
         icon: <FiLayers />,
-        permission: "account.view",
+        anyOf: ["loan.view", "account.view"],
         subItems: [
           { label: "Loan Ledger", path: "/ledger/loan", icon: <FiFileText />, permission: "loan.view" },
           { label: "Loan Item", path: "/ledger/loan-item", icon: <FiPackage />, permission: "loan.view" },

@@ -112,20 +112,75 @@ export const KYC_PROVIDERS = {
         label: "PAN verification",
         method: "POST",
         path: "/kyc/pan/verify",
+        requestEntity: "in.co.sandbox.kyc.pan_verification.request",
+        docsNote:
+          "Sandbox test PAN XXXPX1234A with name John Ronald Doe and DOB 11/11/2001 returns a valid individual match.",
         fields: [
-          { key: "pan", label: "PAN", placeholder: "ABCDE1234F", required: true },
-          { key: "name_as_per_pan", label: "Name as per PAN", placeholder: "Full name on PAN card", required: true },
-          { key: "date_of_birth", label: "Date of birth", placeholder: "DD/MM/YYYY", required: true },
+          {
+            key: "pan",
+            label: "PAN",
+            placeholder: "XXXPX1234A",
+            required: true,
+            sampleValue: "XXXPX1234A",
+          },
+          {
+            key: "name_as_per_pan",
+            label: "Name as per PAN",
+            placeholder: "John Ronald Doe",
+            required: true,
+            sampleValue: "John Ronald Doe",
+          },
+          {
+            key: "date_of_birth",
+            label: "Date of birth",
+            placeholder: "DD/MM/YYYY",
+            required: true,
+            sampleValue: "11/11/2001",
+          },
         ],
+        expectedResponse: {
+          code: 200,
+          timestamp: 1000000000000,
+          transaction_id: "3b862714-d27d-4907-9027-e6399f8a8d46",
+          data: {
+            "@entity": "in.co.sandbox.kyc.pan_verification.response",
+            pan: "XXXPX1234A",
+            category: "individual",
+            status: "valid",
+            remarks: null,
+            name_as_per_pan_match: true,
+            date_of_birth_match: true,
+            aadhaar_seeding_status: "y",
+          },
+        },
       },
       aadhaar: {
         id: "aadhaar",
         label: "Aadhaar OTP (step 1)",
         method: "POST",
         path: "/kyc/aadhaar/okyc/otp",
+        requestEntity: "in.co.sandbox.kyc.aadhaar.okyc.otp.request",
+        docsNote:
+          "Use test Aadhaar 123456789012 in Sandbox test mode. UIDAI recommends DigiLocker for production KYC.",
         fields: [
-          { key: "aadhaar", label: "Aadhaar number", placeholder: "12-digit Aadhaar", required: true },
+          {
+            key: "aadhaar_number",
+            label: "Aadhaar number",
+            placeholder: "123456789012",
+            required: true,
+            sampleValue: "123456789012",
+          },
         ],
+        expectedResponse: {
+          code: 200,
+          timestamp: 1000000000000,
+          transaction_id: "7d75d9db-0870-4719-8884-a3eee7bd68d5",
+          data: {
+            "@entity": "in.co.sandbox.kyc.aadhaar.okyc.otp.response",
+            reference_id: 1234567,
+            message: "OTP sent successfully",
+          },
+        },
       },
     },
   },
@@ -240,20 +295,70 @@ export const KYC_PROVIDERS = {
         label: "PAN Lite verification",
         method: "POST",
         path: "/tools/kyc/pan-lite",
+        docsNote:
+          "Signed request: developer_key, secret-key (HMAC), and timestamp headers. Body fields vary by Eko product version.",
         fields: [
-          { key: "pan", label: "PAN", placeholder: "ABCDE1234F", required: true },
-          { key: "name", label: "Customer name", placeholder: "Name to match PAN", required: true },
+          {
+            key: "pan",
+            label: "PAN",
+            placeholder: "ABCDE1234F",
+            required: true,
+            sampleValue: "ABCDE1234F",
+          },
+          {
+            key: "name",
+            label: "Customer name",
+            placeholder: "Name to match PAN",
+            required: true,
+            sampleValue: "Rajesh Kumar",
+          },
         ],
+        expectedResponse: {
+          response_status_id: 0,
+          status: 0,
+          message: "Success",
+          data: {
+            pan: "ABCDE1234F",
+            registered_name: "RAJESH KUMAR",
+            name_match: true,
+            pan_status: "VALID",
+            category: "Individual",
+          },
+        },
       },
       aadhaar: {
         id: "aadhaar",
         label: "DigiLocker KYC init",
         method: "POST",
         path: "/tools/kyc/digilocker/init",
+        docsNote:
+          "Initiates DigiLocker flow; response includes redirect URL or session id for customer consent.",
         fields: [
-          { key: "aadhaar", label: "Aadhaar number", placeholder: "12-digit Aadhaar", required: true },
-          { key: "mobile", label: "Mobile number", placeholder: "10-digit mobile", required: true },
+          {
+            key: "aadhaar",
+            label: "Aadhaar number",
+            placeholder: "123456789012",
+            required: true,
+            sampleValue: "123456789012",
+          },
+          {
+            key: "mobile",
+            label: "Mobile number",
+            placeholder: "9876543210",
+            required: true,
+            sampleValue: "9876543210",
+          },
         ],
+        expectedResponse: {
+          response_status_id: 0,
+          status: 0,
+          message: "DigiLocker session created",
+          data: {
+            request_id: "EKO-DL-20250101120000",
+            redirect_url: "https://digilocker.gov.in/...",
+            expires_in_seconds: 900,
+          },
+        },
       },
     },
   },
@@ -302,30 +407,63 @@ export function saveKycSettings(settings) {
 
 const MASK = "••••••••";
 
+export function getDefaultTestFormValues(providerId, testType) {
+  const api = KYC_PROVIDERS[providerId]?.testApis?.[testType];
+  if (!api) return {};
+  const values = {};
+  api.fields?.forEach((field) => {
+    values[field.key] = field.sampleValue ?? "";
+  });
+  return values;
+}
+
+export function getExpectedTestResponse(providerId, testType) {
+  const api = KYC_PROVIDERS[providerId]?.testApis?.[testType];
+  return api?.expectedResponse ? JSON.parse(JSON.stringify(api.expectedResponse)) : null;
+}
+
+export function buildTestRequestBody(providerId, testType, providerSettings, formValues) {
+  const api = KYC_PROVIDERS[providerId]?.testApis?.[testType];
+  if (!api) return null;
+
+  const body = { ...formValues };
+
+  if (providerId === "sandbox") {
+    if (api.requestEntity) {
+      body["@entity"] = api.requestEntity;
+    }
+    body.consent = "Y";
+    const reason = providerSettings.verificationReason?.trim();
+    if (reason) body.reason = reason;
+  } else if (providerId === "eko") {
+    if (providerSettings.clientId?.trim()) {
+      body.client_id = providerSettings.clientId.trim();
+    }
+  }
+
+  return body;
+}
+
 export function buildTestRequestPreview(providerId, testType, baseUrl, providerSettings, formValues) {
   const provider = KYC_PROVIDERS[providerId];
   const api = provider?.testApis?.[testType];
   if (!api) return null;
 
   const url = `${baseUrl.replace(/\/$/, "")}${api.path}`;
-  const body = { consent: "Y", ...formValues };
-
-  if (providerId === "sandbox") {
-    const reason = providerSettings.verificationReason?.trim();
-    if (reason) body.reason = reason;
-  }
+  const body = buildTestRequestBody(providerId, testType, providerSettings, formValues);
 
   const headers =
     providerId === "sandbox"
       ? {
+          Authorization: "Bearer <access_token from Sandbox authenticate API>",
           "x-api-key": providerSettings.apiKey || "(not set)",
-          "x-api-secret": providerSettings.apiSecret ? MASK : "(not set)",
+          "x-api-secret": providerSettings.apiSecret ? MASK : "(used server-side to obtain token)",
           "x-api-version": providerSettings.apiVersion || "1.0",
           "Content-Type": "application/json",
         }
       : {
           developer_key: providerSettings.developerKey || "(not set)",
-          "secret-key": providerSettings.accessKey ? MASK : "(not set)",
+          "secret-key": providerSettings.accessKey ? MASK : "(signed HMAC on server)",
           timestamp: String(Math.floor(Date.now() / 1000)),
           "Content-Type": "application/json",
         };
@@ -340,42 +478,44 @@ export function credentialsReady(providerId, providerSettings) {
   return Boolean(providerSettings.developerKey?.trim() && providerSettings.accessKey?.trim());
 }
 
-/** Frontend-only mock until backend proxy is wired */
-export function mockTestApiResponse(providerId, testType, formValues) {
-  const at = new Date().toISOString();
-  if (testType === "pan") {
-    return {
-      ok: true,
-      status: 200,
-      durationMs: 900 + Math.floor(Math.random() * 400),
-      body: {
-        code: 200,
-        message: "Success",
-        data: {
-          pan: formValues.pan || formValues.pan_number,
-          name_match: true,
-          status: "VALID",
-          category: "Individual",
-          provider: providerId,
-          verified_at: at,
-          _mock: true,
-        },
-      },
-    };
+/** Frontend-only mock until backend proxy is wired — mirrors provider doc shape */
+export function mockTestApiResponse(providerId, testType, formValues, providerSettings) {
+  const expected = getExpectedTestResponse(providerId, testType);
+  const durationMs = 900 + Math.floor(Math.random() * 400);
+  const now = Date.now();
+
+  if (providerId === "sandbox" && expected) {
+    const body = JSON.parse(JSON.stringify(expected));
+    body.timestamp = now;
+    body.transaction_id = `${body.transaction_id?.slice(0, 8) || "mock"}-${now.toString(36)}`;
+
+    if (testType === "pan" && body.data) {
+      body.data.pan = formValues.pan || body.data.pan;
+    }
+    if (testType === "aadhaar" && body.data) {
+      body.data.reference_id = Math.floor(1000000 + Math.random() * 9000000);
+    }
+
+    return { ok: true, status: 200, durationMs, body, simulated: true };
   }
+
+  if (providerId === "eko" && expected) {
+    const body = JSON.parse(JSON.stringify(expected));
+    if (testType === "pan" && body.data) {
+      body.data.pan = formValues.pan || body.data.pan;
+      body.data.registered_name = (formValues.name || body.data.registered_name).toUpperCase();
+    }
+    if (testType === "aadhaar" && body.data) {
+      body.data.request_id = `EKO-DL-${now}`;
+    }
+    return { ok: true, status: 200, durationMs, body, simulated: true };
+  }
+
   return {
     ok: true,
     status: 200,
-    durationMs: 1100 + Math.floor(Math.random() * 500),
-    body: {
-      code: 200,
-      message: "OTP sent successfully",
-      data: {
-        aadhaar: formValues.aadhaar?.replace(/\d(?=\d{4})/g, "X") || "XXXX-XXXX-1234",
-        ref_id: `MOCK-${Date.now().toString(36).toUpperCase()}`,
-        provider: providerId,
-        _mock: true,
-      },
-    },
+    durationMs,
+    body: { message: "No sample response configured", provider: providerId, testType },
+    simulated: true,
   };
 }
