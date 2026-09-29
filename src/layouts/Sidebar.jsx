@@ -43,7 +43,7 @@ import {
 import { FaBook, FaBalanceScale } from "react-icons/fa";
 import AppBrandLogo from "../components/common/AppBrandLogo";
 import { useDispatch, useSelector } from "react-redux";
-import { logout } from "../store/slices/authSlice";
+import { signOutUser } from "../utils/signOut";
 import { setSelectedFirmId } from "../store/slices/firmSlice";
 import { filterMenuByPermissions, isOwner } from "../utils/permissions";
 
@@ -55,9 +55,9 @@ const Sidebar = () => {
   const { firms, selectedFirmId } = useSelector((state) => state.firm);
   const user = useSelector((state) => state.auth.user);
 
-  const handleLogout = (e) => {
+  const handleLogout = async (e) => {
     e.preventDefault();
-    dispatch(logout());
+    await signOutUser(dispatch);
   };
 
   const handleFirmChange = (e) => {

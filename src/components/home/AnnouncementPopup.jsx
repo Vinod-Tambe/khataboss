@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { getAnnouncementFeed } from '../../api/announcementApi';
 import { getAnnouncementTypeConfig } from '../../constants/announcementTypes';
+import { shouldShowAnnouncementPopup } from '../../utils/announcementMeta';
 import AnnouncementFeedFooter from './AnnouncementFeedFooter';
 
 const DISMISS_STORAGE_KEY = 'khataboss_dismissed_announcements';
@@ -29,6 +30,7 @@ const AnnouncementPopup = () => {
       const dismissed = new Set(readDismissed());
       const pending = (res.data || [])
         .filter((item) => !dismissed.has(item.ann_uuid))
+        .filter((item) => shouldShowAnnouncementPopup(item))
         .sort((a, b) => {
           if (a.ann_is_pinned !== b.ann_is_pinned) {
             return a.ann_is_pinned ? -1 : 1;

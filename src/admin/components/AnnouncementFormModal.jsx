@@ -130,7 +130,7 @@ const AnnouncementFormModal = ({
             <button type="button" className="btn btn-light" onClick={onClose}>
               Cancel
             </button>
-            <button type="submit" className="btn btn-success" disabled={saving}>
+            <button type="submit" className="btn admin-announcement-btn-primary" disabled={saving}>
               {saving ? 'Saving...' : editingUuid ? 'Update Announcement' : 'Publish Announcement'}
             </button>
           </div>

@@ -1,5 +1,12 @@
 const pad2 = (value) => String(value).padStart(2, '0');
 
+export const formatDateOnly = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return `${pad2(date.getDate())}/${pad2(date.getMonth() + 1)}/${date.getFullYear()}`;
+};
+
 export const formatDateTime = (value) => {
   if (!value) return '';
   const date = new Date(value);

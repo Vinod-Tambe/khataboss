@@ -24,3 +24,12 @@ export const deleteAnnouncement = async (uuid) => {
   const response = await adminAxiosInstance.delete(`/announcement/${uuid}`);
   return { message: response.data?.message };
 };
+
+export const seedAnnouncementTemplates = async () => {
+  const response = await adminAxiosInstance.post('/announcement/templates/seed');
+  return {
+    data: response.data?.data || [],
+    stats: response.data?.stats,
+    message: response.data?.message,
+  };
+};

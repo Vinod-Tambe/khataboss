@@ -31,9 +31,11 @@ export const loginWithCredentials = async (login_id, password) => {
  * Logout logic - can be used to notify backend if needed
  */
 export const logoutApi = async () => {
-  // If backend has a logout endpoint, call it here
-  // const response = await axiosInstance.post('/auth/logout');
-  return { success: true, message: 'Logged out successfully' };
+  const response = await axiosInstance.post('/auth/logout');
+  return {
+    success: true,
+    message: response.data?.message || 'Logged out successfully',
+  };
 };
 
 /**

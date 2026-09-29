@@ -5,6 +5,7 @@ import '../../css/ActiveLoanPanel.css';
 import DepositModal from './modal/DepositModal';
 import TransactionModal from './modal/TransactionModal';
 import LoanRecordReceiptModal from './LoanRecordReceiptModal';
+import LoanCustomerMessageModal from './LoanCustomerMessageModal';
 import { downloadLoanInvoicePdf } from './invoice/downloadLoanInvoicePdf';
 import { downloadLoanForm8Pdf } from './downloadLoanForm8Pdf';
 import { downloadLoanAgreementPdf } from './downloadLoanAgreementPdf';
@@ -558,6 +559,8 @@ const ActionFooter = ({
   isForm8Downloading,
   isAgreementDownloading,
   isDeletingLoan,
+  onAlertClick,
+  onNoticeClick,
 }) => (
   <div className="action-footer mt-4">
     <div className="d-flex flex-wrap gap-2 justify-content-center">
@@ -599,7 +602,7 @@ const ActionFooter = ({
       <button className="btn btn-sm text-nowrap blue-btn" onClick={onLogsClick} disabled={!showLogs}>
         <i className="bi bi-journal-text text-info me-1"></i> Logs
       </button>
-      <button className="btn btn-sm text-nowrap blue-btn">
+      <button type="button" className="btn btn-sm text-nowrap blue-btn" onClick={onNoticeClick}>
         <i className="bi bi-envelope-open text-warning me-1"></i> Notice
       </button>
       <button
@@ -610,7 +613,7 @@ const ActionFooter = ({
         <i className={`bi ${isInvoiceDownloading ? 'bi-hourglass-split' : 'bi-file-earmark-arrow-down'} text-primary me-1`}></i>
         {isInvoiceDownloading ? 'Downloading...' : 'Invoice'}
       </button>
-      <button className="btn btn-sm text-nowrap blue-btn">
+      <button type="button" className="btn btn-sm text-nowrap blue-btn" onClick={onAlertClick}>
         <i className="bi bi-envelope text-warning me-1"></i> Alert
       </button>
       {canDeleteLoan && (
@@ -773,6 +776,8 @@ const LoanMobileView = ({
   interestBlockReason,
   onEditInterestClick,
   recordNav = null,
+  onAlertClick,
+  onNoticeClick,
 }) => {
   const interestMethodLabel = formatInterestMethodLabel(loanInfoData);
 
@@ -1260,7 +1265,7 @@ const LoanMobileView = ({
         <button type="button" className="btn loan-mobile-action-btn" onClick={onLogsClick} disabled={!showLogs}>
           <i className="bi bi-journal-text text-info"></i> Logs
         </button>
-        <button type="button" className="btn loan-mobile-action-btn">
+        <button type="button" className="btn loan-mobile-action-btn" onClick={onNoticeClick}>
           <i className="bi bi-envelope-open text-warning"></i> Notice
         </button>
         <button
@@ -1272,7 +1277,7 @@ const LoanMobileView = ({
           <i className={`bi ${isInvoiceDownloading ? 'bi-hourglass-split' : 'bi-file-earmark-arrow-down'} text-primary`}></i>
           {isInvoiceDownloading ? '...' : 'Invoice'}
         </button>
-        <button type="button" className="btn loan-mobile-action-btn">
+        <button type="button" className="btn loan-mobile-action-btn" onClick={onAlertClick}>
           <i className="bi bi-envelope text-warning"></i> Alert
         </button>
         {canDeleteLoan && (
@@ -1292,6 +1297,25 @@ const LoanMobileView = ({
   );
 };
 
+const LoanCustomerMessageModalHost = ({
+  modalState,
+  onHide,
+  customer,
+  loanDetails,
+  amountDue,
+  dueDate,
+}) => (
+  <LoanCustomerMessageModal
+    show={modalState.show}
+    onHide={onHide}
+    kind={modalState.kind}
+    customer={customer}
+    loanDetails={loanDetails}
+    amountDue={amountDue}
+    dueDate={dueDate}
+  />
+);
+
 const LoanInfo = () => {
   const [activeModal, setActiveModal] = useState(null);
   const [showLogsModal, setShowLogsModal] = useState(false);
@@ -1308,6 +1332,7 @@ const LoanInfo = () => {
   const [deletingApId, setDeletingApId] = useState(null);
   const [isDeletingLoan, setIsDeletingLoan] = useState(false);
   const [showInterestModal, setShowInterestModal] = useState(false);
+  const [loanMessageModal, setLoanMessageModal] = useState({ show: false, kind: 'alert' });
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -1322,6 +1347,21 @@ const LoanInfo = () => {
   const canDeleteLoan = can('loan.delete');
   const canForm8 = can('loan.form8') || can('loan.view');
   const canAgreement = can('loan.agreement') || can('loan.view');
+  const canSendLoanMessages = can('sms.manage');
+  const canSendLoanNotice = can('loan.notice');
+
+  const openLoanCustomerMessage = (kind) => {
+    if (!canSendLoanMessages) {
+      toast.error('You need SMS / messaging permission to send reminders.');
+      return;
+    }
+    if (kind === 'notice' && !canSendLoanNotice) {
+      toast.error('You do not have permission to send loan notice.');
+      return;
+    }
+    if (!loanDetails) return;
+    setLoanMessageModal({ show: true, kind });
+  };
 
   const customerName = selectedUser?.user_first_name
     ? `${selectedUser.user_first_name} ${selectedUser.user_last_name || ''}`.trim()
@@ -1887,6 +1927,8 @@ const LoanInfo = () => {
         interestBlockReason={interestBlockReason}
         onEditInterestClick={openInterestModal}
         recordNav={recordNav}
+        onAlertClick={() => openLoanCustomerMessage('alert')}
+        onNoticeClick={() => openLoanCustomerMessage('notice')}
       />
 
       {/* ========== Desktop view ========== */}
@@ -2066,6 +2108,8 @@ const LoanInfo = () => {
           onDeleteClick={handleDeleteLoan}
           canDeleteLoan={canDeleteLoanAllowed}
           isDeletingLoan={isDeletingLoan}
+          onAlertClick={() => openLoanCustomerMessage('alert')}
+          onNoticeClick={() => openLoanCustomerMessage('notice')}
         />
       </div>
 
@@ -2125,6 +2169,15 @@ const LoanInfo = () => {
         loanDetails={loanDetails}
         canEdit={canEditLoan}
         onSuccess={fetchLoan}
+      />
+
+      <LoanCustomerMessageModalHost
+        modalState={loanMessageModal}
+        onHide={() => setLoanMessageModal({ show: false, kind: 'alert' })}
+        customer={selectedUser}
+        loanDetails={loanDetails}
+        amountDue={payableAmount}
+        dueDate={interestEndDate}
       />
     </div>
   );

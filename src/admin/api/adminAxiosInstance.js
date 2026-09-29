@@ -37,6 +37,11 @@ adminAxiosInstance.interceptors.response.use(
       !isAdminAuthRoute;
 
     if (isTokenError) {
+      const data = error.response?.data;
+      const message = data?.message || data?.error;
+      if (data?.code === 'SESSION_SUPERSEDED' && message) {
+        window.alert(message);
+      }
       localStorage.removeItem('adminUser');
       sessionStorage.removeItem('adminToken');
       if (!window.location.pathname.startsWith('/admin/login')) {

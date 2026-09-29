@@ -63,16 +63,17 @@ const AdminLoginPage = () => {
             />
             <button
               type="button"
-              className="btn btn-sm position-absolute end-0 me-2"
+              className="btn btn-sm admin-password-toggle position-absolute end-0 me-2"
               style={{ top: '38px' }}
               onClick={() => setShowPassword(!showPassword)}
               tabIndex={-1}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
               <i className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'}`} />
             </button>
           </div>
 
-          <button type="submit" className="btn btn-primary w-100 fw-bold admin-login-btn" disabled={loginLoading}>
+          <button type="submit" className="btn w-100 fw-bold admin-login-btn" disabled={loginLoading}>
             {loginLoading ? (
               <>
                 <span className="spinner-border spinner-border-sm me-2" />

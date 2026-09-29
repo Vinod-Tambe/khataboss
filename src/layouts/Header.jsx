@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FiUser, FiMenu, FiBell, FiSun, FiMoon, FiMonitor, FiDroplet, FiBriefcase, FiLock, FiLogOut } from 'react-icons/fi';
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { logout } from "../store/slices/authSlice";
+import { signOutUser } from "../utils/signOut";
 import { loadFirmsDropdown, setSelectedFirmId } from "../store/slices/firmSlice";
 import { useTheme } from "../context/ThemeContext";
 import HeaderSearch from "../components/common/HeaderSearch";
@@ -233,9 +233,9 @@ const Header = () => {
     };
   }, []);
 
-  const handleLogout = (e) => {
+  const handleLogout = async (e) => {
     e.preventDefault();
-    dispatch(logout());
+    await signOutUser(dispatch);
   };
 
   const handleFirmChange = (e) => {

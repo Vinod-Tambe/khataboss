@@ -51,6 +51,10 @@ const appConfig = {
   /** OTP resend countdown (seconds) */
   otpExpirySeconds: 60,
 
+  /** Idle session: no pointer/keyboard activity → warning → auto logout */
+  idleSessionIdleMinutes: 2,
+  idleSessionWarningSeconds: 10,
+
   /** CRA build: disable source maps (also in package.json build script) */
   generateSourceMap: false,
 };

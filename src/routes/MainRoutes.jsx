@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import SubscriptionExpiryLoginModal from '../components/common/SubscriptionExpiryLoginModal';
+import IdleSessionGuard from '../components/common/IdleSessionGuard';
 import {
   clearSubscriptionExpiryLoginNotice,
   readSubscriptionExpiryLoginNotice,
@@ -58,6 +59,7 @@ const MainRoutes = () => {
         isUrgent={Boolean(loginExpiryNotice?.isUrgent)}
         onContinue={handleExpiryModalContinue}
       />
+      <IdleSessionGuard />
       <Header />
       <div className="main-content">
         <Sidebar />

@@ -61,14 +61,17 @@ axiosInstance.interceptors.response.use(
         error.config &&
         error.config.url &&
         !error.config.url.includes('/auth/login') &&
-        !error.config.url.includes('/auth/verify-otp')) ||
+        !error.config.url.includes('/auth/verify-otp') &&
+        !error.config.url.includes('/auth/logout')) ||
       (responseData && responseData.error === "Access denied. No token provided.")
     );
 
     if (isTokenError) {
       const apiMessage = responseData?.message || responseData?.error;
+      const alertTitle =
+        responseData?.code === 'SESSION_SUPERSEDED' ? 'Signed in elsewhere' : 'Session Expired';
 
-      await LogoutAlert(apiMessage);
+      await LogoutAlert(apiMessage, alertTitle);
 
       localStorage.removeItem('user');
       sessionStorage.removeItem('token');

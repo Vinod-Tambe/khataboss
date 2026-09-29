@@ -512,3 +512,92 @@ body:has(.login-container),
     padding: 0 !important;
   }
 }
+
+.login-software-notice {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--ann-type-border, #fde68a);
+  background: color-mix(in srgb, var(--ann-type-bg, #fff4d6) 55%, var(--login-card-bg, #fff));
+  text-align: left;
+}
+
+.login-software-notice__icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--login-card-bg, #fff);
+  color: var(--ann-type-color, #b45309);
+  border: 1px solid var(--ann-type-border, #fde68a);
+  font-size: 1.15rem;
+}
+
+.login-software-notice__label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ann-type-color, #b45309);
+  margin-bottom: 0.15rem;
+}
+
+.login-software-notice__title {
+  font-weight: 800;
+  font-size: 0.92rem;
+  color: var(--login-input-text, #0f172a);
+  margin-bottom: 0.35rem;
+  line-height: 1.3;
+}
+
+.login-software-notice__body {
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--login-muted-text, #475569);
+  white-space: pre-wrap;
+}
+
+.login-software-notice__hint {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--ann-type-color, #047857);
+}
+
+.login-software-notice__more {
+  font-size: 0.72rem;
+  margin-top: 0.35rem;
+  color: var(--login-muted-text, #64748b);
+}
+
+.login-software-notice--blocking {
+  margin-top: 0.25rem;
+  padding: 1.15rem 1.25rem;
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.login-software-notice--blocking .login-software-notice__icon {
+  width: 48px;
+  height: 48px;
+  font-size: 1.35rem;
+}
+
+.login-software-notice--blocking .login-software-notice__title {
+  font-size: 1.05rem;
+}
+
+.login-software-notice--blocking .login-software-notice__body {
+  font-size: 0.86rem;
+}
+
+.login-software-notice__hint--block {
+  color: #b45309;
+  font-weight: 800;
+  line-height: 1.45;
+}

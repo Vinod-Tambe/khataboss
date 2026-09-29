@@ -43,9 +43,50 @@
 }
 
 .admin-login-btn {
-  background: var(--login-gradient, linear-gradient(135deg, #1e3a8a, #2563eb, #06b6d4));
-  border: none;
-  color: #ffffff;
+  background: var(--login-gradient, linear-gradient(135deg, #1e3a8a, #2563eb, #06b6d4)) !important;
+  border: none !important;
+  color: #ffffff !important;
+  padding: 0.65rem 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  transition: filter 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-login-btn:hover:not(:disabled),
+.admin-login-btn:focus-visible:not(:disabled) {
+  background: var(
+    --login-gradient-reverse,
+    linear-gradient(135deg, #06b6d4, #2563eb, #1e3a8a)
+  ) !important;
+  color: #ffffff !important;
+  filter: brightness(1.03);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.32);
+}
+
+.admin-login-btn:active:not(:disabled) {
+  color: #ffffff !important;
+  filter: brightness(0.96);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.22);
+}
+
+.admin-login-btn:disabled {
+  background: var(--login-gradient, linear-gradient(135deg, #1e3a8a, #2563eb, #06b6d4)) !important;
+  color: #ffffff !important;
+  opacity: 0.75;
+  box-shadow: none;
+}
+
+.admin-password-toggle {
+  color: var(--login-muted-text, #64748b) !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.admin-password-toggle:hover,
+.admin-password-toggle:focus-visible {
+  color: var(--layout-sidebar-brand-text, #1e40af) !important;
+  background: transparent !important;
 }
 
 .admin-back-link {
@@ -478,6 +519,111 @@
   margin-top: auto;
   padding-top: 0.75rem;
   border-top: 1px solid var(--ann-type-border, #dee2e6);
+}
+
+.announcement-admin-card__schedule-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.2;
+  border: 1.5px solid var(--ann-type-color, #2563eb);
+  background: #fff;
+  color: var(--ann-type-color, #2563eb);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.1s ease;
+}
+
+.announcement-admin-card__schedule-btn:hover,
+.announcement-admin-card__schedule-btn:focus-visible {
+  background: color-mix(in srgb, var(--ann-type-color, #2563eb) 14%, #fff);
+  color: var(--ann-type-color, #2563eb);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--ann-type-color, #2563eb) 22%, transparent);
+}
+
+.announcement-admin-card__schedule-btn:active {
+  transform: translateY(1px);
+}
+
+.announcement-schedule-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.announcement-schedule-badge--inactive {
+  color: #64748b;
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+}
+
+.announcement-schedule-badge--scheduled {
+  color: #1d4ed8;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.announcement-schedule-badge--live {
+  color: #047857;
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+}
+
+.announcement-schedule-badge--expired {
+  color: #b45309;
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.admin-announcement-btn-primary {
+  background: var(
+    --login-gradient,
+    linear-gradient(135deg, #1e3a8a, #2563eb, #06b6d4)
+  ) !important;
+  border: none !important;
+  color: #fff !important;
+  font-weight: 700;
+  padding: 0.45rem 1.1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.22);
+}
+
+.admin-announcement-btn-primary:hover:not(:disabled),
+.admin-announcement-btn-primary:focus-visible:not(:disabled) {
+  filter: brightness(1.05);
+  color: #fff !important;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.28);
+}
+
+.admin-announcement-btn-primary:disabled {
+  opacity: 0.72;
+  color: #fff !important;
+}
+
+.admin-announcement-btn-outline {
+  border: 1.5px solid #2563eb !important;
+  color: #1d4ed8 !important;
+  background: #fff !important;
+  font-weight: 700;
+}
+
+.admin-announcement-btn-outline:hover,
+.admin-announcement-btn-outline:focus-visible {
+  background: #eff6ff !important;
+  color: #1e40af !important;
 }
 
 @media (max-width: 1199.98px) {

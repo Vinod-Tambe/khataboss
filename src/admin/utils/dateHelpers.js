@@ -93,6 +93,20 @@ export const nowDateTimeInputValue = () => toDateTimeInputValue(new Date());
 
 export const todayDateInputValue = () => toDateInputValue(new Date());
 
+/** Start of local day from yyyy-mm-dd (announcement template schedule). */
+export const dateInputToPublishStart = (value) => {
+  const date = parseAdminDate(value);
+  if (!date) return null;
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
+};
+
+/** End of local day from yyyy-mm-dd (announcement template schedule). */
+export const dateInputToExpiryEnd = (value) => {
+  const date = parseAdminDate(value);
+  if (!date) return null;
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+};
+
 /** Scheduled = future publish, Live = visible to owners, Expired = past expiry */
 export const getAnnouncementScheduleStatus = (item, now = new Date()) => {
   if (!item || item.ann_status !== 'Active') return 'Inactive';

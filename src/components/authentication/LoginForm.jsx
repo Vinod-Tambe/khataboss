@@ -8,6 +8,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { login as reduxLogin, loginWithOtp as reduxLoginWithOtp } from "../../store/slices/authSlice";
 import { otpExpirySeconds } from "../../config/appConfig";
 import AppBrandLogo from "../common/AppBrandLogo";
+import LoginSoftwareNotice from "./LoginSoftwareNotice";
+import { useLoginSoftwareNotices } from "./useLoginSoftwareNotices";
 import { storeSubscriptionExpiryLoginNotice } from "../../utils/subscriptionExpiry";
 
 
@@ -123,6 +125,8 @@ const LoginForm = () => {
   const dispatch = useDispatch();
   const { loginLoading } = useSelector((state) => state.auth);
   const [otpSending, setOtpSending] = useState(false);
+  const { notices: loginSoftwareNotices, maintenanceMode: loginMaintenanceMode } =
+    useLoginSoftwareNotices();
 
   const otpRefs = useRef([]);
   const loginIdRef = useRef(null);
@@ -328,8 +332,14 @@ const LoginForm = () => {
               </div>
             </h2>
 
-            <h2 className="text-center mb-3 login-heading fw-bold">Sign in to KhataBoss</h2>
+            <h2 className="text-center mb-3 login-heading fw-bold">
+              {loginMaintenanceMode ? 'Service notice' : 'Sign in to KhataBoss'}
+            </h2>
 
+            {loginMaintenanceMode ? (
+              <LoginSoftwareNotice notices={loginSoftwareNotices} blockLogin />
+            ) : (
+              <>
             <ul className="nav nav-pills justify-content-center mb-3">
               {["username", "otp", "finger"].map((tab) => (
                 <li className="nav-item" key={tab}>
@@ -529,6 +539,8 @@ const LoginForm = () => {
                 <Link to="#" className="login-social-link fs-4"><i className="bi bi-linkedin"></i></Link>
               </div>
             </div>
+              </>
+            )}
           </div>
         </div>
       </div>
