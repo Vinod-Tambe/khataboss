@@ -10,6 +10,10 @@ import { FiArrowLeft, FiArrowRight, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { getFirmsDropdown } from '../../api/firmApi';
 import { getAccountsDropdown } from '../../api/accountApi';
 import { createMoneyTransaction } from '../../api/moneyTransactionApi';
+import {
+  PERSONAL_EXPENSE_FORM_TITLE,
+  PERSONAL_EXPENSE_LIST_TITLE,
+} from '../../constants/personalExpense';
 import useFormNavigation from '../../hooks/useFormNavigation';
 
 const emptyLineRow = () => ({ acc_id: '', amt: '', remarks: '' });
@@ -320,10 +324,10 @@ const InterAccountTransferForm = () => {
         from_rows,
         to_rows,
       });
-      toast.success('Transfer saved (journal updated).');
+      toast.success('Personal expense saved (journal updated).');
       navigate('/account/transfer/list');
     } catch (error) {
-      toast.error(error.message || 'Failed to save transfer');
+      toast.error(error.message || 'Failed to save personal expense');
     } finally {
       setLoading(false);
     }
@@ -449,14 +453,15 @@ const InterAccountTransferForm = () => {
     <div className="card p-3 p-md-4 shadow-sm border-0 app-module-panel">
       <div className="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
         <div className="flex-grow-1">
-          <h4 className="fw-bold text-brown mb-1">Inter-Account Transfer</h4>
+          <h4 className="fw-bold text-brown mb-1">{PERSONAL_EXPENSE_FORM_TITLE}</h4>
           <p className="text-muted small mb-0">
-            Select one {fromEntryLabel} account on top, then split the amount across{' '}
-            {toEntryLabel} accounts below. Use <strong>+</strong> to add split rows.
+            Record a personal expense by moving amount from one ledger account (CR) to payment
+            accounts (DR). Select one {fromEntryLabel} account on top, then split across{' '}
+            {toEntryLabel} accounts below.
           </p>
         </div>
         <div className="d-flex flex-wrap align-items-center gap-2 ms-md-auto">
-          <div className="btn-group btn-group-sm" role="group" aria-label="Transfer entry type">
+          <div className="btn-group btn-group-sm" role="group" aria-label="Personal expense entry type">
             <button
               type="button"
               className={`btn ${isCrToDr ? 'btn-primary' : 'btn-outline-primary border-dark bg-white'}`}
@@ -473,7 +478,7 @@ const InterAccountTransferForm = () => {
             </button>
           </div>
           <Link to="/account/transfer/list" className="btn btn-outline-secondary btn-sm">
-            <FiArrowLeft className="me-1" /> Transaction list
+            <FiArrowLeft className="me-1" /> {PERSONAL_EXPENSE_LIST_TITLE}
           </Link>
         </div>
       </div>
@@ -507,7 +512,7 @@ const InterAccountTransferForm = () => {
           </div>
           <div className="col-12 col-md-4">
             <label className="form-label fw-bold small text-muted mb-1">
-              Transfer date <span className="text-danger">*</span>
+              Expense date <span className="text-danger">*</span>
             </label>
             <input
               type="text"
@@ -595,7 +600,7 @@ const InterAccountTransferForm = () => {
                 Saving…
               </>
             ) : (
-              'Save transfer'
+              'Save personal expense'
             )}
           </button>
           <button

@@ -1,8 +1,22 @@
+import {
+  PERSONAL_EXPENSES_DAYBOOK_TITLE,
+  getPersonalExpenseDaybookSection,
+  isPersonalExpensesDaybookSection,
+} from "../../constants/personalExpense";
+
+export {
+  PERSONAL_EXPENSES_DAYBOOK_TITLE,
+  getPersonalExpenseDaybookSection,
+  isPersonalExpensesDaybookSection,
+};
+
 export const formatCurrency = (val) =>
   Math.abs(parseFloat(val) || 0).toLocaleString("en-IN", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+
+export const isInterAccountTransferDaybookSection = isPersonalExpensesDaybookSection;
 
 export const getRowAmounts = (item = {}) => {
   const cash = parseFloat(item.db_cash_amt) || 0;
@@ -74,22 +88,23 @@ export const isProcessingDaybookSection = (title) => title === "PROCESSING AMOUN
 
 export const isFirstMonthInterestDaybookSection = (title) => title === "FIRST MONTH INTEREST";
 
-export const isInterAccountTransferDaybookSection = (title) =>
-  title === "INTER-ACCOUNT TRANSFER";
-
-export const getInterAccountTransferRowAmount = (item = {}) =>
+export const getPersonalExpenseRowAmount = (item = {}) =>
   parseFloat(item.db_transfer_amt) || 0;
 
-export const calculateInterAccountTransferSectionTotals = (data = []) =>
+export const getInterAccountTransferRowAmount = getPersonalExpenseRowAmount;
+
+export const calculatePersonalExpenseSectionTotals = (data = []) =>
   data.reduce(
     (acc, item) => {
-      const amt = getInterAccountTransferRowAmount(item);
+      const amt = getPersonalExpenseRowAmount(item);
       acc.transfer += amt;
       acc.total += amt;
       return acc;
     },
     { transfer: 0, total: 0 }
   );
+
+export const calculateInterAccountTransferSectionTotals = calculatePersonalExpenseSectionTotals;
 
 export const isInformationalDaybookSection = () => false;
 
@@ -185,6 +200,7 @@ export const calculateDayBookSummary = (DayBookData = {}, opening_data = {}) => 
   const Loan_added_data = DayBookData?.["LOAN ADDED"] || {};
   const Additional_principal_data = DayBookData?.["ADDITIONAL LOAN PRINCIPAL"] || {};
   const Transfer_loan_in_data = DayBookData?.["TRANSFER LOAN IN"] || {};
+  const Personal_expense_data = getPersonalExpenseDaybookSection(DayBookData);
 
   const total_today_cash_out_amt =
     parseFloat(Finance_added_data.total_cash_amt || 0) +
@@ -228,12 +244,25 @@ export const calculateDayBookSummary = (DayBookData = {}, opening_data = {}) => 
     parseFloat(Additional_principal_data.total_amt || 0) +
     parseFloat(Transfer_loan_in_data.total_amt || 0);
 
-  const total_today_cash_amt = total_today_cash_in_amt - total_today_cash_out_amt;
-  const total_today_bank_amt = total_today_bank_in_amt - total_today_bank_out_amt;
-  const total_today_card_amt = total_today_card_in_amt - total_today_card_out_amt;
-  const total_today_online_amt = total_today_online_in_amt - total_today_online_out_amt;
+  const interAccountCash = parseFloat(Personal_expense_data.total_cash_amt || 0);
+  const interAccountBank = parseFloat(Personal_expense_data.total_bank_amt || 0);
+  const interAccountOnline = parseFloat(Personal_expense_data.total_online_amt || 0);
+  const interAccountCard = parseFloat(Personal_expense_data.total_card_amt || 0);
+
+  const total_today_cash_amt =
+    total_today_cash_in_amt - total_today_cash_out_amt + interAccountCash;
+  const total_today_bank_amt =
+    total_today_bank_in_amt - total_today_bank_out_amt + interAccountBank;
+  const total_today_card_amt =
+    total_today_card_in_amt - total_today_card_out_amt + interAccountCard;
+  const total_today_online_amt =
+    total_today_online_in_amt - total_today_online_out_amt + interAccountOnline;
   const total_today_disc_amt = total_today_disc_in_amt - total_today_disc_out_amt;
-  const total_today_amt = total_today_in_amt - total_today_out_amt;
+  const total_today_amt =
+    total_today_cash_amt +
+    total_today_bank_amt +
+    total_today_online_amt +
+    total_today_card_amt;
 
   const total_close_cash_amt = total_open_cash_amt + total_today_cash_amt;
   const total_close_bank_amt = total_open_bank_amt + total_today_bank_amt;
@@ -254,8 +283,12 @@ export const calculateDayBookSummary = (DayBookData = {}, opening_data = {}) => 
     total_today_online_out_amt +
     total_today_card_out_amt +
     total_today_disc_out_amt;
-  const total_close_final_amt =
-    total_open_amt + (total_final_dr_amt - total_final_cr_amt);
+  const interTransferGross = parseFloat(Personal_expense_data.total_transfer_amt || 0);
+  const finalDrWithTransfer =
+    interTransferGross > 0 ? total_final_dr_amt + interTransferGross : total_final_dr_amt;
+  const finalCrWithTransfer =
+    interTransferGross > 0 ? total_final_cr_amt + interTransferGross : total_final_cr_amt;
+  const total_close_final_amt = total_close_amt;
 
   return {
     in: {
@@ -298,8 +331,8 @@ export const calculateDayBookSummary = (DayBookData = {}, opening_data = {}) => 
       disc: total_close_disc_amt,
       total: total_close_amt,
     },
-    finalCr: total_final_cr_amt,
-    finalDr: total_final_dr_amt,
+    finalCr: finalCrWithTransfer,
+    finalDr: finalDrWithTransfer,
     finalTotal: total_close_final_amt,
   };
 };
@@ -366,7 +399,7 @@ export const DAYBOOK_SECTIONS = [
     amtTone: "cr",
   },
   {
-    title: "INTER-ACCOUNT TRANSFER",
+    title: PERSONAL_EXPENSES_DAYBOOK_TITLE,
     colorClass: "bg-purple",
     amtTone: "dr",
   },

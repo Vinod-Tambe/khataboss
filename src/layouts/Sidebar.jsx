@@ -128,19 +128,19 @@ const Sidebar = () => {
         ],
       },
       {
-        id: "transactions",
-        label: "Transaction",
+        id: "personal-expenses",
+        label: "Expenses",
         icon: <FiRepeat />,
         anyOf: ["account.view", "account.transfer"],
         subItems: [
           {
-            label: "Inter Transfer",
+            label: "Add Expense",
             path: "/account/transfer/add",
             icon: <FiPlusCircle />,
             permission: "account.transfer",
           },
           {
-            label: "Transaction List",
+            label: "Expense List",
             path: "/account/transfer/list",
             icon: <FiList />,
             permission: "account.view",

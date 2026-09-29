@@ -207,18 +207,31 @@ const Daybook = () => {
     }
 
     if (isInterAccountTransferDaybookSection(item.title)) {
-      const totalTransfer = (item.data || []).reduce(
-        (sum, d) => sum + (parseFloat(d.db_transfer_amt) || 0),
-        0
+      const totals = (item.data || []).reduce(
+        (t, d) => ({
+          total_cash_amt: t.total_cash_amt + (parseFloat(d.db_cash_amt) || 0),
+          total_bank_amt: t.total_bank_amt + (parseFloat(d.db_bank_amt) || 0),
+          total_online_amt: t.total_online_amt + (parseFloat(d.db_online_amt) || 0),
+          total_card_amt: t.total_card_amt + (parseFloat(d.db_card_amt) || 0),
+          total_disc_amt: 0,
+          total_transfer_amt:
+            t.total_transfer_amt + (parseFloat(d.db_transfer_amt) || 0),
+        }),
+        {
+          total_cash_amt: 0,
+          total_bank_amt: 0,
+          total_online_amt: 0,
+          total_card_amt: 0,
+          total_disc_amt: 0,
+          total_transfer_amt: 0,
+        }
       );
-      acc[item.title] = {
-        total_cash_amt: 0,
-        total_bank_amt: 0,
-        total_online_amt: 0,
-        total_card_amt: 0,
-        total_disc_amt: 0,
-        total_amt: totalTransfer,
-      };
+      totals.total_amt =
+        totals.total_cash_amt +
+        totals.total_bank_amt +
+        totals.total_online_amt +
+        totals.total_card_amt;
+      acc[item.title] = totals;
       return acc;
     }
 

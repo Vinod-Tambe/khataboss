@@ -1,5 +1,6 @@
 import React from 'react';
 import '../../css/DataTable.css';
+import { getPersonalExpenseDaybookSection } from './dayBookUtils';
 // import useConfigStore from '../../zustand/config.store';
 
 const DayBookSummary = ({ DayBookData,opening_data }) => {
@@ -63,6 +64,7 @@ const DayBookSummary = ({ DayBookData,opening_data }) => {
     const Loan_added_data = DayBookData?.['LOAN ADDED'] || {};
     const Additional_principal_data = DayBookData?.['ADDITIONAL LOAN PRINCIPAL'] || {};
     const Transfer_loan_in_data = DayBookData?.['TRANSFER LOAN IN'] || {};
+    const Personal_expense_data = getPersonalExpenseDaybookSection(DayBookData);
 
     total_today_cash_out_amt = parseFloat(Finance_added_data.total_cash_amt || 0) + parseFloat(Finance_emi_rollback_data.total_cash_amt || 0) + parseFloat(Loan_added_data.total_cash_amt || 0) + parseFloat(Additional_principal_data.total_cash_amt || 0) + parseFloat(Transfer_loan_in_data.total_cash_amt || 0);
     total_today_bank_out_amt = parseFloat(Finance_added_data.total_bank_amt || 0) + parseFloat(Finance_emi_rollback_data.total_bank_amt || 0) + parseFloat(Loan_added_data.total_bank_amt || 0) + parseFloat(Additional_principal_data.total_bank_amt || 0) + parseFloat(Transfer_loan_in_data.total_bank_amt || 0);
@@ -71,14 +73,26 @@ const DayBookSummary = ({ DayBookData,opening_data }) => {
     total_today_disc_out_amt = parseFloat(Finance_added_data.total_disc_amt || 0) + parseFloat(Finance_emi_rollback_data.total_disc_amt || 0) + parseFloat(Loan_added_data.total_disc_amt || 0) + parseFloat(Additional_principal_data.total_disc_amt || 0) + parseFloat(Transfer_loan_in_data.total_disc_amt || 0);
     total_today_out_amt = parseFloat(Finance_added_data.total_amt || 0) + parseFloat(Finance_emi_rollback_data.total_amt || 0) + parseFloat(Loan_added_data.total_amt || 0) + parseFloat(Additional_principal_data.total_amt || 0) + parseFloat(Transfer_loan_in_data.total_amt || 0);
 
-    // Calculate TODAY TOTAL (in - out)
-    total_today_cash_amt = total_today_cash_in_amt - total_today_cash_out_amt;
-    total_today_bank_amt = total_today_bank_in_amt - total_today_bank_out_amt;
-    total_today_card_amt = total_today_card_in_amt - total_today_card_out_amt;
-    total_today_online_amt = total_today_online_in_amt - total_today_online_out_amt;
+    const interAccountCash = parseFloat(Personal_expense_data.total_cash_amt || 0);
+    const interAccountBank = parseFloat(Personal_expense_data.total_bank_amt || 0);
+    const interAccountOnline = parseFloat(Personal_expense_data.total_online_amt || 0);
+    const interAccountCard = parseFloat(Personal_expense_data.total_card_amt || 0);
+
+    // Period inter-account moves cash between channels (journals); net total stays ~0.
+    total_today_cash_amt =
+      total_today_cash_in_amt - total_today_cash_out_amt + interAccountCash;
+    total_today_bank_amt =
+      total_today_bank_in_amt - total_today_bank_out_amt + interAccountBank;
+    total_today_card_amt =
+      total_today_card_in_amt - total_today_card_out_amt + interAccountCard;
+    total_today_online_amt =
+      total_today_online_in_amt - total_today_online_out_amt + interAccountOnline;
     total_today_disc_amt = total_today_disc_in_amt - total_today_disc_out_amt;
-    total_today_amt = total_today_in_amt - total_today_out_amt;
-    // Calculate TODAY TOTAL (in - out)
+    total_today_amt =
+      total_today_cash_amt +
+      total_today_bank_amt +
+      total_today_online_amt +
+      total_today_card_amt;
     // Calculate TODAY CLOSING  AMOUNT
     total_close_cash_amt =total_open_cash_amt+ total_today_cash_amt;
     total_close_bank_amt =total_open_bank_amt+ total_today_bank_amt;
@@ -90,8 +104,12 @@ const DayBookSummary = ({ DayBookData,opening_data }) => {
      //Calculate Total Final CR And DR Amount With Final Amoutn (CR-DR)
      let total_final_dr_amt=total_today_cash_in_amt+total_today_bank_in_amt+total_today_online_in_amt+total_today_card_in_amt+total_today_disc_in_amt;
      let total_final_cr_amt=total_today_cash_out_amt+total_today_bank_out_amt+total_today_online_out_amt+total_today_card_out_amt+total_today_disc_out_amt;
-     let total_open_final_amt=total_open_amt;
-    let total_close_final_amt=total_open_final_amt+(total_final_dr_amt-total_final_cr_amt);
+    const interTransferGross = parseFloat(Personal_expense_data.total_transfer_amt || 0);
+    if (interTransferGross > 0) {
+      total_final_dr_amt += interTransferGross;
+      total_final_cr_amt += interTransferGross;
+    }
+    let total_close_final_amt=total_close_amt;
     //  setDaybookAmounts({ openingAmount: total_open_final_amt.toFixed(2) });
      //Calculate Total Final CR And DR Amount With Final Amoutn (CR-DR)
     return (

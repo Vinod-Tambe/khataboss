@@ -8,6 +8,7 @@ import {
   formatCurrency,
   getInterAccountTransferRowAmount,
 } from "./dayBookUtils";
+import { PERSONAL_EXPENSES_DAYBOOK_TITLE } from "../../constants/personalExpense";
 
 const renderToDetail = (item) => {
   const lines = item.db_to_lines;
@@ -71,12 +72,12 @@ const DayBookInterAccountTransferTable = ({ title, data = [], isPrint = false })
   return (
     <div className="border border-secondary border-dashed mb-3">
       <div className="d-flex justify-content-between align-items-center">
-        <h6 className="fw-bold mb-0 ms-2">{title || "INTER-ACCOUNT TRANSFER"}</h6>
+        <h6 className="fw-bold mb-0 ms-2">{title || PERSONAL_EXPENSES_DAYBOOK_TITLE}</h6>
         {!isPrint && (
           <input
             type="search"
             className="form-control form-control-sm border border-dark w-auto mt-2 mb-2 me-2"
-            placeholder={title || "INTER-ACCOUNT TRANSFER"}
+            placeholder={title || PERSONAL_EXPENSES_DAYBOOK_TITLE}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />

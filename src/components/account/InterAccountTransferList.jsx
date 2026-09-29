@@ -7,6 +7,10 @@ import { FiPlusCircle } from 'react-icons/fi';
 import List from '../common/List';
 import usePermissions from '../../hooks/usePermissions';
 import { deleteMoneyTransaction, getMoneyTransactions } from '../../api/moneyTransactionApi';
+import {
+  PERSONAL_EXPENSE_FORM_TITLE,
+  PERSONAL_EXPENSE_LIST_TITLE,
+} from '../../constants/personalExpense';
 
 const formatAmt = (value) =>
   parseFloat(value || 0).toLocaleString('en-IN', {
@@ -33,7 +37,7 @@ const InterAccountTransferList = () => {
       const res = await getMoneyTransactions({ firmId: firmFilter });
       setRows(res.data || []);
     } catch (error) {
-      toast.error(error.message || 'Failed to load transfers');
+      toast.error(error.message || 'Failed to load personal expenses');
     } finally {
       setLoading(false);
     }
@@ -45,12 +49,12 @@ const InterAccountTransferList = () => {
 
   const handleDelete = async (row) => {
     if (!canTransfer) {
-      toast.error('You do not have permission to delete transfers.');
+      toast.error('You do not have permission to delete personal expenses.');
       return;
     }
     try {
       await deleteMoneyTransaction(row.mtf_id);
-      toast.success('Transfer deleted.');
+      toast.success('Personal expense deleted.');
       fetchRows();
     } catch (error) {
       toast.error(error.message || 'Delete failed');
@@ -100,12 +104,14 @@ const InterAccountTransferList = () => {
     <div className="card p-3 pt-2 shadow-sm app-module-panel">
       <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
         <div>
-          <h4 className="fw-bold text-brown mb-0">Transaction List</h4>
-          <p className="text-muted small mb-0">Inter-account transfers between ledger accounts.</p>
+          <h4 className="fw-bold text-brown mb-0">{PERSONAL_EXPENSE_LIST_TITLE}</h4>
+          <p className="text-muted small mb-0">
+            Personal expenses recorded between ledger accounts (journal linked).
+          </p>
         </div>
         {canTransfer && (
           <Link to="/account/transfer/add" className="btn btn-primary">
-            <FiPlusCircle className="me-1" /> New transfer
+            <FiPlusCircle className="me-1" /> {PERSONAL_EXPENSE_FORM_TITLE}
           </Link>
         )}
       </div>
@@ -113,11 +119,11 @@ const InterAccountTransferList = () => {
       <List
         data={tableData}
         columns={columns}
-        title="Transaction List"
+        title={PERSONAL_EXPENSE_LIST_TITLE}
         isLoading={loading}
         hasDelete={canTransfer}
         onDelete={handleDelete}
-        deleteConfirmMessage="Delete this transfer? The linked journal entry will also be removed."
+        deleteConfirmMessage="Delete this personal expense? The linked journal entry will also be removed."
         showFooter={false}
         primaryKey="mtf_id"
         subtitleKey="from_name"
