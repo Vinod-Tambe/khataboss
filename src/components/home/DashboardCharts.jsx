@@ -30,6 +30,32 @@ const formatCountLabel = (value) => {
   return num > 0 ? String(num) : '';
 };
 
+/** Integer count charts — avoid Apex nice-scale + round() duplicate 0/1 labels. */
+const resolveCountYAxisScale = (counts) => {
+  const peak = (counts || []).reduce((m, v) => Math.max(m, Number(v) || 0), 0);
+  if (peak <= 0) {
+    return { min: 0, max: 5, tickAmount: 5 };
+  }
+  if (peak <= 5) {
+    return { min: 0, max: 5, tickAmount: 5 };
+  }
+  if (peak <= 10) {
+    return { min: 0, max: 10, tickAmount: 5 };
+  }
+  if (peak <= 50) {
+    return { min: 0, max: Math.ceil(peak / 5) * 5, tickAmount: 5 };
+  }
+  const padded = Math.ceil(peak * 1.1);
+  const magnitude = 10 ** Math.floor(Math.log10(padded));
+  const max = Math.ceil(padded / magnitude) * magnitude;
+  return { min: 0, max, tickAmount: 5 };
+};
+
+const formatYAxisCount = (value) => {
+  const n = Math.round(Number(value));
+  return Number.isFinite(n) ? String(n) : '';
+};
+
 const ChartSummary = ({ items }) => (
   <div className="dashboard-chart-summary">
     {items.map((item) => (
@@ -106,6 +132,7 @@ const DashboardCharts = ({ charts, loading }) => {
         fontWeight: 600,
         labels: { colors: chartLabelColor },
         markers: { width: 10, height: 10, radius: 3 },
+        offsetY: 4,
       },
       tooltip: { theme: chartTheme },
     }),
@@ -172,7 +199,9 @@ const DashboardCharts = ({ charts, loading }) => {
     [buildPieOptions, financePieLabels]
   );
 
-  const buildColumnOptions = useCallback((categories, barColor, yTitle) => ({
+  const buildColumnOptions = useCallback((categories, barColor, yTitle, seriesCounts = []) => {
+    const yScale = resolveCountYAxisScale(seriesCounts);
+    return {
     ...baseChartOptions,
     chart: { ...baseChartOptions.chart, type: 'bar' },
     plotOptions: {
@@ -204,12 +233,14 @@ const DashboardCharts = ({ charts, loading }) => {
       axisTicks: { show: false },
     },
     yaxis: {
-      min: 0,
-      forceNiceScale: true,
-      tickAmount: 5,
+      min: yScale.min,
+      max: yScale.max,
+      forceNiceScale: false,
+      tickAmount: yScale.tickAmount,
+      decimalsInFloat: 0,
       labels: {
         style: { colors: chartLabelColor, fontSize: `${chartFont.sm}px` },
-        formatter: (v) => Math.round(v),
+        formatter: formatYAxisCount,
       },
       title: {
         text: yTitle,
@@ -222,17 +253,26 @@ const DashboardCharts = ({ charts, loading }) => {
       ...baseChartOptions.tooltip,
       y: { formatter: (value) => `${Number(value || 0)} new account(s)` },
     },
-  }), [baseChartOptions, chartFont, chartLabelColor, chartValueColor]);
+  };
+  }, [baseChartOptions, chartFont, chartLabelColor, chartValueColor]);
 
   const loanColumnOptions = useMemo(
-    () => buildColumnOptions(loanPeriodData.categories, loanColor, 'New loans'),
-    [buildColumnOptions, loanColor, loanPeriodData.categories]
+    () => buildColumnOptions(loanPeriodData.categories, loanColor, 'New loans', loanPeriodData.counts),
+    [buildColumnOptions, loanColor, loanPeriodData.categories, loanPeriodData.counts]
   );
 
   const financeColumnOptions = useMemo(
-    () => buildColumnOptions(financePeriodData.categories, financeColor, 'New finance'),
-    [buildColumnOptions, financeColor, financePeriodData.categories]
+    () => buildColumnOptions(
+      financePeriodData.categories,
+      financeColor,
+      'New finance',
+      financePeriodData.counts
+    ),
+    [buildColumnOptions, financeColor, financePeriodData.categories, financePeriodData.counts]
   );
+
+  const loanPeriodHasData = (loanPeriodData.counts || []).some((v) => Number(v) > 0);
+  const financePeriodHasData = (financePeriodData.counts || []).some((v) => Number(v) > 0);
 
   const loanHasPie = loanPieSeries.some((v) => Number(v) > 0);
   const financeHasPie = financePieSeries.some((v) => Number(v) > 0);
@@ -250,47 +290,51 @@ const DashboardCharts = ({ charts, loading }) => {
     <div className="mb-4 mt-4">
       <div className="dashboard-graphs">
         <div className="graph-card border-0">
-          <div className="mb-3">
+          <div className="graph-card__header">
             <h5 className="card-title fw-bold mb-1 text-dark dashboard-chart-title">Loan Audit</h5>
-            <p className="text-muted small mb-0">Loan counts by status (pie chart)</p>
+            <p className="text-muted small mb-2">Loan counts by status (pie chart)</p>
+            <ChartSummary
+              items={[
+                { label: 'Total', value: loanAudit.total ?? 0, color: loanColor },
+                { label: 'Active', value: loanAudit.active ?? 0, color: LOAN_PIE_COLORS[0] },
+                { label: 'Auction', value: loanAudit.auction ?? 0, color: LOAN_PIE_COLORS[1] },
+                { label: 'Release', value: loanAudit.released ?? 0, color: LOAN_PIE_COLORS[2] },
+                { label: 'Transfer', value: loanAudit.transfer ?? 0, color: LOAN_PIE_COLORS[3] },
+              ]}
+            />
           </div>
-          <ChartSummary
-            items={[
-              { label: 'Total', value: loanAudit.total ?? 0, color: loanColor },
-              { label: 'Active', value: loanAudit.active ?? 0, color: LOAN_PIE_COLORS[0] },
-              { label: 'Auction', value: loanAudit.auction ?? 0, color: LOAN_PIE_COLORS[1] },
-              { label: 'Release', value: loanAudit.released ?? 0, color: LOAN_PIE_COLORS[2] },
-              { label: 'Transfer', value: loanAudit.transfer ?? 0, color: LOAN_PIE_COLORS[3] },
-            ]}
-          />
-          <div className="graph-content d-flex justify-content-center align-items-center">
+          <div className="graph-content">
             {!loanHasPie ? (
               <p className="text-muted text-center py-5 mb-0">No loan data yet.</p>
             ) : (
-              <Chart
-                key={`loan-pie-${theme}-${loading}`}
-                options={loanPieOptions}
-                series={loanPieSeries}
-                type="pie"
-                height={300}
-                width="100%"
-              />
+              <div className="graph-content__inner">
+                <Chart
+                  key={`loan-pie-${theme}-${loading}`}
+                  options={loanPieOptions}
+                  series={loanPieSeries}
+                  type="pie"
+                  height={300}
+                  width="100%"
+                />
+              </div>
             )}
           </div>
         </div>
 
         <div className="graph-card border-0">
-          <div className="d-flex justify-content-between align-items-start gap-3 mb-3">
-            <div>
-              <h5 className="card-title fw-bold mb-1 text-dark dashboard-chart-title">
-                Last Loan Audit
-              </h5>
-              <p className="text-muted small mb-0">New loans opened — last 5 periods</p>
+          <div className="graph-card__header graph-card__header--bar">
+            <div className="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+              <div>
+                <h5 className="card-title fw-bold mb-1 text-dark dashboard-chart-title">
+                  Last Loan Audit
+                </h5>
+                <p className="text-muted small mb-0">New loans opened — last 5 periods</p>
+              </div>
+              <PeriodSelect value={loanPeriod} onChange={setLoanPeriod} />
             </div>
-            <PeriodSelect value={loanPeriod} onChange={setLoanPeriod} />
           </div>
           <div className="graph-content">
-            {!loanPeriodData.counts?.length ? (
+            {!loanPeriodHasData ? (
               <p className="text-muted text-center py-5 mb-0">No loans in selected periods.</p>
             ) : (
               <Chart
@@ -305,45 +349,49 @@ const DashboardCharts = ({ charts, loading }) => {
         </div>
 
         <div className="graph-card border-0">
-          <div className="mb-3">
+          <div className="graph-card__header">
             <h5 className="card-title fw-bold mb-1 text-dark dashboard-chart-title">Finance Audit</h5>
-            <p className="text-muted small mb-0">Finance counts by status (pie chart)</p>
+            <p className="text-muted small mb-2">Finance counts by status (pie chart)</p>
+            <ChartSummary
+              items={[
+                { label: 'Total', value: financeAudit.total ?? 0, color: financeColor },
+                { label: 'Active', value: financeAudit.active ?? 0, color: FINANCE_PIE_COLORS[0] },
+                { label: 'Close', value: financeAudit.closed ?? 0, color: FINANCE_PIE_COLORS[1] },
+              ]}
+            />
           </div>
-          <ChartSummary
-            items={[
-              { label: 'Total', value: financeAudit.total ?? 0, color: financeColor },
-              { label: 'Active', value: financeAudit.active ?? 0, color: FINANCE_PIE_COLORS[0] },
-              { label: 'Close', value: financeAudit.closed ?? 0, color: FINANCE_PIE_COLORS[1] },
-            ]}
-          />
-          <div className="graph-content d-flex justify-content-center align-items-center">
+          <div className="graph-content">
             {!financeHasPie ? (
               <p className="text-muted text-center py-5 mb-0">No finance data yet.</p>
             ) : (
-              <Chart
-                key={`finance-pie-${theme}-${loading}`}
-                options={financePieOptions}
-                series={financePieSeries}
-                type="pie"
-                height={300}
-                width="100%"
-              />
+              <div className="graph-content__inner">
+                <Chart
+                  key={`finance-pie-${theme}-${loading}`}
+                  options={financePieOptions}
+                  series={financePieSeries}
+                  type="pie"
+                  height={300}
+                  width="100%"
+                />
+              </div>
             )}
           </div>
         </div>
 
         <div className="graph-card border-0">
-          <div className="d-flex justify-content-between align-items-start gap-3 mb-3">
-            <div>
-              <h5 className="card-title fw-bold mb-1 text-dark dashboard-chart-title">
-                Last Finance Audit
-              </h5>
-              <p className="text-muted small mb-0">New finance opened — last 5 periods</p>
+          <div className="graph-card__header graph-card__header--bar">
+            <div className="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+              <div>
+                <h5 className="card-title fw-bold mb-1 text-dark dashboard-chart-title">
+                  Last Finance Audit
+                </h5>
+                <p className="text-muted small mb-0">New finance opened — last 5 periods</p>
+              </div>
+              <PeriodSelect value={financePeriod} onChange={setFinancePeriod} />
             </div>
-            <PeriodSelect value={financePeriod} onChange={setFinancePeriod} />
           </div>
           <div className="graph-content">
-            {!financePeriodData.counts?.length ? (
+            {!financePeriodHasData ? (
               <p className="text-muted text-center py-5 mb-0">No finance in selected periods.</p>
             ) : (
               <Chart
