@@ -56,27 +56,42 @@ axiosInstance.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    const isTokenError = error.response && (
-      (error.response.status === 401 &&
-        error.config &&
-        error.config.url &&
-        !error.config.url.includes('/auth/login') &&
-        !error.config.url.includes('/auth/verify-otp') &&
-        !error.config.url.includes('/auth/logout')) ||
-      (responseData && responseData.error === "Access denied. No token provided.")
-    );
+    const isPublicUrl =
+      error.config &&
+      error.config.url &&
+      (error.config.url.includes('/auth/login') ||
+        error.config.url.includes('/auth/verify-otp') ||
+        error.config.url.includes('/auth/logout') ||
+        error.config.url.includes('/announcement/public'));
+
+    const shouldSkipAlert = Boolean(error.config?.skipAuthAlert || isPublicUrl);
+    const hasActiveToken = Boolean(sessionStorage.getItem('token'));
+
+    const isTokenError =
+      error.response &&
+      !shouldSkipAlert &&
+      ((error.response.status === 401 && error.config?.url && !isPublicUrl) ||
+        (responseData &&
+          (responseData.error === "Access denied. No token provided." ||
+            responseData.message === "Access denied. No token provided.")));
 
     if (isTokenError) {
-      const apiMessage = responseData?.message || responseData?.error;
-      const alertTitle =
-        responseData?.code === 'SESSION_SUPERSEDED' ? 'Signed in elsewhere' : 'Session Expired';
-
-      await LogoutAlert(apiMessage, alertTitle);
-
       localStorage.removeItem('user');
       sessionStorage.removeItem('token');
       localStorage.removeItem('token');
-      window.location.href = '/';
+
+      // Only show the 'Session Expired' alert if user actually had an active session
+      if (hasActiveToken) {
+        const apiMessage = responseData?.message || responseData?.error;
+        const alertTitle =
+          responseData?.code === 'SESSION_SUPERSEDED' ? 'Signed in elsewhere' : 'Session Expired';
+
+        await LogoutAlert(apiMessage, alertTitle);
+
+        if (window.location.pathname !== '/') {
+          window.location.href = '/';
+        }
+      }
     }
     return Promise.reject(error);
   }
