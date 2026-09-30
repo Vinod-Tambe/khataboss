@@ -26,10 +26,22 @@ export const deleteAnnouncement = async (uuid) => {
 };
 
 export const seedAnnouncementTemplates = async () => {
-  const response = await adminAxiosInstance.post('/announcement/templates/seed');
-  return {
-    data: response.data?.data || [],
-    stats: response.data?.stats,
-    message: response.data?.message,
-  };
+  const paths = ['/admin/announcement/templates/seed', '/announcement/templates/seed'];
+  let lastError;
+  for (const url of paths) {
+    try {
+      const response = await adminAxiosInstance.post(url);
+      return {
+        data: response.data?.data || [],
+        stats: response.data?.stats,
+        message: response.data?.message,
+      };
+    } catch (error) {
+      lastError = error;
+      if (error.response?.status !== 404) {
+        throw error;
+      }
+    }
+  }
+  throw lastError;
 };
