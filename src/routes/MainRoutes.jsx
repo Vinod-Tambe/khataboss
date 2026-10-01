@@ -27,6 +27,8 @@ import SmsPage from '../components/sms/SmsPage';
 import MoneyLenderRoutes from '../pages/money-lender/MoneyLenderRoutes';
 import FinanceRoutes from '../pages/finance/FinanceRoutes';
 import LoanRoutes from '../pages/loan/LoanRoutes';
+import StockRoutes from '../pages/stock/StockRoutes';
+import StockDetailsPage from '../components/stock/StockDetailsPage';
 import BackupRoutes from '../pages/backup/BackupRoutes';
 import OwnerProfile from '../components/owner/OwnerProfile';
 import UpdatePassword from '../components/owner/UpdatePassword';
@@ -36,6 +38,9 @@ import AgreementCustomizationPage from '../components/settings/AgreementCustomiz
 import PermissionRoute from './PermissionRoute';
 import OwnerOnlyRoute from './OwnerOnlyRoute';
 import SupportRoutes from '../pages/support/SupportRoutes';
+import { KeyboardShortcutsProvider } from '../context/KeyboardShortcutsContext';
+import AppKeyboardShortcutsHost from '../components/common/AppKeyboardShortcutsHost';
+
 const MainRoutes = () => {
   const [loginExpiryNotice, setLoginExpiryNotice] = useState(null);
 
@@ -52,6 +57,8 @@ const MainRoutes = () => {
   };
 
   return (
+    <KeyboardShortcutsProvider>
+      <AppKeyboardShortcutsHost />
     <div className="layout-wrapper">
       <SubscriptionExpiryLoginModal
         show={Boolean(loginExpiryNotice?.message)}
@@ -111,6 +118,22 @@ const MainRoutes = () => {
                 element={
                   <PermissionRoute anyOf={["loan.view", "loan.release", "loan.auction", "loan.transfer"]}>
                     <LoanRoutes />
+                  </PermissionRoute>
+                }
+              />
+              <Route
+                path="/stock/details/:uuid"
+                element={
+                  <PermissionRoute permission="loan.view">
+                    <StockDetailsPage />
+                  </PermissionRoute>
+                }
+              />
+              <Route
+                path="/stock/*"
+                element={
+                  <PermissionRoute permission="loan.view">
+                    <StockRoutes />
                   </PermissionRoute>
                 }
               />
@@ -254,6 +277,7 @@ const MainRoutes = () => {
         </main>
       </div>
     </div>
+    </KeyboardShortcutsProvider>
   );
 };
 

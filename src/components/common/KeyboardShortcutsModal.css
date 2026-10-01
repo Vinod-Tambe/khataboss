@@ -1,0 +1,47 @@
+.keyboard-shortcuts-body {
+  max-height: min(70vh, 560px);
+}
+
+.keyboard-shortcuts-group-title {
+  color: var(--app-text, #1e293b);
+  font-size: 0.95rem;
+}
+
+.keyboard-shortcuts-table td {
+  vertical-align: top;
+  padding: 0.35rem 0.5rem;
+}
+
+.keyboard-shortcuts-keys {
+  white-space: nowrap;
+  width: 38%;
+}
+
+.keyboard-shortcuts-desc {
+  color: var(--app-text, #334155);
+  font-size: 0.875rem;
+}
+
+.keyboard-shortcuts-keypart {
+  display: inline-flex;
+  align-items: center;
+}
+
+.keyboard-shortcuts-plus {
+  margin: 0 0.2rem;
+  color: var(--stock-label, #64748b);
+  font-size: 0.75rem;
+}
+
+.keyboard-shortcuts-kbd {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--app-text, #1e293b);
+  background: var(--stock-surface-raised, #f1f5f9);
+  border: 1px solid var(--app-border, #cbd5e1);
+  border-radius: 0.35rem;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+}

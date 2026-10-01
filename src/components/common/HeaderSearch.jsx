@@ -6,6 +6,10 @@ import { setSelectedUser } from "../../store/slices/userSlice";
 import { resolveImageUrl } from "../../utils/imageHelpers";
 import usePermissions from "../../hooks/usePermissions";
 import { toast } from "react-toastify";
+import {
+  GLOBAL_SEARCH_INPUT_ID,
+  KEYBOARD_SHORTCUT_EVENTS,
+} from "../../config/keyboardShortcuts";
 
 const getProfileImgUrl = (user) => resolveImageUrl(user?.user_profile_img) || "";
 
@@ -82,8 +86,21 @@ const HeaderSearch = ({
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const wrapRef = useRef(null);
+  const inputRef = useRef(null);
   const debounceRef = useRef(null);
   const requestIdRef = useRef(0);
+
+  useEffect(() => {
+    const focusInput = () => {
+      inputRef.current?.focus();
+      inputRef.current?.select?.();
+      setOpen(true);
+    };
+    window.addEventListener(KEYBOARD_SHORTCUT_EVENTS.FOCUS_GLOBAL_SEARCH, focusInput);
+    return () => {
+      window.removeEventListener(KEYBOARD_SHORTCUT_EVENTS.FOCUS_GLOBAL_SEARCH, focusInput);
+    };
+  }, []);
 
   const resultCounts = useMemo(() => {
     const counts = { loan: 0, finance: 0, customer: 0 };
@@ -412,6 +429,8 @@ const HeaderSearch = ({
     <div className={`header-search ${className}`} ref={wrapRef}>
       <div className="input-group header-search__input-group">
         <input
+          ref={inputRef}
+          id={GLOBAL_SEARCH_INPUT_ID}
           type="text"
           className="form-control border-dark"
           placeholder={placeholder}

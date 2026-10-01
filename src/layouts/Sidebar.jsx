@@ -4,7 +4,7 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import { Offcanvas } from "bootstrap";
 import PerfectScrollbar from "perfect-scrollbar";
 import "perfect-scrollbar/css/perfect-scrollbar.css";
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, Link, useLocation } from "react-router-dom";
 import {
   FiHome,
   FiBook,
@@ -48,6 +48,7 @@ import { setSelectedFirmId } from "../store/slices/firmSlice";
 import { filterMenuByPermissions, isOwner } from "../utils/permissions";
 
 const Sidebar = () => {
+  const location = useLocation();
   const [openSubmenus, setOpenSubmenus] = useState({});
   const primaryScrollRef = useRef(null);
   const scrollbarRef = useRef(null);
@@ -212,6 +213,14 @@ const Sidebar = () => {
         permission: "account.view",
       },
       {
+        id: "stock",
+        label: "Stocks",
+        icon: <FiPackage />,
+        path: "/stock/grid",
+        permission: "loan.view",
+        activePathPrefix: "/stock",
+      },
+      {
         id: "ledger",
         label: "Ledger",
         icon: <FiLayers />,
@@ -352,7 +361,12 @@ const Sidebar = () => {
       ) : (
         <NavLink
           to={item.path}
-          className={({ isActive }) => (isActive ? "active" : "")}
+          className={({ isActive }) => {
+            const prefixActive =
+              item.activePathPrefix &&
+              location.pathname.startsWith(item.activePathPrefix);
+            return isActive || prefixActive ? "active" : "";
+          }}
           onClick={(e) => {
             if (item.id === "logout") handleLogout(e);
             closeSidebarOnMobile();

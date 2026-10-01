@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FiUser, FiMenu, FiBell, FiSun, FiMoon, FiMonitor, FiDroplet, FiBriefcase, FiLock, FiLogOut } from 'react-icons/fi';
+import { FiUser, FiMenu, FiBell, FiSun, FiMoon, FiMonitor, FiDroplet, FiBriefcase, FiLock, FiLogOut, FiCommand } from 'react-icons/fi';
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { signOutUser } from "../utils/signOut";
@@ -13,6 +13,7 @@ import FinanceCollectionModal from "../components/finance/FinanceCollectionModal
 import LoanCollectionModal from "../components/loan/LoanCollectionModal";
 import AppBrandLogo from "../components/common/AppBrandLogo";
 import useSubscriptionExpiry from "../hooks/useSubscriptionExpiry";
+import { useKeyboardShortcutsOptional } from "../context/KeyboardShortcutsContext";
 
 const themeLabels = {
   light: "Light",
@@ -137,6 +138,7 @@ const Header = () => {
   const isOwnerUser = isOwner(user);
   const canViewLogs = hasPermission(user, "reports.logs");
   const { showCountdown, countdownLabel, isUrgent } = useSubscriptionExpiry();
+  const keyboardShortcuts = useKeyboardShortcutsOptional();
   const ThemeIcon =
     theme === "dark"
       ? FiMoon
@@ -537,6 +539,17 @@ const Header = () => {
                   <FiLock size={16} />
                   <span>Update Password</span>
                 </Link>
+                <button
+                  type="button"
+                  className="dropdown-item d-flex align-items-center gap-2"
+                  onClick={() => {
+                    closeProfileMenu();
+                    keyboardShortcuts?.openShortcutsHelp?.();
+                  }}
+                >
+                  <FiCommand size={16} />
+                  <span>Keyboard shortcuts</span>
+                </button>
                 <hr className="dropdown-divider my-1 d-md-none" />
                 <button
                   type="button"

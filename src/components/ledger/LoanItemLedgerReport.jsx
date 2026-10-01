@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import moment from 'moment';
 import { formatListAmt, statusBadgeHtml } from '../../utils/listFormatters';
 import { resolveImageUrl } from '../../utils/imageHelpers';
+import { getStockDetailId } from '../../utils/stockFormatters';
 
 const formatWeight = (weight, type) => {
   const w = parseFloat(weight) || 0;
@@ -14,6 +15,7 @@ const LoanItemLedgerReport = ({
   loading = false,
   errorMessage = null,
   onOpenLoanDetails,
+  onOpenStockDetails,
   isPrint = false,
 }) => {
   const totals = useMemo(() => {
@@ -76,8 +78,31 @@ const LoanItemLedgerReport = ({
             rows.map((row, index) => {
               const imgUrl = resolveImageUrl(row.st_image);
               const loan = row.loan;
+              const rowKey = row.st_id ?? row.st_uuid ?? index;
+              const stockDetailId = getStockDetailId(row);
+              const openStock =
+                !isPrint && onOpenStockDetails && stockDetailId
+                  ? () => onOpenStockDetails(row)
+                  : null;
+
               return (
-                <tr key={row.st_id ?? row.st_uuid ?? index}>
+                <tr
+                  key={rowKey}
+                  className={openStock ? 'cursor-pointer' : undefined}
+                  onClick={openStock || undefined}
+                  role={openStock ? 'button' : undefined}
+                  tabIndex={openStock ? 0 : undefined}
+                  onKeyDown={
+                    openStock
+                      ? (e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            openStock();
+                          }
+                        }
+                      : undefined
+                  }
+                >
                   <td className="sticky-col text-center">{index + 1}</td>
                   {!isPrint && (
                     <td className="text-center" style={{ width: 56 }}>
@@ -112,12 +137,13 @@ const LoanItemLedgerReport = ({
                       <button
                         type="button"
                         className="btn btn-link p-0 border-0 text-brown fw-bold text-decoration-none"
-                        onClick={() =>
+                        onClick={(e) => {
+                          e.stopPropagation();
                           onOpenLoanDetails(
                             { ...loan, user: row.user },
                             row.user
-                          )
-                        }
+                          );
+                        }}
                         title="Open loan details (customer home)"
                       >
                         {loanRef(loan)}

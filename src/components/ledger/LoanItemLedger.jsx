@@ -62,9 +62,8 @@ const LoanItemLedger = () => {
         params.startDate = startDate;
         params.endDate = endDate;
       }
-      const response = await getStockLedger(params);
-      const data = Array.isArray(response) ? response : response.data || [];
-      setRows(data);
+      const response = await getStockLedger({ ...params, page: 1, limit: 5000 });
+      setRows(response.data || []);
     } catch (err) {
       console.error(err);
       setRows([]);

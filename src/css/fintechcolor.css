@@ -101,9 +101,11 @@
   --layout-sidebar-icon: #2563eb;
   --layout-sidebar-muted-text: #0891b2;
   --layout-sidebar-hover-bg: #f0f9ff;
-  --layout-sidebar-hover-text: #1e40af;
+  --layout-sidebar-hover-text: #1e293b;
+  --layout-sidebar-hover-icon: #2563eb;
   --layout-sidebar-active-bg: rgba(37, 99, 235, 0.12);
-  --layout-sidebar-active-text: #1e40af;
+  --layout-sidebar-active-text: #0f172a;
+  --layout-sidebar-active-icon: #2563eb;
   --layout-sidebar-active-border: #2563eb;
   --layout-sidebar-sub-active-bg: rgba(6, 182, 212, 0.12);
   --layout-sidebar-brand-text: #1e40af;
@@ -187,6 +189,47 @@
   --theme-option-text: #1e3a8a;
   --theme-option-active-bg: #2563eb;
   --theme-option-active-text: #ffffff;
+
+  /* Stock module */
+  --stock-accent: var(--text-brown);
+  --stock-accent-soft: var(--bg-cust-primary);
+  --stock-price: var(--btn-success-text);
+  --stock-border: var(--app-border);
+  --stock-surface: #ffffff;
+  --stock-surface-raised: var(--bg-secondary);
+  --stock-cell-bg: var(--bg-cust-primary);
+  --stock-cell-accent: #2563eb;
+  --stock-label: #64748b;
+  --stock-value: var(--app-text);
+  --stock-card-footer-bg: var(--bg-green-soft);
+  --stock-item-heading-bg: var(--bg-cust-primary);
+  --stock-header-item-bg: var(--datatable-head-bg);
+  --stock-header-item-text: var(--datatable-head-text);
+  --stock-header-loan-bg: var(--btn-danger-bg);
+  --stock-header-loan-text: var(--btn-danger-text);
+  --stock-header-customer-bg: var(--btn-info-bg);
+  --stock-header-customer-text: var(--btn-info-text);
+  --stock-header-items-bg: var(--blue-btn-bg);
+  --stock-header-items-text: var(--btn-primary-text);
+  --stock-firm-badge-bg: var(--status-badge-primary-bg);
+  --stock-firm-badge-text: var(--status-badge-primary-text);
+  --stock-firm-badge-border: var(--status-badge-primary-border);
+  --stock-firm-badge-on-header-bg: #ffffff;
+  --stock-firm-badge-on-header-text: #0c4a6e;
+  --stock-firm-badge-on-header-border: #7dd3fc;
+  --stock-details-btn-bg: var(--stock-surface);
+  --stock-details-btn-border: #0284c7;
+  --stock-details-btn-text: #0369a1;
+  --stock-details-btn-hover-bg: #0284c7;
+  --stock-details-btn-hover-text: #ffffff;
+  --stock-details-btn-hover-border: #0369a1;
+  --stock-list-hover-bg: var(--bg-cust-info);
+  --stock-metal-gold-bg: linear-gradient(135deg, #b45309 0%, #fcd34d 55%, #d97706 100%);
+  --stock-metal-gold-text: #1e3a8a;
+  --stock-metal-silver-bg: linear-gradient(135deg, #64748b 0%, #e2e8f0 50%, #94a3b8 100%);
+  --stock-metal-silver-text: #0f172a;
+  --stock-metal-default-bg: rgba(15, 23, 42, 0.78);
+  --stock-metal-default-text: #ffffff;
 }
 
 [data-theme="fintech"] body {

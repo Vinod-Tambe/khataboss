@@ -1531,17 +1531,15 @@
   align-items: center;
   gap: 12px;
   padding: 12px 18px;
-  color: var(--layout-sidebar-text, var(--color-black));
   text-decoration: none;
-  transition: all 0.25s ease;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
   font-size: 17px;
 }
 
-.sidebar-menu svg,
 .sidebar-menu .arrow {
   font-size: 1.2rem;
   flex-shrink: 0;
-  color: var(--layout-sidebar-icon, var(--layout-sidebar-text, var(--color-black)));
+  color: var(--layout-sidebar-muted-text, var(--layout-sidebar-text, var(--color-black)));
   stroke: currentColor;
 }
 
@@ -1549,15 +1547,22 @@
 .sidebar-menu > li > .submenu-toggle .menu-icon svg {
   width: 1.2rem;
   height: 1.2rem;
+  stroke: currentColor;
 }
 
 .sidebar-menu>li:hover>a,
 .sidebar-menu>li:hover>.submenu-toggle {
   background: var(--layout-sidebar-hover-bg, var(--light));
+}
+
+.sidebar-menu>li:hover .menu-label {
   color: var(--layout-sidebar-hover-text, var(--success));
 }
 
-.sidebar-menu>li:hover svg,
+.sidebar-menu>li:hover .menu-icon {
+  color: var(--layout-sidebar-hover-icon, var(--layout-sidebar-icon, var(--success)));
+}
+
 .sidebar-menu>li:hover .arrow {
   color: var(--layout-sidebar-hover-text, var(--success));
 }
@@ -1565,13 +1570,20 @@
 .sidebar-menu>li>a.active,
 .sidebar-menu>li>.submenu-toggle.active {
   background: var(--layout-sidebar-active-bg);
-  color: var(--layout-sidebar-active-text, var(--success));
   font-weight: 600;
   border-left: 4px solid var(--layout-sidebar-active-border, var(--success));
 }
 
-.sidebar-menu>li>a.active svg,
-.sidebar-menu>li>.submenu-toggle.active svg,
+.sidebar-menu>li>a.active .menu-label,
+.sidebar-menu>li>.submenu-toggle.active .menu-label {
+  color: var(--layout-sidebar-active-text, var(--success));
+}
+
+.sidebar-menu>li>a.active .menu-icon,
+.sidebar-menu>li>.submenu-toggle.active .menu-icon {
+  color: var(--layout-sidebar-active-icon, var(--layout-brand, var(--success)));
+}
+
 .sidebar-menu>li>a.active .arrow,
 .sidebar-menu>li>.submenu-toggle.active .arrow {
   color: var(--layout-sidebar-active-text, var(--success));
@@ -1598,11 +1610,15 @@
   flex-shrink: 0;
   width: 1.2rem;
   height: 1.2rem;
+  color: var(--layout-sidebar-icon, var(--layout-brand, var(--success)));
+  transition: color 0.25s ease;
 }
 
 .menu-label {
   min-width: 0;
   line-height: 1.25;
+  color: var(--layout-sidebar-text, var(--color-black));
+  transition: color 0.25s ease;
 }
 
 .submenu {

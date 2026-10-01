@@ -130,9 +130,11 @@
   --layout-sidebar-icon: #94a3b8;
   --layout-sidebar-muted-text: #6ee7b7;
   --layout-sidebar-hover-bg: #252540;
-  --layout-sidebar-hover-text: #5cb8a5;
+  --layout-sidebar-hover-text: #e2e8f0;
+  --layout-sidebar-hover-icon: #5cb8a5;
   --layout-sidebar-active-bg: rgba(92, 174, 157, 0.18);
-  --layout-sidebar-active-text: #5cb8a5;
+  --layout-sidebar-active-text: #e2e8f0;
+  --layout-sidebar-active-icon: #5cb8a5;
   --layout-sidebar-active-border: #5cb8a5;
   --layout-sidebar-sub-active-bg: rgba(92, 174, 157, 0.22);
   --layout-sidebar-brand-text: #f8fafc;
@@ -224,6 +226,47 @@
   --theme-option-text: #e5e7eb;
   --theme-option-active-bg: #e5e7eb;
   --theme-option-active-text: #111827;
+
+  /* Stock module */
+  --stock-accent: var(--text-brown);
+  --stock-accent-soft: var(--bg-cust-primary);
+  --stock-item-heading-bg: var(--bg-cust-primary);
+  --stock-price: var(--btn-success-text);
+  --stock-border: var(--app-border);
+  --stock-surface: var(--color-white);
+  --stock-surface-raised: var(--bg-secondary);
+  --stock-cell-bg: var(--bg-cust-primary);
+  --stock-cell-accent: var(--layout-brand);
+  --stock-label: var(--bs-secondary-color);
+  --stock-value: var(--app-text);
+  --stock-card-footer-bg: var(--bg-green-soft);
+  --stock-header-item-bg: linear-gradient(135deg, #3d2914 0%, #5c4a2a 100%);
+  --stock-header-item-text: #fde68a;
+  --stock-header-loan-bg: linear-gradient(135deg, #4c1d2e 0%, #7f1d1d 100%);
+  --stock-header-loan-text: #fecaca;
+  --stock-header-customer-bg: linear-gradient(135deg, #164e63 0%, #1e3a5f 100%);
+  --stock-header-customer-text: #a5f3fc;
+  --stock-header-items-bg: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  --stock-header-items-text: #e2e8f0;
+  --stock-firm-badge-bg: var(--status-badge-primary-bg);
+  --stock-firm-badge-text: var(--status-badge-primary-text);
+  --stock-firm-badge-border: var(--status-badge-primary-border);
+  --stock-firm-badge-on-header-bg: rgba(15, 23, 42, 0.92);
+  --stock-firm-badge-on-header-text: #fde68a;
+  --stock-firm-badge-on-header-border: rgba(253, 230, 138, 0.45);
+  --stock-details-btn-bg: rgba(8, 145, 178, 0.14);
+  --stock-details-btn-border: #22d3ee;
+  --stock-details-btn-text: #a5f3fc;
+  --stock-details-btn-hover-bg: #0891b2;
+  --stock-details-btn-hover-text: #f0fdfa;
+  --stock-details-btn-hover-border: #06b6d4;
+  --stock-list-hover-bg: var(--bg-cust-info);
+  --stock-metal-gold-bg: linear-gradient(135deg, #92400e 0%, #fbbf24 55%, #b45309 100%);
+  --stock-metal-gold-text: #1c1917;
+  --stock-metal-silver-bg: linear-gradient(135deg, #475569 0%, #cbd5e1 50%, #64748b 100%);
+  --stock-metal-silver-text: #0f172a;
+  --stock-metal-default-bg: rgba(15, 23, 42, 0.88);
+  --stock-metal-default-text: #f1f5f9;
 }
 
 [data-theme="dark"] body {

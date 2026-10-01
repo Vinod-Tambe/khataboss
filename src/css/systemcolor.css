@@ -107,9 +107,11 @@
   --layout-sidebar-icon: #c2185b;
   --layout-sidebar-muted-text: #6d28d9;
   --layout-sidebar-hover-bg: #fff0f7;
-  --layout-sidebar-hover-text: #a1005b;
+  --layout-sidebar-hover-text: #4a2048;
+  --layout-sidebar-hover-icon: #c2185b;
   --layout-sidebar-active-bg: rgba(194, 24, 91, 0.12);
-  --layout-sidebar-active-text: #a1005b;
+  --layout-sidebar-active-text: #4a2048;
+  --layout-sidebar-active-icon: #c2185b;
   --layout-sidebar-active-border: #e60000;
   --layout-sidebar-sub-active-bg: rgba(109, 40, 217, 0.12);
   --layout-sidebar-brand-text: #c2185b;
@@ -199,6 +201,47 @@
   --theme-option-text: #4a0e4e;
   --theme-option-active-bg: #a1005b;
   --theme-option-active-text: #ffffff;
+
+  /* Stock module */
+  --stock-accent: var(--text-brown);
+  --stock-accent-soft: var(--bg-cust-primary);
+  --stock-price: var(--btn-success-text);
+  --stock-border: var(--app-border);
+  --stock-surface: #ffffff;
+  --stock-surface-raised: var(--bg-secondary);
+  --stock-cell-bg: var(--bg-cust-primary);
+  --stock-cell-accent: #a1005b;
+  --stock-label: #6b5b73;
+  --stock-value: var(--app-text);
+  --stock-card-footer-bg: var(--bg-pink-soft);
+  --stock-item-heading-bg: var(--bg-cust-primary);
+  --stock-header-item-bg: var(--datatable-head-bg);
+  --stock-header-item-text: var(--datatable-head-text);
+  --stock-header-loan-bg: var(--btn-danger-bg);
+  --stock-header-loan-text: var(--btn-danger-text);
+  --stock-header-customer-bg: var(--bg-cust-info);
+  --stock-header-customer-text: var(--btn-info-text);
+  --stock-header-items-bg: var(--blue-btn-bg);
+  --stock-header-items-text: var(--btn-primary-text);
+  --stock-firm-badge-bg: var(--status-badge-primary-bg);
+  --stock-firm-badge-text: var(--status-badge-primary-text);
+  --stock-firm-badge-border: var(--status-badge-primary-border);
+  --stock-firm-badge-on-header-bg: #ffffff;
+  --stock-firm-badge-on-header-text: #6b1040;
+  --stock-firm-badge-on-header-border: #e8a4c8;
+  --stock-details-btn-bg: var(--stock-surface);
+  --stock-details-btn-border: #7c3aed;
+  --stock-details-btn-text: #6d28d9;
+  --stock-details-btn-hover-bg: #7c3aed;
+  --stock-details-btn-hover-text: #ffffff;
+  --stock-details-btn-hover-border: #6d28d9;
+  --stock-list-hover-bg: var(--bg-cust-info);
+  --stock-metal-gold-bg: linear-gradient(135deg, #d97706 0%, #fcd34d 55%, #f59e0b 100%);
+  --stock-metal-gold-text: #4a0e4e;
+  --stock-metal-silver-bg: linear-gradient(135deg, #7c3aed 0%, #e9d5ff 50%, #a78bfa 100%);
+  --stock-metal-silver-text: #3b0764;
+  --stock-metal-default-bg: rgba(74, 14, 78, 0.82);
+  --stock-metal-default-text: #ffffff;
 }
 
 /* Soft multi-tone page wash like login energy */
