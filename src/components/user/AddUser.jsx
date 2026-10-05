@@ -554,11 +554,30 @@ const AddUser = () => {
         </>
     );
 
+    const handleBack = () => {
+        navigate('/user/grid');
+    };
+
+    const renderFormTopBar = (title) => (
+        <div className="d-flex align-items-center gap-2 mb-3 mb-md-4">
+            <button
+                type="button"
+                className="btn btn-outline-secondary btn-sm"
+                onClick={handleBack}
+                aria-label="Back to customer list"
+            >
+                <i className="bi bi-arrow-left me-1" aria-hidden="true" />
+                Back
+            </button>
+            <h4 className="card-title fw-bold mb-0 flex-grow-1 text-center text-md-start">{title}</h4>
+        </div>
+    );
+
     const renderContent = () => {
         if (!isMobile) {
             return (
                 <div className="card p-4 shadow-sm">
-                    <h4 className="card-title text-center fw-bold pb-md-0">Add New Customer</h4>
+                    {renderFormTopBar('Add New Customer')}
                     {renderStep1()}
                     <hr className="my-3" />
                     {renderStep2()}
@@ -573,6 +592,7 @@ const AddUser = () => {
 
         return (
             <div className="card p-3 shadow-sm">
+                {renderFormTopBar('Add New Customer')}
                 <h5 className="text-center mb-4">Step {currentStep} of 2</h5>
 
                 {currentStep === 1 && renderStep1()}

@@ -1,0 +1,38 @@
+.interest-ledger-report {
+  --il-opening-bg: color-mix(in srgb, var(--bg-secondary, #f0eded) 45%, var(--datatable-body-bg, #fff) 55%);
+  --il-received-bg: color-mix(in srgb, var(--btn-success-bg, #d8f6d8) 28%, var(--datatable-body-bg, #fff) 72%);
+  --il-paid-bg: color-mix(in srgb, var(--btn-danger-bg, #ffdbe1) 28%, var(--datatable-body-bg, #fff) 72%);
+  --il-final-bg: color-mix(in srgb, var(--btn-primary-bg, #dfecff) 28%, var(--datatable-body-bg, #fff) 72%);
+  --il-opening-text: var(--app-text, #333);
+  --il-received-text: var(--btn-success-text, #006400);
+  --il-paid-text: var(--btn-danger-text, #dc143c);
+  --il-final-text: var(--btn-primary-text, #000080);
+}
+
+.interest-ledger-table thead .interest-ledger-table__section-opening,
+.interest-ledger-table tbody .interest-ledger-table__cell-opening,
+.interest-ledger-table tfoot .interest-ledger-table__cell-opening {
+  background-color: var(--il-opening-bg);
+  color: var(--il-opening-text);
+}
+
+.interest-ledger-table thead .interest-ledger-table__section-received,
+.interest-ledger-table tbody .interest-ledger-table__cell-received,
+.interest-ledger-table tfoot .interest-ledger-table__cell-received {
+  background-color: var(--il-received-bg);
+  color: var(--il-received-text);
+}
+
+.interest-ledger-table thead .interest-ledger-table__section-paid,
+.interest-ledger-table tbody .interest-ledger-table__cell-paid,
+.interest-ledger-table tfoot .interest-ledger-table__cell-paid {
+  background-color: var(--il-paid-bg);
+  color: var(--il-paid-text);
+}
+
+.interest-ledger-table thead .interest-ledger-table__section-final,
+.interest-ledger-table tbody .interest-ledger-table__cell-final,
+.interest-ledger-table tfoot .interest-ledger-table__cell-final {
+  background-color: var(--il-final-bg);
+  color: var(--il-final-text);
+}

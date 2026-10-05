@@ -83,6 +83,33 @@ export const getCustomerFirmName = (user, firms = []) => {
   return '';
 };
 
+/** Plain customer label for lists/search (name + father when present). */
+export const formatCustomerListName = (user) => {
+  if (!user) return "-";
+  const fullName = [user.user_first_name, user.user_last_name].filter(Boolean).join(" ").trim();
+  const father = String(user.user_father_name || "").trim();
+  if (!fullName && !father) return "-";
+  if (!father) return fullName;
+  if (!fullName) return `F/O ${father}`;
+  return `${fullName} (F/O ${father})`;
+};
+
+/** HTML for list tables: name with father on second line. */
+export const formatCustomerListNameHtml = (user, { linkClass = "text-brown fw-bold" } = {}) => {
+  if (!user) return "-";
+  const fullName = [user.user_first_name, user.user_last_name].filter(Boolean).join(" ").trim();
+  const father = String(user.user_father_name || "").trim();
+  if (!fullName && !father) return "-";
+  const nameLine = fullName
+    ? `<span class="${linkClass}">${fullName}</span>`
+    : "";
+  const fatherLine = father
+    ? `<div class="small text-muted">F/O ${father}</div>`
+    : "";
+  if (!nameLine) return `<span class="${linkClass}">F/O ${father}</span>`;
+  return `<div class="lh-sm">${nameLine}${fatherLine}</div>`;
+};
+
 /** Lines for customer name hover tooltip (home, grid, etc.). */
 export const buildCustomerHoverDetails = (user, firms = []) => {
   if (!user) return [];

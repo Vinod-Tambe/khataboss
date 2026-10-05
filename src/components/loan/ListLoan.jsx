@@ -12,8 +12,10 @@ import {
   formatListDate,
   statusBadgeHtml,
   formatProfitLossHtml,
+  formatLoanFinalWeightDisplay,
   normalizeLoanListRow,
 } from "../../utils/listFormatters";
+import { formatCustomerListName, formatCustomerListNameHtml } from "../../utils/customerFormatters";
 
 const ListLoan = ({ status = "ALL", global = false }) => {
   const navigate = useNavigate();
@@ -109,6 +111,9 @@ const ListLoan = ({ status = "ALL", global = false }) => {
     navigate("/user/home");
   };
 
+  const isPendingInterestList = status === "PENDING_INTEREST";
+  const showCustomerColumns = global || isPendingInterestList;
+
   const columns = useMemo(() => {
     const cols = [
       {
@@ -125,7 +130,7 @@ const ListLoan = ({ status = "ALL", global = false }) => {
       },
     ];
 
-    if (global) {
+    if (showCustomerColumns) {
       cols.push(
         {
           key: "girv_customer_name",
@@ -133,15 +138,24 @@ const ListLoan = ({ status = "ALL", global = false }) => {
           searchable: true,
           customerHome: true,
           render: (data, type, row) => {
-            const name = data || "-";
-            if (type !== "display") return name;
-            if (!row?.user) return "-";
-            return `<span class="text-brown fw-bold cursor-pointer customer-home-btn" title="Open customer home">${name}</span>`;
+            const searchText = formatCustomerListName(row?.user) || data || "-";
+            if (type !== "display" && type !== "export") return searchText;
+            if (type === "export") return searchText;
+            if (!row?.user) return data || "-";
+            return `<span class="cursor-pointer customer-home-btn" title="Open customer home">${formatCustomerListNameHtml(row.user, {
+              linkClass: "text-brown fw-bold",
+            })}</span>`;
           },
         },
         {
           key: "girv_customer_mobile",
           title: "Mobile",
+          searchable: true,
+          render: (data) => data || "-",
+        },
+        {
+          key: "girv_firm_name",
+          title: "Firm",
           searchable: true,
           render: (data) => data || "-",
         }
@@ -158,6 +172,26 @@ const ListLoan = ({ status = "ALL", global = false }) => {
         key: "girv_type",
         title: "Type",
         render: (data) => (data ? String(data).toUpperCase() : "-"),
+      },
+      {
+        key: "girv_final_weight",
+        title: "Final Weight",
+        sum: true,
+        sumDecimals: 3,
+        render: (data, type, row) => {
+          const isSecured = String(row?.girv_type || "").toLowerCase() === "secured";
+          if (!isSecured) {
+            return type === "display" || type === "export" ? "-" : 0;
+          }
+          const num = data != null && data !== "" ? Number(data) : 0;
+          if (Number.isNaN(num)) {
+            return type === "display" || type === "export" ? "-" : 0;
+          }
+          if (type !== "display" && type !== "export") {
+            return num;
+          }
+          return formatLoanFinalWeightDisplay(row, num);
+        },
       },
       {
         key: "girv_start_date",
@@ -184,12 +218,56 @@ const ListLoan = ({ status = "ALL", global = false }) => {
         sum: true,
         render: (data) => formatListAmtOrDash(data),
       },
-      {
-        key: "girv_total_interest",
-        title: "Interest",
-        sum: true,
-        render: (data) => formatListAmtOrDash(data),
-      },
+      ...(isPendingInterestList
+        ? [
+            {
+              key: "girv_roi_display",
+              title: "ROI",
+              searchable: true,
+              render: (data) => data || "-",
+            },
+            {
+              key: "girv_interest_method_display",
+              title: "Interest Method",
+              searchable: true,
+              render: (data) => data || "-",
+            },
+            {
+              key: "girv_accrued_interest",
+              title: "Accrued Interest",
+              sum: true,
+              render: (data) => formatListAmtOrDash(data),
+            },
+            {
+              key: "girv_interest_received",
+              title: "Interest Received",
+              sum: true,
+              render: (data) => formatListAmtOrDash(data),
+            },
+            {
+              key: "girv_pending_interest",
+              title: "Pending Interest",
+              sum: true,
+              render: (data, type) => {
+                if (type !== "display" && type !== "export") return data ?? 0;
+                const amt = formatListAmtOrDash(data);
+                return amt === "-"
+                  ? "-"
+                  : `<span class="text-danger fw-bold">${amt}</span>`;
+              },
+            },
+          ]
+        : []),
+      ...(!isPendingInterestList
+        ? [
+            {
+              key: "girv_total_interest",
+              title: "Interest",
+              sum: true,
+              render: (data) => formatListAmtOrDash(data),
+            },
+          ]
+        : []),
       {
         key: "girv_processing_amt",
         title: "Processing",
@@ -205,8 +283,12 @@ const ListLoan = ({ status = "ALL", global = false }) => {
       {
         key: "profit_loss",
         title: "Profit/Loss",
-        render: (data, type) => {
-          if (type !== "display") {
+        render: (data, type, row) => {
+          const isSecured = String(row?.girv_type || "").toLowerCase() === "secured";
+          if (!isSecured) {
+            return type === "display" || type === "export" ? "-" : "";
+          }
+          if (type !== "display" && type !== "export") {
             return data != null ? formatListAmtOrDash(data) : "-";
           }
           return formatProfitLossHtml(data);
@@ -232,7 +314,7 @@ const ListLoan = ({ status = "ALL", global = false }) => {
     }
 
     return cols;
-  }, [global, status]);
+  }, [status, isPendingInterestList, showCustomerColumns]);
 
   const getTitle = () => {
     let baseTitle = "";
@@ -254,6 +336,9 @@ const ListLoan = ({ status = "ALL", global = false }) => {
         break;
       case "AUCTION":
         baseTitle = "Auction Loan List";
+        break;
+      case "PENDING_INTEREST":
+        baseTitle = "Pending Interest List";
         break;
       default:
         baseTitle = `${status} Loan List`;
@@ -289,12 +374,12 @@ const ListLoan = ({ status = "ALL", global = false }) => {
             columns={columns}
             title={getTitle()}
             primaryKey="girv_id"
-            subtitleKey="girv_start_date"
-            amountKey="girv_prin_amt"
+            subtitleKey={isPendingInterestList ? "girv_customer_mobile" : "girv_start_date"}
+            amountKey={isPendingInterestList ? "girv_pending_interest" : "girv_prin_amt"}
             onView={canViewLoan ? handleView : undefined}
             onDelete={canDeleteLoan ? handleDelete : undefined}
             onEdit={canEditLoan ? handleEdit : undefined}
-            onCustomerHome={global ? handleCustomerHome : undefined}
+            onCustomerHome={showCustomerColumns ? handleCustomerHome : undefined}
             hasView={canViewLoan}
             hasDelete={canDeleteLoan ? (row) => row.girv_status === "ACTIVE" : false}
             hasEdit={canEditLoan ? (row) => row.girv_status === "ACTIVE" : false}

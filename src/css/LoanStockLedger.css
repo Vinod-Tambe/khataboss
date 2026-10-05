@@ -1,0 +1,287 @@
+.loan-stock-ledger-page {
+  --lsl-filter-border: var(--color-black, #000);
+}
+
+[data-theme='dark'] .loan-stock-ledger-page,
+[data-theme='brand-dark'] .loan-stock-ledger-page {
+  --lsl-filter-border: color-mix(in srgb, var(--app-text, #e2e8f0) 55%, #000 45%);
+}
+
+.loan-stock-ledger-page__meta {
+  line-height: 1.45;
+  color: var(--app-text, #333);
+}
+
+.loan-stock-ledger-page__meta-label {
+  color: var(--datatable-head-text, var(--text-brown, brown));
+  font-weight: 700;
+}
+
+.loan-stock-ledger-page__meta-sep {
+  margin: 0 0.65rem;
+  color: var(--app-border, #dee2e6);
+}
+
+.loan-stock-ledger-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+}
+
+.loan-stock-ledger-toolbar__title {
+  flex: 1 1 12rem;
+  min-width: min(100%, 14rem);
+  font-size: clamp(1.35rem, 2.8vw, 1.75rem);
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.loan-stock-ledger-toolbar__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex: 1 1 20rem;
+  max-width: 100%;
+}
+
+.loan-stock-ledger-page .loan-stock-ledger-toolbar__filters .form-select {
+  text-align: center;
+  background: var(--datatable-body-bg, #fff);
+  color: var(--datatable-body-text, #212529);
+  border: 1px solid var(--lsl-filter-border) !important;
+  box-shadow: none;
+}
+
+.loan-stock-ledger-page .loan-stock-ledger-toolbar__filters .form-select:focus {
+  border-color: var(--lsl-filter-border) !important;
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--lsl-filter-border) 22%, transparent);
+}
+
+.loan-stock-ledger-toolbar__select--year {
+  width: 7.25rem;
+  max-width: 100%;
+}
+
+.loan-stock-ledger-toolbar__select--month {
+  width: 11.5rem;
+  max-width: 100%;
+}
+
+.loan-stock-ledger-toolbar__select--firm {
+  width: 10.5rem;
+  max-width: min(100%, 16rem);
+}
+
+@media (max-width: 575.98px) {
+  .loan-stock-ledger-toolbar__title {
+    white-space: normal;
+    width: 100%;
+  }
+
+  .loan-stock-ledger-toolbar__filters {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .loan-stock-ledger-toolbar__select {
+    flex: 1 1 7rem;
+  }
+}
+
+.loan-stock-ledger-page__footer {
+  border-color: var(--layout-item-border, #dee2e6) !important;
+}
+
+.loan-stock-ledger-logic__toggle {
+  color: var(--datatable-head-text, var(--text-brown, brown));
+  font-weight: 600;
+}
+
+.loan-stock-ledger-logic__body {
+  background: var(--datatable-body-bg, #fff);
+  border-color: var(--lsl-filter-border, #000) !important;
+  color: var(--app-text, #333);
+}
+
+/* —— Report table: theme tokens + section tints —— */
+.loan-stock-ledger-report {
+  --lsl-border: var(--color-black, #000);
+  --lsl-head-bg: var(--datatable-head-bg, #e7eeff);
+  --lsl-head-text: var(--datatable-head-text, maroon);
+  --lsl-foot-bg: var(--datatable-foot-bg, #f4eaea);
+  --lsl-body-bg: var(--datatable-body-bg, #fff);
+  --lsl-body-text: var(--datatable-body-text, #212529);
+  --lsl-date-bg: color-mix(in srgb, var(--bg-secondary, #f0eded) 40%, var(--lsl-body-bg) 60%);
+  --lsl-date-text: var(--app-text, #333);
+
+  --lsl-opening-bg: color-mix(in srgb, var(--btn-primary-bg, #dfecff) 28%, var(--lsl-body-bg) 72%);
+  --lsl-opening-text: var(--btn-primary-text, #000080);
+  --lsl-received-bg: color-mix(in srgb, var(--btn-danger-bg, #ffdbe1) 26%, var(--lsl-body-bg) 74%);
+  --lsl-received-text: var(--btn-danger-text, #dc143c);
+  --lsl-total-bg: color-mix(in srgb, var(--btn-yellow-bg, #fce3bf) 30%, var(--lsl-body-bg) 70%);
+  --lsl-total-text: var(--btn-warning-text, #aa6600);
+  --lsl-released-bg: color-mix(in srgb, var(--btn-success-bg, #d8f6d8) 26%, var(--lsl-body-bg) 74%);
+  --lsl-released-text: var(--btn-success-text, #006400);
+  --lsl-final-bg: color-mix(in srgb, var(--btn-info-bg, #dbfbff) 28%, var(--lsl-body-bg) 72%);
+  --lsl-final-text: var(--btn-info-text, #065658);
+  --lsl-interest-bg: color-mix(in srgb, var(--bg-cust-info, #eaf4f3) 32%, var(--lsl-body-bg) 68%);
+  --lsl-interest-text: var(--color-maroon, maroon);
+}
+
+.loan-stock-ledger-report__title {
+  font-size: 1.1rem;
+  letter-spacing: 0.02em;
+  color: var(--text-brown, brown);
+}
+
+.loan-stock-ledger-table {
+  font-size: 0.82rem;
+  border-collapse: collapse;
+  background: var(--lsl-body-bg);
+  color: var(--lsl-body-text);
+  border: 1px solid var(--lsl-border) !important;
+}
+
+.loan-stock-ledger-table th,
+.loan-stock-ledger-table td {
+  border: 1px solid var(--lsl-border) !important;
+  padding: 0.35rem 0.45rem;
+  white-space: nowrap;
+}
+
+[data-theme='dark'] .loan-stock-ledger-report,
+[data-theme='brand-dark'] .loan-stock-ledger-report {
+  --lsl-border: color-mix(in srgb, var(--app-text, #e2e8f0) 55%, #000 45%);
+}
+
+.loan-stock-ledger-table__head-main th {
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.loan-stock-ledger-table__head-main th.loan-stock-ledger-table__date-col {
+  background: var(--lsl-head-bg);
+  color: var(--lsl-head-text);
+}
+
+.loan-stock-ledger-table__head-sub th {
+  font-weight: 600;
+  font-size: 0.72rem;
+}
+
+.loan-stock-ledger-table tbody tr {
+  background: transparent;
+}
+
+.loan-stock-ledger-table tbody td {
+  background-color: var(--lsl-body-bg);
+}
+
+.loan-stock-ledger-table__date-col {
+  min-width: 6.5rem;
+}
+
+.loan-stock-ledger-table thead .loan-stock-ledger-table__date-col,
+.loan-stock-ledger-table tbody .loan-stock-ledger-table__date-col,
+.loan-stock-ledger-table tfoot .loan-stock-ledger-table__date-col {
+  background-color: var(--lsl-date-bg);
+  color: var(--lsl-date-text);
+}
+
+.loan-stock-ledger-table thead .loan-stock-ledger-table__section-opening,
+.loan-stock-ledger-table tbody .loan-stock-ledger-table__cell-opening,
+.loan-stock-ledger-table tfoot .loan-stock-ledger-table__cell-opening {
+  background-color: var(--lsl-opening-bg);
+  color: var(--lsl-opening-text);
+}
+
+.loan-stock-ledger-table thead .loan-stock-ledger-table__section-received,
+.loan-stock-ledger-table tbody .loan-stock-ledger-table__cell-received,
+.loan-stock-ledger-table tfoot .loan-stock-ledger-table__cell-received {
+  background-color: var(--lsl-received-bg);
+  color: var(--lsl-received-text);
+}
+
+.loan-stock-ledger-table thead .loan-stock-ledger-table__section-total,
+.loan-stock-ledger-table tbody .loan-stock-ledger-table__cell-total,
+.loan-stock-ledger-table tfoot .loan-stock-ledger-table__cell-total {
+  background-color: var(--lsl-total-bg);
+  color: var(--lsl-total-text);
+}
+
+.loan-stock-ledger-table thead .loan-stock-ledger-table__section-released,
+.loan-stock-ledger-table tbody .loan-stock-ledger-table__cell-released,
+.loan-stock-ledger-table tfoot .loan-stock-ledger-table__cell-released {
+  background-color: var(--lsl-released-bg);
+  color: var(--lsl-released-text);
+}
+
+.loan-stock-ledger-table thead .loan-stock-ledger-table__section-final,
+.loan-stock-ledger-table tbody .loan-stock-ledger-table__cell-final,
+.loan-stock-ledger-table tfoot .loan-stock-ledger-table__cell-final {
+  background-color: var(--lsl-final-bg);
+  color: var(--lsl-final-text);
+}
+
+.loan-stock-ledger-table thead .loan-stock-ledger-table__section-interest,
+.loan-stock-ledger-table tbody .loan-stock-ledger-table__cell-interest,
+.loan-stock-ledger-table tfoot .loan-stock-ledger-table__cell-interest {
+  background-color: var(--lsl-interest-bg);
+  color: var(--lsl-interest-text);
+}
+
+/* Column group separators (vertical bands) */
+.loan-stock-ledger-table__amt {
+  font-weight: 600;
+}
+
+/* Footer: light band, same section colors (slightly richer) */
+.loan-stock-ledger-table__foot th {
+  font-weight: 700;
+  font-size: 0.78rem;
+  border: 1px solid var(--lsl-border) !important;
+  padding: 0.45rem 0.45rem;
+}
+
+.loan-stock-ledger-table__foot tr {
+  border-top: 2px solid var(--lsl-border);
+}
+
+.loan-stock-ledger-table__foot .loan-stock-ledger-table__date-col {
+  background-color: color-mix(in srgb, var(--lsl-date-bg) 55%, var(--lsl-foot-bg) 45%);
+  color: var(--lsl-head-text);
+  font-weight: 700;
+}
+
+.loan-stock-ledger-table__foot .loan-stock-ledger-table__cell-opening {
+  background-color: color-mix(in srgb, var(--lsl-opening-bg) 65%, var(--lsl-foot-bg) 35%);
+}
+
+.loan-stock-ledger-table__foot .loan-stock-ledger-table__cell-received {
+  background-color: color-mix(in srgb, var(--lsl-received-bg) 65%, var(--lsl-foot-bg) 35%);
+}
+
+.loan-stock-ledger-table__foot .loan-stock-ledger-table__cell-total {
+  background-color: color-mix(in srgb, var(--lsl-total-bg) 65%, var(--lsl-foot-bg) 35%);
+}
+
+.loan-stock-ledger-table__foot .loan-stock-ledger-table__cell-released {
+  background-color: color-mix(in srgb, var(--lsl-released-bg) 65%, var(--lsl-foot-bg) 35%);
+}
+
+.loan-stock-ledger-table__foot .loan-stock-ledger-table__cell-final {
+  background-color: color-mix(in srgb, var(--lsl-final-bg) 65%, var(--lsl-foot-bg) 35%);
+}
+
+.loan-stock-ledger-table__foot .loan-stock-ledger-table__cell-interest {
+  background-color: color-mix(in srgb, var(--lsl-interest-bg) 65%, var(--lsl-foot-bg) 35%);
+}
+
+.loan-stock-ledger-report.is-print .loan-stock-ledger-table {
+  font-size: 10px;
+}

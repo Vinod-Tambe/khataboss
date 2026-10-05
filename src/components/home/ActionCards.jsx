@@ -22,7 +22,7 @@ const allActionItems = [
     permission: "loan.deposit",
   },
   {
-    title: "Add User",
+    title: "Add Customer",
     icon: "bi-person-plus",
     color: "success",
     isModal: true,
@@ -71,7 +71,7 @@ const allActionItems = [
     permission: "reports.profitLoss",
   },
   {
-    title: "User List",
+    title: "Customer List",
     icon: "bi-list-ul",
     color: "info",
     to: "/user/grid",
@@ -105,7 +105,7 @@ const ActionCards = ({ firms, selectedFirmId }) => {
   );
 
   const handleItemClick = (item) => {
-    if (item.title === "Add User") {
+    if (item.title === "Add Customer") {
       setShowModal(true);
     } else if (item.title === "Finance Collection") {
       setShowFinanceModal(true);

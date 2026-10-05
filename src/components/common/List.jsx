@@ -319,9 +319,10 @@ const List = ({
                 const colData = api.column(idx, { search: "applied" }).data();
                 const total = sumApiValues(colData);
 
+                const sumDecimals = col.sumDecimals ?? 2;
                 const formatted = total.toLocaleString("en-IN", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
+                  minimumFractionDigits: sumDecimals,
+                  maximumFractionDigits: sumDecimals,
                 });
 
                 const display = total === 0 ? "0.00" : formatted;

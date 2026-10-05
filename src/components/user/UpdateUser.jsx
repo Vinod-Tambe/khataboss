@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import ProfileDocumentsSection from '../common/ProfileDocumentsSection';
 import SignaturePad from '../common/SignaturePad';
@@ -11,6 +11,7 @@ import {
     resolveImageUrl,
 } from '../../utils/imageHelpers';
 import '../../css/ProfileDocumentsSection.css';
+import '../../css/CustomerList.css';
 import moment from 'moment';
 import $ from 'jquery';
 import 'daterangepicker';
@@ -37,6 +38,13 @@ const buildCustomerAudit = (user = {}) => ({
 const UpdateUser = () => {
     const { uuid } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
+    const returnTo =
+        location.state?.returnTo === '/user/home' ||
+        location.state?.returnTo === '/user/list' ||
+        location.state?.returnTo === '/user/grid'
+            ? location.state.returnTo
+            : '/user/grid';
     const dispatch = useDispatch();
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [currentStep, setCurrentStep] = useState(1);
@@ -541,7 +549,7 @@ const UpdateUser = () => {
         if (!customerAudit.customerCode && !customerAudit.updatedAt) return null;
 
         return (
-            <div className="update-customer-audit d-flex flex-column align-items-start align-items-md-end gap-2">
+            <>
                 {customerAudit.customerCode && (
                     <span className="badge rounded-pill bg-primary-subtle border border-primary text-primary px-3 py-2">
                         <span className="fw-bold">Cust ID:</span>{' '}
@@ -556,15 +564,39 @@ const UpdateUser = () => {
                         </span>
                     </span>
                 )}
-            </div>
+            </>
         );
     };
 
+    const handleBack = () => {
+        navigate(returnTo);
+    };
+
+    const backAriaLabel =
+        returnTo === '/user/home'
+            ? 'Back to customer home'
+            : returnTo === '/user/list'
+              ? 'Back to customer list'
+              : 'Back to customer grid';
+
     const renderContent = () => (
         <div className="card p-4 shadow-sm border-0">
-            <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
-                <h4 className="card-title fw-bold mb-0">Update Customer Records</h4>
-                {renderCustomerAudit()}
+            <div className="update-customer-header d-flex flex-wrap align-items-center gap-2 gap-md-3 mb-4">
+                <button
+                    type="button"
+                    className="btn btn-outline-secondary btn-sm flex-shrink-0"
+                    onClick={handleBack}
+                    aria-label={backAriaLabel}
+                >
+                    <i className="bi bi-arrow-left me-1" aria-hidden="true" />
+                    Back
+                </button>
+                <h4 className="card-title fw-bold mb-0 flex-shrink-0">Update Customer Records</h4>
+                {(customerAudit.customerCode || customerAudit.updatedAt) && (
+                    <div className="update-customer-audit d-flex flex-wrap align-items-center gap-2 ms-md-auto">
+                        {renderCustomerAudit()}
+                    </div>
+                )}
             </div>
             {!isMobile ? (
                 <>

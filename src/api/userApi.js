@@ -36,6 +36,28 @@ export const getUsers = async (firmId, search = "") => {
   }
 };
 
+export const getDeletedUsers = async (firmId, search = "") => {
+  try {
+    const response = await axiosInstance.get('/user/deleted/list', {
+      params: { firmId, search },
+    });
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.error || error.response?.data?.message || error.message;
+    throw new Error(message);
+  }
+};
+
+export const restoreUser = async (uuid) => {
+  try {
+    const response = await axiosInstance.post(`/user/${uuid}/restore`);
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.error || error.response?.data?.message || error.message;
+    throw new Error(message);
+  }
+};
+
 /**
  * Fast header autocomplete search
  * @param {string} q - mobile / email / name / customer id

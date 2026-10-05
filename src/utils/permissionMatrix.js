@@ -3,10 +3,12 @@
 export const MODULE_META = {
   firm: { label: "Firm access", icon: "bi-building" },
   account: { label: "Account access", icon: "bi-wallet2" },
+  expense: { label: "Personal Expenses access", icon: "bi-receipt" },
   staff: { label: "Staff access", icon: "bi-person-badge" },
   user: { label: "User access", icon: "bi-people-fill" },
   moneyLender: { label: "Money Lender access", icon: "bi-cash-stack" },
   loan: { label: "Loan access", icon: "bi-journal-text" },
+  stock: { label: "Stock access", icon: "bi-box-seam" },
   finance: { label: "Finance access", icon: "bi-currency-rupee" },
   reports: { label: "Reports access", icon: "bi-bar-chart-line" },
   settings: { label: "Settings access", icon: "bi-gear-fill" },

@@ -11,6 +11,7 @@ import {
   PERSONAL_EXPENSE_FORM_TITLE,
   PERSONAL_EXPENSE_LIST_TITLE,
 } from '../../constants/personalExpense';
+import { formatTransferDirectionLabel } from '../../utils/transferDirection';
 
 const formatAmt = (value) =>
   parseFloat(value || 0).toLocaleString('en-IN', {
@@ -20,12 +21,11 @@ const formatAmt = (value) =>
 
 const modeLabel = (mode) => (mode === 'ONE_TO_MANY' ? 'One to many' : 'One to one');
 
-const directionLabel = (direction) =>
-  direction === 'DR_TO_CR' ? 'DR → CR' : 'CR → DR';
+const directionLabel = (direction) => formatTransferDirectionLabel(direction);
 
 const InterAccountTransferList = () => {
-  const { can } = usePermissions();
-  const canTransfer = can('account.transfer');
+  const { canAny } = usePermissions();
+  const canTransfer = canAny(['expense.create', 'account.transfer']);
   const { selectedFirmId } = useSelector((state) => state.firm);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -1,15 +1,18 @@
-import React from 'react'
-import { Routes, Route } from 'react-router-dom';
-import HomePage from './pages/HomePage'
+import React from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
+import HomePage from './pages/HomePage';
+import { nestedRoutesProps } from '../../utils/moduleRouteUtils';
 
 const HomeRoutes = () => {
+  const location = useLocation();
+
   return (
     <div>
-      <Routes>
-        <Route path="/*" element={< HomePage />} />
+      <Routes {...nestedRoutesProps(location)}>
+        <Route path="*" element={<HomePage />} />
       </Routes>
     </div>
-  )
-}
+  );
+};
 
-export default HomeRoutes
+export default HomeRoutes;

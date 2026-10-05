@@ -1,5 +1,32 @@
 import axiosInstance from './axiosInstance';
 
+export const getLoanStockDailyLedger = async (filters = {}) => {
+  try {
+    const response = await axiosInstance.get('/stock/loan-stock-ledger', { params: filters });
+    return response.data?.data ?? response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getInterestDailyLedger = async (filters = {}) => {
+  try {
+    const response = await axiosInstance.get('/stock/interest-ledger', { params: filters });
+    return response.data?.data ?? response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getTransferredLoanDailyLedger = async (filters = {}) => {
+  try {
+    const response = await axiosInstance.get('/stock/transferred-loan-ledger', { params: filters });
+    return response.data?.data ?? response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
 export const getStockLedger = async (filters = {}) => {
   try {
     const response = await axiosInstance.get('/stock/ledger', { params: filters });

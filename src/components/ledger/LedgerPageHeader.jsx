@@ -15,11 +15,12 @@ const LedgerPageHeader = ({
   onFirmChange,
   firms = [],
   children,
+  showDateRange = true,
 }) => {
   const dateRef = useRef(null);
 
   useEffect(() => {
-    if (!dateRef.current) return;
+    if (!showDateRange || !dateRef.current) return;
 
     const { fyStart, fyEnd } = getFinancialYearMoments();
 
@@ -59,20 +60,24 @@ const LedgerPageHeader = ({
     return () => {
       $(dateInput).data('daterangepicker')?.remove();
     };
-  }, [startDate, endDate, onDateRangeChange]);
+  }, [startDate, endDate, onDateRangeChange, showDateRange]);
 
   return (
     <div className="row align-items-center mt-2">
-      <div className="col-md-3 col-12 mt-2">
-        <input
-          type="text"
-          className="form-control border-dark text-center"
-          placeholder="Select Date Range"
-          ref={dateRef}
-          readOnly
-        />
-      </div>
-      <div className="col-md-6 mt-2 text-center">
+      {showDateRange ? (
+        <div className="col-md-3 col-12 mt-2">
+          <input
+            type="text"
+            className="form-control border-dark text-center"
+            placeholder="Select Date Range"
+            ref={dateRef}
+            readOnly
+          />
+        </div>
+      ) : null}
+      <div
+        className={`${showDateRange ? 'col-md-6' : 'col-md-9'} col-12 mt-2 text-center`}
+      >
         <h3 className="text-brown fw-bold mb-0 responsive-text">
           <i className={`bi ${iconClass} me-2 responsive-text`}></i>
           {title}

@@ -5,37 +5,13 @@ import { getUsers, deleteUser } from "../../api/userApi";
 import { setSelectedUser } from "../../store/slices/userSlice";
 import { toast } from "react-toastify";
 import { ConfirmAlert } from "../common/ConfirmAlert";
-import { getCustomerFirmName } from "../../utils/customerFormatters";
 import UserGridContent from "./UserGridContent";
 import UserListContent from "./UserListContent";
+import { buildCustomerListColumns } from "./customerListColumns";
 import usePermissions from "../../hooks/usePermissions";
 import PermissionGate from "../common/PermissionGate";
 import "../../css/DataTable.css";
-const baseColumns = [
-  {
-    key: "user_unique_code",
-    title: "Unique Code",
-    orderable: true,
-    searchable: true,
-    render: (data, type, row) => row?.user_unique_code || row?.user_id,
-  },
-  { key: "user_first_name", title: "First Name", orderable: true, searchable: true },
-  { key: "user_last_name", title: "Last Name", orderable: true, searchable: true },
-  { key: "user_father_name", title: "Father Name", orderable: true, searchable: true },
-  { key: "user_mobile_no", title: "Mobile No", orderable: true, searchable: true },
-  { key: "user_gender", title: "Gender", orderable: true, searchable: true },
-  { key: "user_city", title: "City", orderable: true, searchable: true },
-  { key: "user_add_date", title: "Date", orderable: true, searchable: true, dateFilter: true },
-];
-
-const firmColumn = {
-  key: "firm_name",
-  title: "Firm",
-  orderable: true,
-  searchable: true,
-  cardCorner: true,
-  render: (val, type, row) => getCustomerFirmName(row) || "—",
-};
+import "../../css/CustomerList.css";
 
 const CustomerBrowse = ({ initialView = "grid" }) => {
   const navigate = useNavigate();
@@ -82,10 +58,10 @@ const CustomerBrowse = ({ initialView = "grid" }) => {
 
   const showFirmBadge = selectedFirmId === "all";
 
-  const columns = useMemo(() => {
-    if (!showFirmBadge) return baseColumns;
-    return [baseColumns[0], firmColumn, ...baseColumns.slice(1)];
-  }, [showFirmBadge]);
+  const columns = useMemo(
+    () => buildCustomerListColumns({ includeFirm: showFirmBadge }),
+    [showFirmBadge]
+  );
 
   const handleGridDelete = async (user) => {
     if (!canDelete) {
@@ -132,7 +108,9 @@ const CustomerBrowse = ({ initialView = "grid" }) => {
       toast.error("You do not have permission to edit customers");
       return;
     }
-    navigate(`/user/edit/${rowData.user_uuid}`);
+    navigate(`/user/edit/${rowData.user_uuid}`, {
+      state: { returnTo: viewMode === 'list' ? '/user/list' : '/user/grid' },
+    });
   };
 
   const toggleView = () => {

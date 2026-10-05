@@ -737,6 +737,43 @@ body {
     }
 }
 
+/* ========== Customer home dashboard (lists + stats) ========== */
+.app-module-panel:has(.user-home-dashboard) {
+    min-height: 0;
+    flex: 0 1 auto;
+}
+
+.user-home-dashboard .user-home-lists {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+.user-home-dashboard .user-home-list-panel {
+    margin-bottom: 0 !important;
+}
+
+.user-home-dashboard .user-home-list-panel h5 {
+    margin-bottom: 0.5rem !important;
+}
+
+.user-home-dashboard .user-home-list-panel .table-wrapper {
+    min-height: 0;
+}
+
+.user-home-dashboard .user-home-mobile {
+    margin-top: 0.5rem;
+}
+
+.user-home-dashboard .user-home-mobile-panel {
+    margin-bottom: 0.75rem;
+}
+
+.user-home-dashboard .user-home-mobile-panel:last-child {
+    margin-bottom: 0;
+}
+
 /* ========== User Home mobile lists ========== */
 .user-home-mobile {
     margin-top: 4px;

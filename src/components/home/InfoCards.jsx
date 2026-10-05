@@ -24,7 +24,7 @@ const InfoCards = ({ cards, loading }) => {
         iconBgClass="bg-primary-subtle"
       />
       <InfoCard
-        title="Total Users"
+        title="Total Customers"
         value={display(cards?.totalUsers)}
         icon="bi-people-fill"
         colorClass="text-info"

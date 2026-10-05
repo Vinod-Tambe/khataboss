@@ -135,7 +135,7 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
 
             const res = await createUser(data);
             const createdUser = res.data || res.user || res;
-            toast.success(res.message || 'User created successfully');
+            toast.success(res.message || 'Customer created successfully');
 
             if (action === 'submit') {
                 // Only submit — keep modal open, no redirect
@@ -178,7 +178,7 @@ const QuickAddUserModal = ({ show, onClose, firms = [], selectedFirmId }) => {
             <CommonModal
                 show={show}
                 onHide={onClose}
-                title="Quick Add User"
+                title="Quick Add Customer"
                 size="lg"
             >
                 <form onSubmit={(e) => { e.preventDefault(); handleSubmit('submit'); }} className="p-3">

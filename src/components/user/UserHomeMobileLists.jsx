@@ -188,6 +188,7 @@ const UserHomeMobileLists = ({
                   items={[
                     { label: "Status", node: <StatusBadge status={row.status} /> },
                     { label: "Type", value: row.type },
+                    { label: "Final Weight", value: row.finalWeight ?? "-" },
                     { label: "Start Date", value: row.startDate },
                     { label: "End Date", value: row.endDate },
                     { label: "T.Period", value: row.timePeriod },

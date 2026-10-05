@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
+import { nestedRoutesProps } from '../utils/moduleRouteUtils';
 import SubscriptionExpiryLoginModal from '../components/common/SubscriptionExpiryLoginModal';
 import IdleSessionGuard from '../components/common/IdleSessionGuard';
 import {
@@ -42,6 +43,7 @@ import { KeyboardShortcutsProvider } from '../context/KeyboardShortcutsContext';
 import AppKeyboardShortcutsHost from '../components/common/AppKeyboardShortcutsHost';
 
 const MainRoutes = () => {
+  const location = useLocation();
   const [loginExpiryNotice, setLoginExpiryNotice] = useState(null);
 
   useEffect(() => {
@@ -50,6 +52,12 @@ const MainRoutes = () => {
       setLoginExpiryNotice(notice);
     }
   }, []);
+
+  useEffect(() => {
+    const main = document.querySelector('.content-area');
+    if (main) main.scrollTop = 0;
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   const handleExpiryModalContinue = () => {
     clearSubscriptionExpiryLoginNotice();
@@ -72,7 +80,7 @@ const MainRoutes = () => {
         <Sidebar />
         <main className="content-area mt-0 mt-md-3 d-flex flex-column" style={{ minHeight: 'calc(100vh - 56px)' }}>
           <div className="container-fluid flex-grow-1 pb-3 pb-md-4 module-container">
-            <Routes>
+            <Routes {...nestedRoutesProps(location)}>
               <Route
                 path="/firm/*"
                 element={
@@ -100,7 +108,7 @@ const MainRoutes = () => {
               <Route
                 path="/account/*"
                 element={
-                  <PermissionRoute anyOf={["account.view", "account.create", "account.edit", "account.transfer"]}>
+                  <PermissionRoute anyOf={["account.view", "account.create", "account.edit", "expense.view", "expense.create", "account.transfer"]}>
                     <AccountRoutes />
                   </PermissionRoute>
                 }
@@ -124,7 +132,7 @@ const MainRoutes = () => {
               <Route
                 path="/stock/details/:uuid"
                 element={
-                  <PermissionRoute permission="loan.view">
+                  <PermissionRoute anyOf={["stock.view", "loan.view"]}>
                     <StockDetailsPage />
                   </PermissionRoute>
                 }
@@ -132,7 +140,7 @@ const MainRoutes = () => {
               <Route
                 path="/stock/*"
                 element={
-                  <PermissionRoute permission="loan.view">
+                  <PermissionRoute anyOf={["stock.view", "loan.view"]}>
                     <StockRoutes />
                   </PermissionRoute>
                 }

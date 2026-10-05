@@ -32,6 +32,7 @@ import {
   FiZap,
   FiArrowUpRight,
   FiRepeat,
+  FiPercent,
   FiUserCheck,
   FiPieChart,
   FiLayers,
@@ -39,6 +40,7 @@ import {
   FiEdit,
   FiPackage,
   FiLifeBuoy,
+  FiTrash2,
 } from "react-icons/fi";
 import { FaBook, FaBalanceScale } from "react-icons/fa";
 import AppBrandLogo from "../components/common/AppBrandLogo";
@@ -132,19 +134,19 @@ const Sidebar = () => {
         id: "personal-expenses",
         label: "Expenses",
         icon: <FiRepeat />,
-        anyOf: ["account.view", "account.transfer"],
+        anyOf: ["expense.view", "expense.create", "account.view", "account.transfer"],
         subItems: [
           {
             label: "Add Expense",
             path: "/account/transfer/add",
             icon: <FiPlusCircle />,
-            permission: "account.transfer",
+            anyOf: ["expense.create", "account.transfer"],
           },
           {
             label: "Expense List",
             path: "/account/transfer/list",
             icon: <FiList />,
-            permission: "account.view",
+            anyOf: ["expense.view", "account.view", "account.transfer"],
           },
         ],
       },
@@ -156,6 +158,7 @@ const Sidebar = () => {
         subItems: [
           { label: "Add Customer", path: "/user/add", icon: <FiUserPlus />, permission: "user.create" },
           { label: "All Customer", path: "/user/grid", icon: <FiUsers />, permission: "user.view" },
+          { label: "Deleted Customer List", path: "/user/deleted-list", icon: <FiTrash2 />, permission: "user.view" },
           { label: "Auction Customer List", path: "/user/auction-list", icon: <FiAward />, permission: "loan.auction" },
         ],
       },
@@ -179,6 +182,7 @@ const Sidebar = () => {
         permission: "loan.view",
         subItems: [
           { label: "Active Loan List", path: "/loan/active-list", icon: <FiZap />, permission: "loan.view" },
+          { label: "Pending Interest List", path: "/loan/pending-interest-list", icon: <FiClock />, permission: "loan.view" },
           { label: "Release Loan List", path: "/loan/release-list", icon: <FiArrowUpRight />, permission: "loan.release" },
           { label: "Auction Loan List", path: "/loan/auction-list", icon: <FiAward />, permission: "loan.auction" },
           { label: "Transfer Loan List", path: "/loan/transfer-list", icon: <FiRepeat />, permission: "loan.transfer" },
@@ -217,7 +221,7 @@ const Sidebar = () => {
         label: "Stocks",
         icon: <FiPackage />,
         path: "/stock/grid",
-        permission: "loan.view",
+        anyOf: ["stock.view", "loan.view"],
         activePathPrefix: "/stock",
       },
       {
@@ -227,6 +231,9 @@ const Sidebar = () => {
         anyOf: ["loan.view", "account.view"],
         subItems: [
           { label: "Loan Ledger", path: "/ledger/loan", icon: <FiFileText />, permission: "loan.view" },
+          { label: "Loan Stock Ledger", path: "/ledger/loan-stock", icon: <FiBook />, permission: "loan.view" },
+          { label: "Transferred Loan Ledger", path: "/ledger/transferred-loan", icon: <FiRepeat />, permission: "loan.view" },
+          { label: "Interest Ledger", path: "/ledger/interest", icon: <FiPercent />, permission: "loan.view" },
           { label: "Loan Item", path: "/ledger/loan-item", icon: <FiPackage />, permission: "loan.view" },
         ],
       },

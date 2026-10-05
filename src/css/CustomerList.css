@@ -1,0 +1,35 @@
+.update-customer-header {
+  width: 100%;
+}
+
+.update-customer-header .update-customer-audit .badge {
+  font-size: 0.78rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .update-customer-header {
+    flex-wrap: nowrap;
+  }
+}
+
+/* Customer normal list — wide table, all columns scroll horizontally */
+.customer-browse-list .table-wrapper table.dynamic-data-table {
+  min-width: 3200px;
+}
+
+.customer-browse-list .table-wrapper td,
+.customer-browse-list .table-wrapper th {
+  white-space: nowrap;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.customer-browse-list .table-wrapper td:hover,
+.customer-browse-list .table-wrapper th:hover {
+  overflow: visible;
+  white-space: normal;
+  word-break: break-word;
+}

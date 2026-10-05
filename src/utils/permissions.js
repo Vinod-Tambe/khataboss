@@ -10,9 +10,22 @@ export const isOwner = (user) => {
 const resolvePermissionKeys = (user) =>
   Array.isArray(user?.permissions) ? user.permissions : [];
 
+/** Legacy keys that still grant newer module permissions. */
+const PERMISSION_ALIASES = {
+  "expense.view": ["account.view", "account.transfer"],
+  "expense.create": ["account.transfer"],
+  "stock.view": ["loan.view"],
+};
+
+const expandPermissionKey = (permissionKey) => {
+  const aliases = PERMISSION_ALIASES[permissionKey] || [];
+  return [permissionKey, ...aliases];
+};
+
 export const hasPermission = (user, permissionKey) => {
   if (!permissionKey) return true;
-  return resolvePermissionKeys(user).includes(permissionKey);
+  const perms = resolvePermissionKeys(user);
+  return expandPermissionKey(permissionKey).some((key) => perms.includes(key));
 };
 
 export const hasAnyPermission = (user, keys = []) => {

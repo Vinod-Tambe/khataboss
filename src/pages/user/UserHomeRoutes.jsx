@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route, Link, useNavigate } from "react-router-dom";
+import { Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import UserHome from "../../components/user/UserHome";
 import AddLoan from "../../components/loan/AddLoan";
@@ -21,6 +21,7 @@ import { resolveImageUrl } from "../../utils/imageHelpers";
 import usePermissions from "../../hooks/usePermissions";
 import PermissionRoute from "../../routes/PermissionRoute";
 import { toast } from "react-toastify";
+import { nestedRoutesProps } from "../../utils/moduleRouteUtils";
 
 const BLOCK_INFO_MAX_CHARS = 40;
 
@@ -69,6 +70,7 @@ const CustomerPhoneDisplay = ({ user, className = "text-muted small text-truncat
 
 const UserHomeRoutes = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { selectedUser } = useSelector((state) => state.user);
   const { can } = usePermissions();
   const canEditCustomer = can("user.edit");
@@ -115,7 +117,7 @@ const UserHomeRoutes = () => {
       `Are you sure you want to update this customer: ${user_first_name} ${user_last_name}?`
     );
     if (isConfirmed) {
-      navigate(`/user/edit/${user_uuid}`);
+      navigate(`/user/edit/${user_uuid}`, { state: { returnTo: '/user/home' } });
     }
   };
 
@@ -369,25 +371,25 @@ const UserHomeRoutes = () => {
       </div>
       <div className="card p-3 pt-2 shadow-sm app-module-panel">
         {/* ================= ROUTES ================= */}
-        <Routes>
-          <Route path="/*" element={<UserHome />} />
-          <Route path="/loan-info" element={<PermissionRoute permission="loan.view"><LoanInfo /></PermissionRoute>} />
-          <Route path="/add-loan" element={<PermissionRoute permission="loan.create"><AddLoan /></PermissionRoute>} />
-          <Route path="/edit-loan/:id" element={<PermissionRoute permission="loan.edit"><UpdateLoan /></PermissionRoute>} />
-          <Route path="/add-finance" element={<PermissionRoute permission="finance.create"><AddFinance /></PermissionRoute>} />
-          <Route path="/edit-finance/:id" element={<PermissionRoute permission="finance.edit"><UpdateFinance /></PermissionRoute>} />
-          <Route path="/active-finance" element={<PermissionRoute permission="finance.view"><ListFinance status="ACTIVE" /></PermissionRoute>} />
-          <Route path="/completed-finance" element={<PermissionRoute permission="finance.view"><ListFinance status="COMPLETED" /></PermissionRoute>} />
-          <Route path="/close-finance" element={<PermissionRoute permission="finance.view"><ListFinance status="CLOSED" /></PermissionRoute>} />
-          <Route path="/all-finance" element={<PermissionRoute permission="finance.view"><ListFinance status="ALL" /></PermissionRoute>} />
-          <Route path="/finance" element={<PermissionRoute permission="finance.view"><Finance /></PermissionRoute>} />
-
-          <Route path="/active-loan" element={<PermissionRoute permission="loan.view"><ListLoan status="ACTIVE" /></PermissionRoute>} />
-          <Route path="/release-loan" element={<PermissionRoute permission="loan.view"><ListLoan status="RELEASED" /></PermissionRoute>} />
-          <Route path="/auction-loan" element={<PermissionRoute permission="loan.auction"><AuctionLoanList /></PermissionRoute>} />
-          <Route path="/transfer-loan" element={<PermissionRoute permission="loan.transfer"><ListLoan status="TRANSFERRED" /></PermissionRoute>} />
-          <Route path="/close-loan" element={<PermissionRoute permission="loan.view"><ListLoan status="CLOSED" /></PermissionRoute>} />
-          <Route path="/all-loan" element={<PermissionRoute permission="loan.view"><ListLoan status="ALL" /></PermissionRoute>} />
+        <Routes {...nestedRoutesProps(location)}>
+          <Route index element={<UserHome />} />
+          <Route path="loan-info" element={<PermissionRoute permission="loan.view"><LoanInfo /></PermissionRoute>} />
+          <Route path="add-loan" element={<PermissionRoute permission="loan.create"><AddLoan /></PermissionRoute>} />
+          <Route path="edit-loan/:id" element={<PermissionRoute permission="loan.edit"><UpdateLoan /></PermissionRoute>} />
+          <Route path="add-finance" element={<PermissionRoute permission="finance.create"><AddFinance /></PermissionRoute>} />
+          <Route path="edit-finance/:id" element={<PermissionRoute permission="finance.edit"><UpdateFinance /></PermissionRoute>} />
+          <Route path="active-finance" element={<PermissionRoute permission="finance.view"><ListFinance status="ACTIVE" /></PermissionRoute>} />
+          <Route path="completed-finance" element={<PermissionRoute permission="finance.view"><ListFinance status="COMPLETED" /></PermissionRoute>} />
+          <Route path="close-finance" element={<PermissionRoute permission="finance.view"><ListFinance status="CLOSED" /></PermissionRoute>} />
+          <Route path="all-finance" element={<PermissionRoute permission="finance.view"><ListFinance status="ALL" /></PermissionRoute>} />
+          <Route path="finance" element={<PermissionRoute permission="finance.view"><Finance /></PermissionRoute>} />
+          <Route path="active-loan" element={<PermissionRoute permission="loan.view"><ListLoan status="ACTIVE" /></PermissionRoute>} />
+          <Route path="release-loan" element={<PermissionRoute permission="loan.view"><ListLoan status="RELEASED" /></PermissionRoute>} />
+          <Route path="auction-loan" element={<PermissionRoute permission="loan.auction"><AuctionLoanList /></PermissionRoute>} />
+          <Route path="transfer-loan" element={<PermissionRoute permission="loan.transfer"><ListLoan status="TRANSFERRED" /></PermissionRoute>} />
+          <Route path="close-loan" element={<PermissionRoute permission="loan.view"><ListLoan status="CLOSED" /></PermissionRoute>} />
+          <Route path="all-loan" element={<PermissionRoute permission="loan.view"><ListLoan status="ALL" /></PermissionRoute>} />
+          <Route path="*" element={<UserHome />} />
         </Routes>
 
       </div>

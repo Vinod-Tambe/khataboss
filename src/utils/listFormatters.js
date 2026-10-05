@@ -1,5 +1,6 @@
 import moment from "moment";
 import { formatTimePeriod } from "./formatTimePeriod";
+import { formatCustomerListName } from "./customerFormatters";
 
 export const formatListAmt = (value) =>
   Number(value || 0).toLocaleString(undefined, {
@@ -192,6 +193,45 @@ export const getLoanListMetrics = (loan) => {
 
 export const getLoanPrincipalAmount = (loan) => getLoanListMetrics(loan).principal;
 
+export const getLoanStockItems = (loan) => {
+  if (!loan) return [];
+  const candidates = [loan.items, loan.stocks, loan.stock_items];
+  for (const list of candidates) {
+    if (Array.isArray(list) && list.length > 0) return list;
+  }
+  return Array.isArray(loan.items) ? loan.items : [];
+};
+
+/** Secured loans: sum FN WT per stock line; falls back to NT/GS when fine weight is missing. */
+export const getLoanFinalWeightTotal = (loan) => {
+  if (String(loan?.girv_type || "").toLowerCase() !== "secured") return null;
+  if (loan?.total_fine_weight != null && loan.total_fine_weight !== "") {
+    const fromApi = Number(loan.total_fine_weight);
+    if (!Number.isNaN(fromApi)) return fromApi;
+  }
+  const items = getLoanStockItems(loan);
+  if (!items.length) return 0;
+  const total = items.reduce((sum, item) => {
+    const fine = parseFloat(item.st_fine_weight);
+    if (!Number.isNaN(fine) && fine > 0) return sum + fine;
+    const nt = parseFloat(item.st_nt_weight);
+    if (!Number.isNaN(nt) && nt > 0) return sum + nt;
+    return sum + (parseFloat(item.st_gs_weight) || 0);
+  }, 0);
+  return parseFloat(total.toFixed(3));
+};
+
+export const formatLoanFinalWeightDisplay = (loan, weightValue) => {
+  const num = weightValue ?? getLoanFinalWeightTotal(loan);
+  if (num == null) return "-";
+  const items = getLoanStockItems(loan);
+  const unit =
+    items.find((i) => i.st_nt_type)?.st_nt_type ||
+    items.find((i) => i.st_gs_type)?.st_gs_type ||
+    "GM";
+  return `${Number(num).toFixed(3)} ${unit}`;
+};
+
 export const formatProfitLossHtml = (value) => {
   if (value == null || value === "") return "-";
   const num = Number(value);
@@ -247,9 +287,22 @@ export const normalizeFinanceListRow = (finance) => {
 export const normalizeLoanListRow = (loan) => {
   if (!loan) return loan;
   const metrics = getLoanListMetrics(loan);
-  const customerName = loan.user
-    ? `${loan.user.user_first_name || ""} ${loan.user.user_last_name || ""}`.trim()
-    : "";
+  const summary = loan.interest_summary;
+  const interestReceived =
+    summary != null
+      ? parseFloat(
+          (
+            (parseFloat(summary.totalDepositsInterest) || 0) +
+            (parseFloat(summary.totalReleasesInterest) || 0)
+          ).toFixed(2)
+        )
+      : null;
+  const roiType = loan.girv_roi_type || summary?.roiType || "monthly";
+  const method = loan.girv_interest_method || summary?.interestMethod || "simple";
+  const methodLabel =
+    method === "compound"
+      ? `Compound (${loan.girv_compound_freq || summary?.compoundFreq || "monthly"})`
+      : "Simple";
 
   return {
     ...loan,
@@ -262,8 +315,18 @@ export const normalizeLoanListRow = (loan) => {
     girv_total_due: metrics.finalPay,
     girv_processing_amt: metrics.processing,
     profit_loss: metrics.profitLoss,
-    girv_customer_name: customerName || "-",
+    girv_final_weight: getLoanFinalWeightTotal(loan),
+    girv_pending_interest: summary?.pendingInterest ?? null,
+    girv_accrued_interest: summary?.totalInterest ?? metrics.interest,
+    girv_interest_received: interestReceived,
+    girv_interest_method_display: methodLabel,
+    girv_roi_display:
+      loan.girv_roi != null && loan.girv_roi !== ""
+        ? `${loan.girv_roi}% (${String(roiType).toLowerCase() === "annually" ? "Annual" : "Monthly"})`
+        : "-",
+    girv_customer_name: formatCustomerListName(loan.user),
     girv_customer_mobile: loan.user?.user_mobile_no || "-",
+    girv_firm_name: loan.firm?.firm_name || "N/A",
     girv_transfer_firm_name:
       loan.transferFirm?.firm_name ||
       (loan.girv_transfer_firm_id ? `Firm #${loan.girv_transfer_firm_id}` : "-"),

@@ -15,6 +15,10 @@ import {
   PERSONAL_EXPENSE_LIST_TITLE,
 } from '../../constants/personalExpense';
 import useFormNavigation from '../../hooks/useFormNavigation';
+import {
+  TRANSFER_DIRECTION,
+  getTransferDirectionUiConfig,
+} from '../../utils/transferDirection';
 
 const emptyLineRow = () => ({ acc_id: '', amt: '', remarks: '' });
 
@@ -35,12 +39,14 @@ const formatInr = (value) =>
     maximumFractionDigits: 2,
   });
 
-const TRANSFER_DIRECTION = {
-  CR_TO_DR: 'CR_TO_DR',
-  DR_TO_CR: 'DR_TO_CR',
-};
-
 const MAX_VOUCHER_NARRATION_LENGTH = 200;
+
+const DIRECTION_OPTIONS = [
+  TRANSFER_DIRECTION.CR_TO_DR,
+  TRANSFER_DIRECTION.DR_TO_CR,
+  TRANSFER_DIRECTION.CR_TO_CR,
+  TRANSFER_DIRECTION.DR_TO_DR,
+];
 
 const accountBalanceType = (acc) =>
   String(acc?.acc_balance_type || 'DR').toUpperCase() === 'CR' ? 'CR' : 'DR';
@@ -118,11 +124,18 @@ const InterAccountTransferForm = () => {
     to_rows: [emptyLineRow()],
   });
 
-  const isCrToDr = form.mtf_direction === TRANSFER_DIRECTION.CR_TO_DR;
-  const fromEntryLabel = isCrToDr ? 'CR' : 'DR';
-  const toEntryLabel = isCrToDr ? 'DR' : 'CR';
-  const topPanelClass = isCrToDr ? 'bg-red' : 'bg-green';
-  const bottomPanelClass = isCrToDr ? 'bg-green' : 'bg-red';
+  const directionUi = useMemo(
+    () => getTransferDirectionUiConfig(form.mtf_direction),
+    [form.mtf_direction]
+  );
+  const {
+    fromLabel: fromEntryLabel,
+    toLabel: toEntryLabel,
+    topPanelClass,
+    bottomPanelClass,
+    fromJournalWord,
+    toJournalWord,
+  } = directionUi;
 
   const fromAccounts = useMemo(
     () => accounts.filter((acc) => accountBalanceType(acc) === fromEntryLabel),
@@ -359,7 +372,7 @@ const InterAccountTransferForm = () => {
       <div className="col-12 mt-0">
         <h6 className="fw-bold text-uppercase small text-brown mb-2">
           <FiArrowRight className="me-1" aria-hidden />
-          Split to {toEntryLabel} accounts ({isCrToDr ? 'debit' : 'credit'})
+          Split to {toEntryLabel} accounts ({toJournalWord})
         </h6>
       </div>
       <div className="col-12">
@@ -383,7 +396,7 @@ const InterAccountTransferForm = () => {
                 {renderAccountOptions(
                   toAccounts,
                   toEntryLabel,
-                  `Select ${toEntryLabel} account (${isCrToDr ? 'debit' : 'credit'})`
+                  `Select ${toEntryLabel} account (${toJournalWord})`
                 )}
               </select>
             </div>
@@ -455,27 +468,33 @@ const InterAccountTransferForm = () => {
         <div className="flex-grow-1">
           <h4 className="fw-bold text-brown mb-1">{PERSONAL_EXPENSE_FORM_TITLE}</h4>
           <p className="text-muted small mb-0">
-            Record a personal expense by moving amount from one ledger account (CR) to payment
-            accounts (DR). Select one {fromEntryLabel} account on top, then split across{' '}
-            {toEntryLabel} accounts below.
+            Move amount from one {fromEntryLabel} account (top) to one or more {toEntryLabel}{' '}
+            accounts (below). Choose entry type (CR→DR, DR→CR, CR→CR, or DR→DR); totals must
+            match.
           </p>
         </div>
         <div className="d-flex flex-wrap align-items-center gap-2 ms-md-auto">
-          <div className="btn-group btn-group-sm" role="group" aria-label="Personal expense entry type">
-            <button
-              type="button"
-              className={`btn ${isCrToDr ? 'btn-primary' : 'btn-outline-primary border-dark bg-white'}`}
-              onClick={() => setTransferDirection(TRANSFER_DIRECTION.CR_TO_DR)}
-            >
-              CR → DR
-            </button>
-            <button
-              type="button"
-              className={`btn ${!isCrToDr ? 'btn-primary' : 'btn-outline-primary border-dark bg-white'}`}
-              onClick={() => setTransferDirection(TRANSFER_DIRECTION.DR_TO_CR)}
-            >
-              DR → CR
-            </button>
+          <div
+            className="btn-group btn-group-sm flex-wrap"
+            role="group"
+            aria-label="Personal expense entry type"
+          >
+            {DIRECTION_OPTIONS.map((dir) => {
+              const label = dir.split('_').join(' → ');
+              const active = form.mtf_direction === dir;
+              return (
+                <button
+                  key={dir}
+                  type="button"
+                  className={`btn ${
+                    active ? 'btn-primary' : 'btn-outline-primary border-dark bg-white'
+                  }`}
+                  onClick={() => setTransferDirection(dir)}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
           <Link to="/account/transfer/list" className="btn btn-outline-secondary btn-sm">
             <FiArrowLeft className="me-1" /> {PERSONAL_EXPENSE_LIST_TITLE}
@@ -556,7 +575,7 @@ const InterAccountTransferForm = () => {
           <div className={`row g-3 ${topPanelClass} p-3 pb-4`}>
             <div className="col-12">
               <h6 className="fw-bold text-uppercase small text-brown mb-2">
-                One {fromEntryLabel} account ({isCrToDr ? 'credit' : 'debit'})
+                One {fromEntryLabel} account ({fromJournalWord})
               </h6>
             </div>
             <div className="col-12 col-md-8">
@@ -572,7 +591,7 @@ const InterAccountTransferForm = () => {
                 {renderAccountOptions(
                   fromAccounts,
                   fromEntryLabel,
-                  `Select ${fromEntryLabel} account (${isCrToDr ? 'credit' : 'debit'})`
+                  `Select ${fromEntryLabel} account (${fromJournalWord})`
                 )}
               </select>
             </div>

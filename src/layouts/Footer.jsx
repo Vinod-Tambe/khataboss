@@ -48,7 +48,7 @@ const Footer = () => {
             }
           >
             <i className="bi bi-people bottom-nav-icon" aria-hidden="true"></i>
-            <span className="bottom-nav-label">Users</span>
+            <span className="bottom-nav-label">Customers</span>
           </NavLink>
 
           <NavLink

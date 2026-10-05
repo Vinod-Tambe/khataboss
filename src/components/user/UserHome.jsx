@@ -14,6 +14,7 @@ import {
   getLoanTimePeriod,
   getLoanListMetrics,
   formatProfitLossText,
+  formatLoanFinalWeightDisplay,
   getLoanPrincipalAmount,
 } from "../../utils/listFormatters";
 import "../../css/Home.css";
@@ -104,6 +105,7 @@ const UserHome = () => {
         const dynamicLoans = (latestLoans || []).slice(0, LAST_N).map((l) => {
           const startDate = l.girv_start_date ? moment(l.girv_start_date) : null;
           const metrics = getLoanListMetrics(l);
+          const isSecured = String(l.girv_type || "").toLowerCase() === "secured";
           return {
             ...l,
             id: l.girv_id,
@@ -112,7 +114,8 @@ const UserHome = () => {
             interest: metrics.interest != null ? formatAmt(metrics.interest) : "-",
             processing: metrics.processing != null ? formatAmt(metrics.processing) : "-",
             finalPay: metrics.finalPay != null ? formatAmt(metrics.finalPay) : "-",
-            profitLoss: formatProfitLossText(metrics.profitLoss),
+            finalWeight: isSecured ? formatLoanFinalWeightDisplay(l) : "-",
+            profitLoss: isSecured ? formatProfitLossText(metrics.profitLoss) : "-",
             type: l.girv_type ? String(l.girv_type).toUpperCase() : "-",
             startDate: startDate?.isValid() ? startDate.format("DD-MM-YYYY") : "-",
             endDate: getLoanEndDate(l),
@@ -212,6 +215,7 @@ const UserHome = () => {
     },
     { header: "Status", key: "status" },
     { header: "Type", key: "type" },
+    { header: "Final Weight", key: "finalWeight" },
     {
       header: "Start Date",
       key: "startDate",
@@ -287,7 +291,7 @@ const UserHome = () => {
   ];
 
   return (
-    <div className="card p-0 p-md-3 pt-2 border-0">
+    <div className="card p-0 p-md-3 pt-2 border-0 user-home-dashboard">
       {loading && (
         <div className="text-center text-muted py-2 mb-2">
           <span className="spinner-border spinner-border-sm me-2" role="status" />
@@ -360,42 +364,30 @@ const UserHome = () => {
       </div>
 
       {/* ================= TABLES (desktop) ================= */}
-      <div className="d-none d-md-block">
+      <div className="d-none d-md-block user-home-lists">
         {financeList.length > 0 && (
-          <div className="row">
-            <div className="col-12">
-              <UserHomeList
-                title="Active Finance List"
-                icon="bi-cash-stack"
-                data={financeList}
-                columns={financeColumns}
-              />
-            </div>
-          </div>
+          <UserHomeList
+            title="Active Finance List"
+            icon="bi-cash-stack"
+            data={financeList}
+            columns={financeColumns}
+          />
         )}
         {loanList.length > 0 && (
-          <div className="row">
-            <div className="col-12">
-              <UserHomeList
-                title="Active Loan List"
-                icon="bi-bank"
-                data={loanList}
-                columns={loanColumns}
-              />
-            </div>
-          </div>
+          <UserHomeList
+            title="Active Loan List"
+            icon="bi-bank"
+            data={loanList}
+            columns={loanColumns}
+          />
         )}
         {transactionList.length > 0 && (
-          <div className="row mt-2">
-            <div className="col-12">
-              <UserHomeList
-                title="Last Transaction"
-                icon="bi-arrow-left-right"
-                data={transactionList}
-                columns={transactionColumns}
-              />
-            </div>
-          </div>
+          <UserHomeList
+            title="Last Transaction"
+            icon="bi-arrow-left-right"
+            data={transactionList}
+            columns={transactionColumns}
+          />
         )}
       </div>
 

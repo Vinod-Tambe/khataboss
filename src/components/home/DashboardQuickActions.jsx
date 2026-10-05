@@ -28,7 +28,7 @@ const DashboardQuickActions = ({ firms, selectedFirmId }) => {
   const handleItemClick = (item) => {
     if (!ensurePermission(item)) return;
     if (item.modalKey === 'calculator') setShowCalculatorModal(true);
-    else if (item.title === 'Add User') setShowUserModal(true);
+    else if (item.title === 'Add Customer') setShowUserModal(true);
     else if (item.title === 'Finance Collection') setShowFinanceModal(true);
     else if (item.title === 'Loan Collection') setShowLoanModal(true);
   };
