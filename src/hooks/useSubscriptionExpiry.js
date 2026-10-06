@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCurrentUser } from '../store/slices/authSlice';
 import {
@@ -26,17 +26,32 @@ const useSubscriptionExpiry = () => {
     dispatch(fetchCurrentUser());
   }, [dispatch, token, user]);
 
+  const lastProfileRefreshRef = useRef(0);
+
   useEffect(() => {
     if (!token) return;
 
-    const refreshProfile = () => dispatch(fetchCurrentUser());
-    const interval = setInterval(refreshProfile, PROFILE_REFRESH_MS);
-    const onFocus = () => refreshProfile();
+    const refreshProfileThrottled = () => {
+      const now = Date.now();
+      if (now - lastProfileRefreshRef.current < PROFILE_REFRESH_MS) return;
+      lastProfileRefreshRef.current = now;
+      dispatch(fetchCurrentUser());
+    };
 
-    window.addEventListener('focus', onFocus);
+    const interval = setInterval(() => {
+      lastProfileRefreshRef.current = Date.now();
+      dispatch(fetchCurrentUser());
+    }, PROFILE_REFRESH_MS);
+
+    const onVisibility = () => {
+      if (document.visibilityState !== 'visible') return;
+      refreshProfileThrottled();
+    };
+
+    document.addEventListener('visibilitychange', onVisibility);
     return () => {
       clearInterval(interval);
-      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, [dispatch, token]);
 

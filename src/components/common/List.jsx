@@ -60,6 +60,22 @@ const List = ({
   const tableRef = useRef(null);
   const dateRef = useRef(null);
   const onFilteredRowsChangeRef = useRef(onFilteredRowsChange);
+  const actionHandlersRef = useRef({});
+  actionHandlersRef.current = {
+    onView,
+    onEdit,
+    onDelete,
+    onPrint,
+    onDownload,
+    onRestore,
+    onCustomerHome,
+    hasEdit,
+    hasDelete,
+    hasPrint,
+    hasView,
+    hasDownload,
+    hasRestore,
+  };
   const [dateRange, setDateRange] = useState({ startDate: null, endDate: null });
   const [tableInstance, setTableInstance] = useState(null);
   const [confirmState, setConfirmState] = useState({ show: false, rowData: null });
@@ -214,8 +230,11 @@ const List = ({
     });
 
 
+    const hasAnyAction =
+      hasEdit || hasDelete || hasPrint || hasView || hasDownload || hasRestore;
+
     // Action column
-    if (hasEdit || hasDelete || hasPrint || hasView || hasDownload || hasRestore) {
+    if (hasAnyAction) {
       dtColumns.push({
         data: null,
         title: "Action",
@@ -225,14 +244,15 @@ const List = ({
         defaultContent: "",
         className: "text-center",
         render: function (data, type, row) {
+          const flags = actionHandlersRef.current;
           let buttons = "";
           const rowId = row.id || row.girv_id || row.girv_uuid || row.firm_id || row.user_id || row.rate_id || row.rate_uuid || row.purity_uuid || row.purity_id || row.backup_id || row.backup_uuid || "";
-          const showView = typeof hasView === "function" ? hasView(row) : hasView;
-          const showEdit = typeof hasEdit === "function" ? hasEdit(row) : hasEdit;
-          const showDelete = typeof hasDelete === "function" ? hasDelete(row) : hasDelete;
-          const showPrint = typeof hasPrint === "function" ? hasPrint(row) : hasPrint;
-          const showDownload = typeof hasDownload === "function" ? hasDownload(row) : hasDownload;
-          const showRestore = typeof hasRestore === "function" ? hasRestore(row) : hasRestore;
+          const showView = typeof flags.hasView === "function" ? flags.hasView(row) : flags.hasView;
+          const showEdit = typeof flags.hasEdit === "function" ? flags.hasEdit(row) : flags.hasEdit;
+          const showDelete = typeof flags.hasDelete === "function" ? flags.hasDelete(row) : flags.hasDelete;
+          const showPrint = typeof flags.hasPrint === "function" ? flags.hasPrint(row) : flags.hasPrint;
+          const showDownload = typeof flags.hasDownload === "function" ? flags.hasDownload(row) : flags.hasDownload;
+          const showRestore = typeof flags.hasRestore === "function" ? flags.hasRestore(row) : flags.hasRestore;
 
           if (showView) {
             buttons += `<button class="btn btn-sm btn-yellow pt-0 mt-0 pb-0 mb-0 view-btn me-1" data-id="${rowId}" title="View"><i class="bi bi-eye text-dark"></i></button>`;
@@ -439,76 +459,75 @@ const List = ({
             $("th span.title-text").show();
           });
 
-          // Action handlers
-          if (onView) {
-            $(tableRef.current).on("click", ".view-btn", function (e) {
-              e.stopPropagation();
-              let tr = $(this).closest("tr");
-              if (tr.hasClass("child")) tr = tr.prev();
-              const rowData = api.row(tr).data();
-              if (rowData) onView(rowData);
-            });
-          }
+          // Action handlers (refs — avoid rebuilding table when parent re-renders)
+          $(tableRef.current).on("click", ".view-btn", function (e) {
+            e.stopPropagation();
+            const handler = actionHandlersRef.current.onView;
+            if (!handler) return;
+            let tr = $(this).closest("tr");
+            if (tr.hasClass("child")) tr = tr.prev();
+            const rowData = api.row(tr).data();
+            if (rowData) handler(rowData);
+          });
 
-          if (onDownload) {
-            $(tableRef.current).on("click", ".download-btn", function (e) {
-              e.stopPropagation();
-              let tr = $(this).closest("tr");
-              if (tr.hasClass("child")) tr = tr.prev();
-              const rowData = api.row(tr).data();
-              if (rowData) onDownload(rowData);
-            });
-          }
+          $(tableRef.current).on("click", ".download-btn", function (e) {
+            e.stopPropagation();
+            const handler = actionHandlersRef.current.onDownload;
+            if (!handler) return;
+            let tr = $(this).closest("tr");
+            if (tr.hasClass("child")) tr = tr.prev();
+            const rowData = api.row(tr).data();
+            if (rowData) handler(rowData);
+          });
 
-          if (onRestore) {
-            $(tableRef.current).on("click", ".restore-btn", function (e) {
-              e.stopPropagation();
-              let tr = $(this).closest("tr");
-              if (tr.hasClass("child")) tr = tr.prev();
-              const rowData = api.row(tr).data();
-              if (rowData) onRestore(rowData);
-            });
-          }
+          $(tableRef.current).on("click", ".restore-btn", function (e) {
+            e.stopPropagation();
+            const handler = actionHandlersRef.current.onRestore;
+            if (!handler) return;
+            let tr = $(this).closest("tr");
+            if (tr.hasClass("child")) tr = tr.prev();
+            const rowData = api.row(tr).data();
+            if (rowData) handler(rowData);
+          });
 
-          if (onEdit) {
-            $(tableRef.current).on("click", ".edit-btn", function (e) {
-              e.stopPropagation();
-              let tr = $(this).closest("tr");
-              if (tr.hasClass("child")) tr = tr.prev();
-              const rowData = api.row(tr).data();
-              if (rowData) onEdit(rowData);
-            });
-          }
+          $(tableRef.current).on("click", ".edit-btn", function (e) {
+            e.stopPropagation();
+            const handler = actionHandlersRef.current.onEdit;
+            if (!handler) return;
+            let tr = $(this).closest("tr");
+            if (tr.hasClass("child")) tr = tr.prev();
+            const rowData = api.row(tr).data();
+            if (rowData) handler(rowData);
+          });
 
-          if (onDelete) {
-            $(tableRef.current).on("click", ".delete-btn", function (e) {
-              e.stopPropagation();
-              let tr = $(this).closest("tr");
-              if (tr.hasClass("child")) tr = tr.prev();
-              const rowData = api.row(tr).data();
-              if (rowData) setConfirmState({ show: true, rowData });
-            });
-          }
+          $(tableRef.current).on("click", ".delete-btn", function (e) {
+            e.stopPropagation();
+            if (!actionHandlersRef.current.onDelete) return;
+            let tr = $(this).closest("tr");
+            if (tr.hasClass("child")) tr = tr.prev();
+            const rowData = api.row(tr).data();
+            if (rowData) setConfirmState({ show: true, rowData });
+          });
 
-          if (onPrint) {
-            $(tableRef.current).on("click", ".print-btn", function (e) {
-              e.stopPropagation();
-              let tr = $(this).closest("tr");
-              if (tr.hasClass("child")) tr = tr.prev();
-              const rowData = api.row(tr).data();
-              if (rowData) onPrint(rowData);
-            });
-          }
+          $(tableRef.current).on("click", ".print-btn", function (e) {
+            e.stopPropagation();
+            const handler = actionHandlersRef.current.onPrint;
+            if (!handler) return;
+            let tr = $(this).closest("tr");
+            if (tr.hasClass("child")) tr = tr.prev();
+            const rowData = api.row(tr).data();
+            if (rowData) handler(rowData);
+          });
 
-          if (onCustomerHome) {
-            $(tableRef.current).on("click", ".customer-home-btn", function (e) {
-              e.stopPropagation();
-              let tr = $(this).closest("tr");
-              if (tr.hasClass("child")) tr = tr.prev();
-              const rowData = api.row(tr).data();
-              if (rowData) onCustomerHome(rowData);
-            });
-          }
+          $(tableRef.current).on("click", ".customer-home-btn", function (e) {
+            e.stopPropagation();
+            const handler = actionHandlersRef.current.onCustomerHome;
+            if (!handler) return;
+            let tr = $(this).closest("tr");
+            if (tr.hasClass("child")) tr = tr.prev();
+            const rowData = api.row(tr).data();
+            if (rowData) handler(rowData);
+          });
         },
       });
 
@@ -529,7 +548,9 @@ const List = ({
     } catch (err) {
       console.error("Error initializing DataTable:", err);
     }
-  }, [data, columns, title, onEdit, onDelete, onPrint, onView, onDownload, onRestore, onCustomerHome, hasEdit, hasDelete, hasPrint, hasView, hasDownload, hasRestore, showFooter]);
+    // Handlers / has* flags read from actionHandlersRef — omit from deps to avoid full table rebuild on parent re-render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional; see actionHandlersRef
+  }, [data, columns, title, showFooter]);
 
 
   // ─── Date Range Filter ────────────────────────────────────────

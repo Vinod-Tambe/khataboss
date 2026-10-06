@@ -112,9 +112,90 @@ const ListLoan = ({ status = "ALL", global = false }) => {
   };
 
   const isPendingInterestList = status === "PENDING_INTEREST";
-  const showCustomerColumns = global || isPendingInterestList;
+  const isTodayPendingInterestList = status === "TODAY_PENDING_INTEREST";
+  const showCustomerColumns =
+    global || isPendingInterestList || isTodayPendingInterestList;
 
   const columns = useMemo(() => {
+    if (isTodayPendingInterestList) {
+      return [
+        {
+          key: "girv_unique_code",
+          title: "Loan No",
+          searchable: true,
+          render: (data, type, row) => {
+            const value = data || row?.girv_loan_no || (row?.girv_id ? String(row.girv_id) : "");
+            if (type !== "display") return value || "-";
+            return value
+              ? `<span class="text-brown fw-bold">${value}</span>`
+              : "-";
+          },
+        },
+        {
+          key: "girv_start_date",
+          title: "Loan Date",
+          dateFilter: true,
+          render: (data) => formatListDate(data),
+        },
+        {
+          key: "girv_customer_name",
+          title: "Customer Name",
+          searchable: true,
+          customerHome: true,
+          render: (data, type, row) => {
+            const searchText = formatCustomerListName(row?.user) || data || "-";
+            if (type !== "display" && type !== "export") return searchText;
+            if (type === "export") return searchText;
+            if (!row?.user) return data || "-";
+            return `<span class="cursor-pointer customer-home-btn" title="Open customer home">${formatCustomerListNameHtml(row.user, {
+              linkClass: "text-brown fw-bold",
+            })}</span>`;
+          },
+        },
+        {
+          key: "girv_time_period",
+          title: "Loan Period",
+          searchable: true,
+          render: (data) => data || "-",
+        },
+        {
+          key: "girv_pending_interest",
+          title: "Pending Interest",
+          sum: true,
+          render: (data, type) => {
+            if (type !== "display" && type !== "export") return data ?? 0;
+            const amt = formatListAmtOrDash(data);
+            return amt === "-"
+              ? "-"
+              : `<span class="text-danger fw-bold">${amt}</span>`;
+          },
+        },
+        {
+          key: "girv_pending_interest_period_display",
+          title: "Pending Int. Period",
+          searchable: true,
+          render: (data, type, row) => {
+            const text =
+              data ||
+              row?.girv_pending_interest_period_display ||
+              "-";
+            return text;
+          },
+        },
+        {
+          key: "girv_interest_received",
+          title: "Paid Interest",
+          sum: true,
+          render: (data) => formatListAmtOrDash(data),
+        },
+        {
+          key: "girv_status",
+          title: "Loan Status",
+          render: (data) => statusBadgeHtml(data),
+        },
+      ];
+    }
+
     const cols = [
       {
         key: "girv_unique_code",
@@ -314,7 +395,7 @@ const ListLoan = ({ status = "ALL", global = false }) => {
     }
 
     return cols;
-  }, [status, isPendingInterestList, showCustomerColumns]);
+  }, [status, isPendingInterestList, isTodayPendingInterestList, showCustomerColumns]);
 
   const getTitle = () => {
     let baseTitle = "";
@@ -339,6 +420,9 @@ const ListLoan = ({ status = "ALL", global = false }) => {
         break;
       case "PENDING_INTEREST":
         baseTitle = "Pending Interest List";
+        break;
+      case "TODAY_PENDING_INTEREST":
+        baseTitle = "Today Pending Interest List";
         break;
       default:
         baseTitle = `${status} Loan List`;
@@ -374,8 +458,16 @@ const ListLoan = ({ status = "ALL", global = false }) => {
             columns={columns}
             title={getTitle()}
             primaryKey="girv_id"
-            subtitleKey={isPendingInterestList ? "girv_customer_mobile" : "girv_start_date"}
-            amountKey={isPendingInterestList ? "girv_pending_interest" : "girv_prin_amt"}
+            subtitleKey={
+              isPendingInterestList || isTodayPendingInterestList
+                ? "girv_customer_mobile"
+                : "girv_start_date"
+            }
+            amountKey={
+              isPendingInterestList || isTodayPendingInterestList
+                ? "girv_pending_interest"
+                : "girv_prin_amt"
+            }
             onView={canViewLoan ? handleView : undefined}
             onDelete={canDeleteLoan ? handleDelete : undefined}
             onEdit={canEditLoan ? handleEdit : undefined}

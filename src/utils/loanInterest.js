@@ -109,6 +109,55 @@ const toCalendarDay = (value) => {
  * Min 1 month (even same-day loan).
  * e.g. 1 month 1 day → 2 months; ₹1000 @ 1% → ₹10 + ₹10 = ₹20
  */
+const daysInCalendarMonth = (year, monthIndex) =>
+  new Date(year, monthIndex + 1, 0).getDate();
+
+/** Monthly interest due day = loan start day-of-month (clamped to month length). */
+export const isLoanInterestDueToday = (startDate, asOfDate = moment()) => {
+  const start = toCalendarDay(startDate);
+  const today = toCalendarDay(asOfDate) ?? moment().startOf('day');
+  if (!start?.isValid() || !today?.isValid()) return false;
+  const dueDay = Math.min(start.date(), daysInCalendarMonth(today.year(), today.month()));
+  return today.date() === dueDay;
+};
+
+const getInterestPeriodCounts = (data, summary, asOfDate = moment()) => {
+  const interestEndDate = resolveLoanInterestEndDate(data, asOfDate);
+  const totalPeriods = getTenureMonths(data.girv_start_date, interestEndDate);
+  const totalInterest = parseFloat(summary.totalInterest) || 0;
+  const paidInterest = parseFloat(
+    (
+      (parseFloat(summary.totalDepositsInterest) || 0) +
+      (parseFloat(summary.totalReleasesInterest) || 0) +
+      (parseFloat(summary.firstMonthInterest) || 0)
+    ).toFixed(2)
+  );
+  const pendingInterest = parseFloat(summary.pendingInterest) || 0;
+
+  let paidPeriods = 0;
+  let pendingPeriods = 0;
+
+  if (totalInterest > 0.01) {
+    paidPeriods = Math.min(
+      totalPeriods,
+      Math.floor((paidInterest / totalInterest) * totalPeriods)
+    );
+    pendingPeriods = Math.max(0, totalPeriods - paidPeriods);
+    if (pendingInterest > 0.01 && pendingPeriods < 1) {
+      pendingPeriods = 1;
+    }
+  } else if (pendingInterest > 0.01) {
+    pendingPeriods = totalPeriods;
+  }
+
+  return {
+    totalInterestPeriods: totalPeriods,
+    paidInterestPeriods: paidPeriods,
+    pendingInterestPeriods: pendingPeriods,
+    totalPaidInterest: paidInterest,
+  };
+};
+
 export const getTenureMonths = (startDate, endDate = moment()) => {
   const start = toCalendarDay(startDate);
   const end = toCalendarDay(endDate) ?? moment().startOf('day');
@@ -261,7 +310,7 @@ export const getLoanInterestSummary = (data, asOfDate = moment()) => {
   const pending = parseFloat((pendingPrincipal + pendingInterest).toFixed(2));
   const totalDueAmount = pending;
 
-  return {
+  const base = {
     originalPrincipal,
     currentTotalPrincipal,
     totalDepositsPrincipal,
@@ -280,5 +329,10 @@ export const getLoanInterestSummary = (data, asOfDate = moment()) => {
     roiType,
     interestMethod,
     compoundFreq,
+  };
+
+  return {
+    ...base,
+    ...getInterestPeriodCounts(data, base, today),
   };
 };

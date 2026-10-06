@@ -183,6 +183,7 @@ const Sidebar = () => {
         subItems: [
           { label: "Active Loan List", path: "/loan/active-list", icon: <FiZap />, permission: "loan.view" },
           { label: "Pending Interest List", path: "/loan/pending-interest-list", icon: <FiClock />, permission: "loan.view" },
+          { label: "Today Pending Interest", path: "/loan/today-pending-interest-list", icon: <FiClock />, permission: "loan.view" },
           { label: "Release Loan List", path: "/loan/release-list", icon: <FiArrowUpRight />, permission: "loan.release" },
           { label: "Auction Loan List", path: "/loan/auction-list", icon: <FiAward />, permission: "loan.auction" },
           { label: "Transfer Loan List", path: "/loan/transfer-list", icon: <FiRepeat />, permission: "loan.transfer" },

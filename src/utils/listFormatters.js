@@ -1,6 +1,7 @@
 import moment from "moment";
-import { formatTimePeriod } from "./formatTimePeriod";
+import { formatTimePeriod, toCalendarDay } from "./formatTimePeriod";
 import { formatCustomerListName } from "./customerFormatters";
+import { resolveLoanInterestEndDate } from "./loanInterest";
 
 export const formatListAmt = (value) =>
   Number(value || 0).toLocaleString(undefined, {
@@ -136,6 +137,52 @@ export const getLoanTimePeriod = (loan) => {
   }
 
   return formatTimePeriod(start, end);
+};
+
+/**
+ * Pending interest duration in the same style as loan period (e.g. "7 days", "1 month 2 days").
+ */
+export const getPendingInterestPeriodDisplay = (loan) => {
+  const summary = loan?.interest_summary;
+  const pending = parseFloat(summary?.pendingInterest) || 0;
+  if (!summary || pending <= 0.01) return "-";
+
+  const start = loan?.girv_start_date;
+  if (!start) return "-";
+
+  const end = resolveLoanInterestEndDate(loan);
+  const paid =
+    (parseFloat(summary.totalDepositsInterest) || 0) +
+    (parseFloat(summary.totalReleasesInterest) || 0) +
+    (parseFloat(summary.firstMonthInterest) || 0);
+
+  if (paid <= 0.01) {
+    return formatTimePeriod(start, end);
+  }
+
+  const startDay = toCalendarDay(start);
+  const endDay = toCalendarDay(end) ?? moment().startOf("day");
+  if (!startDay?.isValid() || !endDay?.isValid()) {
+    return formatTimePeriod(start, end);
+  }
+
+  const paidMonths = Math.max(0, parseInt(summary.paidInterestPeriods, 10) || 0);
+  let pendingStart = paidMonths > 0 ? startDay.clone().add(paidMonths, "months") : startDay;
+
+  if (paidMonths === 0 && paid > 0.01) {
+    const totalInt = parseFloat(summary.totalInterest) || 0;
+    if (totalInt > 0.01) {
+      const ratio = Math.min(1, paid / totalInt);
+      const spanMs = endDay.diff(startDay);
+      pendingStart = moment(startDay.valueOf() + spanMs * ratio).startOf("day");
+    }
+  }
+
+  if (!pendingStart.isBefore(endDay, "day")) {
+    return "1 day";
+  }
+
+  return formatTimePeriod(pendingStart, endDay);
 };
 
 /** Finance tenure from start date to today or close/update date. */
@@ -317,8 +364,13 @@ export const normalizeLoanListRow = (loan) => {
     profit_loss: metrics.profitLoss,
     girv_final_weight: getLoanFinalWeightTotal(loan),
     girv_pending_interest: summary?.pendingInterest ?? null,
+    girv_pending_interest_periods: summary?.pendingInterestPeriods ?? null,
+    girv_pending_interest_period_display: getPendingInterestPeriodDisplay(loan),
+    girv_paid_interest_periods: summary?.paidInterestPeriods ?? null,
     girv_accrued_interest: summary?.totalInterest ?? metrics.interest,
-    girv_interest_received: interestReceived,
+    girv_interest_received:
+      interestReceived ??
+      (summary?.totalPaidInterest != null ? summary.totalPaidInterest : null),
     girv_interest_method_display: methodLabel,
     girv_roi_display:
       loan.girv_roi != null && loan.girv_roi !== ""

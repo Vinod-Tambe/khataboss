@@ -12,6 +12,7 @@ const LoanRoutes = () => {
       <Route path="all-list" element={<ListLoan status="ALL" global={true} />} />
       <Route path="active-list" element={<ListLoan status="ACTIVE" global={true} />} />
       <Route path="pending-interest-list" element={<ListLoan status="PENDING_INTEREST" global={true} />} />
+      <Route path="today-pending-interest-list" element={<ListLoan status="TODAY_PENDING_INTEREST" global={true} />} />
       <Route path="release-list" element={<ListLoan status="RELEASED" global={true} />} />
       <Route path="auction-list" element={<AuctionLoanList global={true} />} />
       <Route path="transfer-list" element={<ListLoan status="TRANSFERRED" global={true} />} />
