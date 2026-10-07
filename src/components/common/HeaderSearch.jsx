@@ -1,38 +1,17 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { globalSearch } from "../../api/userApi";
 import { setSelectedUser } from "../../store/slices/userSlice";
-import { resolveImageUrl } from "../../utils/imageHelpers";
 import usePermissions from "../../hooks/usePermissions";
 import { toast } from "react-toastify";
 import {
   GLOBAL_SEARCH_INPUT_ID,
   KEYBOARD_SHORTCUT_EVENTS,
 } from "../../config/keyboardShortcuts";
-
-const getProfileImgUrl = (user) => resolveImageUrl(user?.user_profile_img) || "";
-
-const formatUserAddress = (user) => {
-  if (!user) return "";
-  const street = String(user.user_curr_address || user.user_per_address || "").trim();
-  const city = String(user.user_city || "").trim();
-  const state = String(user.user_state || "").trim();
-  const country = String(user.user_country || "").trim();
-  const pincode = String(user.user_pincode || "").trim();
-  const locality = [city, state, country].filter(Boolean).join(", ");
-  const withPin = [locality, pincode].filter(Boolean).join(" - ");
-  return [street, withPin].filter(Boolean).join(", ");
-};
-
-const formatCustomerName = (user) =>
-  `${user?.user_first_name || ""} ${user?.user_last_name || ""}`.trim() || "Customer";
-
-const formatMoney = (value) =>
-  Number(value || 0).toLocaleString("en-IN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+import HeaderSearchCustomerTable from "./HeaderSearchCustomerTable";
+import HeaderSearchLoanTable from "./HeaderSearchLoanTable";
+import HeaderSearchFinanceTable from "./HeaderSearchFinanceTable";
 
 const buildSearchItems = (payload = {}) => {
   const items = [];
@@ -87,8 +66,10 @@ const HeaderSearch = ({
   const [activeIndex, setActiveIndex] = useState(-1);
   const wrapRef = useRef(null);
   const inputRef = useRef(null);
+  const dropdownRef = useRef(null);
   const debounceRef = useRef(null);
   const requestIdRef = useRef(0);
+  const [panelLayout, setPanelLayout] = useState(null);
 
   useEffect(() => {
     const focusInput = () => {
@@ -102,13 +83,68 @@ const HeaderSearch = ({
     };
   }, []);
 
-  const resultCounts = useMemo(() => {
-    const counts = { loan: 0, finance: 0, customer: 0 };
-    items.forEach((item) => {
-      counts[item.type] += 1;
+  const loanItems = useMemo(
+    () => items.filter((item) => item.type === "loan"),
+    [items]
+  );
+
+  const financeItems = useMemo(
+    () => items.filter((item) => item.type === "finance"),
+    [items]
+  );
+
+  const customerItems = useMemo(
+    () => items.filter((item) => item.type === "customer"),
+    [items]
+  );
+
+  const usesResultPanel =
+    loanItems.length > 0 || financeItems.length > 0 || customerItems.length > 0;
+
+  const updatePanelLayout = useCallback(() => {
+    if (!usesResultPanel || !open || !wrapRef.current) {
+      setPanelLayout(null);
+      return;
+    }
+    const anchor = wrapRef.current.getBoundingClientRect();
+    const top = Math.round(anchor.bottom + 4);
+    const gutter = window.innerWidth < 768 ? 8 : 12;
+
+    const contentEl = document.querySelector(".content-area");
+    const alignToMain =
+      contentEl && window.matchMedia("(min-width: 992px)").matches;
+
+    if (alignToMain) {
+      const contentRect = contentEl.getBoundingClientRect();
+      setPanelLayout({
+        top,
+        left: Math.round(contentRect.left + gutter),
+        width: Math.max(280, Math.round(contentRect.width - gutter * 2)),
+      });
+      return;
+    }
+
+    setPanelLayout({
+      top,
+      left: gutter,
+      width: Math.max(280, Math.round(window.innerWidth - gutter * 2)),
     });
-    return counts;
-  }, [items]);
+  }, [usesResultPanel, open]);
+
+  useLayoutEffect(() => {
+    updatePanelLayout();
+  }, [updatePanelLayout, query, items.length, loading, open]);
+
+  useEffect(() => {
+    if (!open || !usesResultPanel) return undefined;
+    const onReflow = () => updatePanelLayout();
+    window.addEventListener("resize", onReflow);
+    window.addEventListener("scroll", onReflow, true);
+    return () => {
+      window.removeEventListener("resize", onReflow);
+      window.removeEventListener("scroll", onReflow, true);
+    };
+  }, [open, usesResultPanel, updatePanelLayout]);
 
   const runSearch = useCallback(
     async (value) => {
@@ -123,7 +159,7 @@ const HeaderSearch = ({
       setLoading(true);
       try {
         const firmId = selectedFirmId === "all" ? null : selectedFirmId;
-        const res = await globalSearch(q, firmId, 15);
+        const res = await globalSearch(q, firmId, 20);
         if (reqId !== requestIdRef.current) return;
         setItems(buildSearchItems(res.data || {}));
         setActiveIndex(-1);
@@ -270,161 +306,6 @@ const HeaderSearch = ({
 
   const showDropdown = open && (loading || items.length > 0 || query.trim().length > 0);
 
-  const renderCustomerItem = (item, idx) => {
-    const user = item.user;
-    const name = formatCustomerName(user);
-    const email = String(user.user_email_id || "").trim();
-    const address = formatUserAddress(user);
-    const profileImg = getProfileImgUrl(user);
-
-    return (
-      <div
-        key={item.key}
-        className={`header-search__item ${idx === activeIndex ? "is-active" : ""}`}
-      >
-        <div className="header-search__top">
-          <button
-            type="button"
-            className="header-search__main"
-            onClick={() => handleItemSelect(item)}
-            title="Open customer home"
-          >
-            <span className="header-search__avatar">
-              {profileImg ? (
-                <img
-                  src={profileImg}
-                  alt={name}
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                    const icon = e.currentTarget.nextElementSibling;
-                    if (icon) icon.hidden = false;
-                  }}
-                />
-              ) : null}
-              <i className="bi bi-person-circle" aria-hidden="true" hidden={Boolean(profileImg)}></i>
-            </span>
-            <span className="header-search__meta">
-              <span className="header-search__title-row">
-                <span className="header-search__badge is-customer">Customer</span>
-                <span className="header-search__name">{name}</span>
-                {user.user_unique_code ? (
-                  <span className="header-search__sub">· {user.user_unique_code}</span>
-                ) : user.user_id != null ? (
-                  <span className="header-search__sub">· ID: {user.user_id}</span>
-                ) : null}
-                {user.user_mobile_no ? (
-                  <span className="header-search__sub">· {user.user_mobile_no}</span>
-                ) : null}
-              </span>
-              {email ? (
-                <span className="header-search__sub header-search__contact" title={email}>
-                  {email}
-                </span>
-              ) : null}
-            </span>
-          </button>
-          <div className="header-search__actions">
-            <button type="button" className="header-search__action is-home" title="Customer Home" onClick={(e) => handleAction(e, user, "home")}>
-              <i className="bi bi-house-door-fill" aria-hidden="true"></i>
-            </button>
-            {canCreateFinance && (
-              <button type="button" className="header-search__action is-finance" title="Add Finance" onClick={(e) => handleAction(e, user, "finance")}>
-                <i className="bi bi-plus-circle-fill" aria-hidden="true"></i>
-              </button>
-            )}
-            {canCreateLoan && (
-              <button type="button" className="header-search__action is-loan" title="Add Loan" onClick={(e) => handleAction(e, user, "loan")}>
-                <i className="bi bi-bank" aria-hidden="true"></i>
-              </button>
-            )}
-            {canFinancePayment && (
-              <button type="button" className="header-search__action is-pay" title="Finance Pay" onClick={(e) => handleAction(e, user, "financePay")}>
-                <i className="bi bi-currency-rupee" aria-hidden="true"></i>
-              </button>
-            )}
-            {canLoanDeposit && (
-              <button type="button" className="header-search__action is-deposit" title="Loan Deposit" onClick={(e) => handleAction(e, user, "loanDeposit")}>
-                <i className="bi bi-safe2-fill" aria-hidden="true"></i>
-              </button>
-            )}
-          </div>
-        </div>
-        {address ? (
-          <div className="header-search__address" title={address}>
-            <i className="bi bi-geo-alt" aria-hidden="true"></i>
-            <span>{address}</span>
-          </div>
-        ) : null}
-      </div>
-    );
-  };
-
-  const renderLoanItem = (item, idx) => {
-    const loan = item.loan;
-    const user = item.user;
-    const loanId = loan.girv_unique_code || loan.girv_loan_no || `LN-${loan.girv_id}`;
-    const customerName = formatCustomerName(user);
-
-    return (
-      <button
-        key={item.key}
-        type="button"
-        className={`header-search__record ${idx === activeIndex ? "is-active" : ""}`}
-        onClick={() => handleItemSelect(item)}
-      >
-        <span className="header-search__record-icon is-loan">
-          <i className="bi bi-bank" aria-hidden="true"></i>
-        </span>
-        <span className="header-search__record-body">
-          <span className="header-search__record-title">
-            <span className="header-search__badge is-loan">Loan</span>
-            <strong>{loanId}</strong>
-            <span className="header-search__sub">· ₹{formatMoney(loan.girv_prin_amt)}</span>
-          </span>
-          <span className="header-search__record-sub">
-            {customerName}
-            {loan.girv_status ? ` · ${loan.girv_status}` : ""}
-            {loan.firm?.firm_name ? ` · ${loan.firm.firm_name}` : ""}
-          </span>
-        </span>
-        <i className="bi bi-chevron-right header-search__record-arrow" aria-hidden="true"></i>
-      </button>
-    );
-  };
-
-  const renderFinanceItem = (item, idx) => {
-    const finance = item.finance;
-    const user = item.user;
-    const financeId = finance.fin_unique_code || `FIN-${finance.fin_id}`;
-    const customerName = formatCustomerName(user);
-
-    return (
-      <button
-        key={item.key}
-        type="button"
-        className={`header-search__record ${idx === activeIndex ? "is-active" : ""}`}
-        onClick={() => handleItemSelect(item)}
-      >
-        <span className="header-search__record-icon is-finance">
-          <i className="bi bi-cash-stack" aria-hidden="true"></i>
-        </span>
-        <span className="header-search__record-body">
-          <span className="header-search__record-title">
-            <span className="header-search__badge is-finance">Finance</span>
-            <strong>{financeId}</strong>
-            <span className="header-search__sub">· ₹{formatMoney(finance.fin_prin_amt)}</span>
-          </span>
-          <span className="header-search__record-sub">
-            {customerName}
-            {finance.fin_status ? ` · ${finance.fin_status}` : ""}
-            {finance.firm?.firm_name ? ` · ${finance.firm.firm_name}` : ""}
-          </span>
-        </span>
-        <i className="bi bi-chevron-right header-search__record-arrow" aria-hidden="true"></i>
-      </button>
-    );
-  };
-
   return (
     <div className={`header-search ${className}`} ref={wrapRef}>
       <div className="input-group header-search__input-group">
@@ -460,30 +341,58 @@ const HeaderSearch = ({
       </div>
 
       {showDropdown && (
-        <div className="header-search__dropdown">
+        <div
+          ref={dropdownRef}
+          className={`header-search__dropdown${usesResultPanel ? " header-search__dropdown--panel" : ""}`}
+          style={
+            usesResultPanel && panelLayout
+              ? {
+                  position: "fixed",
+                  top: panelLayout.top,
+                  left: panelLayout.left,
+                  width: panelLayout.width,
+                  right: "auto",
+                }
+              : undefined
+          }
+        >
           {loading && <div className="header-search__empty text-muted">Searching...</div>}
           {!loading && query.trim() && items.length === 0 && (
             <div className="header-search__empty text-muted">
               No customer, loan, or finance record found
             </div>
           )}
-          {!loading && items.length > 0 && (
-            <div className="header-search__summary text-muted">
-              {resultCounts.loan > 0 ? `${resultCounts.loan} loan` : null}
-              {resultCounts.loan > 0 && resultCounts.finance > 0 ? " · " : null}
-              {resultCounts.finance > 0 ? `${resultCounts.finance} finance` : null}
-              {(resultCounts.loan > 0 || resultCounts.finance > 0) && resultCounts.customer > 0
-                ? " · "
-                : null}
-              {resultCounts.customer > 0 ? `${resultCounts.customer} customer` : null}
-            </div>
+          {!loading && loanItems.length > 0 && (
+            <HeaderSearchLoanTable
+              loanItems={loanItems}
+              items={items}
+              activeIndex={activeIndex}
+              onSelect={handleItemSelect}
+              onAction={handleAction}
+            />
           )}
-          {!loading &&
-            items.map((item, idx) => {
-              if (item.type === "loan") return renderLoanItem(item, idx);
-              if (item.type === "finance") return renderFinanceItem(item, idx);
-              return renderCustomerItem(item, idx);
-            })}
+          {!loading && financeItems.length > 0 && (
+            <HeaderSearchFinanceTable
+              financeItems={financeItems}
+              items={items}
+              activeIndex={activeIndex}
+              onSelect={handleItemSelect}
+              onAction={handleAction}
+            />
+          )}
+          {!loading && customerItems.length > 0 && (
+            <HeaderSearchCustomerTable
+              customerItems={customerItems}
+              items={items}
+              activeIndex={activeIndex}
+              onSelect={handleItemSelect}
+              onAction={handleAction}
+              canCreateFinance={canCreateFinance}
+              canCreateLoan={canCreateLoan}
+              canFinancePayment={canFinancePayment}
+              canLoanDeposit={canLoanDeposit}
+            />
+          )}
         </div>
       )}
     </div>

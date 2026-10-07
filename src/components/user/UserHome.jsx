@@ -14,7 +14,7 @@ import {
   getLoanTimePeriod,
   getLoanListMetrics,
   formatProfitLossText,
-  formatLoanFinalWeightDisplay,
+  formatLoanMetalFinalWeightDisplay,
   getLoanPrincipalAmount,
 } from "../../utils/listFormatters";
 import "../../css/Home.css";
@@ -114,7 +114,8 @@ const UserHome = () => {
             interest: metrics.interest != null ? formatAmt(metrics.interest) : "-",
             processing: metrics.processing != null ? formatAmt(metrics.processing) : "-",
             finalPay: metrics.finalPay != null ? formatAmt(metrics.finalPay) : "-",
-            finalWeight: isSecured ? formatLoanFinalWeightDisplay(l) : "-",
+            goldFinalWeight: isSecured ? formatLoanMetalFinalWeightDisplay(l, "gold") : "-",
+            silverFinalWeight: isSecured ? formatLoanMetalFinalWeightDisplay(l, "silver") : "-",
             profitLoss: isSecured ? formatProfitLossText(metrics.profitLoss) : "-",
             type: l.girv_type ? String(l.girv_type).toUpperCase() : "-",
             startDate: startDate?.isValid() ? startDate.format("DD-MM-YYYY") : "-",
@@ -215,7 +216,8 @@ const UserHome = () => {
     },
     { header: "Status", key: "status" },
     { header: "Type", key: "type" },
-    { header: "Final Weight", key: "finalWeight" },
+    { header: "Gold FN WT", key: "goldFinalWeight" },
+    { header: "Silver FN WT", key: "silverFinalWeight" },
     {
       header: "Start Date",
       key: "startDate",

@@ -147,3 +147,112 @@ export const buildCustomerHoverDetails = (user, firms = []) => {
 
   return lines;
 };
+
+/** Label/value rows for header search and compact customer previews (always shows core fields). */
+export const buildCustomerSearchDetailRows = (user, firms = []) => {
+  if (!user) return [];
+
+  const dash = '—';
+  const rows = [];
+
+  const customerId =
+    String(user.user_unique_code || '').trim() ||
+    (user.user_id != null ? `CST-${user.user_id}` : '');
+  rows.push({ label: 'Customer ID', shortLabel: 'ID', value: customerId || dash });
+
+  const { mobile, phone } = getCustomerPhoneParts(user);
+  rows.push({ label: 'Mobile', shortLabel: 'Mobile', value: mobile || dash });
+  if (phone) {
+    rows.push({ label: 'Alt. phone', shortLabel: 'Phone', value: phone });
+  }
+
+  const whatsapp = String(user.user_whatsapp_no || '').trim();
+  if (whatsapp && whatsapp !== mobile) {
+    rows.push({ label: 'WhatsApp', shortLabel: 'WA', value: whatsapp });
+  }
+
+  const email = getCustomerEmail(user);
+  rows.push({ label: 'Email', shortLabel: 'Email', value: email === '-' ? dash : email });
+
+  const father = String(user.user_father_name || '').trim();
+  rows.push({ label: 'Father name', shortLabel: 'Father', value: father || dash });
+
+  const address = getCustomerFullAddress(user);
+  rows.push({
+    label: 'Address',
+    shortLabel: 'Address',
+    value: address === '-' ? dash : address,
+  });
+
+  const firm = getCustomerFirmName(user, firms);
+  rows.push({ label: 'Firm', shortLabel: 'Firm', value: firm || dash });
+
+  return rows;
+};
+
+export const formatCustomerSearchDetailLine = (user, firms = []) =>
+  buildCustomerSearchDetailRows(user, firms)
+    .map((row) => `${row.shortLabel || row.label}: ${row.value}`)
+    .join(' · ');
+
+const dashCell = (value) => {
+  const text = String(value ?? '').trim();
+  return text || '—';
+};
+
+/** Customer list / header-search table columns (matches Customers List layout). */
+export const HEADER_SEARCH_CUSTOMER_COLUMNS = [
+  { key: 'userCode', title: 'Customer ID' },
+  { key: 'customerName', title: 'Customer Name' },
+  { key: 'locality', title: 'Village / City / State' },
+  { key: 'address', title: 'Address' },
+  { key: 'mobile', title: 'Mobile No' },
+  { key: 'aadhaar', title: 'Adhaar Number' },
+  { key: 'firm', title: 'Firm Name' },
+  { key: 'status', title: 'Status' },
+];
+
+export const formatCustomerTableName = (user) =>
+  dashCell([user?.user_first_name, user?.user_last_name].filter(Boolean).join(' '));
+
+export const formatCustomerFatherSpouseName = (user) => {
+  const father = String(user?.user_father_name || '').trim();
+  const spouse = String(user?.user_spouse_name || '').trim();
+  if (father && spouse) return `${father} / ${spouse}`;
+  return dashCell(father || spouse);
+};
+
+export const formatCustomerVillageCityState = (user) => {
+  const parts = [user?.user_village, user?.user_city, user?.user_state]
+    .map((part) => String(part || '').trim())
+    .filter(Boolean);
+  return parts.length ? parts.join(' / ') : '—';
+};
+
+export const formatCustomerStreetAddress = (user) => {
+  const curr = String(user?.user_curr_address || '').trim();
+  const perm = String(user?.user_per_address || '').trim();
+  if (curr && perm && curr !== perm) return `${curr} / ${perm}`;
+  return dashCell(curr || perm);
+};
+
+export const formatCustomerAadhaarNo = (user) => dashCell(user?.user_adhaar_no);
+
+export const formatCustomerSearchUserCode = (user) =>
+  dashCell(
+    user?.user_unique_code || (user?.user_id != null ? `CST-${user.user_id}` : '')
+  );
+
+export const formatCustomerRecordStatus = (user) =>
+  user?.user_is_deleted ? 'Deleted' : 'Active';
+
+export const buildCustomerSearchTableRow = (user, firms = []) => ({
+  customerName: formatCustomerTableName(user),
+  locality: formatCustomerVillageCityState(user),
+  address: formatCustomerStreetAddress(user),
+  mobile: dashCell(user?.user_mobile_no),
+  aadhaar: formatCustomerAadhaarNo(user),
+  firm: dashCell(getCustomerFirmName(user, firms)),
+  userCode: formatCustomerSearchUserCode(user),
+  status: formatCustomerRecordStatus(user),
+});

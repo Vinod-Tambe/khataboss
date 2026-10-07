@@ -249,6 +249,35 @@ export const getLoanStockItems = (loan) => {
   return Array.isArray(loan.items) ? loan.items : [];
 };
 
+const getStockLineFinalWeight = (item) => {
+  const fine = parseFloat(item.st_fine_weight);
+  if (!Number.isNaN(fine) && fine > 0) return fine;
+  const nt = parseFloat(item.st_nt_weight);
+  if (!Number.isNaN(nt) && nt > 0) return nt;
+  return parseFloat(item.st_gs_weight) || 0;
+};
+
+const resolveStockMetalGroup = (metalType) => {
+  const value = String(metalType || "").toLowerCase();
+  if (value.includes("silver")) return "silver";
+  if (value.includes("gold")) return "gold";
+  return "other";
+};
+
+const getLoanWeightUnit = (loan, metalFilter) => {
+  const items = getLoanStockItems(loan);
+  const scoped = metalFilter
+    ? items.filter((i) => resolveStockMetalGroup(i.st_metal_type) === metalFilter)
+    : items;
+  return (
+    scoped.find((i) => i.st_nt_type)?.st_nt_type ||
+    scoped.find((i) => i.st_gs_type)?.st_gs_type ||
+    items.find((i) => i.st_nt_type)?.st_nt_type ||
+    items.find((i) => i.st_gs_type)?.st_gs_type ||
+    "GM"
+  );
+};
+
 /** Secured loans: sum FN WT per stock line; falls back to NT/GS when fine weight is missing. */
 export const getLoanFinalWeightTotal = (loan) => {
   if (String(loan?.girv_type || "").toLowerCase() !== "secured") return null;
@@ -258,12 +287,19 @@ export const getLoanFinalWeightTotal = (loan) => {
   }
   const items = getLoanStockItems(loan);
   if (!items.length) return 0;
+  const total = items.reduce((sum, item) => sum + getStockLineFinalWeight(item), 0);
+  return parseFloat(total.toFixed(3));
+};
+
+/** Gold or silver final weight total for secured loan collateral lines. */
+export const getLoanFinalWeightByMetal = (loan, metal) => {
+  if (String(loan?.girv_type || "").toLowerCase() !== "secured") return null;
+  const group = metal === "silver" ? "silver" : "gold";
+  const items = getLoanStockItems(loan);
+  if (!items.length) return 0;
   const total = items.reduce((sum, item) => {
-    const fine = parseFloat(item.st_fine_weight);
-    if (!Number.isNaN(fine) && fine > 0) return sum + fine;
-    const nt = parseFloat(item.st_nt_weight);
-    if (!Number.isNaN(nt) && nt > 0) return sum + nt;
-    return sum + (parseFloat(item.st_gs_weight) || 0);
+    if (resolveStockMetalGroup(item.st_metal_type) !== group) return sum;
+    return sum + getStockLineFinalWeight(item);
   }, 0);
   return parseFloat(total.toFixed(3));
 };
@@ -271,11 +307,15 @@ export const getLoanFinalWeightTotal = (loan) => {
 export const formatLoanFinalWeightDisplay = (loan, weightValue) => {
   const num = weightValue ?? getLoanFinalWeightTotal(loan);
   if (num == null) return "-";
-  const items = getLoanStockItems(loan);
-  const unit =
-    items.find((i) => i.st_nt_type)?.st_nt_type ||
-    items.find((i) => i.st_gs_type)?.st_gs_type ||
-    "GM";
+  const unit = getLoanWeightUnit(loan);
+  return `${Number(num).toFixed(3)} ${unit}`;
+};
+
+export const formatLoanMetalFinalWeightDisplay = (loan, metal, weightValue) => {
+  const num = weightValue ?? getLoanFinalWeightByMetal(loan, metal);
+  if (num == null) return "-";
+  const group = metal === "silver" ? "silver" : "gold";
+  const unit = getLoanWeightUnit(loan, group);
   return `${Number(num).toFixed(3)} ${unit}`;
 };
 
@@ -363,6 +403,8 @@ export const normalizeLoanListRow = (loan) => {
     girv_processing_amt: metrics.processing,
     profit_loss: metrics.profitLoss,
     girv_final_weight: getLoanFinalWeightTotal(loan),
+    girv_gold_final_weight: getLoanFinalWeightByMetal(loan, "gold"),
+    girv_silver_final_weight: getLoanFinalWeightByMetal(loan, "silver"),
     girv_pending_interest: summary?.pendingInterest ?? null,
     girv_pending_interest_periods: summary?.pendingInterestPeriods ?? null,
     girv_pending_interest_period_display: getPendingInterestPeriodDisplay(loan),

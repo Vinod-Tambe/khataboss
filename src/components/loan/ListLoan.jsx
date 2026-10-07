@@ -12,10 +12,25 @@ import {
   formatListDate,
   statusBadgeHtml,
   formatProfitLossHtml,
-  formatLoanFinalWeightDisplay,
+  formatLoanMetalFinalWeightDisplay,
   normalizeLoanListRow,
 } from "../../utils/listFormatters";
 import { formatCustomerListName, formatCustomerListNameHtml } from "../../utils/customerFormatters";
+
+const renderLoanMetalWeightColumn = (metal) => (data, type, row) => {
+  const isSecured = String(row?.girv_type || "").toLowerCase() === "secured";
+  if (!isSecured) {
+    return type === "display" || type === "export" ? "-" : 0;
+  }
+  const num = data != null && data !== "" ? Number(data) : 0;
+  if (Number.isNaN(num)) {
+    return type === "display" || type === "export" ? "-" : 0;
+  }
+  if (type !== "display" && type !== "export") {
+    return num;
+  }
+  return formatLoanMetalFinalWeightDisplay(row, metal, num);
+};
 
 const ListLoan = ({ status = "ALL", global = false }) => {
   const navigate = useNavigate();
@@ -255,24 +270,18 @@ const ListLoan = ({ status = "ALL", global = false }) => {
         render: (data) => (data ? String(data).toUpperCase() : "-"),
       },
       {
-        key: "girv_final_weight",
-        title: "Final Weight",
+        key: "girv_gold_final_weight",
+        title: "Gold FN WT",
         sum: true,
         sumDecimals: 3,
-        render: (data, type, row) => {
-          const isSecured = String(row?.girv_type || "").toLowerCase() === "secured";
-          if (!isSecured) {
-            return type === "display" || type === "export" ? "-" : 0;
-          }
-          const num = data != null && data !== "" ? Number(data) : 0;
-          if (Number.isNaN(num)) {
-            return type === "display" || type === "export" ? "-" : 0;
-          }
-          if (type !== "display" && type !== "export") {
-            return num;
-          }
-          return formatLoanFinalWeightDisplay(row, num);
-        },
+        render: renderLoanMetalWeightColumn("gold"),
+      },
+      {
+        key: "girv_silver_final_weight",
+        title: "Silver FN WT",
+        sum: true,
+        sumDecimals: 3,
+        render: renderLoanMetalWeightColumn("silver"),
       },
       {
         key: "girv_start_date",
