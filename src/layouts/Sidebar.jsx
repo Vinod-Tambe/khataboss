@@ -143,7 +143,7 @@ const Sidebar = () => {
             anyOf: ["expense.create", "account.transfer"],
           },
           {
-            label: "Expense List",
+            label: "Expenses List",
             path: "/account/transfer/list",
             icon: <FiList />,
             anyOf: ["expense.view", "account.view", "account.transfer"],

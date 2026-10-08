@@ -1,5 +1,20 @@
 import React from 'react'
 import moment from 'moment'
+import { getExpenseTypeLabel } from '../../constants/expenseTypes'
+
+const formatLedgerTransactionDetails = (item) => {
+    const voucherType = getExpenseTypeLabel(item.jrtr_panel);
+    const body = (
+        item.display_details ||
+        item.jrtr_acc_info ||
+        item.jrtr_other_info ||
+        ''
+    ).trim();
+
+    if (!voucherType) return body || '-';
+    if (!body) return voucherType;
+    return `${voucherType} — ${body}`;
+};
 
 const AccountDetailsReport = ({
     ledgerData = [],
@@ -25,11 +40,7 @@ const AccountDetailsReport = ({
         processedData.push({
             ...item,
             date: item.jrtr_date,
-            details:
-                item.display_details ||
-                item.jrtr_acc_info ||
-                item.jrtr_other_info ||
-                '',
+            details: formatLedgerTransactionDetails(item),
             debit,
             credit,
             opening_bal: openingBal,
@@ -111,7 +122,7 @@ const AccountDetailsReport = ({
                                 <td className="sticky-col text-center">{index + 1}</td>
                                 <td className="text-center">{moment(item.date).format("DD-MM-YYYY")}</td>
                                 <td>{item.firm}</td>
-                                <td>{item.details}</td>
+                                <td style={{ textTransform: 'none' }}>{item.details}</td>
                                 <td className="text-end">{formatBalanceType(item.opening_bal)}</td>
                                 <td className="text-end text-success">{item.debit > 0 ? formatAmount(item.debit) : "0.00"}</td>
                                 <td className="text-end text-danger">{item.credit > 0 ? formatAmount(item.credit) : "0.00"}</td>

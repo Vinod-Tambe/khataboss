@@ -20,7 +20,8 @@ const DayBookInterAccountTransferMobileCard = ({ item, cardKey, expanded, onTogg
             className="daybook-mobile-row__meta-btn"
             onClick={() => onToggle(cardKey)}
           >
-            {item.db_date || "-"} · {item.db_firm || "-"} · {item.db_direction || "-"}
+            {item.db_date || "-"} · {item.db_firm || "-"} · {item.db_expense_type || "-"} ·{" "}
+            {item.db_direction || "-"}
           </button>
         </div>
         <button
@@ -48,13 +49,16 @@ const DayBookInterAccountTransferMobileCard = ({ item, cardKey, expanded, onTogg
                   {lines.map((line, idx) => (
                     <li key={`${line.account}-${idx}`}>
                       {line.account}: {formatCurrency(line.amount)}
-                      {line.remarks ? ` (${line.remarks})` : ""}
                     </li>
                   ))}
                 </ul>
               ) : (
                 <strong>{item.db_to_description || "-"}</strong>
               )}
+            </div>
+            <div className="is-full">
+              <span>Expense type</span>
+              <strong>{item.db_expense_type || "-"}</strong>
             </div>
             <div className="is-full">
               <span>Narration</span>

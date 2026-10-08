@@ -198,6 +198,7 @@ const buildInterAccountTransferSectionTable = (title, data = []) => {
     [
       { text: 'DATE', style: 'tableHeader', alignment: 'left' },
       { text: 'FIRM', style: 'tableHeader', alignment: 'left' },
+      { text: 'EXPENSE TYPE', style: 'tableHeader', alignment: 'left' },
       { text: 'ENTRY', style: 'tableHeader', alignment: 'left' },
       { text: 'FROM ACCOUNT', style: 'tableHeader', alignment: 'left' },
       { text: 'TO / SPLIT DETAIL', style: 'tableHeader', alignment: 'left' },
@@ -211,6 +212,7 @@ const buildInterAccountTransferSectionTable = (title, data = []) => {
     body.push([
       { text: item.db_date || '-', style: 'tableCell' },
       { text: item.db_firm || '-', style: 'tableCell' },
+      { text: item.db_expense_type || '-', style: 'tableCell' },
       { text: item.db_direction || '-', style: 'tableCell' },
       { text: item.db_from_account || '-', style: 'accountName' },
       { text: item.db_to_description || '-', style: 'tableCell' },
@@ -221,7 +223,8 @@ const buildInterAccountTransferSectionTable = (title, data = []) => {
 
   const footerIndex = body.length;
   body.push([
-    { text: 'TOTAL AMT :', style: 'tableFooter', colSpan: 5, alignment: 'right' },
+    { text: 'TOTAL AMT :', style: 'tableFooter', colSpan: 6, alignment: 'right' },
+    {},
     {},
     {},
     {},

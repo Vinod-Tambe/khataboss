@@ -20,9 +20,6 @@ const renderToDetail = (item) => {
             <span className="fw-semibold">{line.account}</span>
             {" — "}
             {formatCurrency(line.amount)}
-            {line.remarks ? (
-              <span className="text-muted"> ({line.remarks})</span>
-            ) : null}
           </li>
         ))}
       </ul>

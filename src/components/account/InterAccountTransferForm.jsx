@@ -14,6 +14,10 @@ import {
   PERSONAL_EXPENSE_FORM_TITLE,
   PERSONAL_EXPENSE_LIST_TITLE,
 } from '../../constants/personalExpense';
+import {
+  DEFAULT_EXPENSE_TYPE_CODE,
+  EXPENSE_TYPE_OPTIONS,
+} from '../../constants/expenseTypes';
 import useFormNavigation from '../../hooks/useFormNavigation';
 import {
   TRANSFER_DIRECTION,
@@ -119,6 +123,7 @@ const InterAccountTransferForm = () => {
     mtf_firm_id: '',
     mtf_trans_date: moment().format('YYYY-MM-DD'),
     mtf_direction: TRANSFER_DIRECTION.CR_TO_DR,
+    mtf_expense_type: DEFAULT_EXPENSE_TYPE_CODE,
     mtf_from_acc_id: '',
     mtf_narration: '',
     to_rows: [emptyLineRow()],
@@ -333,6 +338,7 @@ const InterAccountTransferForm = () => {
         mtf_firm_id: form.mtf_firm_id,
         mtf_trans_date: form.mtf_trans_date,
         mtf_direction: form.mtf_direction,
+        mtf_expense_type: form.mtf_expense_type,
         mtf_narration: form.mtf_narration.trim(),
         from_rows,
         to_rows,
@@ -531,6 +537,25 @@ const InterAccountTransferForm = () => {
           </div>
           <div className="col-12 col-md-4">
             <label className="form-label fw-bold small text-muted mb-1">
+              Expense type <span className="text-danger">*</span>
+            </label>
+            <select
+              className="form-select border-dark"
+              value={form.mtf_expense_type}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, mtf_expense_type: e.target.value }))
+              }
+              required
+            >
+              {EXPENSE_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.code} value={opt.code}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="col-12 col-md-4">
+            <label className="form-label fw-bold small text-muted mb-1">
               Expense date <span className="text-danger">*</span>
             </label>
             <input
@@ -541,13 +566,13 @@ const InterAccountTransferForm = () => {
               required
             />
           </div>
-          <div className="col-12 col-md-4">
+          <div className="col-12 col-md-12">
             <label className="form-label fw-bold small text-muted mb-1">
               Voucher narration <span className="text-danger">*</span>
             </label>
             <textarea
               className="form-control border-dark"
-              rows={2}
+              rows={1}
               placeholder="Enter voucher narration"
               value={form.mtf_narration}
               maxLength={MAX_VOUCHER_NARRATION_LENGTH}

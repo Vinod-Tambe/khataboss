@@ -11,6 +11,7 @@ import {
   PERSONAL_EXPENSE_FORM_TITLE,
   PERSONAL_EXPENSE_LIST_TITLE,
 } from '../../constants/personalExpense';
+import { getExpenseTypeLabel } from '../../constants/expenseTypes';
 import { formatTransferDirectionLabel } from '../../utils/transferDirection';
 
 const formatAmt = (value) =>
@@ -71,6 +72,7 @@ const InterAccountTransferList = () => {
         firm_name: row.firm?.firm_name || '-',
         from_name: row.from_label || row.from_account?.acc_name || '-',
         to_names: row.destination_label || '-',
+        expense_type_label: getExpenseTypeLabel(row.expense_type_label || row.mtf_panel),
         mode_label: modeLabel(row.mtf_mode),
         direction_label: directionLabel(row.mtf_direction),
         amount_display: formatAmt(row.mtf_total_amt),
@@ -84,7 +86,8 @@ const InterAccountTransferList = () => {
       { key: 'mtf_id', title: 'ID', orderable: true, searchable: true },
       { key: 'mtf_trans_date_display', title: 'Date', orderable: true, searchable: true },
       { key: 'firm_name', title: 'Firm', orderable: true, searchable: true },
-      { key: 'mode_label', title: 'Type', orderable: true, searchable: true },
+      { key: 'expense_type_label', title: 'Expense type', orderable: true, searchable: true },
+      { key: 'mode_label', title: 'Split', orderable: true, searchable: true },
       { key: 'direction_label', title: 'Entry', orderable: true, searchable: true },
       { key: 'from_name', title: 'From accounts', orderable: true, searchable: true },
       { key: 'to_names', title: 'To accounts', orderable: true, searchable: true },
