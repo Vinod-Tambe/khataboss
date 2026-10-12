@@ -204,7 +204,8 @@ const dashCell = (value) => {
 export const HEADER_SEARCH_CUSTOMER_COLUMNS = [
   { key: 'userCode', title: 'Customer ID' },
   { key: 'customerName', title: 'Customer Name' },
-  { key: 'locality', title: 'Village / City / State' },
+  { key: 'fatherName', title: 'Father Name' },
+  { key: 'locality', title: 'Locality' },
   { key: 'address', title: 'Address' },
   { key: 'mobile', title: 'Mobile No' },
   { key: 'aadhaar', title: 'Adhaar Number' },
@@ -214,6 +215,8 @@ export const HEADER_SEARCH_CUSTOMER_COLUMNS = [
 
 export const formatCustomerTableName = (user) =>
   dashCell([user?.user_first_name, user?.user_last_name].filter(Boolean).join(' '));
+
+export const formatCustomerFatherName = (user) => dashCell(user?.user_father_name);
 
 export const formatCustomerFatherSpouseName = (user) => {
   const father = String(user?.user_father_name || '').trim();
@@ -240,19 +243,23 @@ export const formatCustomerAadhaarNo = (user) => dashCell(user?.user_adhaar_no);
 
 export const formatCustomerSearchUserCode = (user) =>
   dashCell(
-    user?.user_unique_code || (user?.user_id != null ? `CST-${user.user_id}` : '')
+    user?.user_unique_code ?? (user?.user_id != null ? String(user.user_id) : '')
   );
 
 export const formatCustomerRecordStatus = (user) =>
   user?.user_is_deleted ? 'Deleted' : 'Active';
 
-export const buildCustomerSearchTableRow = (user, firms = []) => ({
-  customerName: formatCustomerTableName(user),
-  locality: formatCustomerVillageCityState(user),
-  address: formatCustomerStreetAddress(user),
-  mobile: dashCell(user?.user_mobile_no),
-  aadhaar: formatCustomerAadhaarNo(user),
-  firm: dashCell(getCustomerFirmName(user, firms)),
-  userCode: formatCustomerSearchUserCode(user),
-  status: formatCustomerRecordStatus(user),
-});
+export const buildCustomerSearchTableRow = (user, firms = []) => {
+  const fullAddress = getCustomerFullAddress(user);
+  return {
+    userCode: formatCustomerSearchUserCode(user),
+    customerName: formatCustomerTableName(user),
+    fatherName: formatCustomerFatherName(user),
+    locality: formatCustomerVillageCityState(user),
+    address: fullAddress === '-' ? '—' : fullAddress,
+    mobile: dashCell(user?.user_mobile_no),
+    aadhaar: formatCustomerAadhaarNo(user),
+    firm: dashCell(getCustomerFirmName(user, firms)),
+    status: formatCustomerRecordStatus(user),
+  };
+};

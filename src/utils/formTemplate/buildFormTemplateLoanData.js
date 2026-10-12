@@ -1,6 +1,20 @@
 import moment from 'moment';
-import { formatTimePeriod } from '../formatTimePeriod';
+import { toCalendarDay } from '../formatTimePeriod';
 import { getLoanInterestSummary } from '../loanInterest';
+
+/** Form 8 item 8 / due date — standard agreed redemption window when not stored on loan. */
+const FORM8_DEFAULT_REDEMPTION_MONTHS = 12;
+
+const buildForm8AgreedRedemptionPeriod = () =>
+  FORM8_DEFAULT_REDEMPTION_MONTHS === 12
+    ? '12 months'
+    : `${FORM8_DEFAULT_REDEMPTION_MONTHS} months`;
+
+const buildForm8RedemptionDueDate = (loanDetails) => {
+  const start = toCalendarDay(loanDetails?.girv_start_date);
+  if (!start?.isValid()) return '—';
+  return start.clone().add(FORM8_DEFAULT_REDEMPTION_MONTHS, 'months').format('DD-MM-YYYY');
+};
 
 const formatMoney = (value) => {
   const num = Number(value) || 0;
@@ -295,8 +309,8 @@ export const buildFormTemplateLoanData = (loanDetails, customer = null) => {
     loan_amount: formatMoney(interestSummary.originalPrincipal),
     interest_rate: `${interestSummary.roi}% ${(loanDetails.girv_roi_type || '').toUpperCase()}`.trim(),
     interest_type: interestMethodLabel,
-    loan_period: formatTimePeriod(startDate, today),
-    due_date: startDate.isValid() ? startDate.clone().add(12, 'months').format('DD-MM-YYYY') : '—',
+    loan_period: buildForm8AgreedRedemptionPeriod(),
+    due_date: buildForm8RedemptionDueDate(loanDetails),
     loan_status: String(loanDetails.girv_status || 'ACTIVE').toUpperCase(),
     item_description: buildItemSummary(items),
     item_metal: buildMetalSummary(items),

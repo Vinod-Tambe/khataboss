@@ -481,7 +481,8 @@
 
 .header-search__customer-table-wrap {
   width: 100%;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .header-search__result-section:first-of-type .header-search__customer-table-wrap {
@@ -542,8 +543,14 @@
   white-space: nowrap;
 }
 
-.header-search__dropdown--panel .header-search__customer-table td:nth-child(4),
-.header-search__dropdown--panel .header-search__customer-table th:nth-child(4) {
+.header-search__result-section--customer .header-search__customer-table {
+  min-width: 72rem;
+}
+
+.header-search__result-section--customer .header-search__customer-table td:nth-child(4),
+.header-search__result-section--customer .header-search__customer-table th:nth-child(4),
+.header-search__result-section--customer .header-search__customer-table td:nth-child(5),
+.header-search__result-section--customer .header-search__customer-table th:nth-child(5) {
   white-space: normal;
   min-width: 8rem;
   max-width: 14rem;

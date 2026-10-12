@@ -1,6 +1,6 @@
 import { formatListAmtOrDash, formatListDate } from "./listFormatters";
 import {
-  formatCustomerListName,
+  formatCustomerTableName,
   formatCustomerSearchUserCode,
 } from "./customerFormatters";
 
@@ -39,7 +39,7 @@ export const buildLoanSearchTableRow = (loan) => {
       loan?.girv_loan_no ||
       (loan?.girv_id != null ? `LN-${loan.girv_id}` : "—"),
     customerId: formatCustomerSearchUserCode(user),
-    customerName: formatCustomerListName(user),
+    customerName: formatCustomerTableName(user),
     mobile: dash(user?.user_mobile_no),
     firm: dash(loan?.firm?.firm_name),
     startDate: formatListDate(loan?.girv_start_date) || "—",
@@ -55,7 +55,7 @@ export const buildFinanceSearchTableRow = (finance) => {
       finance?.fin_unique_code ||
       (finance?.fin_id != null ? `FIN-${finance.fin_id}` : "—"),
     customerId: formatCustomerSearchUserCode(user),
-    customerName: formatCustomerListName(user),
+    customerName: formatCustomerTableName(user),
     mobile: dash(user?.user_mobile_no),
     firm: dash(finance?.firm?.firm_name),
     startDate: formatListDate(finance?.fin_start_date) || "—",

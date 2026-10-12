@@ -30,7 +30,9 @@ const DraggableList = ({ items = [], onReorder, renderItem, itemKey = 'id' }) =>
     }
     const next = [...items];
     const [moved] = next.splice(dragIndex, 1);
-    next.splice(index, 0, moved);
+    let insertAt = index;
+    if (dragIndex < index) insertAt = index - 1;
+    next.splice(insertAt, 0, moved);
     onReorder(next.map((item, idx) => ({ ...item, order: idx + 1 })));
     setDragIndex(null);
     setOverIndex(null);
@@ -47,19 +49,27 @@ const DraggableList = ({ items = [], onReorder, renderItem, itemKey = 'id' }) =>
         <div
           key={item[itemKey] ?? index}
           className={`form-custom-dnd-item ${dragIndex === index ? 'is-dragging' : ''} ${overIndex === index ? 'is-over' : ''}`}
+          onDragEnter={(e) => e.preventDefault()}
           onDragOver={(e) => handleDragOver(e, index)}
           onDrop={() => handleDrop(index)}
         >
-          <button
-            type="button"
+          <span
             className="form-custom-dnd-handle"
             draggable
+            role="button"
+            tabIndex={0}
             aria-label="Drag to reorder"
-            onDragStart={() => handleDragStart(index)}
+            onMouseDown={(e) => e.stopPropagation()}
+            onDragStart={(e) => {
+              handleDragStart(index);
+              const id = item[itemKey] ?? String(index);
+              e.dataTransfer.setData('text/plain', String(id));
+              e.dataTransfer.effectAllowed = 'move';
+            }}
             onDragEnd={handleDragEnd}
           >
             <FiMenu size={14} />
-          </button>
+          </span>
           <div className="form-custom-dnd-content">{renderItem(item, index)}</div>
         </div>
       ))}

@@ -3,33 +3,86 @@
   "subtitle": "Pledge Book — Register of Pledges",
   "complianceReference": "Prescribed under Maharashtra Money-Lending (Regulation) Act, 2014 & Rules 2014 (Rule 18 — Form Nos. 7 & 8) and Tamil Nadu Pawn Brokers Act, 1943 (Form E — Pledge Book)",
   "headerNote": "Licence No.: {{firm_reg_no}} | Pledge / Ticket No.: {{loan_no}} | Date of Loan: {{loan_date}}",
+  "footerNoteTitle": "Important Note",
   "footerNote": "Note: All entries except payments (Item 5), date of redemption (Item 9) and person redeeming (Item 11) shall be made on the day of pawning. Duplicate pawn receipt register to be maintained under Section 24(5), Maharashtra Money-Lending (Regulation) Act, 2014.",
   "pageSize": "A4",
   "orientation": "portrait",
-  "fontSize": "medium",
-  "showPageNumbers": true,
+  "fontSize": "small",
+  "singlePageLayout": true,
+  "showPageNumbers": false,
+  "builderBlockOrder": [
+    "layout_left_logo",
+    "form_header",
+    "section:firm_details",
+    "section:customer_details",
+    "customer_photo",
+    "section:loan_details",
+    "stock_line_items",
+    "form_terms",
+    "form_footer",
+    "layout_footer_image",
+    "signature_lines"
+  ],
+  "blockLayouts": {
+    "layout_left_logo": { "widthPct": 28, "heightMm": 14, "heightMode": "fixed" },
+    "layout_right_logo": {
+      "widthPct": 24,
+      "heightMm": 14,
+      "heightMode": "fixed",
+      "posXPct": 76,
+      "posYPct": 0,
+      "freePosition": true,
+      "hAlign": "right"
+    },
+    "form_header": { "widthPct": 100, "heightMm": 14, "heightMode": "fixed" },
+    "section:firm_details": { "widthPct": 100, "heightMm": 22, "heightMode": "fixed" },
+    "section:customer_details": { "widthPct": 100, "heightMm": 20, "heightMode": "fixed" },
+    "customer_photo": { "widthPct": 28, "heightMm": 14, "heightMode": "fixed" },
+    "section:loan_details": { "widthPct": 100, "heightMm": 26, "heightMode": "fixed" },
+    "stock_line_items": { "widthPct": 100, "heightMm": null, "heightMode": "auto" },
+    "form_terms": { "widthPct": 100, "heightMm": 14, "heightMode": "fixed" },
+    "form_footer": { "widthPct": 100, "heightMm": 9, "heightMode": "fixed" },
+    "layout_footer_image": {
+      "widthPct": 100,
+      "heightMm": 14,
+      "heightMode": "fixed",
+      "posXPct": 0,
+      "posYPct": 90,
+      "freePosition": true,
+      "hAlign": "center"
+    },
+    "signature_lines": { "widthPct": 100, "heightMm": 32, "heightMode": "fixed" }
+  },
+  "assets": {
+    "leftLogoDataUrl": "",
+    "rightLogoDataUrl": "",
+    "footerImageDataUrl": ""
+  },
   "theme": {
-    "primaryColor": "#000000",
-    "secondaryColor": "#1a1a1a",
-    "textColor": "#000000",
-    "mutedTextColor": "#333333",
-    "borderColor": "#000000",
-    "headerBackground": "#ffffff",
+    "primaryColor": "#1e3a5f",
+    "secondaryColor": "#2c5282",
+    "textColor": "#1a202c",
+    "mutedTextColor": "#4a5568",
+    "borderColor": "#2c5282",
+    "headerBackground": "#f0f4f8",
     "sectionBackground": "#ffffff",
-    "sectionTitleColor": "#000000",
-    "tableHeaderBackground": "#e8e8e8",
-    "accentColor": "#000000",
-    "pageBackground": "#ffffff"
+    "sectionTitleColor": "#1e3a5f",
+    "tableHeaderBackground": "#e8eef5",
+    "accentColor": "#1e4976",
+    "pageBackground": "#ffffff",
+    "labelFontSizePt": 9,
+    "valueFontSizePt": 9
   },
   "layout": {
     "showLeftLogo": true,
     "showRightLogo": false,
     "showCustomerPhoto": true,
     "showStockItemImages": true,
+    "showFooterImage": true,
     "showOwnerSign": true,
     "showQrCode": false,
     "useFirmFormHeader": true,
-    "useFirmFormFooter": true
+    "useFirmFormFooter": false
   },
   "sections": [
     {
@@ -37,12 +90,22 @@
       "label": "Particulars of Pawnbroker / Money-Lender",
       "enabled": true,
       "order": 1,
+      "backgroundColor": "#ffffff",
+      "borderColor": "#2c5282",
+      "titleColor": "#1e3a5f",
+      "titleBackgroundColor": "#e8eef5",
+      "titleFontSizePt": 10,
+      "titleFontWeight": "600",
+      "labelFontSizePt": 9,
+      "labelFontWeight": "500",
+      "valueFontSizePt": 9,
+      "valueFontWeight": "600",
       "fields": [
-        { "id": "firm_name", "label": "Name of Pawnbroker / Money-Lender", "enabled": true, "fieldLayout": "full" },
+        { "id": "firm_name", "label": "Name of Pawnbroker / Money-Lender", "enabled": true, "fieldLayout": "half" },
         { "id": "firm_shop_name", "label": "Place of Business / Shop Name", "enabled": true, "fieldLayout": "half" },
         { "id": "firm_reg_no", "label": "Licence / Registration No.", "enabled": true, "fieldLayout": "half" },
-        { "id": "firm_address", "label": "Full Address of Pawnbroker", "enabled": true, "fieldLayout": "full" },
         { "id": "firm_phone_no", "label": "Phone No.", "enabled": true, "fieldLayout": "half" },
+        { "id": "firm_address", "label": "Full Address of Pawnbroker", "enabled": true, "fieldLayout": "half" },
         { "id": "firm_pan_no", "label": "PAN of Money-Lender", "enabled": true, "fieldLayout": "half" },
         { "id": "firm_gstin_no", "label": "GSTIN (if applicable)", "enabled": false, "fieldLayout": "half" }
       ]
@@ -52,14 +115,24 @@
       "label": "Particulars of Pawner",
       "enabled": true,
       "order": 2,
+      "backgroundColor": "#ffffff",
+      "borderColor": "#2c5282",
+      "titleColor": "#1e3a5f",
+      "titleBackgroundColor": "#e8eef5",
+      "titleFontSizePt": 10,
+      "titleFontWeight": "600",
+      "labelFontSizePt": 9,
+      "labelFontWeight": "500",
+      "valueFontSizePt": 9,
+      "valueFontWeight": "600",
       "fields": [
-        { "id": "customer_name", "label": "Name of Pawner", "enabled": true, "fieldLayout": "full" },
-        { "id": "customer_address", "label": "Full Address of Pawner", "enabled": true, "fieldLayout": "full" },
+        { "id": "customer_name", "label": "Name of Pawner", "enabled": true, "fieldLayout": "half" },
         { "id": "customer_mobile", "label": "Mobile No.", "enabled": true, "fieldLayout": "half" },
         { "id": "customer_aadhaar", "label": "Aadhaar / Identity Proof No.", "enabled": true, "fieldLayout": "half" },
         { "id": "customer_pan", "label": "PAN of Pawner", "enabled": false, "fieldLayout": "half" },
-        { "id": "owner_name_address", "label": "10. Name & Address of Owner (if pawner is not the owner)", "enabled": true, "fieldLayout": "full" },
-        { "id": "customer_photo", "label": "Photo of Pawner (on file)", "enabled": true, "fieldLayout": "half" }
+        { "id": "customer_address", "label": "Full Address of Pawner", "enabled": true, "fieldLayout": "half" },
+        { "id": "owner_name_address", "label": "10. Name & Address of Owner (if pawner is not the owner)", "enabled": false, "fieldLayout": "half" },
+        { "id": "customer_photo", "label": "Photo of Pawner (on file)", "enabled": false, "fieldLayout": "half" }
       ]
     },
     {
@@ -67,36 +140,56 @@
       "label": "Pledge Particulars (Form E — Items 1 to 4 & 8)",
       "enabled": true,
       "order": 3,
+      "backgroundColor": "#ffffff",
+      "borderColor": "#2c5282",
+      "titleColor": "#1e3a5f",
+      "titleBackgroundColor": "#e8eef5",
+      "titleFontSizePt": 10,
+      "titleFontWeight": "600",
+      "labelFontSizePt": 9,
+      "labelFontWeight": "500",
+      "valueFontSizePt": 9,
+      "valueFontWeight": "600",
       "fields": [
         { "id": "loan_no", "label": "1. Number of Pledge / Ticket No.", "enabled": true, "fieldLayout": "half" },
         { "id": "loan_date", "label": "2. Date of Loan", "enabled": true, "fieldLayout": "half" },
         { "id": "loan_amount", "label": "3. Amount of Principal of the Loan (Rs.)", "enabled": true, "fieldLayout": "half" },
         { "id": "interest_rate", "label": "4. Rate of Interest Charged", "enabled": true, "fieldLayout": "half" },
-        { "id": "interest_type", "label": "Interest Type (Simple / Compound)", "enabled": true, "fieldLayout": "half" },
+        { "id": "interest_type", "label": "Interest Type (Simple / Compound)", "enabled": true, "fieldLayout": "full" },
         { "id": "loan_period", "label": "8. Time Agreed for Redemption of Pledge", "enabled": true, "fieldLayout": "half" },
         { "id": "due_date", "label": "Due Date for Redemption", "enabled": true, "fieldLayout": "half" },
-        { "id": "loan_status", "label": "Status of Pledge", "enabled": true, "fieldLayout": "half" }
+        { "id": "loan_status", "label": "Status of Pledge", "enabled": false, "fieldLayout": "half" }
       ]
     },
     {
       "id": "item_details",
       "label": "Description & Value of Pledged Article(s) (Form E — Items 6 & 7)",
-      "enabled": true,
+      "enabled": false,
       "order": 4,
+      "backgroundColor": "#ffffff",
+      "borderColor": "#2c5282",
+      "titleColor": "#1e3a5f",
+      "titleBackgroundColor": "#e8eef5",
+      "titleFontSizePt": 10,
+      "titleFontWeight": "600",
+      "labelFontSizePt": 9,
+      "labelFontWeight": "500",
+      "valueFontSizePt": 9,
+      "valueFontWeight": "600",
       "fields": [
-        { "id": "item_description", "label": "6. Full & Detailed Description of Article(s)", "enabled": true, "fieldLayout": "full" },
-        { "id": "item_metal", "label": "Metal / Type", "enabled": true, "fieldLayout": "small" },
-        { "id": "item_gross_wt", "label": "Gross Weight", "enabled": true, "fieldLayout": "small" },
-        { "id": "item_net_wt", "label": "Net Weight", "enabled": true, "fieldLayout": "small" },
-        { "id": "item_purity", "label": "Purity / Karat", "enabled": true, "fieldLayout": "small" },
-        { "id": "item_pieces", "label": "No. of Pieces", "enabled": true, "fieldLayout": "small" },
-        { "id": "item_value", "label": "7. Value of Article(s) at Time of Pledge (Rs.)", "enabled": true, "fieldLayout": "half" }
+        { "id": "item_description", "label": "6. Full & Detailed Description of Article(s)", "enabled": false, "fieldLayout": "full" },
+        { "id": "item_metal", "label": "Metal / Type", "enabled": false, "fieldLayout": "small" },
+        { "id": "item_gross_wt", "label": "Gross Weight", "enabled": false, "fieldLayout": "small" },
+        { "id": "item_net_wt", "label": "Net Weight", "enabled": false, "fieldLayout": "small" },
+        { "id": "item_purity", "label": "Purity / Karat", "enabled": false, "fieldLayout": "small" },
+        { "id": "item_pieces", "label": "No. of Pieces", "enabled": false, "fieldLayout": "small" },
+        { "id": "item_value", "label": "7. Value of Article(s) at Time of Pledge (Rs.)", "enabled": false, "fieldLayout": "half" }
       ]
     },
     {
       "id": "transaction_history",
       "label": "5. Register of Payments (Amount & Date of Every Payment)",
-      "enabled": true,
+      "enabled": false,
       "order": 5,
       "fields": [
         { "id": "payment_date", "label": "Date of Payment", "enabled": true },
@@ -110,7 +203,7 @@
     {
       "id": "interest_summary",
       "label": "Account Summary",
-      "enabled": true,
+      "enabled": false,
       "order": 6,
       "fields": [
         { "id": "total_interest", "label": "Total Interest Accrued (Rs.)", "enabled": true, "fieldLayout": "half" },
@@ -122,7 +215,7 @@
     {
       "id": "redemption_details",
       "label": "Redemption / Release (Form E — Items 9 to 11)",
-      "enabled": true,
+      "enabled": false,
       "order": 7,
       "fields": [
         { "id": "date_of_redemption", "label": "9. Date of Redemption or Sale in Auction", "enabled": true, "fieldLayout": "half" },
@@ -131,21 +224,11 @@
       ]
     }
   ],
-  "termsAndConditions": "I hereby declare that the article(s) pledged above belong to me and are free from any encumbrance. I agree to repay the principal amount with interest at the rate stated above within the time agreed for redemption. I understand that the pledge shall be redeemable within the period agreed and during the days of grace as provided under applicable law. The pawnbroker / money-lender shall have the right to sell the pledged article(s) in case of default after due notice as prescribed under the Maharashtra Money-Lending (Regulation) Act, 2014 or the Tamil Nadu Pawn Brokers Act, 1943, as applicable.",
+  "termsAndConditions": "I hereby declare that the article(s) pledged above belong to me and are free from any encumbrance. I agree to repay the principal amount with interest at the rate stated above within the time agreed for redemption. I understand that the pledge shall be redeemable within the period agreed and during the days of grace as provided under applicable law.",
   "declarationText": "I have read and understood the terms and conditions stated above. The particulars furnished by me are true and correct to the best of my knowledge.",
   "signatureLabels": {
-    "customer": "Signature / Thumb-impression of Pawner",
-    "owner": "Signature of Pawnbroker / Authorised Agent",
-    "witness": "Witness (Optional)"
+    "owner": "owner",
+    "customer": "customer"
   },
-  "variables": [
-    { "key": "{{firm_name}}", "label": "Pawnbroker Name" },
-    { "key": "{{firm_reg_no}}", "label": "Licence / Registration No." },
-    { "key": "{{loan_no}}", "label": "Pledge / Ticket No." },
-    { "key": "{{loan_date}}", "label": "Date of Loan" },
-    { "key": "{{customer_name}}", "label": "Pawner Name" },
-    { "key": "{{loan_amount}}", "label": "Principal Amount" },
-    { "key": "{{outstanding}}", "label": "Outstanding Balance" },
-    { "key": "{{today_date}}", "label": "Today's Date" }
-  ]
+  "variables": []
 }

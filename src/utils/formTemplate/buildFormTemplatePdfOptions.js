@@ -1,5 +1,6 @@
 import loadCustomerPhotoForPdf from './loadCustomerPhotoForPdf';
 import loadFirmAssetsForPdf from './loadFirmAssetsForPdf';
+import { resolveForm8PdfImageDataUrls } from './formTemplateImageAssets';
 import loadLoanStockImagesForPdf from './loadLoanStockImagesForPdf';
 import { mergeCustomerForPdf } from './resolveFirmForPdf';
 import { normalizeImageDataUrlForPdf } from '../imageHelpers';
@@ -52,13 +53,19 @@ export async function buildLiveFormTemplatePdfOptions({
       : Promise.resolve(null),
   ]);
 
+  const templateImages = resolveForm8PdfImageDataUrls(config, firmAssets);
+
   return await preparePdfImageOptions({
     ...(formData ? { formData } : {}),
     ...(transactionRows ? { transactionRows } : {}),
     ...(loanRef ? { loanRef } : {}),
     ...(stockItemRows?.length ? { stockItemRows } : {}),
     customerPhotoDataUrl,
-    ...firmAssets,
+    leftLogoDataUrl: templateImages.leftLogoDataUrl,
+    rightLogoDataUrl: templateImages.rightLogoDataUrl,
+    footerImageDataUrl: templateImages.footerImageDataUrl,
+    formHeader: firmAssets.formHeader,
+    formFooter: firmAssets.formFooter,
   });
 }
 
@@ -76,6 +83,7 @@ export async function buildPreviewFormTemplatePdfOptions({
   const showCustomerPhoto = shouldShowCustomerPhoto(config);
   const showStockItemImages = shouldShowStockItemImages(config);
   const firmAssets = await loadFirmAssetsForPdf(firm);
+  const templateImages = resolveForm8PdfImageDataUrls(config, firmAssets);
 
   return await preparePdfImageOptions({
     ...(formData ? { formData } : {}),
@@ -84,9 +92,12 @@ export async function buildPreviewFormTemplatePdfOptions({
     customerPhotoDataUrl:
       showCustomerPhoto && useSampleCustomerPhoto ? SAMPLE_CUSTOMER_PHOTO_DATA_URL : null,
     leftLogoDataUrl:
-      firmAssets.leftLogoDataUrl || (useSampleLogos ? SAMPLE_FIRM_LOGO_DATA_URL : null),
+      templateImages.leftLogoDataUrl ||
+      (useSampleLogos ? SAMPLE_FIRM_LOGO_DATA_URL : null),
     rightLogoDataUrl:
-      firmAssets.rightLogoDataUrl || (useSampleLogos ? SAMPLE_FIRM_LOGO_DATA_URL : null),
+      templateImages.rightLogoDataUrl ||
+      (useSampleLogos ? SAMPLE_FIRM_LOGO_DATA_URL : null),
+    footerImageDataUrl: templateImages.footerImageDataUrl,
     formHeader: firmAssets.formHeader,
     formFooter: firmAssets.formFooter,
   });

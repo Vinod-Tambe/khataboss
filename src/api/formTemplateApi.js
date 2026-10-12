@@ -1,7 +1,13 @@
 import axiosInstance from './axiosInstance';
 
-const errMsg = (error) =>
-  error.response?.data?.message || error.response?.data?.error || error.message;
+const errMsg = (error) => {
+  if (error.response?.status === 413) {
+    return (
+      'Template is too large to save. Use smaller logo/footer images (under ~1 MB each) or rely on firm logos instead of uploading very large files.'
+    );
+  }
+  return error.response?.data?.message || error.response?.data?.error || error.message;
+};
 
 export const getFormTemplates = async () => {
   try {
