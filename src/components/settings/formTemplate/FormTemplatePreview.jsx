@@ -21,6 +21,7 @@ import {
 } from '../../../utils/formTemplate/formTemplatePreviewAssets';
 import { parseSectionBlockId } from '../../../utils/formTemplate/form8BuilderCatalog';
 import { parseFieldBlockId } from '../../../utils/formTemplate/form8FieldBlocks';
+import { isForm8DividerBlockId } from '../../../utils/formTemplate/form8DividerBlocks';
 import {
   getBlockLayout,
   getForm8BlockOrder,
@@ -42,14 +43,23 @@ import {
   getForm8SectionTitlePreviewStyle,
 } from '../../../utils/formTemplate/form8SectionStyle';
 import {
-  getForm8BlockBoxPreviewStyle,
+  FORM8_HEADER_LINE_DEFS,
   getForm8BlockTitlePreviewStyle,
-  getForm8BlockBodyPreviewStyle,
+  getForm8TextPartPreviewStyle,
+  getForm8SignatureSectionBoxStyle,
+  getForm8SignatureLinePreviewStyle,
+  getForm8SignatureNamePreviewStyle,
+  getForm8DividerPreviewStyle,
+  getForm8HeaderBoxPreviewStyle,
+  getForm8HeaderLinePreviewStyle,
+  getForm8ImageBorderPreviewStyle,
 } from '../../../utils/formTemplate/form8BlockStyle';
 import { getForm8TextSizePt } from '../../../utils/formTemplate/form8TypographyGroups';
 import {
+  getForm8StockCellBorderStyle,
+  getForm8StockSectionBoxStyle,
   getForm8StockTablePreviewVars,
-  stockTableHasGridBorder,
+  isForm8TableBorderOn,
 } from '../../../utils/formTemplate/form8StockTableStyle';
 import {
   getForm8FieldDisplayLabel,
@@ -57,8 +67,9 @@ import {
   getForm8SectionDisplayTitle,
 } from '../../../utils/formTemplate/form8SectionDisplay';
 import {
-  FORM8_STOCK_TABLE_COLUMNS,
   getForm8StockCellValue,
+  getForm8StockFooterCellValue,
+  getVisibleForm8StockColumns,
 } from '../../../utils/formTemplate/form8StockTable';
 import Form8BuilderCanvasDropSlot from './Form8BuilderCanvasDropSlot';
 import { F8_PALETTE_DRAG_MIME } from '../../../utils/formTemplate/form8BuilderPalette';
@@ -205,13 +216,21 @@ const FormTemplatePreview = ({
 
   const renderStockItemsTable = (stockBlockSpec = {}) => {
     if (!showStockItemImages || !stockItemRows?.length) return null;
-    const gridClass = stockTableHasGridBorder(stockBlockSpec) ? ' f8-stock-table--grid' : '';
+    const columns = getVisibleForm8StockColumns(stockBlockSpec);
+    const bordered = isForm8TableBorderOn(stockBlockSpec);
+    const cellBorderStyle = getForm8StockCellBorderStyle(stockBlockSpec, config.theme || {});
     return (
-      <table className={`form-custom-a4-table form-custom-a4-stock-table${gridClass}`}>
+      <table
+        className={`form-custom-a4-stock-table${bordered ? ' f8-stock-table--bordered' : ''}`}
+      >
         <thead>
           <tr>
-            {FORM8_STOCK_TABLE_COLUMNS.map((col) => (
-              <th key={col.id} className={`form-custom-a4-stock-th--${col.align}`}>
+            {columns.map((col) => (
+              <th
+                key={col.id}
+                className={`form-custom-a4-stock-th--${col.align} form-custom-a4-stock-col--${col.id}`}
+                style={cellBorderStyle}
+              >
                 {col.label}
               </th>
             ))}
@@ -220,8 +239,12 @@ const FormTemplatePreview = ({
         <tbody>
           {stockItemRows.map((row, idx) => (
             <tr key={row.imageKey || idx}>
-              {FORM8_STOCK_TABLE_COLUMNS.map((col) => (
-                <td key={col.id} className={`form-custom-a4-stock-td--${col.align}`}>
+              {columns.map((col) => (
+                <td
+                  key={col.id}
+                  className={`form-custom-a4-stock-td--${col.align} form-custom-a4-stock-col--${col.id}`}
+                  style={cellBorderStyle}
+                >
                   {col.id === 'image' ? (
                     row.previewImageUrl ? (
                       <img
@@ -240,6 +263,19 @@ const FormTemplatePreview = ({
             </tr>
           ))}
         </tbody>
+        <tfoot>
+          <tr>
+            {columns.map((col) => (
+              <td
+                key={col.id}
+                className={`form-custom-a4-stock-tf--${col.align} form-custom-a4-stock-col--${col.id}`}
+                style={cellBorderStyle}
+              >
+                {getForm8StockFooterCellValue(stockItemRows, col.id, columns)}
+              </td>
+            ))}
+          </tr>
+        </tfoot>
       </table>
     );
   };
@@ -259,10 +295,17 @@ const FormTemplatePreview = ({
     return getFieldTestValue(field.id, testData);
   };
 
-  const renderSectionFields = (section, { excludePhoto = false } = {}) => {
+  const renderSectionFields = (
+    section,
+    { excludePhoto = false, labelStyle, valueStyle } = {}
+  ) => {
     const fields = (section.fields || []).filter(
       (f) => f.enabled && !(excludePhoto && f.id === CUSTOMER_PHOTO_FIELD_ID)
     );
+    const labelCss = labelStyle && Object.keys(labelStyle).length ? labelStyle : undefined;
+    const valueCss = valueStyle && Object.keys(valueStyle).length ? valueStyle : undefined;
+    const labelClass = labelCss?.color ? 'label f8-field-text--custom' : 'label';
+    const valueClass = valueCss?.color ? 'value f8-field-text--custom' : 'value';
     return (
       <div className="form-custom-a4-fields">
         {groupFieldsByLayout(fields).map((group, gIdx) => (
@@ -278,8 +321,10 @@ const FormTemplatePreview = ({
                   field.backgroundColor ? { backgroundColor: field.backgroundColor } : undefined
                 }
               >
-                <span className="label">{getForm8FieldDisplayLabel(field)}</span>
-                <span className="value">
+                <span className={labelClass} style={labelCss}>
+                  {getForm8FieldDisplayLabel(field)}
+                </span>
+                <span className={valueClass} style={valueCss}>
                   {renderFieldValue(field, excludePhoto)}
                 </span>
               </div>
@@ -295,7 +340,8 @@ const FormTemplatePreview = ({
     const excludePhoto =
       blockOrder.includes('customer_photo') && layout.showCustomerPhoto !== false;
 
-    const { sectionStyle, sectionClassName } = getForm8SectionPreviewStyle(section);
+    const { sectionStyle, sectionClassName, labelStyle, valueStyle } =
+      getForm8SectionPreviewStyle(section);
     const { titleStyle, titleClassName } = getForm8SectionTitlePreviewStyle(section);
 
     return (
@@ -334,7 +380,7 @@ const FormTemplatePreview = ({
             </tbody>
           </table>
         ) : (
-          renderSectionFields(section, { excludePhoto })
+          renderSectionFields(section, { excludePhoto, labelStyle, valueStyle })
         )}
       </section>
     );
@@ -346,9 +392,16 @@ const FormTemplatePreview = ({
     Boolean(freeCanvas && isForm8MediaBlockId(blockId));
 
   const logoMediaProps = (blockId) => {
-    if (!builderMode || logoFillsBlockBox(blockId)) return {};
-    const style = getForm8LogoMediaStyle(config, blockId, logoPageWidthPx);
-    return { style };
+    const borderStyle = getForm8ImageBorderPreviewStyle(getBlockLayout(config, blockId));
+    if (!builderMode || logoFillsBlockBox(blockId)) {
+      return Object.keys(borderStyle).length ? { style: borderStyle } : {};
+    }
+    return {
+      style: {
+        ...getForm8LogoMediaStyle(config, blockId, logoPageWidthPx),
+        ...borderStyle,
+      },
+    };
   };
 
   const mediaSlotSide = (blockId) => {
@@ -389,18 +442,24 @@ const FormTemplatePreview = ({
     return <div className="form-custom-a4-firm-header">{html}</div>;
   };
 
-  const renderFooterNoteBody = (raw) => {
+  const renderFooterNoteBody = (raw, style) => {
     const html = replaceTemplateVariables(raw, testData);
     if (!html) return null;
+    const className = 'form-custom-a4-footer-note-body f8-text-part--custom';
     if (templateLooksLikeHtml(html)) {
       return (
         <div
-          className="form-custom-a4-footer-note-body"
+          className={className}
+          style={style}
           dangerouslySetInnerHTML={{ __html: html }}
         />
       );
     }
-    return <p className="form-custom-a4-footer-note-body">{html}</p>;
+    return (
+      <p className={className} style={style}>
+        {html}
+      </p>
+    );
   };
 
   const renderBlock = (blockId, { inLogoBand = false } = {}) => {
@@ -428,6 +487,20 @@ const FormTemplatePreview = ({
         ? 'f8-builder-block--section f8-builder-block--band-section'
         : 'f8-builder-block--section';
       return wrapBlock(blockId, sectionClass, renderSection(section), { inLogoBand });
+    }
+
+    if (isForm8DividerBlockId(blockId)) {
+      const dividerSpec = getBlockLayout(config, blockId);
+      const dividerTheme = config.theme || {};
+      return wrapBlock(
+        blockId,
+        'f8-builder-block--divider',
+          <hr
+            className="form-custom-a4-divider"
+            data-f8-divider={blockId}
+            style={getForm8DividerPreviewStyle(dividerSpec, dividerTheme)}
+          />
+      );
     }
 
     switch (blockId) {
@@ -498,7 +571,14 @@ const FormTemplatePreview = ({
           </div>
         );
 
-      case 'form_header':
+      case 'form_header': {
+        const headerSpec = getBlockLayout(config, blockId);
+        const headerBox = getForm8HeaderBoxPreviewStyle(headerSpec);
+        const headerLineStyle = (id) => {
+          const line = FORM8_HEADER_LINE_DEFS.find((item) => item.id === id);
+          const style = line ? getForm8HeaderLinePreviewStyle(headerSpec, line) : {};
+          return Object.keys(style).length ? style : undefined;
+        };
         return wrapBlock(
           blockId,
           'f8-builder-block--header',
@@ -506,20 +586,32 @@ const FormTemplatePreview = ({
             {layout.useFirmFormHeader && firmFormHeader
               ? renderFirmHeaderHtml(firmFormHeader)
               : null}
-            <header className="form-custom-a4-header form-custom-a4-header--title">
-              <h1>{config.title || 'FORM 8'}</h1>
-              {config.subtitle ? <p className="subtitle">{config.subtitle}</p> : null}
+            <header
+              className="form-custom-a4-header form-custom-a4-header--title"
+              style={Object.keys(headerBox).length ? headerBox : undefined}
+            >
+              <h1 style={headerLineStyle('title')}>{config.title || 'FORM 8'}</h1>
+              {config.subtitle ? (
+                <p className="subtitle" style={headerLineStyle('subtitle')}>
+                  {config.subtitle}
+                </p>
+              ) : null}
               {config.complianceReference ? (
-                <p className="compliance">{config.complianceReference}</p>
+                <p className="compliance" style={headerLineStyle('compliance')}>
+                  {config.complianceReference}
+                </p>
               ) : null}
               {config.headerNote ? (
-                <p className="note">{replaceTemplateVariables(config.headerNote, testData)}</p>
+                <p className="note" style={headerLineStyle('note')}>
+                  {replaceTemplateVariables(config.headerNote, testData)}
+                </p>
               ) : null}
             </header>
           </>
         );
+      }
 
-      case 'customer_photo':
+      case 'customer_photo': {
         if (!showCustomerPhoto) return null;
         return wrapBlock(
           blockId,
@@ -539,18 +631,21 @@ const FormTemplatePreview = ({
                 className={`form-custom-a4-customer-photo${
                   logoFillsBlockBox(blockId) ? ' form-custom-a4-logo-img--fill-box' : ''
                 }`}
+                {...logoMediaProps(blockId)}
               />
             ) : (
               <div
                 className={`form-custom-a4-photo-placeholder${
                   logoFillsBlockBox(blockId) ? ' form-custom-a4-logo-placeholder--fill-box' : ''
                 }`}
+                {...logoMediaProps(blockId)}
               >
                 Photo
               </div>
             )}
           </div>
         );
+      }
 
       case 'stock_line_items': {
         const itemSection = sectionsById.get('item_details');
@@ -570,7 +665,7 @@ const FormTemplatePreview = ({
         const theme = config.theme || {};
         const mergedStockSectionStyle = {
           ...stockStyle.sectionStyle,
-          ...getForm8BlockBoxPreviewStyle(stockBlockSpec, theme),
+          ...getForm8StockSectionBoxStyle(stockBlockSpec),
           ...getForm8StockTablePreviewVars(stockBlockSpec, theme),
         };
         if (stockBlockSpec.labelFontSizePt) {
@@ -617,20 +712,19 @@ const FormTemplatePreview = ({
         if (!config.termsAndConditions) return null;
         const termsSpec = getBlockLayout(config, blockId);
         const theme = config.theme || {};
-        const termsBox = getForm8BlockBoxPreviewStyle(termsSpec, theme);
-        const termsTitle = getForm8BlockTitlePreviewStyle(termsSpec, theme, page.fontPt + 1);
-        const termsBody = getForm8BlockBodyPreviewStyle(termsSpec, theme, page.fontPt);
+        const termsTitle = getForm8TextPartPreviewStyle(termsSpec, 'title', theme, page.fontPt + 1);
+        const termsBody = {
+          ...getForm8TextPartPreviewStyle(termsSpec, 'body', theme, page.fontPt),
+          whiteSpace: 'pre-wrap',
+        };
         return wrapBlock(
           blockId,
           'f8-builder-block--legal',
-          <section
-            className="form-custom-a4-section form-custom-a4-terms form-custom-a4-section--block"
-            style={Object.keys(termsBox).length ? termsBox : undefined}
-          >
-            <h3 style={Object.keys(termsTitle).length ? termsTitle : undefined}>
+          <section className="form-custom-a4-section form-custom-a4-terms form-custom-a4-section--block">
+            <h3 className="f8-text-part--custom" style={termsTitle}>
               Terms &amp; Conditions
             </h3>
-            <p style={Object.keys(termsBody).length ? termsBody : undefined}>
+            <p className="f8-text-part--custom" style={termsBody}>
               {replaceTemplateVariables(config.termsAndConditions, testData)}
             </p>
           </section>
@@ -645,25 +739,19 @@ const FormTemplatePreview = ({
         if (!footerText) return null;
         const footerSpec = getBlockLayout(config, blockId);
         const theme = config.theme || {};
-        const footerBox = getForm8BlockBoxPreviewStyle(footerSpec, theme);
-        const footerTitle = getForm8BlockTitlePreviewStyle(footerSpec, theme, page.fontPt + 1);
-        const footerBody = getForm8BlockBodyPreviewStyle(footerSpec, theme, page.fontPt);
+        const footerTitle = getForm8TextPartPreviewStyle(footerSpec, 'title', theme, page.fontPt + 1);
+        const footerBody = {
+          ...getForm8TextPartPreviewStyle(footerSpec, 'body', theme, page.fontPt),
+          whiteSpace: 'pre-wrap',
+        };
         return wrapBlock(
           blockId,
           'f8-builder-block--footer',
-          <section
-            className="form-custom-a4-section form-custom-a4-section--block form-custom-a4-section--footer-note"
-            style={Object.keys(footerBox).length ? footerBox : undefined}
-          >
-            <h3 style={Object.keys(footerTitle).length ? footerTitle : undefined}>
+          <section className="form-custom-a4-section form-custom-a4-section--block form-custom-a4-section--footer-note">
+            <h3 className="f8-text-part--custom" style={footerTitle}>
               {getForm8FooterNoteTitle(config)}
             </h3>
-            <div
-              className="form-custom-a4-footer-note-body"
-              style={Object.keys(footerBody).length ? footerBody : undefined}
-            >
-              {renderFooterNoteBody(footerText)}
-            </div>
+            {renderFooterNoteBody(footerText, footerBody)}
           </section>
         );
       }
@@ -677,7 +765,7 @@ const FormTemplatePreview = ({
             {footerImageUrl ? (
               <img
                 src={footerImageUrl}
-                alt="Footer image"
+                alt="Footer"
                 className={logoImgClass(blockId)}
                 {...logoMediaProps(blockId)}
               />
@@ -692,12 +780,25 @@ const FormTemplatePreview = ({
           </div>
         );
 
-      case 'signature_lines':
+      case 'signature_lines': {
+        const sigSpec = getBlockLayout(config, blockId);
+        const sigTheme = config.theme || {};
+        const sigBox = getForm8SignatureSectionBoxStyle(sigSpec);
         return wrapBlock(
           blockId,
           'f8-builder-block--signatures',
-          <Form8SignatureBlock entries={signatureEntries} />
+          <Form8SignatureBlock
+            entries={signatureEntries}
+            boxStyle={Object.keys(sigBox).length ? sigBox : undefined}
+            captionStyle={getForm8SignatureNamePreviewStyle(
+              sigSpec,
+              sigTheme,
+              page.valueFontPt
+            )}
+            lineStyle={getForm8SignatureLinePreviewStyle(sigSpec, sigTheme)}
+          />
         );
+      }
 
       case 'form_legal':
         return wrapBlock(
@@ -736,6 +837,12 @@ const FormTemplatePreview = ({
   const safeScale = Number.isFinite(scale) && scale > 0 ? scale : 0.65;
   const pageWPx = page.widthMm * MM_PX;
   const pageHPx = canvasPageHeightMm * MM_PX;
+
+  const handleBlankCanvasPointerDown = (e) => {
+    if (!builderMode) return;
+    if (e.target.closest('.f8-builder-block')) return;
+    onSelectBlock?.(null);
+  };
 
   const handleCanvasDragOver = (e) => {
     if (!builderMode || !dragTransferHas(e.dataTransfer, F8_PALETTE_DRAG_MIME)) return;
@@ -845,6 +952,7 @@ const FormTemplatePreview = ({
               transform: `scale(${safeScale})`,
               transformOrigin: 'top left',
             }}
+            onPointerDown={builderMode ? handleBlankCanvasPointerDown : undefined}
             onDragOver={builderMode ? handleCanvasDragOver : undefined}
             onDrop={builderMode ? handleCanvasDrop : undefined}
           >
@@ -867,6 +975,7 @@ const FormTemplatePreview = ({
           transform: `scale(${safeScale})`,
           transformOrigin: 'top center',
         }}
+        onPointerDown={builderMode ? handleBlankCanvasPointerDown : undefined}
       >
         {pageInner}
       </div>

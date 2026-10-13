@@ -55,6 +55,11 @@ export const FORM8_SPECIAL_BLOCKS = [
     category: 'optional',
     description: 'Statutory note (Rule 18 / Section 24)',
   },
+  {
+    id: 'form_divider',
+    label: 'Divider',
+    category: 'optional',
+  },
 ];
 
 export const sectionBlockId = (sectionId) => `section:${sectionId}`;

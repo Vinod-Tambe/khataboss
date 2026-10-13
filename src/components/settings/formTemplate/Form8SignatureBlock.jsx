@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Form8SignatureBlock = ({ entries = [] }) => {
+const Form8SignatureBlock = ({ entries = [], boxStyle, captionStyle, lineStyle }) => {
   if (!entries.length) return null;
 
   const columnClass =
@@ -9,12 +9,21 @@ const Form8SignatureBlock = ({ entries = [] }) => {
       : 'form-custom-a4-signatures form-custom-a4-signatures--row form-custom-a4-signatures--cols-2';
 
   return (
-    <div className={columnClass}>
+    <div className={columnClass} style={boxStyle}>
       {entries.map(({ id, caption }) => (
         <div key={id} className="form-custom-a4-sign-cell">
           <div className="form-custom-a4-sign-cell__space" aria-hidden="true" />
-          <div className="form-custom-a4-sign-cell__line" aria-hidden="true" />
-          <div className="form-custom-a4-sign-cell__caption">{caption}</div>
+          <div
+            className="form-custom-a4-sign-cell__line f8-sig-line--custom"
+            aria-hidden="true"
+            style={lineStyle}
+          />
+          <div
+            className="form-custom-a4-sign-cell__caption f8-sig-name--custom"
+            style={captionStyle}
+          >
+            {caption}
+          </div>
         </div>
       ))}
     </div>

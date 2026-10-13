@@ -1,17 +1,16 @@
 import React, { useMemo, useState } from 'react';
 import {
-  FiChevronLeft,
-  FiChevronRight,
-  FiDownload,
-  FiExternalLink,
   FiSave,
 } from 'react-icons/fi';
+import { FaFilePdf } from 'react-icons/fa';
 import FormTemplatePreview from './FormTemplatePreview';
 import Form8BuilderElementsPanel from './Form8BuilderElementsPanel';
 import Form8BuilderPropertiesPanel from './Form8BuilderPropertiesPanel';
 import Form8BuilderFitPreview from './Form8BuilderFitPreview';
 import { getSortedSections, normalizeFormConfig } from '../../../utils/formTemplate/formTemplateConfig';
 import { resolveForm8BuilderImageUrls } from '../../../utils/formTemplate/formTemplateImageAssets';
+import { parseSectionBlockId } from '../../../utils/formTemplate/form8BuilderCatalog';
+import { isForm8DividerBlockId, isForm8DividerPaletteId } from '../../../utils/formTemplate/form8DividerBlocks';
 
 const Form8BuilderWorkspace = ({
   firmName,
@@ -21,9 +20,8 @@ const Form8BuilderWorkspace = ({
   saving,
   onStatusChange,
   onSave,
-  onDiscard,
+  onBackToList,
   onPdfPreview,
-  onPdfDownload,
   updateConfig,
   updateTheme,
   updateLayout,
@@ -39,7 +37,7 @@ const Form8BuilderWorkspace = ({
   updateBlockLayout,
   updateFormAsset,
 }) => {
-  const [selectedBlockId, setSelectedBlockId] = useState('form_header');
+  const [selectedBlockId, setSelectedBlockId] = useState(null);
   const [propertiesTab, setPropertiesTab] = useState('content');
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
@@ -52,8 +50,15 @@ const Form8BuilderWorkspace = ({
   );
 
   const handleSelectBlock = (blockId) => {
-    setSelectedBlockId(blockId);
-    setPropertiesTab('content');
+    if (isForm8DividerPaletteId(blockId)) return;
+    setSelectedBlockId(blockId || null);
+    if (blockId && (parseSectionBlockId(blockId) || isForm8DividerBlockId(blockId))) {
+      setPropertiesTab('advance');
+    }
+  };
+
+  const handleDeselectBlock = () => {
+    setSelectedBlockId(null);
   };
 
   return (
@@ -64,14 +69,13 @@ const Form8BuilderWorkspace = ({
           <span className="f8-builder-firm">{firmName}</span>
         </div>
         <div className="f8-builder-topbar-actions">
+          {typeof onBackToList === 'function' ? (
+            <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onBackToList}>
+              Back to list
+            </button>
+          ) : null}
           <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onPdfPreview}>
-            <FiExternalLink size={14} className="me-1" /> PDF
-          </button>
-          <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onPdfDownload}>
-            <FiDownload size={14} className="me-1" /> Download
-          </button>
-          <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onDiscard}>
-            Cancel
+            <FaFilePdf size={14} className="me-1" /> View
           </button>
           <button type="button" className="btn btn-sm btn-primary" onClick={onSave} disabled={saving}>
             <FiSave size={14} className="me-1" />
@@ -92,27 +96,16 @@ const Form8BuilderWorkspace = ({
           onToggleBlockOnCanvas={toggleBlockOnCanvas}
           collapsed={!leftPanelOpen}
           onToggleCollapsed={() => setLeftPanelOpen(true)}
+          onCollapse={() => setLeftPanelOpen(false)}
         />
 
-        <main className="f8-builder-canvas-wrap f8-builder-canvas-wrap--fit">
-          <div className="f8-builder-canvas-rails">
-            <button
-              type="button"
-              className="f8-builder-rail-btn"
-              title={leftPanelOpen ? 'Hide elements' : 'Show elements'}
-              onClick={() => setLeftPanelOpen((v) => !v)}
-            >
-              {leftPanelOpen ? <FiChevronLeft size={16} /> : <FiChevronRight size={16} />}
-            </button>
-            <button
-              type="button"
-              className="f8-builder-rail-btn f8-builder-rail-btn--end"
-              title={rightPanelOpen ? 'Hide properties' : 'Show properties'}
-              onClick={() => setRightPanelOpen((v) => !v)}
-            >
-              {rightPanelOpen ? <FiChevronRight size={16} /> : <FiChevronLeft size={16} />}
-            </button>
-          </div>
+        <main
+          className="f8-builder-canvas-wrap f8-builder-canvas-wrap--fit"
+          onPointerDown={(e) => {
+            if (e.target.closest('.f8-builder-block')) return;
+            handleDeselectBlock();
+          }}
+        >
           <Form8BuilderFitPreview config={normalized}>
             {(fitScale) => (
               <FormTemplatePreview
@@ -140,10 +133,11 @@ const Form8BuilderWorkspace = ({
         <Form8BuilderPropertiesPanel
           collapsed={!rightPanelOpen}
           onToggleCollapsed={() => setRightPanelOpen(true)}
+          onCollapse={() => setRightPanelOpen(false)}
           blockId={selectedBlockId}
           propertiesTab={propertiesTab}
           onTabChange={setPropertiesTab}
-          onClose={() => setSelectedBlockId('form_header')}
+          onClose={handleDeselectBlock}
           formConfig={normalized}
           status={status}
           onStatusChange={onStatusChange}

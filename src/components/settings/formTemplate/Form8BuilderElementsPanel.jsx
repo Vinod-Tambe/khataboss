@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import { FiChevronRight, FiSearch } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiSearch } from 'react-icons/fi';
 import { canToggleForm8BlockOnCanvas } from '../../../utils/formTemplate/form8BuilderBlocks';
 import { buildForm8PaletteCatalog } from '../../../utils/formTemplate/form8BuilderPalette';
 
-const PaletteRow = ({ item, selected, onToggle }) => {
+const PaletteRow = ({ item, selected, onSelect, onToggleCanvas }) => {
   const toggleable = canToggleForm8BlockOnCanvas(item.id);
   const className = [
     'f8-builder-palette-item',
@@ -17,20 +17,26 @@ const PaletteRow = ({ item, selected, onToggle }) => {
     .filter(Boolean)
     .join(' ');
 
-  const statusLabel = item.onCanvas ? 'On form — click to remove' : 'Off form — click to add';
+  const handleActivate = () => {
+    if (item.onCanvas || !toggleable) {
+      onSelect?.(item);
+      return;
+    }
+    onToggleCanvas?.(item);
+  };
 
   return (
     <div
       role="button"
       tabIndex={0}
       className={className}
-      title={toggleable ? statusLabel : item.label}
-      aria-pressed={item.onCanvas}
-      onClick={() => onToggle?.(item)}
+      title={item.onCanvas ? 'On form — click to select' : 'Off form — click to add'}
+      aria-pressed={selected}
+      onClick={handleActivate}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          onToggle?.(item);
+          handleActivate();
         }
       }}
     >
@@ -38,7 +44,20 @@ const PaletteRow = ({ item, selected, onToggle }) => {
       {toggleable ? (
         <span
           className={`f8-builder-palette-status${item.onCanvas ? ' is-on' : ' is-off'}`}
-          aria-hidden="true"
+          role="button"
+          tabIndex={0}
+          title={item.onCanvas ? 'Remove from form' : 'Add to form'}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleCanvas?.(item);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              e.stopPropagation();
+              onToggleCanvas?.(item);
+            }
+          }}
         >
           {item.onCanvas ? 'On' : 'Add'}
         </span>
@@ -55,6 +74,7 @@ const Form8BuilderElementsPanel = ({
   onToggleBlockOnCanvas,
   collapsed = false,
   onToggleCollapsed,
+  onCollapse,
 }) => {
   const [query, setQuery] = useState('');
 
@@ -74,7 +94,16 @@ const Form8BuilderElementsPanel = ({
     );
   }, [catalog.items, q]);
 
-  const handleToggleItem = (item) => {
+  const handleSelectItem = (item) => {
+    onSelectBlock(item.id);
+  };
+
+  const handleToggleCanvas = (item) => {
+    if (item.repeatable) {
+      const addedId = onToggleBlockOnCanvas?.(item.id);
+      onSelectBlock(addedId || item.id);
+      return;
+    }
     if (!canToggleForm8BlockOnCanvas(item.id)) {
       onSelectBlock(item.id);
       return;
@@ -82,12 +111,12 @@ const Form8BuilderElementsPanel = ({
     if (item.onCanvas) {
       onToggleBlockOnCanvas?.(item.id);
       if (selectedBlockId === item.id) {
-        onSelectBlock('form_header');
+        onSelectBlock(null);
       }
       return;
     }
-    onToggleBlockOnCanvas?.(item.id);
-    onSelectBlock(item.id);
+    const addedId = onToggleBlockOnCanvas?.(item.id);
+    onSelectBlock(addedId || item.id);
   };
 
   if (collapsed) {
@@ -108,7 +137,17 @@ const Form8BuilderElementsPanel = ({
   return (
     <aside className="f8-builder-panel f8-builder-panel--elements f8-builder-panel--compact">
       <div className="f8-builder-panel-fixed">
-        <div className="f8-builder-panel-title">Elements</div>
+        <div className="f8-builder-panel-title-row">
+          <div className="f8-builder-panel-title">Elements</div>
+          <button
+            type="button"
+            className="f8-builder-panel-hide"
+            title="Hide elements"
+            onClick={onCollapse}
+          >
+            <FiChevronLeft size={16} />
+          </button>
+        </div>
         <div className="f8-builder-search-wrap">
           <FiSearch className="f8-builder-search-icon" size={14} aria-hidden="true" />
           <input
@@ -128,7 +167,8 @@ const Form8BuilderElementsPanel = ({
               key={item.id}
               item={item}
               selected={selectedBlockId === item.id}
-              onToggle={handleToggleItem}
+              onSelect={handleSelectItem}
+              onToggleCanvas={handleToggleCanvas}
             />
           ))}
         </div>

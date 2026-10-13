@@ -9,9 +9,13 @@ import usePermissions from "../hooks/usePermissions";
  */
 const PermissionRoute = ({ permission, anyOf, children }) => {
   const profileLoading = useSelector((state) => state.auth.profileLoading);
+  const user = useSelector((state) => state.auth.user);
   const { can, canAny } = usePermissions();
 
-  if (profileLoading) {
+  // Only block the first paint when we have no cached session.
+  // Background profile refresh (every 2 min / tab focus) must NOT unmount
+  // the page — that wiped Form 8 / agreement editors back to the list.
+  if (profileLoading && !user) {
     return (
       <div className="d-flex align-items-center justify-content-center py-5">
         <div className="spinner-border spinner-border-sm text-secondary" role="status" />

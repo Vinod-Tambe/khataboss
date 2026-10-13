@@ -1,7 +1,6 @@
 import defaultConfig from '../../data/defaultFormTemplate.json';
 import { buildDefaultTemplateVariables } from './formTemplateMacros';
 import {
-  FORM8_DEFAULT_BLOCK_LAYOUTS,
   normalizeBuilderBlockOrder,
   seedForm8FreeMediaBlockLayout,
 } from './form8BuilderBlocks';
@@ -12,6 +11,7 @@ import {
   seedForm8CanvasPositions,
 } from './form8CanvasLayout';
 import { FORM8_RETIRED_SECTION_IDS } from './form8BuilderCatalog';
+import { migrateForm8DividerBlocks } from './form8DividerBlocks';
 import { mergeSectionStyleFields } from './form8SectionStyle';
 import { normalizeForm8SignatureLabels } from './form8Signatures';
 import {
@@ -323,18 +323,21 @@ export const normalizeFormConfig = (config) => {
       ? Boolean(layoutFromConfig.showFooterImage)
       : Boolean(DEFAULT_FORM_CONFIG.layout.showFooterImage);
 
-  const builderBlockOrder = normalizeBuilderBlockOrder(
-    Array.isArray(config.builderBlockOrder) && config.builderBlockOrder.length
-      ? config.builderBlockOrder
-      : DEFAULT_FORM_CONFIG.builderBlockOrder || []
-  ).filter((id) => id !== 'layout_logo');
-
-  const blockLayouts = isLegacyBuilder
-    ? { ...(DEFAULT_FORM_CONFIG.blockLayouts || {}) }
-    : {
-        ...(DEFAULT_FORM_CONFIG.blockLayouts || {}),
-        ...(config.blockLayouts || {}),
-      };
+  const dividerMigrated = migrateForm8DividerBlocks({
+    builderBlockOrder: normalizeBuilderBlockOrder(
+      Array.isArray(config.builderBlockOrder) && config.builderBlockOrder.length
+        ? config.builderBlockOrder
+        : DEFAULT_FORM_CONFIG.builderBlockOrder || []
+    ).filter((id) => id !== 'layout_logo'),
+    blockLayouts: isLegacyBuilder
+      ? { ...(DEFAULT_FORM_CONFIG.blockLayouts || {}) }
+      : {
+          ...(DEFAULT_FORM_CONFIG.blockLayouts || {}),
+          ...(config.blockLayouts || {}),
+        },
+  });
+  const builderBlockOrder = dividerMigrated.builderBlockOrder;
+  const blockLayouts = dividerMigrated.blockLayouts;
 
   const pageDims = getPageStyle({ ...DEFAULT_FORM_CONFIG, ...config, sections, builderBlockOrder, blockLayouts, layout: isLegacyBuilder ? DEFAULT_FORM_CONFIG.layout : { ...DEFAULT_FORM_CONFIG.layout, ...layoutFromConfig, showStockItemImages, showFooterImage } });
 

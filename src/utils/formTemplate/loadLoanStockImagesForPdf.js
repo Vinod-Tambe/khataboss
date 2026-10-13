@@ -34,10 +34,9 @@ export async function loadLoanStockImagesForPdf(items = []) {
         gs_weight: formatWeight(item.st_gs_weight, item.st_gs_type),
         nt_weight: formatWeight(item.st_nt_weight, item.st_nt_type),
         purity: item.st_purity != null && item.st_purity !== '' ? String(item.st_purity) : '—',
-        fine_weight:
-          item.st_fine_weight != null && item.st_fine_weight !== ''
-            ? String(item.st_fine_weight)
-            : '—',
+        rate:
+          item.st_rate != null && item.st_rate !== '' ? formatMoney(item.st_rate) : '—',
+        fine_weight: formatWeight(item.st_fine_weight, item.st_fine_type || 'GM'),
         valuation: formatMoney(
           item.st_final_valuation ?? item.st_valuation ?? item.valuation ?? 0
         ),

@@ -1,6 +1,6 @@
 import React from 'react';
 import { toast } from 'react-hot-toast';
-import { FiChevronLeft, FiX } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiX } from 'react-icons/fi';
 import DraggableList from './DraggableList';
 import FormTemplateMacroPanel from './FormTemplateMacroPanel';
 import Form8BuilderImageUpload from './Form8BuilderImageUpload';
@@ -18,27 +18,47 @@ import {
 } from '../../../utils/formTemplate/form8BuilderBlocks';
 import { isForm8BlockOnCanvas } from '../../../utils/formTemplate/form8BuilderPalette';
 import {
-  THEME_FIELDS,
-  FIELD_LAYOUT_OPTIONS,
   getPageStyle,
   getSortedFields,
-  resolveFieldFontSizes,
 } from '../../../utils/formTemplate/formTemplateConfig';
-import { getForm8SectionDisplayTitle } from '../../../utils/formTemplate/form8SectionDisplay';
-import { SECTION_STYLE_RESET_PATCH } from '../../../utils/formTemplate/form8SectionStyle';
+import {
+  FORM8_FONT_WEIGHT_OPTIONS,
+  SECTION_STYLE_RESET_PATCH,
+  isForm8SectionBorderOn,
+} from '../../../utils/formTemplate/form8SectionStyle';
 import {
   FORM8_BLOCK_STYLE_RESET_PATCH,
-  FORM8_TYPOGRAPHY_BLOCK_IDS,
+  FORM8_HEADER_LINE_DEFS,
+  isForm8HeaderBorderOn,
+  isForm8ImageBorderOn,
+  isForm8TextPartBorderOn,
+  FORM8_DIVIDER_STYLE_OPTIONS,
 } from '../../../utils/formTemplate/form8BlockStyle';
+import { isForm8TableBorderOn } from '../../../utils/formTemplate/form8StockTableStyle';
+import {
+  FORM_FIELD_FONT_PT_MAX,
+  FORM_FIELD_FONT_PT_MIN,
+} from '../../../utils/formTemplate/formTemplateConfig';
 import Form8TypographyFields from './Form8TypographyFields';
+import {
+  BOX_COLORS,
+  FRIENDLY_FIELD_LAYOUT_OPTIONS,
+  TITLE_COLORS,
+  getForm8ElementStyleProfile,
+  resolveStyleColorFallback,
+  usesForm8SectionAdvance,
+} from '../../../utils/formTemplate/form8ElementStyleProfiles';
 import {
   FORM_TEMPLATE_ASSET_KEYS,
   getFormTemplateAssets,
 } from '../../../utils/formTemplate/formTemplateImageAssets';
+import { FORM8_STOCK_TABLE_COLUMNS } from '../../../utils/formTemplate/form8StockTable';
 import {
-  resolveFirmLeftLogoUrl,
-  resolveFirmRightLogoUrl,
-} from '../../../utils/formTemplate/loadFirmAssetsForPdf';
+  getForm8DividerLabel,
+  isForm8DividerBlockId,
+  readForm8DividerOwnStyle,
+} from '../../../utils/formTemplate/form8DividerBlocks';
+import { form8TextTypographyPatch } from '../../../utils/formTemplate/form8TypographyGroups';
 
 const PROP_TABS = [
   { id: 'content', label: 'Content' },
@@ -47,13 +67,16 @@ const PROP_TABS = [
 ];
 
 const blockTitle = (blockId, config) => {
+  const meta = FORM8_BLOCK_META[blockId];
+  if (isForm8DividerBlockId(blockId)) {
+    return getForm8DividerLabel(blockId, config?.builderBlockOrder || []);
+  }
+  if (meta?.label) return meta.label;
   const sectionId = parseSectionBlockId(blockId);
   if (sectionId) {
     const section = config?.sections?.find((s) => s.id === sectionId);
     return section?.label || 'Section';
   }
-  const meta = FORM8_BLOCK_META[blockId];
-  if (meta?.label) return meta.label;
   const titles = {
     page_settings: 'Page & Theme',
     macro_keywords: 'Macro Keywords',
@@ -79,10 +102,10 @@ const Form8BuilderPropertiesPanel = ({
   updateBlockLayout,
   updateFormAsset,
   onToggleBlockOnCanvas,
-  firm = null,
   imageUrls = null,
   collapsed = false,
   onToggleCollapsed,
+  onCollapse,
 }) => {
   const toggleBlockOnCanvas = onToggleBlockOnCanvas;
 
@@ -118,7 +141,18 @@ const Form8BuilderPropertiesPanel = ({
   if (!formConfig || !blockId) {
     return (
       <aside className="f8-builder-panel f8-builder-panel--props f8-builder-panel--empty">
-        <p className="text-muted small mb-0">Select an element on the canvas or from the left panel.</p>
+        <div className="f8-builder-panel-title-row px-2 pt-2">
+          <div className="f8-builder-panel-title mb-0">Properties</div>
+          <button
+            type="button"
+            className="f8-builder-panel-hide"
+            title="Hide properties"
+            onClick={onCollapse}
+          >
+            <FiChevronRight size={16} />
+          </button>
+        </div>
+        <p className="text-muted small mb-0 px-2 pb-2">Select an element on the canvas or from the left panel.</p>
       </aside>
     );
   }
@@ -130,109 +164,23 @@ const Form8BuilderPropertiesPanel = ({
 
   const setSectionStyle = (patch) => updateSection(sectionId, patch);
 
-  const renderSectionColorField = (label, key, fallback = '#ffffff') => (
+  const renderColorRow = (label, key, fallback, value, onChange) => (
     <div className="mb-2">
       <label className="form-label small">{label}</label>
       <div className="form-custom-color-input-row">
         <input
           type="color"
-          value={section?.[key] || fallback}
-          onChange={(e) => setSectionStyle({ [key]: e.target.value })}
+          value={value || fallback}
+          onChange={(e) => onChange({ [key]: e.target.value })}
         />
         <input
           type="text"
           className="form-control form-control-sm"
-          placeholder={`Default (${fallback})`}
-          value={section?.[key] || ''}
-          onChange={(e) => setSectionStyle({ [key]: e.target.value })}
+          placeholder={fallback}
+          value={value || ''}
+          onChange={(e) => onChange({ [key]: e.target.value })}
         />
       </div>
-    </div>
-  );
-
-  const renderSectionAdvancePanel = () => {
-    const pageStyle = getPageStyle(formConfig);
-    const globalLabel = pageStyle.labelFontPt;
-    const globalValue = pageStyle.valueFontPt;
-    const globalTitle = (pageStyle.fontPt ?? 11) + 1;
-    const fields = getSortedFields(section);
-
-    return (
-      <>
-        <p className="small fw-semibold mb-2">{getForm8SectionDisplayTitle(section)}</p>
-        <p className="small fw-semibold mb-2 mt-2">Box</p>
-        {renderSectionColorField('Background', 'backgroundColor', '#ffffff')}
-        {renderSectionColorField('Border', 'borderColor', formConfig.theme?.borderColor || '#2c5282')}
-        <p className="small fw-semibold mb-2 mt-3">Main title colors</p>
-        {renderSectionColorField('Text color', 'titleColor', formConfig.theme?.sectionTitleColor || '#1e3a5f')}
-        {renderSectionColorField(
-          'Bar background',
-          'titleBackgroundColor',
-          formConfig.theme?.tableHeaderBackground || '#e8eef5'
-        )}
-        <p className="small fw-semibold mb-2 mt-3">Typography</p>
-        <Form8TypographyFields
-          values={section}
-          placeholders={{
-            titleFontSizePt: globalTitle,
-            labelFontSizePt: globalLabel,
-            valueFontSizePt: globalValue,
-          }}
-          onPatch={(patch) => setSectionStyle(patch)}
-        />
-        {fields.length ? (
-          <>
-            <p className="small fw-semibold mb-2 mt-3">Field backgrounds</p>
-            {fields.map((field) => (
-              <div key={field.id} className="mb-2 d-flex align-items-center gap-2">
-                <span className="small flex-grow-1 text-truncate">
-                  {field.label || field.id}
-                </span>
-                <input
-                  type="color"
-                  className="form-control form-control-color form-control-sm"
-                  title="Field background"
-                  value={field.backgroundColor || '#ffffff'}
-                  onChange={(e) =>
-                    updateSectionField(sectionId, field.id, { backgroundColor: e.target.value })
-                  }
-                />
-              </div>
-            ))}
-          </>
-        ) : null}
-        <button
-          type="button"
-          className="btn btn-sm btn-outline-secondary mt-2"
-          onClick={() => setSectionStyle({ ...SECTION_STYLE_RESET_PATCH })}
-        >
-          Reset styling
-        </button>
-      </>
-    );
-  };
-
-  const renderThemeFields = () => (
-    <div className="form-custom-color-grid">
-      {THEME_FIELDS.map(({ key, label }) => (
-        <div key={key} className="form-custom-color-field">
-          <label className="form-label" htmlFor={`f8-theme-${key}`}>{label}</label>
-          <div className="form-custom-color-input-row">
-            <input
-              id={`f8-theme-${key}`}
-              type="color"
-              value={formConfig.theme?.[key] || '#000000'}
-              onChange={(e) => updateTheme(key, e.target.value)}
-            />
-            <input
-              type="text"
-              className="form-control form-control-sm"
-              value={formConfig.theme?.[key] || ''}
-              onChange={(e) => updateTheme(key, e.target.value)}
-            />
-          </div>
-        </div>
-      ))}
     </div>
   );
 
@@ -327,23 +275,52 @@ const Form8BuilderPropertiesPanel = ({
       );
     }
 
-    if (blockId === 'signature_lines' || blockId === 'customer_photo' || blockId === 'stock_line_items') {
+    if (blockId === 'signature_lines' || isForm8DividerBlockId(blockId)) {
       return null;
     }
 
+    if (blockId === 'customer_photo') {
+      return null;
+    }
+
+    if (blockId === 'stock_line_items') {
+      const hidden = new Set(
+        getBlockLayout(formConfig, blockId).stockHiddenColumns || []
+      );
+      return (
+        <div className="f8-builder-field-layout-list">
+          {FORM8_STOCK_TABLE_COLUMNS.map((col) => {
+            const checked = !hidden.has(col.id);
+            return (
+              <div key={col.id} className="form-custom-field-editor">
+                <label className="form-custom-toggle-item">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={(e) => {
+                      const next = new Set(hidden);
+                      if (e.target.checked) next.delete(col.id);
+                      else next.add(col.id);
+                      if (next.size >= FORM8_STOCK_TABLE_COLUMNS.length) return;
+                      updateBlockLayout(blockId, {
+                        stockHiddenColumns: [...next],
+                      });
+                    }}
+                  />
+                  <span>{col.label}</span>
+                </label>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
     if (blockId === 'layout_left_logo') {
-      const firmLeft = resolveFirmLeftLogoUrl(firm);
       return (
         <Form8BuilderImageUpload
           label="Left logo"
           previewUrl={templateAssets.leftLogoDataUrl || imageUrls?.leftLogoUrl}
-          sourceHint={
-            templateAssets.leftLogoDataUrl
-              ? 'Stored on this Form 8 template.'
-              : firmLeft
-                ? 'Using firm left logo. Upload here to override for Form 8 only.'
-                : 'Upload here, or set in Firm settings.'
-          }
           onChange={handleAssetUpload(FORM_TEMPLATE_ASSET_KEYS.leftLogo)}
           onClear={handleAssetClear(FORM_TEMPLATE_ASSET_KEYS.leftLogo)}
         />
@@ -351,18 +328,10 @@ const Form8BuilderPropertiesPanel = ({
     }
 
     if (blockId === 'layout_right_logo') {
-      const firmRight = resolveFirmRightLogoUrl(firm);
       return (
         <Form8BuilderImageUpload
           label="Right logo"
           previewUrl={templateAssets.rightLogoDataUrl || imageUrls?.rightLogoUrl}
-          sourceHint={
-            templateAssets.rightLogoDataUrl
-              ? 'Stored on this Form 8 template.'
-              : firmRight
-                ? 'Using firm right logo. Upload here to override for Form 8 only.'
-                : 'Upload here, or set in Firm settings.'
-          }
           onChange={handleAssetUpload(FORM_TEMPLATE_ASSET_KEYS.rightLogo)}
           onClear={handleAssetClear(FORM_TEMPLATE_ASSET_KEYS.rightLogo)}
         />
@@ -371,19 +340,12 @@ const Form8BuilderPropertiesPanel = ({
 
     if (blockId === 'layout_footer_image') {
       return (
-        <>
-          <Form8BuilderImageUpload
-            label="Footer image"
-            previewUrl={templateAssets.footerImageDataUrl || imageUrls?.footerImageUrl}
-            sourceHint={
-              templateAssets.footerImageDataUrl
-                ? 'Stored on this Form 8 template.'
-                : 'Uses footer upload, else right/left logo. Upload a dedicated footer banner if needed.'
-            }
-            onChange={handleAssetUpload(FORM_TEMPLATE_ASSET_KEYS.footerImage)}
-            onClear={handleAssetClear(FORM_TEMPLATE_ASSET_KEYS.footerImage)}
-          />
-        </>
+        <Form8BuilderImageUpload
+          label="Footer image"
+          previewUrl={templateAssets.footerImageDataUrl || imageUrls?.footerImageUrl}
+          onChange={handleAssetUpload(FORM_TEMPLATE_ASSET_KEYS.footerImage)}
+          onClear={handleAssetClear(FORM_TEMPLATE_ASSET_KEYS.footerImage)}
+        />
       );
     }
 
@@ -445,160 +407,1241 @@ const Form8BuilderPropertiesPanel = ({
     return null;
   };
 
-  const renderFormHeaderTypographySettings = () => {
-    const pageStyle = getPageStyle(formConfig);
-    const autoSizes = resolveFieldFontSizes(pageStyle.fontPt, {});
-    const autoMainTitle = pageStyle.mainTitleFontPt;
-
-    return (
-      <div className="f8-form-header-typography mb-3 pb-3 border-bottom">
-        <p className="small fw-semibold mb-2">Page defaults (all sections)</p>
-        <label className="form-label">Compactness</label>
-        <select
-          className="form-select form-select-sm mb-3"
-          value={formConfig.fontSize || 'small'}
-          onChange={(e) => updateConfig('fontSize', e.target.value)}
-        >
-          <option value="small">Small (compact)</option>
-          <option value="medium">Medium</option>
-          <option value="large">Large</option>
-        </select>
-        <p className="small text-muted mb-2">
-          Main title, label, and text sizes below apply when a block does not set its own.
-        </p>
-        <Form8TypographyFields
-          values={formConfig.theme || {}}
-          placeholders={{
-            titleFontSizePt: autoMainTitle,
-            labelFontSizePt: autoSizes.labelFontPt,
-            valueFontSizePt: autoSizes.valueFontPt,
-          }}
-          onPatch={(patch) => updateTheme(patch)}
-        />
-      </div>
+  const renderAdvance = () => {
+    const profile = getForm8ElementStyleProfile(
+      blockId,
+      usesForm8SectionAdvance(blockId, Boolean(section))
     );
-  };
+    if (!profile) {
+      return null;
+    }
 
-  const renderBlockAdvancePanel = () => {
+    const pageStyle = getPageStyle(formConfig);
+    const theme = formConfig.theme || {};
     const layoutSpec = getBlockLayout(formConfig, blockId);
-    const pageStyle = getPageStyle(formConfig);
-    const globalTitle = (pageStyle.fontPt ?? 11) + 1;
-    const globalBody = pageStyle.fontPt ?? 11;
+    const styleValues =
+      profile.store === 'section'
+        ? section || {}
+        : isForm8DividerBlockId(blockId)
+          ? { ...layoutSpec, ...readForm8DividerOwnStyle(formConfig, blockId) }
+          : layoutSpec;
+    const applyStyle =
+      profile.store === 'section'
+        ? setSectionStyle
+        : (patch) => updateBlockLayout(blockId, patch);
 
-    const setBlockStyle = (patch) => updateBlockLayout(blockId, patch);
+    const colorValue = (key) => {
+      if (profile.store === 'header' && (key === 'backgroundColor' || key === 'titleColor' || key === 'titleBackgroundColor' || key === 'bodyColor' || key === 'borderColor')) {
+        return layoutSpec[key] || '';
+      }
+      return styleValues[key] || '';
+    };
 
-    const renderBlockColorField = (label, key, fallback = '#ffffff') => (
-      <div className="mb-2">
-        <label className="form-label small">{label}</label>
-        <div className="form-custom-color-input-row">
-          <input
-            type="color"
-            value={layoutSpec[key] || fallback}
-            onChange={(e) => setBlockStyle({ [key]: e.target.value })}
-          />
-          <input
-            type="text"
-            className="form-control form-control-sm"
-            placeholder={`Default (${fallback})`}
-            value={layoutSpec[key] || ''}
-            onChange={(e) => setBlockStyle({ [key]: e.target.value })}
-          />
-        </div>
-      </div>
-    );
+    const applyColor = (patch) => {
+      if (profile.store === 'header') {
+        updateBlockLayout(blockId, patch);
+        return;
+      }
+      applyStyle(patch);
+    };
+
+    const paint = (field) => {
+      const fallback = resolveStyleColorFallback(theme, field);
+      return renderColorRow(
+        field.label,
+        field.key,
+        fallback,
+        colorValue(field.key),
+        applyColor
+      );
+    };
+
+    const typoPlaceholders = {
+      titleFontSizePt: pageStyle.mainTitleFontPt ?? (pageStyle.fontPt ?? 11) + 1,
+      labelFontSizePt: pageStyle.labelFontPt,
+      valueFontSizePt: pageStyle.valueFontPt ?? pageStyle.fontPt,
+    };
 
     return (
       <>
-        <p className="small fw-semibold mb-2">{blockTitle(blockId, formConfig)}</p>
-        <p className="small fw-semibold mb-2 mt-2">Box</p>
-        {renderBlockColorField('Background', 'backgroundColor', '#ffffff')}
-        {renderBlockColorField('Border', 'borderColor', formConfig.theme?.borderColor || '#2c5282')}
-        <p className="small fw-semibold mb-2 mt-3">Main title colors</p>
-        {renderBlockColorField('Text color', 'titleColor', formConfig.theme?.sectionTitleColor || '#1e3a5f')}
-        {renderBlockColorField(
-          'Bar background',
-          'titleBackgroundColor',
-          formConfig.theme?.tableHeaderBackground || '#e8eef5'
-        )}
-        {blockId !== 'stock_line_items' ? (
+        {profile.showHeaderBox ? (
+          <div className="mb-3">
+            {renderColorRow(
+              'Background colour',
+              'backgroundColor',
+              resolveStyleColorFallback(theme, {
+                fallback: 'sectionBackground',
+                fallbackHex: '#ffffff',
+              }),
+              colorValue('backgroundColor'),
+              applyColor
+            )}
+            <div className="form-check mb-2">
+              <input
+                id={`f8-header-border-${blockId}`}
+                className="form-check-input"
+                type="checkbox"
+                checked={isForm8HeaderBorderOn(styleValues)}
+                onChange={(e) =>
+                  applyStyle({ headerBorder: e.target.checked ? '1' : '' })
+                }
+              />
+              <label className="form-check-label small" htmlFor={`f8-header-border-${blockId}`}>
+                Border
+              </label>
+            </div>
+            {renderColorRow(
+              'Border colour',
+              'borderColor',
+              resolveStyleColorFallback(theme, {
+                fallback: 'borderColor',
+                fallbackHex: '#2c5282',
+              }),
+              colorValue('borderColor'),
+              applyColor
+            )}
+            <div className="mb-2">
+              <label className="form-label small" htmlFor={`f8-header-width-${blockId}`}>
+                Border size
+              </label>
+              <input
+                id={`f8-header-width-${blockId}`}
+                type="number"
+                className="form-control form-control-sm"
+                step="any"
+                value={styleValues.headerBorderWidth ?? ''}
+                placeholder="1"
+                onChange={(e) => applyStyle({ headerBorderWidth: e.target.value })}
+              />
+            </div>
+            <div className="mb-2">
+              <label className="form-label small" htmlFor={`f8-header-radius-${blockId}`}>
+                Border radius
+              </label>
+              <input
+                id={`f8-header-radius-${blockId}`}
+                type="number"
+                className="form-control form-control-sm"
+                step="any"
+                value={styleValues.headerBorderRadius ?? ''}
+                placeholder="0"
+                onChange={(e) => applyStyle({ headerBorderRadius: e.target.value })}
+              />
+            </div>
+          </div>
+        ) : null}
+
+        {profile.showHeaderLines
+          ? FORM8_HEADER_LINE_DEFS.map((line) => (
+              <div key={line.id} className="mb-3">
+                <p className="small fw-semibold mb-2">{line.label}</p>
+                {renderColorRow(
+                  'Text colour',
+                  line.colorKey,
+                  resolveStyleColorFallback(theme, {
+                    fallback: line.fallbackColor,
+                    fallbackHex: line.fallbackHex,
+                  }),
+                  colorValue(line.colorKey),
+                  applyColor
+                )}
+                {renderColorRow(
+                  'Box background',
+                  line.bgKey,
+                  '#ffffff',
+                  colorValue(line.bgKey),
+                  applyColor
+                )}
+                <div className="row g-2">
+                  <div className="col-6">
+                    <label className="form-label small" htmlFor={`f8-hdr-size-${line.id}`}>
+                      Font size
+                    </label>
+                    <input
+                      id={`f8-hdr-size-${line.id}`}
+                      type="number"
+                      className="form-control form-control-sm"
+                      min={FORM_FIELD_FONT_PT_MIN}
+                      max={FORM_FIELD_FONT_PT_MAX}
+                      step={0.5}
+                      value={styleValues[line.sizeKey] ?? ''}
+                      placeholder={String(
+                        line.id === 'title'
+                          ? typoPlaceholders.titleFontSizePt
+                          : line.id === 'note'
+                            ? typoPlaceholders.valueFontSizePt
+                            : typoPlaceholders.labelFontSizePt
+                      )}
+                      onChange={(e) => applyStyle({ [line.sizeKey]: e.target.value })}
+                    />
+                  </div>
+                  <div className="col-6">
+                    <label className="form-label small" htmlFor={`f8-hdr-weight-${line.id}`}>
+                      Font weight
+                    </label>
+                    <select
+                      id={`f8-hdr-weight-${line.id}`}
+                      className="form-select form-select-sm"
+                      value={styleValues[line.weightKey] ?? ''}
+                      onChange={(e) => applyStyle({ [line.weightKey]: e.target.value })}
+                    >
+                      {FORM8_FONT_WEIGHT_OPTIONS.map((opt) => (
+                        <option key={opt.value || 'default'} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            ))
+          : null}
+
+        {profile.showSectionGroups ? (
           <>
-            <p className="small fw-semibold mb-2 mt-3">Text color</p>
-            {renderBlockColorField('Text color', 'bodyColor', formConfig.theme?.textColor || '#1a202c')}
+            <div className="mb-3">
+              <p className="small fw-semibold mb-2">Section</p>
+              {renderColorRow(
+                'Background colour',
+                'backgroundColor',
+                resolveStyleColorFallback(theme, {
+                  fallback: 'sectionBackground',
+                  fallbackHex: '#ffffff',
+                }),
+                colorValue('backgroundColor'),
+                applyColor
+              )}
+              <div className="form-check mb-2">
+                <input
+                  id={`f8-section-border-${blockId}`}
+                  className="form-check-input"
+                  type="checkbox"
+                  checked={isForm8SectionBorderOn(styleValues)}
+                  onChange={(e) =>
+                    applyStyle({ sectionBorder: e.target.checked ? '1' : '' })
+                  }
+                />
+                <label className="form-check-label small" htmlFor={`f8-section-border-${blockId}`}>
+                  Border
+                </label>
+              </div>
+              {renderColorRow(
+                'Border colour',
+                'borderColor',
+                resolveStyleColorFallback(theme, {
+                  fallback: 'borderColor',
+                  fallbackHex: '#2c5282',
+                }),
+                colorValue('borderColor'),
+                applyColor
+              )}
+              <div className="mb-2">
+                <label className="form-label small" htmlFor={`f8-section-width-${blockId}`}>
+                  Border size
+                </label>
+                <input
+                  id={`f8-section-width-${blockId}`}
+                  type="number"
+                  className="form-control form-control-sm"
+                  step="any"
+                  value={styleValues.sectionBorderWidth ?? ''}
+                  placeholder="1"
+                  onChange={(e) => applyStyle({ sectionBorderWidth: e.target.value })}
+                />
+              </div>
+              <div className="mb-2">
+                <label className="form-label small" htmlFor={`f8-section-radius-${blockId}`}>
+                  Border radius
+                </label>
+                <input
+                  id={`f8-section-radius-${blockId}`}
+                  type="number"
+                  className="form-control form-control-sm"
+                  step="any"
+                  value={styleValues.sectionBorderRadius ?? ''}
+                  placeholder="0"
+                  onChange={(e) => applyStyle({ sectionBorderRadius: e.target.value })}
+                />
+              </div>
+              {renderColorRow(
+                'Heading text',
+                'titleColor',
+                resolveStyleColorFallback(theme, {
+                  fallback: 'sectionTitleColor',
+                  fallbackHex: '#1e3a5f',
+                }),
+                colorValue('titleColor'),
+                applyColor
+              )}
+              {renderColorRow(
+                'Heading bar',
+                'titleBackgroundColor',
+                resolveStyleColorFallback(theme, {
+                  fallback: 'tableHeaderBackground',
+                  fallbackHex: '#e8eef5',
+                }),
+                colorValue('titleBackgroundColor'),
+                applyColor
+              )}
+              <div className="row g-2">
+                <div className="col-6">
+                  <label className="form-label small" htmlFor={`f8-sec-title-size-${blockId}`}>
+                    Heading size
+                  </label>
+                  <input
+                    id={`f8-sec-title-size-${blockId}`}
+                    type="number"
+                    className="form-control form-control-sm"
+                    min={FORM_FIELD_FONT_PT_MIN}
+                    max={FORM_FIELD_FONT_PT_MAX}
+                    step={0.5}
+                    value={styleValues.titleFontSizePt ?? ''}
+                    placeholder={String(typoPlaceholders.titleFontSizePt)}
+                    onChange={(e) => applyStyle({ titleFontSizePt: e.target.value })}
+                  />
+                </div>
+                <div className="col-6">
+                  <label className="form-label small" htmlFor={`f8-sec-title-weight-${blockId}`}>
+                    Heading weight
+                  </label>
+                  <select
+                    id={`f8-sec-title-weight-${blockId}`}
+                    className="form-select form-select-sm"
+                    value={styleValues.titleFontWeight ?? ''}
+                    onChange={(e) => applyStyle({ titleFontWeight: e.target.value })}
+                  >
+                    {FORM8_FONT_WEIGHT_OPTIONS.map((opt) => (
+                      <option key={opt.value || 'default'} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {[
+              {
+                id: 'label',
+                title: 'Label',
+                colorKey: 'labelColor',
+                bgKey: 'labelBackgroundColor',
+                sizeKey: 'labelFontSizePt',
+                weightKey: 'labelFontWeight',
+                colorFallback: 'sectionTitleColor',
+                colorHex: '#1e3a5f',
+                sizePlaceholder: typoPlaceholders.labelFontSizePt,
+              },
+              {
+                id: 'value',
+                title: 'Value',
+                colorKey: 'valueColor',
+                bgKey: 'valueBackgroundColor',
+                sizeKey: 'valueFontSizePt',
+                weightKey: 'valueFontWeight',
+                colorFallback: 'textColor',
+                colorHex: '#1a202c',
+                sizePlaceholder: typoPlaceholders.valueFontSizePt,
+              },
+            ].map((group) => (
+              <div key={group.id} className="mb-3">
+                <p className="small fw-semibold mb-2">{group.title}</p>
+                {renderColorRow(
+                  'Text colour',
+                  group.colorKey,
+                  resolveStyleColorFallback(theme, {
+                    fallback: group.colorFallback,
+                    fallbackHex: group.colorHex,
+                  }),
+                  colorValue(group.colorKey),
+                  applyColor
+                )}
+                {renderColorRow(
+                  'Box background',
+                  group.bgKey,
+                  '#ffffff',
+                  colorValue(group.bgKey),
+                  applyColor
+                )}
+                <div className="row g-2">
+                  <div className="col-6">
+                    <label className="form-label small" htmlFor={`f8-sec-${group.id}-size-${blockId}`}>
+                      Font size
+                    </label>
+                    <input
+                      id={`f8-sec-${group.id}-size-${blockId}`}
+                      type="number"
+                      className="form-control form-control-sm"
+                      min={FORM_FIELD_FONT_PT_MIN}
+                      max={FORM_FIELD_FONT_PT_MAX}
+                      step={0.5}
+                      value={styleValues[group.sizeKey] ?? ''}
+                      placeholder={String(group.sizePlaceholder)}
+                      onChange={(e) => applyStyle({ [group.sizeKey]: e.target.value })}
+                    />
+                  </div>
+                  <div className="col-6">
+                    <label className="form-label small" htmlFor={`f8-sec-${group.id}-weight-${blockId}`}>
+                      Font weight
+                    </label>
+                    <select
+                      id={`f8-sec-${group.id}-weight-${blockId}`}
+                      className="form-select form-select-sm"
+                      value={styleValues[group.weightKey] ?? ''}
+                      onChange={(e) => applyStyle({ [group.weightKey]: e.target.value })}
+                    >
+                      {FORM8_FONT_WEIGHT_OPTIONS.map((opt) => (
+                        <option key={opt.value || 'default'} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            ))}
           </>
         ) : null}
-        {blockId === 'stock_line_items' ? (
+
+        {profile.showStockTableGroups ? (
           <>
-            <p className="small fw-semibold mb-2 mt-3">Line item table</p>
-            <p className="small text-muted mb-2">
-              Column headers use <strong>Label</strong> typography; row values use <strong>Text</strong>.
+            <div className="mb-3">
+              <p className="small fw-semibold mb-2">Section</p>
+              {renderColorRow(
+                'Background colour',
+                'backgroundColor',
+                resolveStyleColorFallback(theme, {
+                  fallback: 'sectionBackground',
+                  fallbackHex: '#ffffff',
+                }),
+                colorValue('backgroundColor'),
+                applyColor
+              )}
+              <div className="form-check mb-2">
+                <input
+                  id={`f8-stock-section-border-${blockId}`}
+                  className="form-check-input"
+                  type="checkbox"
+                  checked={isForm8SectionBorderOn(styleValues)}
+                  onChange={(e) =>
+                    applyStyle({ sectionBorder: e.target.checked ? '1' : '' })
+                  }
+                />
+                <label className="form-check-label small" htmlFor={`f8-stock-section-border-${blockId}`}>
+                  Border
+                </label>
+              </div>
+              {renderColorRow(
+                'Border colour',
+                'borderColor',
+                resolveStyleColorFallback(theme, {
+                  fallback: 'borderColor',
+                  fallbackHex: '#2c5282',
+                }),
+                colorValue('borderColor'),
+                applyColor
+              )}
+              <div className="mb-2">
+                <label className="form-label small" htmlFor={`f8-stock-section-width-${blockId}`}>
+                  Border size
+                </label>
+                <input
+                  id={`f8-stock-section-width-${blockId}`}
+                  type="number"
+                  className="form-control form-control-sm"
+                  step="any"
+                  value={styleValues.sectionBorderWidth ?? ''}
+                  placeholder="1"
+                  onChange={(e) => applyStyle({ sectionBorderWidth: e.target.value })}
+                />
+              </div>
+              <div className="mb-2">
+                <label className="form-label small" htmlFor={`f8-stock-section-radius-${blockId}`}>
+                  Border radius
+                </label>
+                <input
+                  id={`f8-stock-section-radius-${blockId}`}
+                  type="number"
+                  className="form-control form-control-sm"
+                  step="any"
+                  value={styleValues.sectionBorderRadius ?? ''}
+                  placeholder="0"
+                  onChange={(e) => applyStyle({ sectionBorderRadius: e.target.value })}
+                />
+              </div>
+              {renderColorRow(
+                'Heading text',
+                'titleColor',
+                resolveStyleColorFallback(theme, {
+                  fallback: 'sectionTitleColor',
+                  fallbackHex: '#1e3a5f',
+                }),
+                colorValue('titleColor'),
+                applyColor
+              )}
+              {renderColorRow(
+                'Heading bar',
+                'titleBackgroundColor',
+                resolveStyleColorFallback(theme, {
+                  fallback: 'tableHeaderBackground',
+                  fallbackHex: '#e8eef5',
+                }),
+                colorValue('titleBackgroundColor'),
+                applyColor
+              )}
+              <div className="row g-2">
+                <div className="col-6">
+                  <label className="form-label small" htmlFor={`f8-stock-title-size-${blockId}`}>
+                    Font size
+                  </label>
+                  <input
+                    id={`f8-stock-title-size-${blockId}`}
+                    type="number"
+                    className="form-control form-control-sm"
+                    min={FORM_FIELD_FONT_PT_MIN}
+                    max={FORM_FIELD_FONT_PT_MAX}
+                    step={0.5}
+                    value={styleValues.titleFontSizePt ?? ''}
+                    placeholder={String(typoPlaceholders.titleFontSizePt)}
+                    onChange={(e) => applyStyle({ titleFontSizePt: e.target.value })}
+                  />
+                </div>
+                <div className="col-6">
+                  <label className="form-label small" htmlFor={`f8-stock-title-weight-${blockId}`}>
+                    Font weight
+                  </label>
+                  <select
+                    id={`f8-stock-title-weight-${blockId}`}
+                    className="form-select form-select-sm"
+                    value={styleValues.titleFontWeight ?? ''}
+                    onChange={(e) => applyStyle({ titleFontWeight: e.target.value })}
+                  >
+                    {FORM8_FONT_WEIGHT_OPTIONS.map((opt) => (
+                      <option key={opt.value || 'default'} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <p className="small fw-semibold mb-2">Table border</p>
+              <div className="form-check mb-2">
+                <input
+                  id={`f8-stock-table-border-${blockId}`}
+                  className="form-check-input"
+                  type="checkbox"
+                  checked={isForm8TableBorderOn(styleValues)}
+                  onChange={(e) =>
+                    applyStyle({ tableBorder: e.target.checked ? '1' : '' })
+                  }
+                />
+                <label className="form-check-label small" htmlFor={`f8-stock-table-border-${blockId}`}>
+                  Border
+                </label>
+              </div>
+              {renderColorRow(
+                'Border colour',
+                'tableBorderColor',
+                resolveStyleColorFallback(theme, {
+                  fallback: 'borderColor',
+                  fallbackHex: '#2c5282',
+                }),
+                colorValue('tableBorderColor'),
+                applyColor
+              )}
+              <div className="mb-2">
+                <label className="form-label small" htmlFor={`f8-stock-table-width-${blockId}`}>
+                  Border size
+                </label>
+                <input
+                  id={`f8-stock-table-width-${blockId}`}
+                  type="number"
+                  className="form-control form-control-sm"
+                  step="any"
+                  value={styleValues.tableBorderWidth ?? ''}
+                  placeholder="1"
+                  onChange={(e) => applyStyle({ tableBorderWidth: e.target.value })}
+                />
+              </div>
+              <div className="mb-2">
+                <label className="form-label small" htmlFor={`f8-stock-table-radius-${blockId}`}>
+                  Border radius
+                </label>
+                <input
+                  id={`f8-stock-table-radius-${blockId}`}
+                  type="number"
+                  className="form-control form-control-sm"
+                  step="any"
+                  value={styleValues.tableBorderRadius ?? ''}
+                  placeholder="0"
+                  onChange={(e) => applyStyle({ tableBorderRadius: e.target.value })}
+                />
+              </div>
+            </div>
+
+            {[
+              {
+                id: 'header',
+                title: 'Table header',
+                bgKey: 'tableHeaderBackgroundColor',
+                colorKey: 'tableHeaderColor',
+                sizeKey: 'tableHeaderFontSizePt',
+                weightKey: 'tableHeaderFontWeight',
+                colorFallback: 'sectionTitleColor',
+                colorHex: '#1e3a5f',
+                bgFallback: 'tableHeaderBackground',
+                bgHex: '#e8eef5',
+                sizePlaceholder: typoPlaceholders.labelFontSizePt,
+              },
+              {
+                id: 'body',
+                title: 'Table body',
+                bgKey: 'tableBodyBackgroundColor',
+                colorKey: 'tableBodyColor',
+                sizeKey: 'tableBodyFontSizePt',
+                weightKey: 'tableBodyFontWeight',
+                colorFallback: 'textColor',
+                colorHex: '#1a202c',
+                bgFallback: 'pageBackground',
+                bgHex: '#ffffff',
+                sizePlaceholder: typoPlaceholders.valueFontSizePt,
+              },
+              {
+                id: 'footer',
+                title: 'Table footer',
+                bgKey: 'tableFooterBackgroundColor',
+                colorKey: 'tableFooterColor',
+                sizeKey: 'tableFooterFontSizePt',
+                weightKey: 'tableFooterFontWeight',
+                colorFallback: 'sectionTitleColor',
+                colorHex: '#1e3a5f',
+                bgFallback: 'tableHeaderBackground',
+                bgHex: '#e8eef5',
+                sizePlaceholder: typoPlaceholders.labelFontSizePt,
+              },
+            ].map((group) => (
+              <div key={group.id} className="mb-3">
+                <p className="small fw-semibold mb-2">{group.title}</p>
+                {renderColorRow(
+                  'Background colour',
+                  group.bgKey,
+                  resolveStyleColorFallback(theme, {
+                    fallback: group.bgFallback,
+                    fallbackHex: group.bgHex,
+                  }),
+                  colorValue(group.bgKey),
+                  applyColor
+                )}
+                {renderColorRow(
+                  'Text colour',
+                  group.colorKey,
+                  resolveStyleColorFallback(theme, {
+                    fallback: group.colorFallback,
+                    fallbackHex: group.colorHex,
+                  }),
+                  colorValue(group.colorKey),
+                  applyColor
+                )}
+                <div className="row g-2">
+                  <div className="col-6">
+                    <label className="form-label small" htmlFor={`f8-stock-${group.id}-size-${blockId}`}>
+                      Font size
+                    </label>
+                    <input
+                      id={`f8-stock-${group.id}-size-${blockId}`}
+                      type="number"
+                      className="form-control form-control-sm"
+                      min={FORM_FIELD_FONT_PT_MIN}
+                      max={FORM_FIELD_FONT_PT_MAX}
+                      step={0.5}
+                      value={styleValues[group.sizeKey] ?? ''}
+                      placeholder={String(group.sizePlaceholder)}
+                      onChange={(e) => applyStyle({ [group.sizeKey]: e.target.value })}
+                    />
+                  </div>
+                  <div className="col-6">
+                    <label className="form-label small" htmlFor={`f8-stock-${group.id}-weight-${blockId}`}>
+                      Font weight
+                    </label>
+                    <select
+                      id={`f8-stock-${group.id}-weight-${blockId}`}
+                      className="form-select form-select-sm"
+                      value={styleValues[group.weightKey] ?? ''}
+                      onChange={(e) => applyStyle({ [group.weightKey]: e.target.value })}
+                    >
+                      {FORM8_FONT_WEIGHT_OPTIONS.map((opt) => (
+                        <option key={opt.value || 'default'} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </>
+        ) : null}
+
+        {profile.showTextBlockGroups ? (
+          <>
+            {[
+              {
+                id: 'title',
+                title: 'Title',
+                colorKey: 'titleColor',
+                bgKey: 'titleBackgroundColor',
+                sizeKey: 'titleFontSizePt',
+                weightKey: 'titleFontWeight',
+                borderOnKey: 'titleBorder',
+                borderColorKey: 'titleBorderColor',
+                borderWidthKey: 'titleBorderWidth',
+                borderRadiusKey: 'titleBorderRadius',
+                colorFallback: 'sectionTitleColor',
+                colorHex: '#1e3a5f',
+                bgFallback: 'tableHeaderBackground',
+                bgHex: '#e8eef5',
+                sizePlaceholder: typoPlaceholders.titleFontSizePt,
+              },
+              {
+                id: 'body',
+                title: 'Body',
+                colorKey: 'bodyColor',
+                bgKey: 'bodyBackgroundColor',
+                sizeKey: 'bodyFontSizePt',
+                weightKey: 'bodyFontWeight',
+                borderOnKey: 'bodyBorder',
+                borderColorKey: 'bodyBorderColor',
+                borderWidthKey: 'bodyBorderWidth',
+                borderRadiusKey: 'bodyBorderRadius',
+                colorFallback: 'textColor',
+                colorHex: '#1a202c',
+                bgFallback: 'pageBackground',
+                bgHex: '#ffffff',
+                sizePlaceholder: typoPlaceholders.valueFontSizePt,
+              },
+            ].map((group) => (
+              <div key={group.id} className="mb-3">
+                <p className="small fw-semibold mb-2">{group.title}</p>
+                {renderColorRow(
+                  'Text colour',
+                  group.colorKey,
+                  resolveStyleColorFallback(theme, {
+                    fallback: group.colorFallback,
+                    fallbackHex: group.colorHex,
+                  }),
+                  colorValue(group.colorKey),
+                  applyColor
+                )}
+                {renderColorRow(
+                  'Background colour',
+                  group.bgKey,
+                  resolveStyleColorFallback(theme, {
+                    fallback: group.bgFallback,
+                    fallbackHex: group.bgHex,
+                  }),
+                  colorValue(group.bgKey),
+                  applyColor
+                )}
+                <div className="form-check mb-2">
+                  <input
+                    id={`f8-text-${group.id}-border-${blockId}`}
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={isForm8TextPartBorderOn(styleValues, group.id)}
+                    onChange={(e) =>
+                      applyStyle({ [group.borderOnKey]: e.target.checked ? '1' : '' })
+                    }
+                  />
+                  <label
+                    className="form-check-label small"
+                    htmlFor={`f8-text-${group.id}-border-${blockId}`}
+                  >
+                    Border
+                  </label>
+                </div>
+                {renderColorRow(
+                  'Border colour',
+                  group.borderColorKey,
+                  resolveStyleColorFallback(theme, {
+                    fallback: 'borderColor',
+                    fallbackHex: '#2c5282',
+                  }),
+                  colorValue(group.borderColorKey),
+                  applyColor
+                )}
+                <div className="mb-2">
+                  <label className="form-label small" htmlFor={`f8-text-${group.id}-width-${blockId}`}>
+                    Border size
+                  </label>
+                  <input
+                    id={`f8-text-${group.id}-width-${blockId}`}
+                    type="number"
+                    className="form-control form-control-sm"
+                    step="any"
+                    value={styleValues[group.borderWidthKey] ?? ''}
+                    placeholder="1"
+                    onChange={(e) => applyStyle({ [group.borderWidthKey]: e.target.value })}
+                  />
+                </div>
+                <div className="mb-2">
+                  <label className="form-label small" htmlFor={`f8-text-${group.id}-radius-${blockId}`}>
+                    Border radius
+                  </label>
+                  <input
+                    id={`f8-text-${group.id}-radius-${blockId}`}
+                    type="number"
+                    className="form-control form-control-sm"
+                    step="any"
+                    value={styleValues[group.borderRadiusKey] ?? ''}
+                    placeholder="0"
+                    onChange={(e) => applyStyle({ [group.borderRadiusKey]: e.target.value })}
+                  />
+                </div>
+                <div className="row g-2">
+                  <div className="col-6">
+                    <label className="form-label small" htmlFor={`f8-text-${group.id}-size-${blockId}`}>
+                      Font size
+                    </label>
+                    <input
+                      id={`f8-text-${group.id}-size-${blockId}`}
+                      type="number"
+                      className="form-control form-control-sm"
+                      min={FORM_FIELD_FONT_PT_MIN}
+                      max={FORM_FIELD_FONT_PT_MAX}
+                      step={0.5}
+                      value={styleValues[group.sizeKey] ?? ''}
+                      placeholder={String(group.sizePlaceholder)}
+                      onChange={(e) => {
+                        if (group.id === 'body') {
+                          applyStyle(form8TextTypographyPatch(e.target.value, styleValues.bodyFontWeight ?? styleValues.valueFontWeight ?? ''));
+                          return;
+                        }
+                        applyStyle({ [group.sizeKey]: e.target.value });
+                      }}
+                    />
+                  </div>
+                  <div className="col-6">
+                    <label className="form-label small" htmlFor={`f8-text-${group.id}-weight-${blockId}`}>
+                      Font weight
+                    </label>
+                    <select
+                      id={`f8-text-${group.id}-weight-${blockId}`}
+                      className="form-select form-select-sm"
+                      value={styleValues[group.weightKey] ?? ''}
+                      onChange={(e) => {
+                        if (group.id === 'body') {
+                          applyStyle(form8TextTypographyPatch(styleValues.bodyFontSizePt ?? styleValues.valueFontSizePt ?? '', e.target.value));
+                          return;
+                        }
+                        applyStyle({ [group.weightKey]: e.target.value });
+                      }}
+                    >
+                      {FORM8_FONT_WEIGHT_OPTIONS.map((opt) => (
+                        <option key={opt.value || 'default'} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </>
+        ) : null}
+
+        {profile.showDividerGroups ? (
+          <div className="mb-3">
+            <p className="small fw-semibold mb-2">
+              {getForm8DividerLabel(blockId, formConfig?.builderBlockOrder || [])} line
             </p>
-            {renderBlockColorField(
-              'Header background',
-              'tableHeaderBackgroundColor',
-              formConfig.theme?.tableHeaderBackground || '#e8eef5'
+            {renderColorRow(
+              'Line colour',
+              'dividerColor',
+              resolveStyleColorFallback(theme, {
+                fallback: 'borderColor',
+                fallbackHex: '#2c5282',
+              }),
+              colorValue('dividerColor'),
+              applyColor
             )}
-            {renderBlockColorField(
-              'Header text',
-              'labelColor',
-              formConfig.theme?.sectionTitleColor || '#1e3a5f'
-            )}
-            {renderBlockColorField('Cell background', 'tableBodyBackgroundColor', '#ffffff')}
-            {renderBlockColorField(
-              'Cell text',
-              'bodyColor',
-              formConfig.theme?.textColor || '#1a202c'
-            )}
-            {renderBlockColorField(
-              'Grid lines (optional)',
-              'tableBorderColor',
-              formConfig.theme?.borderColor || '#2c5282'
-            )}
+            <div className="mb-2">
+              <label className="form-label small" htmlFor={`f8-divider-width-${blockId}`}>
+                Line size
+              </label>
+              <input
+                id={`f8-divider-width-${blockId}`}
+                type="number"
+                className="form-control form-control-sm"
+                step="any"
+                value={styleValues.dividerWidth ?? ''}
+                placeholder="1"
+                onChange={(e) => applyStyle({ dividerWidth: e.target.value })}
+              />
+            </div>
+            <div className="mb-2">
+              <label className="form-label small" htmlFor={`f8-divider-style-${blockId}`}>
+                Line style
+              </label>
+              <select
+                id={`f8-divider-style-${blockId}`}
+                className="form-select form-select-sm"
+                value={styleValues.dividerStyle || 'solid'}
+                onChange={(e) => applyStyle({ dividerStyle: e.target.value })}
+              >
+                {FORM8_DIVIDER_STYLE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        ) : null}
+
+        {profile.showSignatureGroups ? (
+          <>
+            <div className="mb-3">
+              <p className="small fw-semibold mb-2">Section</p>
+              {renderColorRow(
+                'Background colour',
+                'backgroundColor',
+                resolveStyleColorFallback(theme, {
+                  fallback: 'sectionBackground',
+                  fallbackHex: '#ffffff',
+                }),
+                colorValue('backgroundColor'),
+                applyColor
+              )}
+              <div className="form-check mb-2">
+                <input
+                  id={`f8-sig-section-border-${blockId}`}
+                  className="form-check-input"
+                  type="checkbox"
+                  checked={isForm8SectionBorderOn(styleValues)}
+                  onChange={(e) =>
+                    applyStyle({ sectionBorder: e.target.checked ? '1' : '' })
+                  }
+                />
+                <label className="form-check-label small" htmlFor={`f8-sig-section-border-${blockId}`}>
+                  Border
+                </label>
+              </div>
+              {renderColorRow(
+                'Border colour',
+                'borderColor',
+                resolveStyleColorFallback(theme, {
+                  fallback: 'borderColor',
+                  fallbackHex: '#2c5282',
+                }),
+                colorValue('borderColor'),
+                applyColor
+              )}
+              <div className="mb-2">
+                <label className="form-label small" htmlFor={`f8-sig-section-width-${blockId}`}>
+                  Border size
+                </label>
+                <input
+                  id={`f8-sig-section-width-${blockId}`}
+                  type="number"
+                  className="form-control form-control-sm"
+                  step="any"
+                  value={styleValues.sectionBorderWidth ?? ''}
+                  placeholder="1"
+                  onChange={(e) => applyStyle({ sectionBorderWidth: e.target.value })}
+                />
+              </div>
+              <div className="mb-2">
+                <label className="form-label small" htmlFor={`f8-sig-section-radius-${blockId}`}>
+                  Border radius
+                </label>
+                <input
+                  id={`f8-sig-section-radius-${blockId}`}
+                  type="number"
+                  className="form-control form-control-sm"
+                  step="any"
+                  value={styleValues.sectionBorderRadius ?? ''}
+                  placeholder="0"
+                  onChange={(e) => applyStyle({ sectionBorderRadius: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="mb-3">
+              <p className="small fw-semibold mb-2">Line</p>
+              {renderColorRow(
+                'Line colour',
+                'signatureLineColor',
+                resolveStyleColorFallback(theme, {
+                  fallback: 'textColor',
+                  fallbackHex: '#111827',
+                }),
+                colorValue('signatureLineColor'),
+                applyColor
+              )}
+              <div className="mb-2">
+                <label className="form-label small" htmlFor={`f8-sig-line-width-${blockId}`}>
+                  Line size
+                </label>
+                <input
+                  id={`f8-sig-line-width-${blockId}`}
+                  type="number"
+                  className="form-control form-control-sm"
+                  step="any"
+                  value={styleValues.signatureLineWidth ?? ''}
+                  placeholder="1"
+                  onChange={(e) => applyStyle({ signatureLineWidth: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="mb-3">
+              <p className="small fw-semibold mb-2">Name</p>
+              {renderColorRow(
+                'Text colour',
+                'bodyColor',
+                resolveStyleColorFallback(theme, {
+                  fallback: 'textColor',
+                  fallbackHex: '#1a202c',
+                }),
+                colorValue('bodyColor'),
+                applyColor
+              )}
+              {renderColorRow(
+                'Background colour',
+                'bodyBackgroundColor',
+                resolveStyleColorFallback(theme, {
+                  fallback: 'pageBackground',
+                  fallbackHex: '#ffffff',
+                }),
+                colorValue('bodyBackgroundColor'),
+                applyColor
+              )}
+              <div className="row g-2">
+                <div className="col-6">
+                  <label className="form-label small" htmlFor={`f8-sig-name-size-${blockId}`}>
+                    Font size
+                  </label>
+                  <input
+                    id={`f8-sig-name-size-${blockId}`}
+                    type="number"
+                    className="form-control form-control-sm"
+                    min={FORM_FIELD_FONT_PT_MIN}
+                    max={FORM_FIELD_FONT_PT_MAX}
+                    step={0.5}
+                    value={styleValues.bodyFontSizePt ?? ''}
+                    placeholder={String(typoPlaceholders.valueFontSizePt)}
+                    onChange={(e) =>
+                      applyStyle(
+                        form8TextTypographyPatch(
+                          e.target.value,
+                          styleValues.bodyFontWeight ?? styleValues.valueFontWeight ?? ''
+                        )
+                      )
+                    }
+                  />
+                </div>
+                <div className="col-6">
+                  <label className="form-label small" htmlFor={`f8-sig-name-weight-${blockId}`}>
+                    Font weight
+                  </label>
+                  <select
+                    id={`f8-sig-name-weight-${blockId}`}
+                    className="form-select form-select-sm"
+                    value={styleValues.bodyFontWeight ?? ''}
+                    onChange={(e) =>
+                      applyStyle(
+                        form8TextTypographyPatch(
+                          styleValues.bodyFontSizePt ?? styleValues.valueFontSizePt ?? '',
+                          e.target.value
+                        )
+                      )
+                    }
+                  >
+                    {FORM8_FONT_WEIGHT_OPTIONS.map((opt) => (
+                      <option key={opt.value || 'default'} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
           </>
         ) : null}
-        <p className="small fw-semibold mb-2 mt-3">Typography</p>
-        <Form8TypographyFields
-          useTextAliases
-          values={layoutSpec}
-          placeholders={{
-            titleFontSizePt: globalTitle,
-            labelFontSizePt: pageStyle.labelFontPt,
-            valueFontSizePt: globalBody,
-          }}
-          onPatch={(patch) => setBlockStyle(patch)}
-        />
+
+        {profile.showCompactness ? (
+          <>
+            <p className="small fw-semibold mb-2">Overall text size</p>
+            <select
+              className="form-select form-select-sm mb-3"
+              value={formConfig.fontSize || 'small'}
+              onChange={(e) => updateConfig('fontSize', e.target.value)}
+            >
+              <option value="small">Small (fits more on one page)</option>
+              <option value="medium">Medium</option>
+              <option value="large">Large (easier to read)</option>
+            </select>
+          </>
+        ) : null}
+
+        {profile.showBox ? (
+          <>
+            <p className="small fw-semibold mb-2">Box</p>
+            {BOX_COLORS.map(paint)}
+          </>
+        ) : null}
+
+        {profile.showImageBorder ? (
+          <>
+            <div className="form-check mb-2">
+              <input
+                id={`f8-image-border-${blockId}`}
+                className="form-check-input"
+                type="checkbox"
+                checked={isForm8ImageBorderOn(styleValues)}
+                onChange={(e) =>
+                  applyStyle({ imageBorder: e.target.checked ? '1' : '' })
+                }
+              />
+              <label className="form-check-label small" htmlFor={`f8-image-border-${blockId}`}>
+                Image border
+              </label>
+            </div>
+            {renderColorRow(
+              'Border colour',
+              'imageBorderColor',
+              resolveStyleColorFallback(theme, {
+                fallback: 'borderColor',
+                fallbackHex: '#2c5282',
+              }),
+              colorValue('imageBorderColor'),
+              applyColor
+            )}
+            <div className="mb-2">
+              <label className="form-label small" htmlFor={`f8-image-width-${blockId}`}>
+                Border size
+              </label>
+              <input
+                id={`f8-image-width-${blockId}`}
+                type="number"
+                className="form-control form-control-sm"
+                step="any"
+                value={styleValues.imageBorderWidth ?? ''}
+                placeholder="1"
+                onChange={(e) => applyStyle({ imageBorderWidth: e.target.value })}
+              />
+            </div>
+            <div className="mb-2">
+              <label className="form-label small" htmlFor={`f8-image-radius-${blockId}`}>
+                Border radius
+              </label>
+              <input
+                id={`f8-image-radius-${blockId}`}
+                type="number"
+                className="form-control form-control-sm"
+                step="any"
+                value={styleValues.imageBorderRadius ?? ''}
+                placeholder="0"
+                onChange={(e) => applyStyle({ imageBorderRadius: e.target.value })}
+              />
+            </div>
+          </>
+        ) : null}
+
+        {profile.showTitleColors ? (
+          <>
+            <p className="small fw-semibold mb-2 mt-3">Heading colours</p>
+            {TITLE_COLORS.map(paint)}
+          </>
+        ) : null}
+
+        {profile.showBodyColor ? (
+          <>
+            <p className="small fw-semibold mb-2 mt-3">Text colour</p>
+            {paint({
+              key: 'bodyColor',
+              label: 'Text',
+              fallback: 'textColor',
+              fallbackHex: '#1a202c',
+            })}
+          </>
+        ) : null}
+
+        {profile.extraColors?.length ? (
+          <>
+            <p className="small fw-semibold mb-2 mt-3">Table colours</p>
+            {profile.extraColors
+              .filter((field) => field.key !== 'borderColor' || blockId !== 'signature_lines')
+              .map(paint)}
+          </>
+        ) : null}
+
+        {profile.typography?.length ? (
+          <>
+            <p className="small fw-semibold mb-2 mt-3">Fonts</p>
+            <Form8TypographyFields
+              useTextAliases={profile.store !== 'section' && profile.store !== 'header'}
+              values={profile.store === 'header' ? theme : styleValues}
+              groups={profile.typography}
+              placeholders={typoPlaceholders}
+              onPatch={(patch) =>
+                profile.store === 'header' ? updateTheme(patch) : applyStyle(patch)
+              }
+            />
+          </>
+        ) : null}
+
+        {profile.showFieldBackgrounds && section ? (
+          <>
+            <p className="small fw-semibold mb-2 mt-3">Field row colour</p>
+            {getSortedFields(section)
+              .filter((field) => field.enabled)
+              .map((field) => (
+                <div key={field.id} className="mb-2 d-flex align-items-center gap-2">
+                  <span className="small flex-grow-1 text-truncate">
+                    {getForm8FieldDisplayLabel(field)}
+                  </span>
+                  <input
+                    type="color"
+                    className="form-control form-control-color form-control-sm"
+                    title="Field background"
+                    value={field.backgroundColor || '#ffffff'}
+                    onChange={(e) =>
+                      updateSectionField(sectionId, field.id, {
+                        backgroundColor: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+              ))}
+          </>
+        ) : null}
+
         <button
           type="button"
           className="btn btn-sm btn-outline-secondary mt-2"
-          onClick={() => setBlockStyle({ ...FORM8_BLOCK_STYLE_RESET_PATCH })}
+          onClick={() => {
+            if (profile.store === 'section') {
+              setSectionStyle({ ...SECTION_STYLE_RESET_PATCH });
+              return;
+            }
+            if (profile.store === 'header') {
+              updateTheme({
+                titleFontSizePt: '',
+                titleFontWeight: '',
+                labelFontSizePt: '',
+                labelFontWeight: '',
+                valueFontSizePt: '',
+                valueFontWeight: '',
+              });
+            }
+            updateBlockLayout(blockId, { ...FORM8_BLOCK_STYLE_RESET_PATCH });
+          }}
         >
           Reset styling
         </button>
       </>
-    );
-  };
-
-  const renderAdvance = () => {
-    if (blockId === 'page_settings' || blockId === 'form_header') {
-      return (
-        <>
-          {renderFormHeaderTypographySettings()}
-          {renderThemeFields()}
-        </>
-      );
-    }
-
-    if (section) {
-      return renderSectionAdvancePanel();
-    }
-
-    if (FORM8_TYPOGRAPHY_BLOCK_IDS.has(blockId)) {
-      return renderBlockAdvancePanel();
-    }
-
-    return (
-      <p className="small text-muted mb-0">
-        No advance options for this element. Use Form header for global theme colors.
-      </p>
     );
   };
 
@@ -609,28 +1652,33 @@ const Form8BuilderPropertiesPanel = ({
 
     const showCanvasPos =
       formConfig.canvasLayout === 'free' || layoutSpec.freePosition;
+    const isImageBlock = isForm8MediaBlockId(blockId);
 
     return (
       <div className="f8-block-size-controls mb-3">
         {showCanvasPos ? (
           <>
-            <label className="form-label">Position from left (%)</label>
-            <input
-              type="number"
-              min={0}
-              max={Math.max(0, 100 - (layoutSpec.widthPct ?? 100))}
-              className="form-control form-control-sm mb-2"
-              value={layoutSpec.posXPct ?? 0}
-              onChange={(e) => {
-                const posXPct = Math.min(100, Math.max(0, Number(e.target.value) || 0));
-                updateBlockLayout(blockId, {
-                  posXPct,
-                  freePosition: true,
-                  widthPct: layoutSpec.widthPct,
-                });
-              }}
-            />
-            <label className="form-label">Position from top (%)</label>
+            {isImageBlock ? null : (
+              <>
+                <label className="form-label">Place from left (%)</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={Math.max(0, 100 - (layoutSpec.widthPct ?? 100))}
+                  className="form-control form-control-sm mb-2"
+                  value={layoutSpec.posXPct ?? 0}
+                  onChange={(e) => {
+                    const posXPct = Math.min(100, Math.max(0, Number(e.target.value) || 0));
+                    updateBlockLayout(blockId, {
+                      posXPct,
+                      freePosition: true,
+                      widthPct: layoutSpec.widthPct,
+                    });
+                  }}
+                />
+              </>
+            )}
+            <label className="form-label">Place from top (%)</label>
             <input
               type="number"
               min={0}
@@ -646,7 +1694,7 @@ const Form8BuilderPropertiesPanel = ({
             />
           </>
         ) : null}
-        <label className="form-label">Width (% of content area)</label>
+        <label className="form-label">Width on page (%)</label>
         <input
           type="number"
           min={isForm8MediaBlockId(blockId) ? getForm8MediaWidthLimits(blockId).min : 20}
@@ -665,21 +1713,24 @@ const Form8BuilderPropertiesPanel = ({
             updateBlockLayout(blockId, patch);
           }}
         />
-        <label className="form-label">Height mode</label>
-        <select
-          className="form-select form-select-sm mb-2"
-          value={isAuto ? 'auto' : 'fixed'}
-          disabled={blockId === 'stock_line_items'}
-          onChange={(e) =>
-            updateBlockLayout(blockId, {
-              heightMode: e.target.value,
-              heightMm: e.target.value === 'auto' ? null : layoutSpec.heightMm || 12,
-            })
-          }
-        >
-          <option value="fixed">Fixed height</option>
-          <option value="auto">Auto (dynamic rows)</option>
-        </select>
+        {blockId === 'stock_line_items' ? null : (
+          <>
+            <label className="form-label">Box height</label>
+            <select
+              className="form-select form-select-sm mb-2"
+              value={isAuto ? 'auto' : 'fixed'}
+              onChange={(e) =>
+                updateBlockLayout(blockId, {
+                  heightMode: e.target.value,
+                  heightMm: e.target.value === 'auto' ? null : layoutSpec.heightMm || 12,
+                })
+              }
+            >
+              <option value="fixed">Fixed box</option>
+              <option value="auto">Grow with content</option>
+            </select>
+          </>
+        )}
         {!isAuto ? (
           <>
             <label className="form-label">Height (mm)</label>
@@ -703,71 +1754,12 @@ const Form8BuilderPropertiesPanel = ({
   const renderLayout = () => {
     const sizeControls = renderBlockSizeControls();
 
-    const logoAlignControls = (id) => {
-      const spec = getBlockLayout(formConfig, id);
-      return (
-        <>
-          <label className="form-label">Horizontal align</label>
-          <select
-            className="form-select form-select-sm mb-2"
-            value={spec.hAlign || (id === 'layout_right_logo' ? 'right' : 'left')}
-            onChange={(e) =>
-              updateBlockLayout(id, { hAlign: e.target.value, offsetXPct: null })
-            }
-          >
-            <option value="left">Left</option>
-            <option value="center">Center</option>
-            <option value="right">Right</option>
-          </select>
-          <label className="form-label">Position from left (%)</label>
-          <input
-            type="number"
-            min={0}
-            max={100}
-            className="form-control form-control-sm mb-2"
-            value={spec.offsetXPct ?? ''}
-            placeholder="Auto (use align)"
-            onChange={(e) => {
-              const raw = e.target.value;
-              if (raw === '') {
-                updateBlockLayout(id, { offsetXPct: null });
-                return;
-              }
-              updateBlockLayout(id, {
-                offsetXPct: Math.min(100, Math.max(0, Number(raw) || 0)),
-                hAlign: 'left',
-              });
-            }}
-          />
-        </>
-      );
-    };
-
-    if (blockId === 'layout_left_logo') {
-      return (
-        <>
-          {sizeControls}
-          {logoAlignControls('layout_left_logo')}
-        </>
-      );
-    }
-
-    if (blockId === 'layout_right_logo') {
-      return (
-        <>
-          {sizeControls}
-          {logoAlignControls('layout_right_logo')}
-        </>
-      );
-    }
-
-    if (blockId === 'layout_footer_image') {
-      return (
-        <>
-          {sizeControls}
-          {logoAlignControls('layout_footer_image')}
-        </>
-      );
+    if (
+      blockId === 'layout_left_logo' ||
+      blockId === 'layout_right_logo' ||
+      blockId === 'layout_footer_image'
+    ) {
+      return <>{sizeControls}</>;
     }
 
     if (blockId === 'customer_photo') {
@@ -796,7 +1788,7 @@ const Form8BuilderPropertiesPanel = ({
                   updateSectionField(sectionId, field.id, { fieldLayout: e.target.value })
                 }
               >
-                {FIELD_LAYOUT_OPTIONS.map((opt) => (
+                {FRIENDLY_FIELD_LAYOUT_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
@@ -817,9 +1809,19 @@ const Form8BuilderPropertiesPanel = ({
       <div className="f8-builder-panel-fixed f8-builder-props-fixed">
         <div className="f8-builder-props-head">
           <h3>{blockTitle(blockId, formConfig)}</h3>
-          <button type="button" className="f8-builder-props-close" onClick={onClose} aria-label="Clear selection">
-            <FiX size={18} />
-          </button>
+          <div className="f8-builder-props-head-actions">
+            <button type="button" className="f8-builder-props-close" onClick={onClose} aria-label="Clear selection">
+              <FiX size={16} />
+            </button>
+            <button
+              type="button"
+              className="f8-builder-panel-hide"
+              title="Hide properties"
+              onClick={onCollapse}
+            >
+              <FiChevronRight size={16} />
+            </button>
+          </div>
         </div>
         {renderFormToggleButton()}
         <div className="f8-builder-props-tabs" role="tablist">

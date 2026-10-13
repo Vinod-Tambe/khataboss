@@ -1,6 +1,7 @@
 import { getForm8BlockOrder, getBlockLayout, isForm8BlockEnabled } from './form8BuilderBlocks';
 import { parseSectionBlockId } from './form8BuilderCatalog';
 import { parseFieldBlockId } from './form8FieldBlocks';
+import { isForm8DividerBlockId } from './form8DividerBlocks';
 import { getForm8FieldDisplayLabel, getForm8FooterNoteTitle } from './form8SectionDisplay';
 import { getSortedFields, replaceTemplateVariables } from './formTemplateConfig';
 import { templateLooksLikeHtml } from './formTemplateRichText';
@@ -61,6 +62,13 @@ export const buildFormTemplatePrintHtml = (config, { firmName = '', firmFormHead
         .join('');
       chunks.push(
         `<section class="f8-block" data-block-id="${esc(blockId)}" style="${esc(style)}"><h3>${esc(section.label)}</h3>${fields}</section>`
+      );
+      return;
+    }
+
+    if (isForm8DividerBlockId(blockId)) {
+      chunks.push(
+        `<hr class="f8-block f8-divider" data-block-id="${esc(blockId)}" style="${esc(style)}" />`
       );
       return;
     }

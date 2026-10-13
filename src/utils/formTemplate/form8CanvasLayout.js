@@ -1,7 +1,6 @@
 import {
   getForm8BlockOrder,
   getBlockLayout,
-  getForm8MediaWidthLimits,
   isForm8BlockEnabled,
   isForm8FreeCanvasMediaBlock,
 } from './form8BuilderBlocks';
@@ -14,7 +13,7 @@ const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
 
 const horizontalWidthLimits = (blockId) => {
   if (isForm8FreeCanvasMediaBlock(blockId)) {
-    return getForm8MediaWidthLimits(blockId);
+    return blockId === 'layout_footer_image' ? { min: 8, max: 100 } : { min: 8, max: 80 };
   }
   if (isForm8FieldBlockId(blockId)) {
     return { min: 12, max: 55 };

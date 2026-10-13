@@ -33,8 +33,8 @@ import {
 } from './form8SectionDisplay';
 import { getForm8FieldBlockValue, parseFieldBlockId } from './form8FieldBlocks';
 import {
-  FORM8_STOCK_TABLE_COLUMNS,
   getForm8StockCellValue,
+  getVisibleForm8StockColumns,
 } from './form8StockTable';
 import { buildStockItemsTablePdf } from './form8StockTableStyle';
 import {
@@ -45,9 +45,18 @@ import {
   isForm8FreeCanvasLayout,
 } from './form8CanvasLayout';
 import { parseSectionBlockId } from './form8BuilderCatalog';
+import { isForm8DividerBlockId } from './form8DividerBlocks';
 import {
+  FORM8_HEADER_LINE_DEFS,
   getForm8BlockPdfBodyProps,
   getForm8BlockPdfTitleProps,
+  buildForm8TextPartPdfBlock,
+  getForm8SignatureLinePdf,
+  signatureHasCustomBox,
+  buildForm8DividerPdfBlock,
+  getForm8HeaderLinePdfProps,
+  headerHasCustomBox,
+  isForm8HeaderBorderOn,
 } from './form8BlockStyle';
 import {
   getForm8SectionFieldPdfStyle,
@@ -65,13 +74,16 @@ const sanitizePdfImage = (dataUrl) =>
 
 pdfMake.vfs = pdfFonts.vfs || pdfFonts.default?.vfs || pdfFonts;
 
-const buildForm8SignaturePdfBlock = (normalized, formData, compact) => {
+const buildForm8SignaturePdfBlock = (normalized, formData, compact, theme, valueFontPt) => {
   const entries = getForm8SignatureEntries(normalized, formData);
   if (!entries.length) return null;
-  return {
+  const sigSpec = getBlockLayout(normalized, 'signature_lines');
+  const body = getForm8BlockPdfBodyProps(sigSpec, theme, valueFontPt, valueFontPt);
+  const line = getForm8SignatureLinePdf(sigSpec, theme, compact);
+  const columns = {
     columns: entries.map((entry) => ({
       stack: [
-        { text: ' ', margin: [0, 0, 0, compact ? 14 : 22] },
+        { text: ' ', margin: [0, 0, 0, line.gap] },
         {
           canvas: [
             {
@@ -80,14 +92,18 @@ const buildForm8SignaturePdfBlock = (normalized, formData, compact) => {
               y1: 0,
               x2: 220,
               y2: 0,
-              lineWidth: 0.5,
-              lineColor: '#111827',
+              lineWidth: line.width,
+              lineColor: hexToRgb(line.color),
             },
           ],
         },
         {
           text: entry.caption,
           style: 'sigName',
+          fontSize: body.fontSize,
+          bold: body.bold,
+          color: hexToRgb(body.color),
+          fillColor: body.fillColor ? hexToRgb(body.fillColor) : undefined,
           margin: [0, compact ? 4 : 6, 0, 0],
         },
       ],
@@ -96,6 +112,8 @@ const buildForm8SignaturePdfBlock = (normalized, formData, compact) => {
     columnGap: 24,
     margin: [0, compact ? 4 : 8, 0, 0],
   };
+  if (!signatureHasCustomBox(sigSpec)) return columns;
+  return wrapSectionPdfBlocks(sigSpec, theme, [columns])[0] || columns;
 };
 
 const buildLogoRow = (layout, leftLogoKey, rightLogoKey, centerText = '') => {
@@ -190,22 +208,6 @@ const buildCustomerPhotoInjectBlock = (customerPhotoKey, theme) => ({
   margin: [0, 0, 0, 6],
 });
 
-const tableGridLayout = (theme) => ({
-  hLineWidth: () => 0.5,
-  vLineWidth: () => 0.5,
-  hLineColor: () => hexToRgb(theme.borderColor),
-  vLineColor: () => hexToRgb(theme.borderColor),
-});
-
-const tableNoBorderLayout = () => ({
-  hLineWidth: () => 0,
-  vLineWidth: () => 0,
-  paddingLeft: () => 0,
-  paddingRight: () => 0,
-  paddingTop: () => 1,
-  paddingBottom: () => 1,
-});
-
 const buildInlineFieldRow = (
   field,
   formData,
@@ -224,9 +226,10 @@ const buildInlineFieldRow = (
         width: '38%',
         text: getForm8FieldDisplayLabel(field),
         style: 'fieldLabel',
-        color: hexToRgb(theme.textColor),
+        color: hexToRgb(fieldFonts?.label?.color || theme.textColor),
         ...(fieldFonts?.label?.fontSize != null ? { fontSize: fieldFonts.label.fontSize } : {}),
         ...(fieldFonts?.label?.bold != null ? { bold: fieldFonts.label.bold } : {}),
+        ...(fieldFonts?.label?.fillColor ? { background: hexToRgb(fieldFonts.label.fillColor) } : {}),
       },
       {
         width: '*',
@@ -245,16 +248,21 @@ const buildInlineFieldRow = (
         width: '38%',
         text: getForm8FieldDisplayLabel(field),
         style: 'fieldLabel',
-        color: hexToRgb(theme.textColor),
+        color: hexToRgb(fieldFonts?.label?.color || theme.textColor),
         ...(fieldFonts?.label?.fontSize != null ? { fontSize: fieldFonts.label.fontSize } : {}),
         ...(fieldFonts?.label?.bold != null ? { bold: fieldFonts.label.bold } : {}),
+        ...(fieldFonts?.label?.fillColor ? { background: hexToRgb(fieldFonts.label.fillColor) } : {}),
       },
       {
         width: '*',
         text: getFormFieldValue(field.id, formData),
         style: 'fieldValue',
-        color: hexToRgb(theme.textColor),
-        ...(valueFill ? { background: valueFill } : {}),
+        color: hexToRgb(fieldFonts?.value?.color || theme.textColor),
+        ...(valueFill
+          ? { background: valueFill }
+          : fieldFonts?.value?.fillColor
+            ? { background: hexToRgb(fieldFonts.value.fillColor) }
+            : {}),
         ...(fieldFonts?.value?.fontSize != null ? { fontSize: fieldFonts.value.fontSize } : {}),
         ...(fieldFonts?.value?.bold != null ? { bold: fieldFonts.value.bold } : {}),
       },
@@ -367,14 +375,12 @@ export const buildFormTemplatePdfDefinition = (
   const size = normalized.pageSize || 'A4';
   const orientation = normalized.orientation || 'portrait';
   const compact = Boolean(normalized.singlePageLayout);
-  const sectionMargin = compact ? [0, 4, 0, 2] : [0, 6, 0, 4];
   const pageMargins = compact ? [28, 28, 28, 28] : [40, 40, 40, 40];
   const pageWidthPt =
     size === 'Letter' ? 612 : size === 'A5' ? 419.53 : orientation === 'landscape' ? 841.89 : 595.28;
   const pageHeightPt =
     size === 'Letter' ? 792 : size === 'A5' ? 595.28 : orientation === 'landscape' ? 595.28 : 841.89;
   const contentWidthPt = pageWidthPt - pageMargins[0] - pageMargins[2];
-  const contentHeightPt = pageHeightPt - pageMargins[1] - pageMargins[3];
   const useFreeCanvas = isForm8FreeCanvasLayout(normalized);
   const basePageHeightMm = normalized.pageHeightMm || (pageHeightPt * 25.4) / 72;
   const canvasPageHeightMm = useFreeCanvas
@@ -495,6 +501,17 @@ export const buildFormTemplatePdfDefinition = (
       return;
     }
 
+    if (isForm8DividerBlockId(blockId)) {
+      target.push(
+        buildForm8DividerPdfBlock(
+          getBlockLayout(normalized, blockId),
+          theme,
+          contentWidthPt
+        )
+      );
+      return;
+    }
+
     const fieldId = parseFieldBlockId(blockId);
     if (fieldId) {
       const label = getForm8FieldDisplayLabel({ id: fieldId });
@@ -539,59 +556,141 @@ export const buildFormTemplatePdfDefinition = (
         break;
       }
       case 'form_header': {
+        const headerSpec = getBlockLayout(normalized, blockId);
+        const headerLine = (id, fallbackPt) => {
+          const line = FORM8_HEADER_LINE_DEFS.find((item) => item.id === id);
+          return line
+            ? getForm8HeaderLinePdfProps(headerSpec, line, fallbackPt)
+            : { fontSize: fallbackPt, bold: false, color: null, fillColor: null };
+        };
+        const applyHeaderLinePdf = (node, props) => {
+          if (props.color) node.color = hexToRgb(props.color);
+          if (props.fontSize) node.fontSize = props.fontSize;
+          node.bold = props.bold;
+          if (props.fillColor) node.background = hexToRgb(props.fillColor);
+          return node;
+        };
+        const headerChunks = [];
         if (layout.useFirmFormHeader && firmFormHeader) {
-          target.push({
+          headerChunks.push({
             text: templateHtmlToPlain(replaceTemplateVariables(firmFormHeader, formData)),
             style: 'note',
             alignment: 'center',
             margin: [0, 0, 0, compact ? 4 : 8],
           });
         }
-        target.push({
-          text: normalized.title || 'FORM 8',
-          style: 'title',
-          alignment: 'center',
-          color: hexToRgb(theme.primaryColor),
-          margin: [0, 0, 0, 4],
-        });
+        const titleProps = headerLine('title', mainTitleFontPt);
+        headerChunks.push(
+          applyHeaderLinePdf(
+            {
+              text: normalized.title || 'FORM 8',
+              style: 'title',
+              alignment: 'center',
+              color: hexToRgb(theme.primaryColor),
+              margin: [0, 0, 0, 4],
+            },
+            titleProps
+          )
+        );
         if (normalized.subtitle) {
-          target.push({
-            text: normalized.subtitle,
-            style: 'subtitle',
-            alignment: 'center',
-            margin: [0, 0, 0, 4],
-          });
+          headerChunks.push(
+            applyHeaderLinePdf(
+              {
+                text: normalized.subtitle,
+                style: 'subtitle',
+                alignment: 'center',
+                color: hexToRgb(theme.sectionTitleColor),
+                margin: [0, 0, 0, 4],
+              },
+              headerLine('subtitle', labelFontPt)
+            )
+          );
         }
         if (normalized.complianceReference) {
-          target.push({
-            text: normalized.complianceReference,
-            style: 'compliance',
-            alignment: 'center',
-            margin: [0, 0, 0, compact ? 4 : 8],
-          });
+          headerChunks.push(
+            applyHeaderLinePdf(
+              {
+                text: normalized.complianceReference,
+                style: 'compliance',
+                alignment: 'center',
+                color: hexToRgb(theme.textColor),
+                margin: [0, 0, 0, compact ? 4 : 8],
+              },
+              headerLine('compliance', labelFontPt)
+            )
+          );
         }
         if (normalized.headerNote) {
+          headerChunks.push(
+            applyHeaderLinePdf(
+              {
+                text: replaceTemplateVariables(normalized.headerNote, formData),
+                style: 'note',
+                alignment: 'center',
+                color: hexToRgb(theme.textColor),
+                margin: [0, 0, 0, compact ? 4 : 10],
+              },
+              headerLine('note', valueFontPt)
+            )
+          );
+        }
+        if (headerHasCustomBox(headerSpec)) {
+          const fill = headerSpec.backgroundColor
+            ? hexToRgb(headerSpec.backgroundColor)
+            : null;
+          const lineColor = hexToRgb(headerSpec.borderColor || '#2c5282');
+          const showBorder = isForm8HeaderBorderOn(headerSpec);
+          const borderW = Number(headerSpec.headerBorderWidth);
+          const lineW = Number.isFinite(borderW) ? (borderW * 72) / 96 : 1;
           target.push({
-            text: replaceTemplateVariables(normalized.headerNote, formData),
-            style: 'note',
-            alignment: 'center',
-            margin: [0, 0, 0, compact ? 4 : 10],
+            table: {
+              widths: ['*'],
+              body: [
+                [
+                  {
+                    stack: headerChunks,
+                    fillColor: fill,
+                    margin: [8, 8, 8, 8],
+                  },
+                ],
+              ],
+            },
+            layout: {
+              hLineWidth: () => (showBorder ? lineW : 0),
+              vLineWidth: () => (showBorder ? lineW : 0),
+              hLineColor: () => lineColor,
+              vLineColor: () => lineColor,
+            },
+            margin: [0, 0, 0, compact ? 6 : 10],
           });
+        } else {
+          headerChunks.forEach((block) => target.push(block));
         }
         break;
       }
       case 'customer_photo':
         if (customerPhotoKey) {
-          target.push(buildCustomerPhotoInjectBlock(customerPhotoKey, theme));
+          if (!pushFreeCanvasMediaPdf(blockId, customerPhotoKey, target)) {
+            const block = buildForm8LogoPdfDefinition(
+              normalized,
+              blockId,
+              customerPhotoKey,
+              contentWidthPt,
+              { compact }
+            );
+            if (block) target.push(block);
+          }
         }
         break;
       case 'stock_line_items': {
         const stockSpec = getBlockLayout(normalized, blockId);
         const itemSection = sectionsById.get('item_details');
         const wrapStyles = {
-          backgroundColor:
-            itemSection?.backgroundColor || stockSpec.backgroundColor || '',
-          borderColor: itemSection?.borderColor || stockSpec.borderColor || '',
+          backgroundColor: stockSpec.backgroundColor || itemSection?.backgroundColor || '',
+          borderColor: stockSpec.borderColor || itemSection?.borderColor || '',
+          sectionBorder: stockSpec.sectionBorder,
+          sectionBorderWidth: stockSpec.sectionBorderWidth,
+          sectionBorderRadius: stockSpec.sectionBorderRadius,
         };
         const stockChunks = [];
         if (itemSection) {
@@ -629,7 +728,7 @@ export const buildFormTemplatePdfDefinition = (
             stockSpec,
             labelFontPt,
             valueFontPt,
-            FORM8_STOCK_TABLE_COLUMNS,
+            getVisibleForm8StockColumns(stockSpec),
             getForm8StockCellValue
           );
           if (stockTable) stockChunks.push(stockTable);
@@ -644,28 +743,32 @@ export const buildFormTemplatePdfDefinition = (
         const termsSpec = getBlockLayout(normalized, blockId);
         const termsTitle = getForm8BlockPdfTitleProps(termsSpec, theme, fontPt);
         const termsBody = getForm8BlockPdfBodyProps(termsSpec, theme, labelFontPt, valueFontPt);
-        const termsChunks = [
-          {
-            text: 'Terms & Conditions',
-            style: 'sectionTitle',
-            color: hexToRgb(termsTitle.color),
-            fillColor: hexToRgb(termsTitle.fillColor),
-            fontSize: termsTitle.fontSize,
-            bold: termsTitle.bold,
-            margin: [0, 0, 0, 0],
-          },
-          {
-            text: replaceTemplateVariables(normalized.termsAndConditions, formData),
-            style: 'body',
-            color: hexToRgb(termsBody.color),
-            fontSize: termsBody.fontSize,
-            bold: termsBody.bold,
-            margin: [0, 4, 0, 0],
-          },
-        ];
-        wrapSectionPdfBlocks(termsSpec, theme, termsChunks).forEach((block) => {
-          target.push(block);
-        });
+        target.push(
+          buildForm8TextPartPdfBlock(
+            termsSpec,
+            'title',
+            {
+              text: 'Terms & Conditions',
+              color: hexToRgb(termsTitle.color),
+              fontSize: termsTitle.fontSize,
+              bold: termsTitle.bold,
+            },
+            theme
+          )
+        );
+        target.push(
+          buildForm8TextPartPdfBlock(
+            termsSpec,
+            'body',
+            {
+              text: replaceTemplateVariables(normalized.termsAndConditions, formData),
+              color: hexToRgb(termsBody.color),
+              fontSize: termsBody.fontSize,
+              bold: termsBody.bold,
+            },
+            theme
+          )
+        );
         break;
       }
       case 'form_footer': {
@@ -677,29 +780,32 @@ export const buildFormTemplatePdfDefinition = (
         const footerSpec = getBlockLayout(normalized, blockId);
         const footerTitle = getForm8BlockPdfTitleProps(footerSpec, theme, fontPt);
         const footerBody = getForm8BlockPdfBodyProps(footerSpec, theme, labelFontPt, valueFontPt);
-        const footerChunks = [
-          {
-            text: getForm8FooterNoteTitle(normalized),
-            style: 'sectionTitle',
-            color: hexToRgb(footerTitle.color),
-            fillColor: hexToRgb(footerTitle.fillColor),
-            fontSize: footerTitle.fontSize,
-            bold: footerTitle.bold,
-            margin: [0, 0, 0, 0],
-          },
-          {
-            text: templateHtmlToPlain(replaceTemplateVariables(footerText, formData)),
-            style: 'body',
-            alignment: 'left',
-            color: hexToRgb(footerBody.color),
-            fontSize: footerBody.fontSize,
-            bold: footerBody.bold,
-            margin: [0, 4, 0, 0],
-          },
-        ];
-        wrapSectionPdfBlocks(footerSpec, theme, footerChunks).forEach((block) => {
-          target.push(block);
-        });
+        target.push(
+          buildForm8TextPartPdfBlock(
+            footerSpec,
+            'title',
+            {
+              text: getForm8FooterNoteTitle(normalized),
+              color: hexToRgb(footerTitle.color),
+              fontSize: footerTitle.fontSize,
+              bold: footerTitle.bold,
+            },
+            theme
+          )
+        );
+        target.push(
+          buildForm8TextPartPdfBlock(
+            footerSpec,
+            'body',
+            {
+              text: templateHtmlToPlain(replaceTemplateVariables(footerText, formData)),
+              color: hexToRgb(footerBody.color),
+              fontSize: footerBody.fontSize,
+              bold: footerBody.bold,
+            },
+            theme
+          )
+        );
         break;
       }
       case 'layout_footer_image': {
@@ -719,7 +825,13 @@ export const buildFormTemplatePdfDefinition = (
         break;
       }
       case 'signature_lines': {
-        const sigBlock = buildForm8SignaturePdfBlock(normalized, formData, compact);
+        const sigBlock = buildForm8SignaturePdfBlock(
+          normalized,
+          formData,
+          compact,
+          theme,
+          valueFontPt
+        );
         if (sigBlock) target.push(sigBlock);
         break;
       }
@@ -745,7 +857,13 @@ export const buildFormTemplatePdfDefinition = (
             margin: [0, 0, 0, 16],
           });
         }
-        const legalSig = buildForm8SignaturePdfBlock(normalized, formData, compact);
+        const legalSig = buildForm8SignaturePdfBlock(
+          normalized,
+          formData,
+          compact,
+          theme,
+          valueFontPt
+        );
         if (legalSig) target.push(legalSig);
         break;
       default:

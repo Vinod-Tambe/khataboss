@@ -412,8 +412,8 @@
   border-color: var(--app-border);
 }
 
-[data-theme="dark"] table tbody td, [data-theme="brand-dark"] table tbody td,
-[data-theme="dark"] table tbody th, [data-theme="brand-dark"] table tbody th{
+[data-theme="dark"] table:not(.form-custom-a4-stock-table) tbody td, [data-theme="brand-dark"] table:not(.form-custom-a4-stock-table) tbody td,
+[data-theme="dark"] table:not(.form-custom-a4-stock-table) tbody th, [data-theme="brand-dark"] table:not(.form-custom-a4-stock-table) tbody th{
   background-color: var(--datatable-body-bg);
   color: var(--datatable-body-text);
   border-color: var(--app-border) !important;

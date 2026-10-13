@@ -29,11 +29,18 @@ export const FORM8_TYPO_TEXT_BLOCK_ALIASES = {
 
 export const FORM8_TYPO_GROUPS = [FORM8_TYPO_MAIN_TITLE, FORM8_TYPO_LABEL, FORM8_TYPO_TEXT];
 
+const firstFilled = (...values) => {
+  for (const value of values) {
+    if (value != null && String(value).trim() !== '') return value;
+  }
+  return '';
+};
+
 export const getForm8TextSizePt = (style = {}) =>
-  style.valueFontSizePt ?? style.bodyFontSizePt ?? '';
+  firstFilled(style.bodyFontSizePt, style.valueFontSizePt);
 
 export const getForm8TextWeight = (style = {}) =>
-  style.valueFontWeight ?? style.bodyFontWeight ?? '';
+  firstFilled(style.bodyFontWeight, style.valueFontWeight);
 
 /** Patch for Text size/weight on block layouts (value + body aliases). */
 export const form8TextTypographyPatch = (sizePt, weight) => {

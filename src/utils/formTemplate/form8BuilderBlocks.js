@@ -1,4 +1,4 @@
-import { pickBlockStyleFields } from './form8BlockStyle';
+import { pickBlockStyleFields, wrapPdfImageWithBorder } from './form8BlockStyle';
 import {
   FORM8_OPTIONAL_SECTION_IDS,
   isForm8PaletteBlockHidden,
@@ -11,6 +11,7 @@ import {
   isForm8FieldBlockId,
   parseFieldBlockId,
 } from './form8FieldBlocks';
+import { isForm8DividerBlockId, readForm8DividerOwnStyle } from './form8DividerBlocks';
 
 const FORM8_SETTINGS_BLOCKS = new Set(['page_settings', 'macro_keywords']);
 const FORM8_OPTIONAL_BLOCK_IDS = new Set([
@@ -20,6 +21,7 @@ const FORM8_OPTIONAL_BLOCK_IDS = new Set([
   'form_footer',
   'layout_footer_image',
   'signature_lines',
+  'form_divider',
   'form_legal',
   ...FORM8_POSITIONABLE_FIELDS.map((f) => fieldBlockId(f.id)),
 ]);
@@ -27,6 +29,7 @@ const FORM8_OPTIONAL_BLOCK_IDS = new Set([
 export const isForm8RequiredBlock = (blockId) => {
   if (FORM8_SETTINGS_BLOCKS.has(blockId)) return false;
   if (isForm8FieldBlockId(blockId)) return false;
+  if (isForm8DividerBlockId(blockId)) return false;
   const sectionId = parseSectionBlockId(blockId);
   if (sectionId) {
     return !FORM8_OPTIONAL_SECTION_IDS.has(sectionId);
@@ -131,6 +134,10 @@ export const FORM8_BLOCK_META = {
     label: 'Stock desc',
     group: 'blocks',
   },
+  form_divider: {
+    label: 'Divider',
+    group: 'blocks',
+  },
   form_terms: {
     label: 'Terms & conditions',
     group: 'blocks',
@@ -214,6 +221,7 @@ export const FORM8_DEFAULT_BLOCK_LAYOUTS = {
   customer_photo: { widthPct: 28, heightMm: 14, heightMode: 'fixed' },
   'section:loan_details': { widthPct: 100, heightMm: 26, heightMode: 'fixed' },
   stock_line_items: { widthPct: 100, heightMm: null, heightMode: 'auto' },
+  form_divider: { widthPct: 100, heightMm: 6, heightMode: 'fixed' },
   form_terms: { widthPct: 100, heightMm: 14, heightMode: 'fixed' },
   form_footer: { widthPct: 100, heightMm: 9, heightMode: 'fixed' },
   layout_footer_image: {
@@ -305,11 +313,13 @@ export const getBlockLayout = (config, blockId) => {
   if (!Object.keys(custom).length && blockId === 'layout_right_logo') {
     custom = legacyLogoLayout(config) || {};
   }
-  const defaults = FORM8_DEFAULT_BLOCK_LAYOUTS[blockId] || {
-    widthPct: 100,
-    heightMm: 12,
-    heightMode: 'fixed',
-  };
+  const defaults = FORM8_DEFAULT_BLOCK_LAYOUTS[blockId]
+    || (isForm8DividerBlockId(blockId) ? FORM8_DEFAULT_BLOCK_LAYOUTS.form_divider : null)
+    || {
+      widthPct: 100,
+      heightMm: 12,
+      heightMode: 'fixed',
+    };
   const hAlign =
     custom.hAlign ??
     defaults.hAlign ??
@@ -334,8 +344,14 @@ export const getBlockLayout = (config, blockId) => {
         : defaults.posYPct ?? null,
     freePosition: Boolean(custom.freePosition),
     zIndex: custom.zIndex ?? defaults.zIndex ?? 2,
+    stockHiddenColumns: Array.isArray(custom.stockHiddenColumns)
+      ? custom.stockHiddenColumns
+      : defaults.stockHiddenColumns || [],
     ...pickBlockStyleFields(defaults),
     ...pickBlockStyleFields(custom),
+    ...(isForm8DividerBlockId(blockId)
+      ? readForm8DividerOwnStyle({ blockLayouts: { [blockId]: custom } }, blockId)
+      : {}),
   };
 };
 
@@ -360,6 +376,7 @@ export const buildForm8PaletteItems = (config, sections = []) => {
       const sectionId = parseSectionBlockId(blockId);
       if (sectionId) return sectionIds.has(blockId);
       if (blockId === 'layout_logo') return false;
+      if (isForm8DividerBlockId(blockId)) return true;
       return Boolean(FORM8_BLOCK_META[blockId]);
     })
     .map((blockId) => {
@@ -416,6 +433,9 @@ export const isForm8BlockEnabled = (config, blockId) => {
   if (sectionId) {
     const section = (config?.sections || []).find((s) => s.id === sectionId);
     return Boolean(section?.enabled);
+  }
+  if (isForm8DividerBlockId(blockId)) {
+    return Boolean(order?.includes(blockId));
   }
   switch (blockId) {
     case 'layout_left_logo':
@@ -549,7 +569,10 @@ export const buildForm8LogoPdfDefinition = (
   const { widthPct, heightMm, hAlign, offsetXPct } = getBlockLayout(normalized, blockId);
   const widthPt = Math.max(24, Math.round(((widthPct ?? 28) / 100) * contentWidthPt));
   const heightPt = Math.max(24, Math.round(mmToPt(heightMm ?? 14)));
-  const imageCell = { image: imageKey, width: widthPt, height: heightPt };
+  const imageCell = wrapPdfImageWithBorder(
+    { image: imageKey, width: widthPt, height: heightPt },
+    getBlockLayout(normalized, blockId)
+  );
 
   let margin = [0, 0, 0, compact ? 4 : 8];
   if (offsetXPct != null && Number.isFinite(Number(offsetXPct))) {
@@ -595,11 +618,14 @@ export const buildForm8MediaPdfImage = (normalized, blockId, imageKey, contentWi
   const { widthPct, heightMm } = getBlockLayout(normalized, blockId);
   const widthPt = Math.max(24, Math.round(((widthPct ?? 28) / 100) * contentWidthPt));
   const heightPt = Math.max(24, Math.round(mmToPt(heightMm ?? 14)));
-  return {
-    image: imageKey,
-    width: widthPt,
-    height: heightPt,
-  };
+  return wrapPdfImageWithBorder(
+    {
+      image: imageKey,
+      width: widthPt,
+      height: heightPt,
+    },
+    getBlockLayout(normalized, blockId)
+  );
 };
 
 export const blockShellClass = (config, blockId) => {

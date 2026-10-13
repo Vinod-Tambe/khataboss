@@ -13,6 +13,13 @@ import {
   parseSectionBlockId,
   sectionBlockId,
 } from './form8BuilderCatalog';
+import {
+  FORM8_DIVIDER_PALETTE_ID,
+  getForm8DividerLabel,
+  isForm8DividerInstanceId,
+  isForm8DividerPaletteId,
+  listForm8DividerBlockIds,
+} from './form8DividerBlocks';
 
 export const F8_PALETTE_DRAG_MIME = 'application/x-f8-palette-block';
 export const F8_CANVAS_BLOCK_DRAG_MIME = 'application/x-f8-block-id';
@@ -31,7 +38,13 @@ const blockCategory = (blockId, sectionId) => {
   return 'required';
 };
 
-const blockLabel = (blockId, sections) => {
+const blockLabel = (blockId, sections, order = []) => {
+  if (isForm8DividerInstanceId(blockId) && !isForm8DividerPaletteId(blockId)) {
+    return getForm8DividerLabel(blockId, order);
+  }
+  if (isForm8DividerPaletteId(blockId)) {
+    return FORM8_BLOCK_META[FORM8_DIVIDER_PALETTE_ID]?.label || 'Divider';
+  }
   if (FORM8_BLOCK_META[blockId]?.label) {
     return FORM8_BLOCK_META[blockId].label;
   }
@@ -55,9 +68,12 @@ export const buildForm8PaletteCatalog = (config, sections = []) => {
   sections.forEach((s) => ids.add(sectionBlockId(s.id)));
 
   const items = [];
+  const order = config?.builderBlockOrder || [];
+
   ids.forEach((blockId) => {
     if (blockId === 'layout_logo') return;
     if (isForm8PaletteBlockHidden(blockId)) return;
+    if (isForm8DividerInstanceId(blockId) && !isForm8DividerPaletteId(blockId)) return;
     const sectionId = parseSectionBlockId(blockId);
     if (sectionId && !sectionIds.has(blockId)) return;
     if (!FORM8_BLOCK_META[blockId] && !sectionId) {
@@ -65,21 +81,43 @@ export const buildForm8PaletteCatalog = (config, sections = []) => {
     }
 
     const category = blockCategory(blockId, sectionId);
-
-    const onCanvas = isForm8BlockOnCanvas(config, blockId);
-    const inOrder = (config?.builderBlockOrder || []).includes(blockId);
+    const repeatable = isForm8DividerPaletteId(blockId);
+    const onCanvas = repeatable ? false : isForm8BlockOnCanvas(config, blockId);
+    const inOrder = order.includes(blockId);
 
     items.push({
       id: blockId,
-      label: blockLabel(blockId, sections),
+      label: blockLabel(blockId, sections, order),
       category,
       onCanvas,
       inOrder,
-      placed: onCanvas || (inOrder && isForm8RequiredBlock(blockId)),
+      repeatable,
+      placed: repeatable ? false : onCanvas || (inOrder && isForm8RequiredBlock(blockId)),
+    });
+  });
+
+  listForm8DividerBlockIds(order).forEach((blockId) => {
+    items.push({
+      id: blockId,
+      label: getForm8DividerLabel(blockId, order),
+      category: 'optional',
+      onCanvas: true,
+      inOrder: true,
+      repeatable: false,
+      placed: true,
     });
   });
 
   const sortKey = (id) => {
+    if (isForm8DividerPaletteId(id)) {
+      const stock = FORM8_DEFAULT_BLOCK_ORDER.indexOf('stock_line_items');
+      return (stock >= 0 ? stock : 8) + 0.4;
+    }
+    if (isForm8DividerInstanceId(id)) {
+      const stock = FORM8_DEFAULT_BLOCK_ORDER.indexOf('stock_line_items');
+      const n = Number(String(id).split(':')[1] || 1);
+      return (stock >= 0 ? stock : 8) + 0.5 + n / 100;
+    }
     const idx = FORM8_DEFAULT_BLOCK_ORDER.indexOf(id);
     return idx >= 0 ? idx : 999;
   };
@@ -102,11 +140,12 @@ export const buildForm8OnCanvasItems = (config, sections = []) => {
       if (sectionId) {
         return sections.some((s) => s.id === sectionId);
       }
+      if (isForm8DividerInstanceId(blockId)) return true;
       return Boolean(FORM8_BLOCK_META[blockId]);
     })
     .map((blockId) => ({
       id: blockId,
-      label: blockLabel(blockId, sections),
+      label: blockLabel(blockId, sections, order),
       onCanvas: isForm8BlockOnCanvas(config, blockId),
     }));
 };

@@ -11,12 +11,19 @@ export const FORM8_FONT_WEIGHT_OPTIONS = [
 export const FORM8_SECTION_STYLE_KEYS = [
   'backgroundColor',
   'borderColor',
+  'sectionBorder',
+  'sectionBorderWidth',
+  'sectionBorderRadius',
   'titleColor',
   'titleBackgroundColor',
   'titleFontSizePt',
   'titleFontWeight',
+  'labelColor',
+  'labelBackgroundColor',
   'labelFontSizePt',
   'labelFontWeight',
+  'valueColor',
+  'valueBackgroundColor',
   'valueFontSizePt',
   'valueFontWeight',
 ];
@@ -26,6 +33,19 @@ const parseSectionPt = (raw, fallback) => {
   const n = Number(raw);
   if (!Number.isFinite(n)) return fallback;
   return clampFieldFontPt(n);
+};
+
+const parseSectionNumber = (raw, fallback) => {
+  if (raw === null || raw === undefined || raw === '') return fallback;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : fallback;
+};
+
+export const isForm8SectionBorderOn = (section) => {
+  const v = section?.sectionBorder;
+  if (v === true || v === 1 || v === '1' || String(v).toLowerCase() === 'true') return true;
+  if (v === '' || v === '0' || v === false) return false;
+  return hasValue(section?.borderColor);
 };
 
 export const pdfBoldFromWeight = (weight, defaultBold = false) => {
@@ -48,6 +68,21 @@ const resolveFontWeightCss = (raw, fallback) => {
 
 const hasValue = (v) => v != null && String(v).trim() !== '';
 
+const getForm8SectionFieldTextStyle = (section, kind) => {
+  const style = {};
+  const colorKey = kind === 'label' ? 'labelColor' : 'valueColor';
+  const bgKey = kind === 'label' ? 'labelBackgroundColor' : 'valueBackgroundColor';
+  const sizeKey = kind === 'label' ? 'labelFontSizePt' : 'valueFontSizePt';
+  const weightKey = kind === 'label' ? 'labelFontWeight' : 'valueFontWeight';
+  if (hasValue(section?.[colorKey])) style.color = section[colorKey];
+  if (hasValue(section?.[bgKey])) style.backgroundColor = section[bgKey];
+  const pt = parseSectionPt(section?.[sizeKey], null);
+  if (pt != null) style.fontSize = `${pt}pt`;
+  const weight = resolveFontWeightCss(section?.[weightKey], null);
+  if (weight != null) style.fontWeight = weight;
+  return style;
+};
+
 /** Preview: inline styles + CSS variables for a section block. */
 export const getForm8SectionPreviewStyle = (section) => {
   const style = {};
@@ -56,10 +91,14 @@ export const getForm8SectionPreviewStyle = (section) => {
   if (hasValue(section?.backgroundColor)) {
     style.backgroundColor = section.backgroundColor;
   }
-  if (hasValue(section?.borderColor)) {
-    style.border = `1px solid ${section.borderColor}`;
-    style.borderColor = section.borderColor;
+  if (isForm8SectionBorderOn(section)) {
+    const color = hasValue(section?.borderColor) ? section.borderColor : '#2c5282';
+    const width = parseSectionNumber(section?.sectionBorderWidth, 1);
+    style.border = `${width}px solid ${color}`;
+    style.borderColor = color;
   }
+  const radius = parseSectionNumber(section?.sectionBorderRadius, null);
+  if (radius != null) style.borderRadius = `${radius}px`;
 
   const labelPt = parseSectionPt(section?.labelFontSizePt, null);
   const valuePt = parseSectionPt(section?.valueFontSizePt, null);
@@ -70,14 +109,20 @@ export const getForm8SectionPreviewStyle = (section) => {
   const valueW = resolveFontWeightCss(section?.valueFontWeight, null);
   if (labelW != null) vars['--ft-label-font-weight'] = labelW;
   if (valueW != null) vars['--ft-value-font-weight'] = valueW;
+  if (hasValue(section?.labelColor)) vars['--ft-label-color'] = section.labelColor;
+  if (hasValue(section?.labelBackgroundColor)) vars['--ft-label-bg'] = section.labelBackgroundColor;
+  if (hasValue(section?.valueColor)) vars['--ft-value-color'] = section.valueColor;
+  if (hasValue(section?.valueBackgroundColor)) vars['--ft-value-bg'] = section.valueBackgroundColor;
 
   const sectionStyle = { ...style, ...vars };
   const hasCustomBox =
-    hasValue(section?.backgroundColor) || hasValue(section?.borderColor);
+    hasValue(section?.backgroundColor) || isForm8SectionBorderOn(section);
 
   return {
     sectionStyle,
     sectionClassName: hasCustomBox ? ' f8-section--styled' : '',
+    labelStyle: getForm8SectionFieldTextStyle(section, 'label'),
+    valueStyle: getForm8SectionFieldTextStyle(section, 'value'),
   };
 };
 
@@ -127,10 +172,14 @@ export const getForm8SectionFieldPdfStyle = (section, labelFontPt, valueFontPt) 
   label: {
     fontSize: parseSectionPt(section?.labelFontSizePt, labelFontPt),
     bold: pdfBoldFromWeight(section?.labelFontWeight, false),
+    color: hasValue(section?.labelColor) ? section.labelColor : null,
+    fillColor: hasValue(section?.labelBackgroundColor) ? section.labelBackgroundColor : null,
   },
   value: {
     fontSize: parseSectionPt(section?.valueFontSizePt, valueFontPt),
     bold: pdfBoldFromWeight(section?.valueFontWeight, true),
+    color: hasValue(section?.valueColor) ? section.valueColor : null,
+    fillColor: hasValue(section?.valueBackgroundColor) ? section.valueBackgroundColor : null,
   },
 });
 
@@ -148,6 +197,7 @@ export const SECTION_STYLE_RESET_PATCH = Object.fromEntries(
 export const FORM8_DEFAULT_SECTION_STYLE = {
   backgroundColor: '#ffffff',
   borderColor: '#2c5282',
+  sectionBorder: '1',
   titleColor: '#1e3a5f',
   titleBackgroundColor: '#e8eef5',
   titleFontSizePt: 10,
@@ -206,7 +256,9 @@ export const wrapSectionPdfBlocks = (section, theme, blocks) => {
       ? section.backgroundColor
       : theme.sectionBackground || '#ffffff'
   );
-  const lineW = 0.75;
+  const showBorder = isForm8SectionBorderOn(section);
+  const borderPx = parseSectionNumber(section?.sectionBorderWidth, 1);
+  const lineW = showBorder ? (borderPx * 72) / 96 : 0;
 
   const outerLayout = {
     hLineWidth: (i, node) =>

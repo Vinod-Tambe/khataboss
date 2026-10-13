@@ -26,8 +26,6 @@ const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
 const RESIZE_HANDLES = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
 const DRAG_THRESHOLD_PX = 4;
 
-const LOGO_MIN_W_PCT = 8;
-const LOGO_MAX_W_PCT = 80;
 const BLOCK_MIN_W_PCT = 20;
 const BLOCK_MAX_W_PCT = 100;
 const MIN_H_MM = 4;
@@ -293,6 +291,8 @@ const Form8BuilderBlockFrame = ({
   };
 
   const handleGripPointerDown = (e) => {
+    e.stopPropagation();
+    onSelect?.(blockId);
     if (freeCanvas) {
       startFreeCanvasDrag(e);
       return;
@@ -304,6 +304,8 @@ const Form8BuilderBlockFrame = ({
     if (e.target.closest('.f8-builder-resize-handle')) return;
     if (e.target.closest('.f8-builder-block-remove')) return;
     if (e.target.closest('.f8-builder-block-toolbar')) return;
+    e.stopPropagation();
+    onSelect?.(blockId);
     if (freeCanvas) {
       startFreeCanvasDrag(e);
       return;
@@ -395,14 +397,7 @@ const Form8BuilderBlockFrame = ({
       '--f8-media-max-w': `${w}mm`,
       '--f8-media-max-h': `${h}mm`,
     };
-  }, [
-    freeCanvas,
-    isImageLikeBlock,
-    config,
-    getLayoutBoxMm,
-    layout.widthPct,
-    layout.heightMm,
-  ]);
+  }, [freeCanvas, isImageLikeBlock, config, getLayoutBoxMm]);
 
   const handleChrome = (e) => {
     e.stopPropagation();

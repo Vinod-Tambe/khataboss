@@ -19,6 +19,7 @@ const Form8TypographyFields = ({
   placeholders = {},
   onPatch,
   useTextAliases = false,
+  groups = FORM8_TYPO_GROUPS,
 }) => {
   const readSize = (group) => {
     if (useTextAliases && group.sizeKey === FORM8_TYPO_TEXT.sizeKey) {
@@ -75,7 +76,7 @@ const Form8TypographyFields = ({
 
   return (
     <div className="f8-typography-groups">
-      {FORM8_TYPO_GROUPS.map((group) => (
+      {(groups?.length ? groups : FORM8_TYPO_GROUPS).map((group) => (
         <div key={group.sizeKey} className="mb-3">
           <p className="small fw-semibold mb-2">{group.label}</p>
           <div className="row g-2">

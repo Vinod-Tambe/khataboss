@@ -39,6 +39,12 @@ import {
   getForm8BlockOrder,
   normalizeBuilderBlockOrder,
 } from "../../utils/formTemplate/form8BuilderBlocks";
+import {
+  createEmptyForm8DividerLayout,
+  createNextForm8DividerBlockId,
+  isForm8DividerBlockId,
+  isForm8DividerPaletteId,
+} from "../../utils/formTemplate/form8DividerBlocks";
 import "../../css/FormCustomization.css";
 
 const FormCustomizationPage = () => {
@@ -50,6 +56,7 @@ const FormCustomizationPage = () => {
   const [editingFirmId, setEditingFirmId] = useState(null);
   const [editingFirmName, setEditingFirmName] = useState("");
   const [formConfig, setFormConfig] = useState(null);
+  const [savedSnapshot, setSavedSnapshot] = useState(null);
   const [status, setStatus] = useState("Active");
   const [mobileMode, setMobileMode] = useState("list");
 
@@ -100,20 +107,40 @@ const FormCustomizationPage = () => {
   };
 
   const handleEdit = (row) => {
-    setEditingId(row.uuid || row.id);
+    const id = row.uuid || row.id;
+    if (!id) {
+      toast.error("This template cannot be opened. Refresh the list and try again.");
+      return;
+    }
+    const nextConfig = normalizeFormConfig(parseTemplateConfig(row.config));
+    const nextStatus = row.status || "Active";
+    setEditingId(id);
     setEditingFirmId(row.firmId ?? null);
     setEditingFirmName(row.firmName || "");
-    setFormConfig(normalizeFormConfig(parseTemplateConfig(row.config)));
-    setStatus(row.status || "Active");
+    setFormConfig(nextConfig);
+    setSavedSnapshot({ config: nextConfig, status: nextStatus });
+    setStatus(nextStatus);
     setMobileMode("edit");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleDiscard = () => {
+    if (savedSnapshot?.config) {
+      setFormConfig(savedSnapshot.config);
+      setStatus(savedSnapshot.status || "Active");
+      setMobileMode("edit");
+      toast.success("Unsaved changes discarded");
+      return;
+    }
+    handleBackToList();
+  };
+
+  const handleBackToList = () => {
     setEditingId(null);
     setEditingFirmId(null);
     setEditingFirmName("");
     setFormConfig(null);
+    setSavedSnapshot(null);
     setStatus("Active");
     setMobileMode("list");
   };
@@ -123,10 +150,16 @@ const FormCustomizationPage = () => {
   };
 
   const updateTheme = (key, value) => {
-    setFormConfig((prev) => ({
-      ...prev,
-      theme: { ...(prev.theme || {}), [key]: value },
-    }));
+    setFormConfig((prev) => {
+      const patch =
+        key && typeof key === "object" && !Array.isArray(key)
+          ? key
+          : { [key]: value };
+      return {
+        ...prev,
+        theme: { ...(prev.theme || {}), ...patch },
+      };
+    });
   };
 
   const updateLayout = (key, checked) => {
@@ -212,49 +245,68 @@ const FormCustomizationPage = () => {
     }));
   };
 
+  const currentBlockOrder = (prev) =>
+    prev.builderBlockOrder?.length
+      ? normalizeBuilderBlockOrder(prev.builderBlockOrder)
+      : getForm8BlockOrder(prev);
+
   const addBlockFromPalette = (blockId, insertBeforeBlockId = null) => {
+    if (isForm8DividerPaletteId(blockId)) {
+      let addedId = null;
+      setFormConfig((prev) => {
+        addedId = createNextForm8DividerBlockId(currentBlockOrder(prev));
+        const order = insertBlockInOrder(currentBlockOrder(prev), addedId, insertBeforeBlockId);
+        return {
+          ...prev,
+          builderBlockOrder: order,
+          blockLayouts: {
+            ...(prev.blockLayouts || {}),
+            [addedId]: createEmptyForm8DividerLayout(),
+          },
+        };
+      });
+      return addedId;
+    }
     setFormConfig((prev) => {
-      const baseOrder = prev.builderBlockOrder?.length
-        ? normalizeBuilderBlockOrder(prev.builderBlockOrder)
-        : getForm8BlockOrder(prev);
+      const baseOrder = currentBlockOrder(prev);
       let order = insertBlockInOrder(baseOrder, blockId, insertBeforeBlockId);
       order = ensureLogoBandOnAdd(order, blockId);
       const patches = getAddBlockPatches(prev, blockId);
       return { ...prev, ...patches, builderBlockOrder: order };
     });
+    return blockId;
   };
 
   const removeBlockFromCanvas = (blockId) => {
     if (!canRemoveForm8Block(blockId)) return;
     setFormConfig((prev) => {
       const patches = getRemoveBlockPatches(prev, blockId);
-      const baseOrder = prev.builderBlockOrder?.length
-        ? normalizeBuilderBlockOrder(prev.builderBlockOrder)
-        : normalizeBuilderBlockOrder(FORM8_DEFAULT_BLOCK_ORDER);
+      const baseOrder = currentBlockOrder(prev);
       const order = baseOrder.filter((id) => id !== blockId);
-      return { ...prev, ...patches, builderBlockOrder: order };
+      const next = { ...prev, ...patches, builderBlockOrder: order };
+      if (isForm8DividerBlockId(blockId) && next.blockLayouts?.[blockId]) {
+        const blockLayouts = { ...next.blockLayouts };
+        delete blockLayouts[blockId];
+        next.blockLayouts = blockLayouts;
+      }
+      return next;
     });
   };
 
   const toggleBlockOnCanvas = (blockId) => {
-    if (!canToggleForm8BlockOnCanvas(blockId)) return;
-    setFormConfig((prev) => {
-      const baseOrder = prev.builderBlockOrder?.length
-        ? normalizeBuilderBlockOrder(prev.builderBlockOrder)
-        : normalizeBuilderBlockOrder(FORM8_DEFAULT_BLOCK_ORDER);
-      if (isForm8BlockOnCanvas(prev, blockId)) {
-        const patches = getRemoveBlockPatches(prev, blockId);
-        const order = baseOrder.filter((id) => id !== blockId);
-        return { ...prev, ...patches, builderBlockOrder: order };
-      }
-      let order = insertBlockInOrder(baseOrder, blockId, null);
-      order = ensureLogoBandOnAdd(order, blockId);
-      const patches = getAddBlockPatches(prev, blockId);
-      return { ...prev, ...patches, builderBlockOrder: order };
-    });
+    if (isForm8DividerPaletteId(blockId)) {
+      return addBlockFromPalette(blockId);
+    }
+    if (!canToggleForm8BlockOnCanvas(blockId)) return blockId;
+    if (isForm8BlockOnCanvas(formConfig, blockId)) {
+      removeBlockFromCanvas(blockId);
+      return blockId;
+    }
+    return addBlockFromPalette(blockId);
   };
 
   const updateBlockLayout = (blockId, patch) => {
+    if (isForm8DividerPaletteId(blockId)) return;
     setFormConfig((prev) => {
       const merged = { ...(prev.blockLayouts?.[blockId] || {}), ...patch };
       const layout =
@@ -291,6 +343,7 @@ const FormCustomizationPage = () => {
       await updateFormTemplate(editingId, { config: payload, status });
       toast.success("Form template updated");
       setFormConfig(payload);
+      setSavedSnapshot({ config: payload, status });
       setMobileMode("edit");
       await loadTemplates();
     } catch (err) {
@@ -336,11 +389,7 @@ const FormCustomizationPage = () => {
     [templates]
   );
 
-  const showBuilder = Boolean(
-    editingId &&
-      formConfig &&
-      (mobileMode === "edit" || mobileMode === "preview")
-  );
+  const showBuilder = Boolean(editingId && formConfig);
 
   const columns = [
     { title: "Firm Name", key: "firmName", orderable: true, searchable: true },
@@ -391,7 +440,11 @@ const FormCustomizationPage = () => {
       <div className="form-custom-mobile-mode-tabs" role="tablist" aria-label="Mobile sections">
         <button type="button" role="tab" aria-selected={mobileMode === "list"}
           className={`form-custom-mobile-mode-tab ${mobileMode === "list" ? "active" : ""}`}
-          onClick={() => setMobileMode("list")}>
+          onClick={() => {
+            if (showBuilder) return;
+            setMobileMode("list");
+          }}
+          disabled={showBuilder}>
           <FiList size={16} /><span>Firm List</span>
         </button>
         <button type="button" role="tab" aria-selected={mobileMode === "edit"}
@@ -417,6 +470,7 @@ const FormCustomizationPage = () => {
             onStatusChange={setStatus}
             onSave={() => handleSubmit({ preventDefault: () => {} })}
             onDiscard={handleDiscard}
+            onBackToList={handleBackToList}
             onPdfPreview={handlePdfPreview}
             onPdfDownload={handlePdfDownload}
             updateConfig={updateConfig}

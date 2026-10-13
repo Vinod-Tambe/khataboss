@@ -333,7 +333,7 @@
   border-radius: 0;
 }
 
-.form-custom-a4-page--single .form-custom-a4-section h3 {
+.form-custom-a4-page--single .form-custom-a4-section h3:not(.f8-text-part--custom) {
   font-size: 7.5pt;
   margin: -4px -5px 3px;
   padding: 2px 4px;
@@ -373,11 +373,11 @@
   padding: 2px 3px;
 }
 
-.form-custom-a4-page--single .form-custom-a4-terms h3 {
+.form-custom-a4-page--single .form-custom-a4-terms h3:not(.f8-text-part--custom) {
   font-size: 7.5pt;
 }
 
-.form-custom-a4-page--single .form-custom-a4-terms p,
+.form-custom-a4-page--single .form-custom-a4-terms p:not(.f8-text-part--custom),
 .form-custom-a4-page--single .form-custom-a4-declaration {
   font-size: 6.5pt;
   line-height: 1.15;
@@ -389,7 +389,7 @@
   margin-top: 2px;
 }
 
-.form-custom-a4-page--single .form-custom-a4-sign-cell__caption {
+.form-custom-a4-page--single .form-custom-a4-sign-cell__caption:not(.f8-sig-name--custom) {
   font-size: 7pt;
 }
 
@@ -438,30 +438,6 @@
   width: 100%;
   height: 100%;
   min-height: 0;
-}
-
-.f8-builder-zoom-bar {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.5rem;
-  border-bottom: 1px solid var(--form-custom-border);
-  background: var(--form-custom-card-bg);
-}
-
-.f8-builder-zoom-label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  min-width: 3rem;
-  text-align: center;
-}
-
-.f8-builder-zoom-reset {
-  font-size: 0.75rem;
-  text-decoration: none;
-  padding: 0 0.35rem;
 }
 
 .f8-builder-fit-viewport {
@@ -963,6 +939,7 @@ body.f8-builder-is-pointer-dragging .f8-canvas-drop-slot {
   display: block;
   object-fit: fill;
   object-position: center center;
+  box-sizing: border-box;
 }
 
 .f8-builder-block--logo-chrome .form-custom-a4-logo-img--fill-box,
@@ -976,6 +953,7 @@ body.f8-builder-is-pointer-dragging .f8-canvas-drop-slot {
   display: block;
   object-fit: fill;
   object-position: center center;
+  box-sizing: border-box;
 }
 
 .form-custom-a4-page--free-canvas .form-custom-a4-logo-placeholder--fill-box {
@@ -1200,8 +1178,8 @@ body.f8-builder-is-pointer-dragging .f8-canvas-drop-slot {
 }
 
 .form-custom-a4-stock-thumb {
-  width: 44px;
-  height: 44px;
+  width: 28px;
+  height: 28px;
   object-fit: cover;
   border: 1px solid var(--ft-border);
   background: #f9fafb;
@@ -1286,6 +1264,13 @@ body.f8-builder-is-pointer-dragging .f8-canvas-drop-slot {
   font-style: italic;
 }
 
+.form-custom-a4-header h1,
+.form-custom-a4-header .subtitle,
+.form-custom-a4-header .compliance,
+.form-custom-a4-header .note {
+  box-sizing: border-box;
+}
+
 .form-custom-a4-meta {
   display: flex;
   justify-content: space-between;
@@ -1319,6 +1304,34 @@ body.f8-builder-is-pointer-dragging .f8-canvas-drop-slot {
   text-transform: none;
   letter-spacing: 0.01em;
   font-size: calc(var(--ft-font-pt, 11pt) + 1pt);
+}
+
+.form-custom-a4-terms h3.f8-text-part--custom,
+.form-custom-a4-section--footer-note h3.f8-text-part--custom {
+  background: transparent;
+  background-image: none;
+  margin: 0;
+  padding: 0;
+  text-transform: none;
+  letter-spacing: normal;
+  border-radius: 0;
+}
+
+.form-custom-a4-terms p.f8-text-part--custom,
+.form-custom-a4-footer-note-body.f8-text-part--custom {
+  margin: 4px 0 0;
+}
+
+.form-custom-a4-page .f8-text-part--custom {
+  color: var(--ft-text-part-color, inherit) !important;
+  font-size: var(--ft-text-part-size, inherit) !important;
+  font-weight: var(--ft-text-part-weight, inherit);
+}
+
+.form-custom-a4-page .f8-text-part--custom :is(p, div, span, li, strong, em, b, i, a) {
+  color: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit;
 }
 
 .form-custom-a4-section--block .form-custom-a4-fields {
@@ -1378,7 +1391,8 @@ body.f8-builder-is-pointer-dragging .f8-canvas-drop-slot {
   max-width: 42%;
   min-width: 0;
   font-weight: var(--ft-label-font-weight, 600);
-  color: var(--ft-text, #111827);
+  color: var(--ft-label-color, var(--ft-text, #111827));
+  background: var(--ft-label-bg, transparent);
   font-size: var(--ft-label-font-pt, calc(var(--ft-font-pt, 11pt) - 1pt));
 }
 
@@ -1386,8 +1400,14 @@ body.f8-builder-is-pointer-dragging .f8-canvas-drop-slot {
   flex: 1 1 50%;
   min-width: 0;
   font-weight: var(--ft-value-font-weight, 500);
+  color: var(--ft-value-color, inherit);
+  background: var(--ft-value-bg, transparent);
   word-break: break-word;
   font-size: var(--ft-value-font-pt, var(--ft-font-pt, 11pt));
+}
+
+.form-custom-a4-section.f8-section--styled {
+  overflow: hidden;
 }
 
 .form-custom-a4-page--single .form-custom-a4-section--block .form-custom-a4-field {
@@ -1460,13 +1480,13 @@ body.f8-builder-is-pointer-dragging .f8-canvas-drop-slot {
 }
 
 .form-custom-a4-field .label {
-  color: var(--ft-muted);
+  color: var(--ft-label-color, var(--ft-muted));
   font-size: var(--ft-label-font-pt, calc(var(--ft-font-pt, 11pt) - 1pt));
 }
 
 .form-custom-a4-field .value {
   font-weight: 600;
-  color: var(--ft-text);
+  color: var(--ft-value-color, var(--ft-text));
   word-break: break-word;
   font-size: var(--ft-value-font-pt, var(--ft-font-pt, 11pt));
 }
@@ -1502,25 +1522,32 @@ body.f8-builder-is-pointer-dragging .f8-canvas-drop-slot {
   color-scheme: light;
 }
 
-[data-theme="dark"] .form-custom-a4-page .form-custom-a4-table th, [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-table th,
-[data-theme="dark"] .form-custom-a4-page .form-custom-a4-table td, [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-table td,
-[data-theme="dark"] .form-custom-a4-page table tbody td, [data-theme="brand-dark"] .form-custom-a4-page table tbody td,
-[data-theme="dark"] .form-custom-a4-page table tbody th, [data-theme="brand-dark"] .form-custom-a4-page table tbody th,
-[data-theme="dark"] .form-custom-a4-page table thead th, [data-theme="brand-dark"] .form-custom-a4-page table thead th{
+[data-theme="dark"] .form-custom-a4-page .form-custom-a4-table:not(.form-custom-a4-stock-table) th,
+[data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-table:not(.form-custom-a4-stock-table) th,
+[data-theme="dark"] .form-custom-a4-page .form-custom-a4-table:not(.form-custom-a4-stock-table) td,
+[data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-table:not(.form-custom-a4-stock-table) td,
+[data-theme="dark"] .form-custom-a4-page table:not(.form-custom-a4-stock-table) tbody td,
+[data-theme="brand-dark"] .form-custom-a4-page table:not(.form-custom-a4-stock-table) tbody td,
+[data-theme="dark"] .form-custom-a4-page table:not(.form-custom-a4-stock-table) tbody th,
+[data-theme="brand-dark"] .form-custom-a4-page table:not(.form-custom-a4-stock-table) tbody th,
+[data-theme="dark"] .form-custom-a4-page table:not(.form-custom-a4-stock-table) thead th,
+[data-theme="brand-dark"] .form-custom-a4-page table:not(.form-custom-a4-stock-table) thead th{
   background-color: var(--ft-section-bg, #ffffff) !important;
   color: var(--ft-text, #111827) !important;
   border-color: var(--ft-border, #d1d5db) !important;
   box-shadow: none !important;
 }
 
-[data-theme="dark"] .form-custom-a4-page .form-custom-a4-table th, [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-table th,
-[data-theme="dark"] .form-custom-a4-page table thead th, [data-theme="brand-dark"] .form-custom-a4-page table thead th{
+[data-theme="dark"] .form-custom-a4-page .form-custom-a4-table:not(.form-custom-a4-stock-table) th,
+[data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-table:not(.form-custom-a4-stock-table) th,
+[data-theme="dark"] .form-custom-a4-page table:not(.form-custom-a4-stock-table) thead th,
+[data-theme="brand-dark"] .form-custom-a4-page table:not(.form-custom-a4-stock-table) thead th{
   background-color: var(--ft-table-header, #e5e7eb) !important;
   color: var(--ft-primary, #1e3a5f) !important;
 }
 
-[data-theme="dark"] .form-custom-a4-page .form-custom-a4-section h3:not(.f8-section-title--custom),
-[data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-section h3:not(.f8-section-title--custom) {
+[data-theme="dark"] .form-custom-a4-page .form-custom-a4-section h3:not(.f8-section-title--custom):not(.f8-text-part--custom),
+[data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-section h3:not(.f8-section-title--custom):not(.f8-text-part--custom) {
   background: var(--ft-table-header, #e5e7eb) !important;
   color: var(--ft-section-title, #374151) !important;
 }
@@ -1529,33 +1556,54 @@ body.f8-builder-is-pointer-dragging .f8-canvas-drop-slot {
   background-image: none;
 }
 
-[data-theme="dark"] .form-custom-a4-page .form-custom-a4-field .label, [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-field .label{
-  color: var(--ft-muted, #6b7280) !important;
+[data-theme="dark"] .form-custom-a4-page .form-custom-a4-field .label:not(.f8-field-text--custom),
+[data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-field .label:not(.f8-field-text--custom) {
+  color: var(--ft-label-color, var(--ft-muted, #6b7280)) !important;
 }
 
-[data-theme="dark"] .form-custom-a4-page .form-custom-a4-field .value, [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-field .value,
-[data-theme="dark"] .form-custom-a4-page .form-custom-a4-terms p, [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-terms p,
+[data-theme="dark"] .form-custom-a4-page .form-custom-a4-field .value:not(.f8-field-text--custom),
+[data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-field .value:not(.f8-field-text--custom) {
+  color: var(--ft-value-color, var(--ft-text, #111827)) !important;
+}
+
+[data-theme="dark"] .form-custom-a4-page .form-custom-a4-terms p:not(.f8-text-part--custom), [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-terms p:not(.f8-text-part--custom),
 [data-theme="dark"] .form-custom-a4-page .form-custom-a4-declaration, [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-declaration,
 [data-theme="dark"] .form-custom-a4-page .form-custom-a4-footer, [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-footer,
+[data-theme="dark"] .form-custom-a4-page .form-custom-a4-footer-note-body:not(.f8-text-part--custom), [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-footer-note-body:not(.f8-text-part--custom),
 [data-theme="dark"] .form-custom-a4-page .form-custom-a4-meta, [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-meta,
 [data-theme="dark"] .form-custom-a4-page .form-custom-a4-pagenum, [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-pagenum,
 [data-theme="dark"] .form-custom-a4-page .form-custom-a4-sign-box, [data-theme="brand-dark"] .form-custom-a4-page .form-custom-a4-sign-box{
   color: var(--ft-text, #111827) !important;
 }
 
-.form-custom-a4-terms p,
+.form-custom-a4-terms p:not(.f8-text-part--custom),
 .form-custom-a4-declaration,
 .form-custom-a4-footer,
-.form-custom-a4-footer-note-body {
+.form-custom-a4-footer-note-body:not(.f8-text-part--custom) {
   font-size: calc(var(--ft-font-pt, 11pt) - 1pt);
   line-height: 1.45;
   color: var(--ft-text);
 }
 
-.form-custom-a4-section--footer-note .form-custom-a4-footer-note-body {
+.form-custom-a4-section--footer-note .form-custom-a4-footer-note-body:not(.f8-text-part--custom) {
   margin: 0;
   padding: 6px 8px 8px;
   text-align: left;
+}
+
+.form-custom-a4-divider {
+  display: block;
+  width: 100%;
+  height: 0;
+  border: 0;
+  margin: 0;
+  opacity: 1;
+  box-sizing: border-box;
+}
+
+.f8-builder-block--divider {
+  display: flex;
+  align-items: center;
 }
 
 .form-custom-a4-signatures {
@@ -1599,6 +1647,19 @@ body.f8-builder-is-pointer-dragging .f8-canvas-drop-slot {
   font-size: var(--ft-value-font-pt, calc(var(--ft-font-pt, 11pt) - 1pt));
   line-height: 1.35;
   color: var(--ft-text, #111827);
+}
+
+.form-custom-a4-page .form-custom-a4-sign-cell__line.f8-sig-line--custom {
+  border-bottom-color: var(--ft-sig-line-color, var(--ft-text, #111827)) !important;
+  border-bottom-width: var(--ft-sig-line-width, 1px) !important;
+  border-bottom-style: solid;
+}
+
+.form-custom-a4-page .form-custom-a4-sign-cell__caption.f8-sig-name--custom {
+  color: var(--ft-sig-name-color, var(--ft-text, #111827)) !important;
+  font-size: var(--ft-sig-name-size, inherit) !important;
+  font-weight: var(--ft-sig-name-weight, inherit);
+  background: var(--ft-sig-name-bg, transparent);
 }
 
 .form-custom-a4-sign-box {
@@ -2030,7 +2091,7 @@ body.f8-builder-is-pointer-dragging .f8-canvas-drop-slot {
 }
 
 .form-custom-page--editing .form-custom-mobile-mode-tabs {
-  margin-bottom: 0.5rem;
+  display: none;
 }
 
 .form-custom-page--editing .form-custom-workspace {
@@ -2096,13 +2157,48 @@ body.f8-builder-is-pointer-dragging .f8-canvas-drop-slot {
   border-radius: 4px;
 }
 
+.f8-builder-panel-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  margin-bottom: 0.45rem;
+}
+
 .f8-builder-panel-title {
   font-size: 0.72rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--form-custom-muted);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0;
+}
+
+.f8-builder-panel-hide,
+.f8-builder-props-head-actions .f8-builder-panel-hide {
+  border: none;
+  background: transparent;
+  color: var(--form-custom-muted);
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.f8-builder-panel-hide:hover {
+  color: #7c3aed;
+  background: var(--form-custom-accent-soft);
+}
+
+.f8-builder-props-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
 }
 
 .f8-builder-search-wrap {
@@ -2205,61 +2301,71 @@ body.f8-builder-is-pointer-dragging .f8-canvas-drop-slot {
 .form-custom-a4-section--stock .form-custom-a4-stock-table {
   width: 100%;
   table-layout: fixed;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   margin-top: 4px;
+  border-radius: var(--ft-stock-table-radius, 0);
 }
 
 .form-custom-a4-section--stock .form-custom-a4-stock-table th,
 .form-custom-a4-section--stock .form-custom-a4-stock-table td {
-  border: none;
   padding: 4px 5px;
   vertical-align: middle;
   word-break: break-word;
+  border: none;
+}
+
+.form-custom-a4-page .form-custom-a4-stock-table.f8-stock-table--bordered th,
+.form-custom-a4-page .form-custom-a4-stock-table.f8-stock-table--bordered td {
+  border-style: solid !important;
+  border-width: var(--ft-stock-table-border-width, 1px) !important;
+  border-color: var(--ft-stock-table-border-color, #2c5282) !important;
 }
 
 .form-custom-a4-section--stock .form-custom-a4-stock-table th {
   background: var(--ft-stock-th-bg, var(--ft-table-header));
-  font-weight: var(--ft-label-font-weight, 700);
-  font-size: var(--ft-label-font-pt, calc(var(--ft-font-pt, 11pt) - 1pt));
+  font-weight: var(--ft-stock-th-font-weight, var(--ft-label-font-weight, 700));
+  font-size: var(--ft-stock-th-font-pt, var(--ft-label-font-pt, calc(var(--ft-font-pt, 11pt) - 1pt)));
   color: var(--ft-stock-th-color, var(--ft-section-title));
+  white-space: nowrap;
 }
 
-.form-custom-a4-section--stock .form-custom-a4-stock-table td {
-  font-weight: var(--ft-value-font-weight, 500);
-  font-size: var(--ft-value-font-pt, calc(var(--ft-font-pt, 11pt) - 1pt));
+.form-custom-a4-section--stock .form-custom-a4-stock-table tbody td {
+  font-weight: var(--ft-stock-td-font-weight, var(--ft-value-font-weight, 500));
+  font-size: var(--ft-stock-td-font-pt, var(--ft-value-font-pt, calc(var(--ft-font-pt, 11pt) - 1pt)));
   color: var(--ft-stock-td-color, var(--ft-text, #111827));
   background: var(--ft-stock-td-bg, transparent);
 }
 
-.form-custom-a4-section--stock .form-custom-a4-stock-table.f8-stock-table--grid th,
-.form-custom-a4-section--stock .form-custom-a4-stock-table.f8-stock-table--grid td {
-  border: 1px solid var(--ft-stock-border, var(--ft-border));
+.form-custom-a4-section--stock .form-custom-a4-stock-table tfoot td {
+  font-weight: var(--ft-stock-tf-font-weight, 700);
+  font-size: var(--ft-stock-tf-font-pt, var(--ft-stock-th-font-pt, calc(var(--ft-font-pt, 11pt) - 1pt)));
+  color: var(--ft-stock-tf-color, var(--ft-stock-th-color, var(--ft-section-title)));
+  background: var(--ft-stock-tf-bg, var(--ft-stock-th-bg, var(--ft-table-header)));
 }
 
 .form-custom-a4-stock-th--center,
-.form-custom-a4-stock-td--center {
+.form-custom-a4-stock-td--center,
+.form-custom-a4-stock-tf--center {
   text-align: center;
 }
 
 .form-custom-a4-stock-th--right,
-.form-custom-a4-stock-td--right {
+.form-custom-a4-stock-td--right,
+.form-custom-a4-stock-tf--right {
   text-align: right;
 }
 
-.form-custom-a4-section--stock .form-custom-a4-stock-table th:nth-child(1),
-.form-custom-a4-section--stock .form-custom-a4-stock-table td:nth-child(1) {
-  width: 11%;
-}
-
-.form-custom-a4-section--stock .form-custom-a4-stock-table th:nth-child(2),
-.form-custom-a4-section--stock .form-custom-a4-stock-table td:nth-child(2) {
-  width: 10%;
-}
-
-.form-custom-a4-section--stock .form-custom-a4-stock-table th:nth-child(4),
-.form-custom-a4-section--stock .form-custom-a4-stock-table td:nth-child(4) {
-  width: 7%;
-}
+.form-custom-a4-stock-col--metal { width: 8%; }
+.form-custom-a4-stock-col--item_name { width: 16%; }
+.form-custom-a4-stock-col--quantity { width: 6%; }
+.form-custom-a4-stock-col--gs_weight { width: 9%; }
+.form-custom-a4-stock-col--nt_weight { width: 9%; }
+.form-custom-a4-stock-col--purity { width: 8%; }
+.form-custom-a4-stock-col--rate { width: 9%; }
+.form-custom-a4-stock-col--fine_weight { width: 9%; }
+.form-custom-a4-stock-col--valuation { width: 11%; }
+.form-custom-a4-stock-col--image { width: 7%; }
 
 .f8-block-size-controls {
   padding-bottom: 0.75rem;
@@ -2599,7 +2705,7 @@ body.f8-builder-is-pointer-dragging .f8-builder-block-toolbar--logo {
 }
 
 .f8-builder-palette-item.is-placed.is-toggleable:hover {
-  border-color: rgba(220, 38, 38, 0.35);
+  border-color: rgba(37, 99, 235, 0.35);
 }
 
 .f8-builder-palette-item.is-addable.is-toggleable:hover {
@@ -2742,6 +2848,7 @@ body.f8-builder-is-pointer-dragging .f8-builder-block-toolbar--logo {
 }
 
 .f8-builder-resize-handle {
+  display: none;
   position: absolute;
   width: 10px;
   height: 10px;
@@ -2752,6 +2859,10 @@ body.f8-builder-is-pointer-dragging .f8-builder-block-toolbar--logo {
   pointer-events: auto;
   touch-action: none;
   box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.35);
+}
+
+.f8-builder-block.is-selected .f8-builder-resize-handle {
+  display: block;
 }
 
 .f8-builder-block-bounds .f8-builder-resize-handle--n {

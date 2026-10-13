@@ -238,7 +238,6 @@ export const buildFormTemplateLoanData = (loanDetails, customer = null) => {
   const user = customer || loanDetails.user || {};
   const items = getLoanItems(loanDetails);
   const today = moment();
-  const startDate = moment(loanDetails.girv_start_date);
   const interestSummary = loanDetails.interest_summary || getLoanInterestSummary(loanDetails, today);
   const redemption = buildRedemptionInfo(loanDetails);
 
