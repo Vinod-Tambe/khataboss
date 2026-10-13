@@ -1360,6 +1360,7 @@ body.f8-builder-is-pointer-dragging .f8-canvas-drop-slot {
   min-height: 1.6em;
   min-width: 0;
   box-sizing: border-box;
+  line-height: 1.2;
 }
 
 .form-custom-a4-section--block .form-custom-a4-field-row.row-half .form-custom-a4-field {
@@ -1412,6 +1413,7 @@ body.f8-builder-is-pointer-dragging .f8-canvas-drop-slot {
 
 .form-custom-a4-page--single .form-custom-a4-section--block .form-custom-a4-field {
   padding: 2px 4px;
+  line-height: 1.15;
 }
 
 .form-custom-a4-page--single .form-custom-a4-section--block .form-custom-a4-field .label {

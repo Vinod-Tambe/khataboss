@@ -34,6 +34,8 @@ import {
   blockAbsoluteFrameStyle,
   computeForm8CanvasPageHeightMm,
   isForm8FreeCanvasLayout,
+  withForm8SideBySideFit,
+  withForm8StockRowFlow,
 } from '../../../utils/formTemplate/form8CanvasLayout';
 import Form8BuilderBlockFrame from './Form8BuilderBlockFrame';
 import Form8SignatureBlock from './Form8SignatureBlock';
@@ -114,16 +116,28 @@ const FormTemplatePreview = ({
       ? allTxnRows.slice(0, 2)
       : allTxnRows;
   const singlePage = Boolean(config?.singlePageLayout);
-  const blockOrder = useMemo(() => getForm8BlockOrder(config), [config]);
-  const page = useMemo(() => getPageStyle(config), [config]);
+  const showStockItemImages = config?.layout?.showStockItemImages !== false;
+  const stockItemRows =
+    stockItemRowsProp || (showStockItemImages ? STOCK_ITEM_TEST_ROWS : null);
+  const layoutConfig = useMemo(() => {
+    const flowed = withForm8StockRowFlow(
+      config,
+      showStockItemImages ? stockItemRows : [],
+      config?.pageHeightMm || 297
+    );
+    if (builderMode) return flowed;
+    return withForm8SideBySideFit(flowed, config?.pageHeightMm || 297);
+  }, [config, showStockItemImages, stockItemRows, builderMode]);
+  const blockOrder = useMemo(() => getForm8BlockOrder(layoutConfig), [layoutConfig]);
+  const page = useMemo(() => getPageStyle(layoutConfig), [layoutConfig]);
   const basePageHeightMm = page.heightMm;
   const freeCanvas = Boolean(
-    config?.singlePageLayout && (builderMode || isForm8FreeCanvasLayout(config))
+    config?.singlePageLayout && (builderMode || isForm8FreeCanvasLayout(layoutConfig))
   );
   const canvasPageHeightMm = useMemo(() => {
-    if (!freeCanvas || !config) return basePageHeightMm;
-    return computeForm8CanvasPageHeightMm(config, basePageHeightMm);
-  }, [config, freeCanvas, basePageHeightMm]);
+    if (!freeCanvas || !layoutConfig) return basePageHeightMm;
+    return computeForm8CanvasPageHeightMm(layoutConfig, basePageHeightMm);
+  }, [layoutConfig, freeCanvas, basePageHeightMm]);
   const { startPointerReorder, forcePointerReorder, getBlockDragUi, isCanvasSlotActive } =
     useForm8PointerReorder(blockOrder, onReorderBlocks, builderMode && !freeCanvas);
   const lastCanvasBlockId = blockOrder[blockOrder.length - 1];
@@ -145,7 +159,7 @@ const FormTemplatePreview = ({
     if (!builderMode) {
       if (freeCanvas) {
         const absoluteStyle = blockAbsoluteFrameStyle(
-          config,
+          layoutConfig,
           blockId,
           page.widthMm,
           basePageHeightMm
@@ -170,7 +184,7 @@ const FormTemplatePreview = ({
         isDragging={isDragging}
         isDropTarget={isDropTarget}
         scale={safeScale}
-        config={config}
+        config={layoutConfig}
         className={className || ''}
         onSelect={onSelectBlock}
         onBlockLayoutChange={onBlockLayoutChange}
@@ -195,9 +209,6 @@ const FormTemplatePreview = ({
   }
 
   const layout = config.layout || {};
-  const showStockItemImages = layout.showStockItemImages !== false;
-  const stockItemRows =
-    stockItemRowsProp || (showStockItemImages ? STOCK_ITEM_TEST_ROWS : null);
   const showCustomerPhoto = layout.showCustomerPhoto !== false;
   const resolvedLeftLogo =
     leftLogoUrl || (useSampleAssets && layout.showLeftLogo ? SAMPLE_FIRM_LOGO_DATA_URL : null);
@@ -208,11 +219,7 @@ const FormTemplatePreview = ({
   const resolvedCustomerPhoto =
     showCustomerPhoto &&
     (customerPhotoUrl || (useSampleAssets ? SAMPLE_CUSTOMER_PHOTO_DATA_URL : null));
-  const footerImageUrl =
-    footerImageUrlProp ||
-    resolvedRightLogo ||
-    resolvedLeftLogo ||
-    (useSampleAssets ? SAMPLE_FIRM_LOGO_DATA_URL : null);
+  const footerImageUrl = footerImageUrlProp || null;
 
   const renderStockItemsTable = (stockBlockSpec = {}) => {
     if (!showStockItemImages || !stockItemRows?.length) return null;
@@ -757,26 +764,17 @@ const FormTemplatePreview = ({
       }
 
       case 'layout_footer_image':
-        if (!layout.showFooterImage) return null;
+        if (!layout.showFooterImage || !footerImageUrl) return null;
         return wrapBlock(
           blockId,
           'f8-builder-block--footer-img f8-builder-block--logo f8-builder-block--logo-center',
           <div className={mediaSlotClass(blockId)}>
-            {footerImageUrl ? (
-              <img
-                src={footerImageUrl}
-                alt="Footer"
-                className={logoImgClass(blockId)}
-                {...logoMediaProps(blockId)}
-              />
-            ) : (
-              <div
-                className={logoPlaceholderClass(blockId)}
-                {...logoMediaProps(blockId)}
-              >
-                Footer image
-              </div>
-            )}
+            <img
+              src={footerImageUrl}
+              alt="Footer"
+              className={logoImgClass(blockId)}
+              {...logoMediaProps(blockId)}
+            />
           </div>
         );
 

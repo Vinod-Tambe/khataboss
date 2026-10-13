@@ -27,7 +27,13 @@ export async function buildLoanForm8PdfPack(loanDetails, customer = null) {
 
   const config = normalizeFormConfig(template.config);
   const firm = await resolveFirmForPdf(firmId, loanDetails.firm || {});
-  const resolvedCustomer = mergeCustomerForPdf(loanDetails?.user, customer);
+  const loanUser = loanDetails.user || null;
+  const loanUserId = loanUser?.user_id ?? loanDetails.girv_user_id;
+  const sameCustomer =
+    customer && loanUserId != null && String(customer.user_id) === String(loanUserId)
+      ? customer
+      : null;
+  const resolvedCustomer = mergeCustomerForPdf(loanUser, sameCustomer);
   const { formData, transactionRows, firmName, loanRef, loanItems } = buildFormTemplateLoanData(
     loanDetails,
     resolvedCustomer

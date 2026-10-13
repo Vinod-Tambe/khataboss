@@ -85,6 +85,198 @@ const blockStackHeightMm = (config, blockId) => {
   return spec.heightMm ?? 12;
 };
 
+/** One line-item row beyond the first sample row. Image rows are taller. */
+const STOCK_EXTRA_ROW_IMAGE_MM = 16;
+const STOCK_EXTRA_ROW_TEXT_MM = 8;
+const STOCK_FLOW_GAP_MM = 3;
+
+const stockRowHasImage = (row) =>
+  Boolean(row?.previewImageUrl || row?.imageDataUrl);
+
+/**
+ * Extra millimetres the stock table needs when a loan has more than one item.
+ * The saved canvas reserves space for a single sample row.
+ */
+export const form8StockFlowExtraMm = (rows, { withImages = true } = {}) => {
+  const list = Array.isArray(rows) ? rows : [];
+  if (list.length <= 1) return 0;
+  const body = list.slice(1).reduce((sum, row) => {
+    const hasImg = withImages && stockRowHasImage(row);
+    return sum + (hasImg ? STOCK_EXTRA_ROW_IMAGE_MM : STOCK_EXTRA_ROW_TEXT_MM);
+  }, 0);
+  return body + STOCK_FLOW_GAP_MM;
+};
+
+const SIDE_BY_SIDE_GAP_PCT = 1.5;
+const SAME_ROW_Y_PCT = 12;
+
+const blocksOverlapHorizontally = (a, b, slackPct = 0.4) =>
+  a.x + a.w > b.x + slackPct && b.x + b.w > a.x + slackPct;
+
+const shrinkLeftForRight = (widths, leftId, leftX, leftW, rightX, minW) => {
+  const nextW = Math.max(minW, rightX - leftX - SIDE_BY_SIDE_GAP_PCT);
+  if (nextW < leftW - 0.4) {
+    widths[leftId] = nextW;
+    return true;
+  }
+  return false;
+};
+
+const readPosYPct = (spec) => {
+  if (spec?.posYPct == null || spec.posYPct === '') return null;
+  const n = Number(spec.posYPct);
+  return Number.isFinite(n) ? n : null;
+};
+
+const sameCanvasRow = (leftSpec, rightSpec) => {
+  const leftY = readPosYPct(leftSpec);
+  const rightY = readPosYPct(rightSpec);
+  if (leftY == null || rightY == null) return false;
+  return Math.abs(leftY - rightY) < SAME_ROW_Y_PCT;
+};
+
+/**
+ * When a photo/logo sits beside a section, shrink only that same-row section
+ * so PDF text does not draw under the image. Firm (and other rows above)
+ * stay full width.
+ */
+export const withForm8SideBySideFit = (config, basePageHeightMm = 297) => {
+  if (!config?.singlePageLayout) return config;
+
+  const order = getForm8BlockOrder(config);
+  if (order.length < 2) return config;
+
+  const widths = {};
+  let changed = false;
+
+  const photoOnForm = order.includes('customer_photo');
+  if (photoOnForm && order.includes('section:customer_details')) {
+    const photo = getBlockLayout(config, 'customer_photo');
+    const customer = getBlockLayout(config, 'section:customer_details');
+    const photoX = Number(photo.posXPct);
+    const photoY = Number(photo.posYPct);
+    const custX = Number(customer.posXPct) || 0;
+    const custY = Number(customer.posYPct);
+    const custW = Number(customer.widthPct) || 100;
+    const placedRight = Number.isFinite(photoX) && photoX > custX + 12;
+    const sameBand =
+      !Number.isFinite(photoY) ||
+      !Number.isFinite(custY) ||
+      Math.abs(photoY - custY) < SAME_ROW_Y_PCT;
+    const photoOnLeft = Number.isFinite(photoX) && photoX <= custX + 12;
+    if (placedRight || (sameBand && !photoOnLeft)) {
+      const photoRightEdge = placedRight
+        ? photoX
+        : 100 - (Number(photo.widthPct) || 22) - SIDE_BY_SIDE_GAP_PCT;
+      if (shrinkLeftForRight(widths, 'section:customer_details', custX, custW, photoRightEdge, 40)) {
+        changed = true;
+      }
+    }
+  }
+
+  const rects = order.map((id) => {
+    const spec = getBlockLayout(config, id);
+    return {
+      id,
+      spec,
+      x: Number(spec.posXPct) || 0,
+      w: widths[id] ?? (Number(spec.widthPct) || 100),
+      media: isForm8FreeCanvasMediaBlock(id),
+    };
+  });
+
+  rects.forEach((rect) => {
+    if (widths[rect.id] == null) widths[rect.id] = rect.w;
+  });
+
+  rects.forEach((right) => {
+    if (!right.media) return;
+    rects.forEach((left) => {
+      if (left.id === right.id || left.x >= right.x - 0.2) return;
+      if (right.id === 'customer_photo' && left.id !== 'section:customer_details') {
+        return;
+      }
+      if (!sameCanvasRow(left.spec, right.spec)) return;
+      const leftW = widths[left.id];
+      const rightW = widths[right.id];
+      if (!blocksOverlapHorizontally({ ...left, w: leftW }, { ...right, w: rightW })) return;
+      if (
+        shrinkLeftForRight(
+          widths,
+          left.id,
+          left.x,
+          leftW,
+          right.x,
+          left.media ? 8 : 20
+        )
+      ) {
+        changed = true;
+      }
+    });
+  });
+
+  if (!changed) return config;
+
+  const blockLayouts = { ...(config.blockLayouts || {}) };
+  Object.keys(widths).forEach((id) => {
+    const current = Number(getBlockLayout(config, id).widthPct) || 100;
+    if (widths[id] === current) return;
+    blockLayouts[id] = {
+      ...(blockLayouts[id] || {}),
+      widthPct: widths[id],
+    };
+  });
+
+  return { ...config, blockLayouts };
+};
+
+const blockTopMmFromSpec = (spec, contentH) => {
+  if (spec?.posYPct == null) return null;
+  return FORM8_PAGE_PADDING_MM.top + (Number(spec.posYPct) / 100) * contentH;
+};
+
+/**
+ * Push blocks under the stock table down when loan line items exceed one row.
+ * Logos and sections above the table stay where the template placed them.
+ */
+export const withForm8StockRowFlow = (config, stockRows, basePageHeightMm = 297) => {
+  const extraMm = form8StockFlowExtraMm(stockRows, {
+    withImages: config?.layout?.showStockItemImages !== false,
+  });
+  if (!config?.singlePageLayout || extraMm < 0.5) return config;
+
+  const order = getForm8BlockOrder(config);
+  const stockIndex = order.indexOf('stock_line_items');
+  if (stockIndex < 0) return config;
+
+  const pageWidthMm = config.pageWidthMm || 210;
+  const refH = getForm8ReferencePageHeightMm(config, basePageHeightMm);
+  const contentH = getForm8ContentBoxMm(pageWidthMm, refH).height;
+  const stockSpec = getBlockLayout(config, 'stock_line_items');
+  const stockTop = blockTopMmFromSpec(stockSpec, contentH);
+  if (stockTop == null) return config;
+
+  const blockLayouts = { ...(config.blockLayouts || {}) };
+  let changed = false;
+
+  order.forEach((blockId, index) => {
+    if (index <= stockIndex) return;
+    const spec = { ...(blockLayouts[blockId] || {}), ...getBlockLayout(config, blockId) };
+    const top = blockTopMmFromSpec(spec, contentH);
+    if (top == null || top <= stockTop + 2) return;
+    const shifted = top + extraMm;
+    blockLayouts[blockId] = {
+      ...spec,
+      posYPct: ((shifted - FORM8_PAGE_PADDING_MM.top) / contentH) * 100,
+      freePosition: true,
+    };
+    changed = true;
+  });
+
+  if (!changed) return config;
+  return { ...config, blockLayouts };
+};
+
 /** Assign default % positions for blocks missing pos (stacked top-to-bottom). */
 export const seedForm8CanvasPositions = (config) => {
   if (!config?.singlePageLayout) return config;
@@ -263,7 +455,9 @@ export const getForm8BlockPdfAbsolutePos = (
   const spec = getBlockLayout(config, blockId);
   const posXPct = spec.posXPct ?? 0;
   const posYPct = spec.posYPct ?? 0;
-  const widthPt = Math.max(24, Math.round(((spec.widthPct ?? 100) / 100) * contentWidthPt));
+  const rawWidthPct = spec.widthPct ?? (isForm8FreeCanvasMediaBlock(blockId) ? 28 : 100);
+  const widthPct = Math.min(rawWidthPct, Math.max(0, 100 - posXPct));
+  const widthPt = Math.max(24, Math.round((widthPct / 100) * contentWidthPt));
 
   return {
     x: Math.round(pageMargins[0] + (posXPct / 100) * contentWidthPt),

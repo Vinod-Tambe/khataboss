@@ -62,10 +62,17 @@ export const getCustomerWhatsAppNo = (user) => {
   return whatsapp || mobile || '';
 };
 
+/** Customer's saved firm — used to auto-select and lock firm on loan/finance forms. */
+export const getCustomerFirmId = (user) => {
+  const id = user?.user_firm_id ?? user?.firm?.firm_id;
+  if (id == null || id === '' || id === 'all') return null;
+  return id;
+};
+
 export const getCustomerFirmInfo = (user, firms = []) => {
   if (user?.firm && typeof user.firm === 'object') return user.firm;
 
-  const firmId = user?.user_firm_id;
+  const firmId = getCustomerFirmId(user);
   if (firmId && Array.isArray(firms) && firms.length) {
     return firms.find((f) => String(f.firm_id) === String(firmId)) || null;
   }

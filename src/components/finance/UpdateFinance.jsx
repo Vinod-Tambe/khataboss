@@ -12,6 +12,7 @@ import { getAccountsDropdown } from '../../api/accountApi';
 import { getFinanceDetails, updateFinance } from '../../api/financeApi';
 import { toast } from 'react-hot-toast';
 import FormUniqueCodeBadge from '../common/FormUniqueCodeBadge';
+import { getCustomerFirmId } from '../../utils/customerFormatters';
 
 const UpdateFinance = () => {
   const navigate = useNavigate();
@@ -61,6 +62,8 @@ const UpdateFinance = () => {
   const [firms, setFirms] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const { selectedUser } = useSelector((state) => state.user);
+  const customerFirmId = getCustomerFirmId(selectedUser);
+  const firmLocked = Boolean(formData.fin_firm_id || customerFirmId);
   const formRef = useRef(null);
   const startDateRef = useRef(null);
   useFormNavigation(formRef);
@@ -404,7 +407,7 @@ const UpdateFinance = () => {
               className="form-select border-dark"
               value={formData.fin_firm_id}
               onChange={handleChange}
-              disabled={lockFinancial}
+              disabled={lockFinancial || firmLocked}
             >
               <option value="">Select Firm</option>
               {firms.map((firm) => (

@@ -21,6 +21,7 @@ import {
   LOAN_DISBURSEMENT_FIELDS,
 } from '../../utils/loanInterest';
 import FormUniqueCodeBadge from '../common/FormUniqueCodeBadge';
+import { getCustomerFirmId } from '../../utils/customerFormatters';
 
 const AddLoan = () => {
   const navigate = useNavigate();
@@ -159,16 +160,28 @@ const AddLoan = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Sync firm ID with Header selection
+  const customerFirmId = getCustomerFirmId(selectedUser);
+  const firmLocked = Boolean(customerFirmId);
+
+  // Customer's firm wins; otherwise follow header firm.
   useEffect(() => {
+    const locked = getCustomerFirmId(selectedUser);
+    if (locked) {
+      setFormData((prev) =>
+        String(prev.girv_firm_id) === String(locked) ? prev : { ...prev, girv_firm_id: locked }
+      );
+      return;
+    }
     if (selectedFirmId === 'all') {
       if (reduxFirms.length > 0 && !formData.girv_firm_id) {
-        setFormData(prev => ({ ...prev, girv_firm_id: reduxFirms[0].firm_id }));
+        setFormData((prev) => ({ ...prev, girv_firm_id: reduxFirms[0].firm_id }));
       }
-    } else if (selectedFirmId && selectedFirmId !== formData.girv_firm_id) {
-      setFormData(prev => ({ ...prev, girv_firm_id: selectedFirmId }));
+      return;
     }
-  }, [selectedFirmId, reduxFirms, formData.girv_firm_id]);
+    if (selectedFirmId && String(selectedFirmId) !== String(formData.girv_firm_id)) {
+      setFormData((prev) => ({ ...prev, girv_firm_id: selectedFirmId }));
+    }
+  }, [selectedUser, selectedFirmId, reduxFirms, formData.girv_firm_id]);
 
   // Fetch accounts when firm changes
   useEffect(() => {
@@ -665,7 +678,7 @@ const AddLoan = () => {
 
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Firm Name <span className="text-danger">*</span></label>
-          <select name="girv_firm_id" className="form-select border-dark" value={formData.girv_firm_id || ''} onChange={handleChange} required>
+          <select name="girv_firm_id" className="form-select border-dark" value={formData.girv_firm_id || ''} onChange={handleChange} required disabled={firmLocked}>
             <option value="" disabled>Select firm</option>
             {firms.map(firm => (
               <option key={firm.firm_id} value={firm.firm_id}>

@@ -1,6 +1,9 @@
 import loadCustomerPhotoForPdf from './loadCustomerPhotoForPdf';
 import loadFirmAssetsForPdf from './loadFirmAssetsForPdf';
-import { resolveForm8PdfImageDataUrls } from './formTemplateImageAssets';
+import {
+  hasFormTemplateFooterImage,
+  resolveForm8PdfImageDataUrls,
+} from './formTemplateImageAssets';
 import loadLoanStockImagesForPdf from './loadLoanStockImagesForPdf';
 import { mergeCustomerForPdf } from './resolveFirmForPdf';
 import { normalizeImageDataUrlForPdf } from '../imageHelpers';
@@ -54,6 +57,13 @@ export async function buildLiveFormTemplatePdfOptions({
   ]);
 
   const templateImages = resolveForm8PdfImageDataUrls(config, firmAssets);
+  const uploadedFooter = templateImages.footerImageDataUrl;
+  const footerRepeatsLogo =
+    uploadedFooter &&
+    (uploadedFooter === firmAssets.leftLogoDataUrl ||
+      uploadedFooter === firmAssets.rightLogoDataUrl ||
+      uploadedFooter === templateImages.leftLogoDataUrl ||
+      uploadedFooter === templateImages.rightLogoDataUrl);
 
   return await preparePdfImageOptions({
     ...(formData ? { formData } : {}),
@@ -63,7 +73,12 @@ export async function buildLiveFormTemplatePdfOptions({
     customerPhotoDataUrl,
     leftLogoDataUrl: templateImages.leftLogoDataUrl,
     rightLogoDataUrl: templateImages.rightLogoDataUrl,
-    footerImageDataUrl: templateImages.footerImageDataUrl,
+    footerImageDataUrl:
+      config?.layout?.showFooterImage &&
+      hasFormTemplateFooterImage(config) &&
+      !footerRepeatsLogo
+        ? uploadedFooter
+        : null,
     formHeader: firmAssets.formHeader,
     formFooter: firmAssets.formFooter,
   });

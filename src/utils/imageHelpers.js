@@ -112,13 +112,13 @@ export function extractStoragePathFromUrl(url) {
   return null;
 }
 
-/** Resolve customer profile image URL from common API shapes. */
+/** Resolve customer profile image URL. Profile photo wins over other saved pictures. */
 export function resolveCustomerProfileImage(user) {
   if (!user) return null;
   return (
     resolveImageUrl(user.user_profile_img) ||
-    resolveImageUrl(user.user_image) ||
     resolveImageUrl(user.ur_image) ||
+    resolveImageUrl(user.user_image) ||
     null
   );
 }
@@ -127,8 +127,8 @@ export function resolveCustomerProfileImagePath(user) {
   if (!user) return null;
   return (
     resolveImageStoragePath(user.user_profile_img) ||
-    resolveImageStoragePath(user.user_image) ||
     resolveImageStoragePath(user.ur_image) ||
+    resolveImageStoragePath(user.user_image) ||
     null
   );
 }

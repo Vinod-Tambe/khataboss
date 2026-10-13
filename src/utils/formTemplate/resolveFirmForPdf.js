@@ -1,5 +1,5 @@
 import { getFirms } from '../../api/firmApi';
-import { resolveImageStoragePath } from '../imageHelpers';
+import { resolveImageStoragePath, resolveImageUrl } from '../imageHelpers';
 
 let firmsCache = null;
 let firmsCacheAt = 0;
@@ -39,23 +39,34 @@ export async function resolveFirmForPdf(firmId, partialFirm = {}) {
   return match ? { ...partialFirm, ...match } : partialFirm || {};
 }
 
-/** Merge customer sources so profile image fields are available for PDF. */
+const customerHasProfilePhoto = (customer) =>
+  Boolean(
+    resolveImageStoragePath(customer?.user_profile_img) ||
+      resolveImageUrl(customer?.user_profile_img)
+  );
+
+/** Merge customer sources. The loan customer's profile photo is kept as the Form 8 photo. */
 export function mergeCustomerForPdf(...customers) {
   const sources = customers.filter(Boolean);
   if (!sources.length) return null;
 
   const merged = Object.assign({}, ...sources);
-  const withPhoto = sources.find(
-    (customer) =>
-      resolveImageStoragePath(customer.user_profile_img) ||
-      resolveImageStoragePath(customer.user_image) ||
-      resolveImageStoragePath(customer.ur_image)
-  );
+  const withProfile = [...sources].reverse().find((customer) => customerHasProfilePhoto(customer));
+  if (withProfile) {
+    merged.user_profile_img = withProfile.user_profile_img;
+    return merged;
+  }
 
-  if (withPhoto) {
-    ['user_profile_img', 'user_image', 'ur_image'].forEach((key) => {
-      if (withPhoto[key]) merged[key] = withPhoto[key];
-    });
+  const withOther = [...sources].reverse().find(
+    (customer) =>
+      resolveImageStoragePath(customer.ur_image) ||
+      resolveImageUrl(customer.ur_image) ||
+      resolveImageStoragePath(customer.user_image) ||
+      resolveImageUrl(customer.user_image)
+  );
+  if (withOther) {
+    merged.ur_image = withOther.ur_image || merged.ur_image;
+    merged.user_image = withOther.user_image || merged.user_image;
   }
 
   return merged;

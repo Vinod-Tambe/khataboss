@@ -35,7 +35,8 @@ const useAppKeyboardShortcuts = () => {
 
   useEffect(() => {
     const onKeyDown = (event) => {
-      const key = event.key;
+      const key = typeof event.key === 'string' ? event.key : '';
+      if (!key) return;
       const lower = key.length === 1 ? key.toLowerCase() : key;
 
       if (key === 'Escape' && shortcuts?.helpOpen) {

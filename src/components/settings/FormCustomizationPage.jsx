@@ -32,6 +32,7 @@ import {
   isForm8BlockOnCanvas,
 } from "../../utils/formTemplate/form8BuilderPalette";
 import { sectionBlockId } from "../../utils/formTemplate/form8BuilderCatalog";
+import { FORM_TEMPLATE_ASSET_KEYS } from "../../utils/formTemplate/formTemplateImageAssets";
 import {
   canRemoveForm8Block,
   canToggleForm8BlockOnCanvas,
@@ -324,10 +325,30 @@ const FormCustomizationPage = () => {
   };
 
   const updateFormAsset = (key, value) => {
-    setFormConfig((prev) => ({
-      ...prev,
-      assets: { ...(prev.assets || {}), [key]: value || "" },
-    }));
+    setFormConfig((prev) => {
+      const next = {
+        ...prev,
+        assets: { ...(prev.assets || {}), [key]: value || "" },
+      };
+      if (key !== FORM_TEMPLATE_ASSET_KEYS.footerImage) return next;
+      const hasImage = Boolean(String(value || "").trim());
+      next.layout = { ...(prev.layout || {}), showFooterImage: hasImage };
+      if (!hasImage) {
+        next.builderBlockOrder = currentBlockOrder(prev).filter(
+          (id) => id !== "layout_footer_image"
+        );
+        return next;
+      }
+      const order = currentBlockOrder(prev);
+      if (!order.includes("layout_footer_image")) {
+        next.builderBlockOrder = insertBlockInOrder(
+          order,
+          "layout_footer_image",
+          order.includes("signature_lines") ? "signature_lines" : null
+        );
+      }
+      return next;
+    });
   };
 
   const handleSubmit = async (e) => {

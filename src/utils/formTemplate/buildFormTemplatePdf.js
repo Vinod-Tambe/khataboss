@@ -6,10 +6,12 @@ import {
   getSortedFields,
   clampFieldFontPt,
   getPageStyle,
+  normalizeFormConfig,
   replaceTemplateVariables,
   groupFieldsByLayout,
   resolveMainTitleFont,
 } from './formTemplateConfig';
+import { hasFormTemplateFooterImage } from './formTemplateImageAssets';
 import { pdfBoldFromWeight } from './form8SectionStyle';
 import {
   buildFormTemplateTestData,
@@ -39,10 +41,13 @@ import {
 import { buildStockItemsTablePdf } from './form8StockTableStyle';
 import {
   computeForm8CanvasPageHeightMm,
+  FORM8_PAGE_PADDING_MM,
   getForm8BlockPdfAbsolutePos,
   getForm8ContentBoxMm,
   getForm8ReferencePageHeightMm,
   isForm8FreeCanvasLayout,
+  withForm8SideBySideFit,
+  withForm8StockRowFlow,
 } from './form8CanvasLayout';
 import { parseSectionBlockId } from './form8BuilderCatalog';
 import { isForm8DividerBlockId } from './form8DividerBlocks';
@@ -59,8 +64,12 @@ import {
   isForm8HeaderBorderOn,
 } from './form8BlockStyle';
 import {
+  FORM8_PDF_LINE_HEIGHT,
+  FORM8_PDF_LINE_HEIGHT_COMPACT,
   getForm8SectionFieldPdfStyle,
+  getForm8SectionPdfBoxMetrics,
   getForm8SectionPdfTitleProps,
+  PDF_TIGHT_LAYOUT,
   wrapSectionPdfBlocks,
 } from './form8SectionStyle';
 
@@ -113,7 +122,7 @@ const buildForm8SignaturePdfBlock = (normalized, formData, compact, theme, value
     margin: [0, compact ? 4 : 8, 0, 0],
   };
   if (!signatureHasCustomBox(sigSpec)) return columns;
-  return wrapSectionPdfBlocks(sigSpec, theme, [columns])[0] || columns;
+  return wrapSectionPdfBlocks(sigSpec, theme, [columns], { compact })[0] || columns;
 };
 
 const buildLogoRow = (layout, leftLogoKey, rightLogoKey, centerText = '') => {
@@ -213,62 +222,65 @@ const buildInlineFieldRow = (
   formData,
   theme,
   customerPhotoKey = null,
-  fieldFonts = null
+  fieldFonts = null,
+  compact = false,
+  boxWidthPt = 0
 ) => {
   if (!field) {
     return { text: '' };
   }
 
+  const usable = Number.isFinite(boxWidthPt) && boxWidthPt > 36 ? Math.floor(boxWidthPt) : 0;
+  const labelRatio = compact ? 0.44 : 0.4;
+  const labelW = usable ? Math.max(20, Math.round(usable * labelRatio)) : null;
+  const valueW = usable ? Math.max(20, usable - labelW) : null;
+  const widths = labelW && valueW ? [labelW, valueW] : ['38%', '*'];
+
+  const lineHeight = compact ? FORM8_PDF_LINE_HEIGHT_COMPACT : FORM8_PDF_LINE_HEIGHT;
+  const { fieldPadY } = getForm8SectionPdfBoxMetrics(compact);
+  const labelCell = {
+    text: getForm8FieldDisplayLabel(field),
+    style: 'fieldLabel',
+    lineHeight,
+    color: hexToRgb(fieldFonts?.label?.color || theme.textColor),
+    ...(fieldFonts?.label?.fontSize != null ? { fontSize: fieldFonts.label.fontSize } : {}),
+    ...(fieldFonts?.label?.bold != null ? { bold: fieldFonts.label.bold } : {}),
+    ...(fieldFonts?.label?.fillColor ? { background: hexToRgb(fieldFonts.label.fillColor) } : {}),
+  };
+
   if (field.id === CUSTOMER_PHOTO_FIELD_ID) {
     return {
-      columns: [
-        {
-        width: '38%',
-        text: getForm8FieldDisplayLabel(field),
-        style: 'fieldLabel',
-        color: hexToRgb(fieldFonts?.label?.color || theme.textColor),
-        ...(fieldFonts?.label?.fontSize != null ? { fontSize: fieldFonts.label.fontSize } : {}),
-        ...(fieldFonts?.label?.bold != null ? { bold: fieldFonts.label.bold } : {}),
-        ...(fieldFonts?.label?.fillColor ? { background: hexToRgb(fieldFonts.label.fillColor) } : {}),
+      table: {
+        widths,
+        body: [[labelCell, buildCustomerPhotoValue(field, formData, customerPhotoKey, theme, compact)]],
       },
-      {
-        width: '*',
-        stack: [buildCustomerPhotoValue(field, formData, customerPhotoKey, theme)],
-        },
-      ],
-      columnGap: 6,
-      margin: [0, 1, 0, 1],
+      layout: PDF_TIGHT_LAYOUT,
+      margin: [0, fieldPadY, 0, fieldPadY],
     };
   }
 
   const valueFill = cellFill(field, theme);
+  const valueCell = {
+    text: getFormFieldValue(field.id, formData),
+    style: 'fieldValue',
+    lineHeight,
+    color: hexToRgb(fieldFonts?.value?.color || theme.textColor),
+    ...(valueFill
+      ? { background: valueFill }
+      : fieldFonts?.value?.fillColor
+        ? { background: hexToRgb(fieldFonts.value.fillColor) }
+        : {}),
+    ...(fieldFonts?.value?.fontSize != null ? { fontSize: fieldFonts.value.fontSize } : {}),
+    ...(fieldFonts?.value?.bold != null ? { bold: fieldFonts.value.bold } : {}),
+  };
+
   return {
-    columns: [
-      {
-        width: '38%',
-        text: getForm8FieldDisplayLabel(field),
-        style: 'fieldLabel',
-        color: hexToRgb(fieldFonts?.label?.color || theme.textColor),
-        ...(fieldFonts?.label?.fontSize != null ? { fontSize: fieldFonts.label.fontSize } : {}),
-        ...(fieldFonts?.label?.bold != null ? { bold: fieldFonts.label.bold } : {}),
-        ...(fieldFonts?.label?.fillColor ? { background: hexToRgb(fieldFonts.label.fillColor) } : {}),
-      },
-      {
-        width: '*',
-        text: getFormFieldValue(field.id, formData),
-        style: 'fieldValue',
-        color: hexToRgb(fieldFonts?.value?.color || theme.textColor),
-        ...(valueFill
-          ? { background: valueFill }
-          : fieldFonts?.value?.fillColor
-            ? { background: hexToRgb(fieldFonts.value.fillColor) }
-            : {}),
-        ...(fieldFonts?.value?.fontSize != null ? { fontSize: fieldFonts.value.fontSize } : {}),
-        ...(fieldFonts?.value?.bold != null ? { bold: fieldFonts.value.bold } : {}),
-      },
-    ],
-    columnGap: 6,
-    margin: [0, 1, 0, 1],
+    table: {
+      widths,
+      body: [[labelCell, valueCell]],
+    },
+    layout: PDF_TIGHT_LAYOUT,
+    margin: [0, fieldPadY, 0, fieldPadY],
   };
 };
 
@@ -277,7 +289,9 @@ const buildSectionFieldTables = (
   formData,
   theme,
   customerPhotoKey = null,
-  fieldFonts = null
+  fieldFonts = null,
+  compact = false,
+  boxWidthPt = 0
 ) => {
   const tables = [];
   const enabledFields = getSortedFields(section).filter((field) => field.enabled);
@@ -291,42 +305,66 @@ const buildSectionFieldTables = (
     tables.push(buildCustomerPhotoInjectBlock(customerPhotoKey, theme));
   }
 
+  const { bodyPadX, fieldRowGap } = getForm8SectionPdfBoxMetrics(compact);
+  const innerWidth =
+    Number.isFinite(boxWidthPt) && boxWidthPt > bodyPadX + 40 ? boxWidthPt - bodyPadX : 0;
+
   const pushFieldGroupRow = (group) => {
-    const row = (field) =>
-      buildInlineFieldRow(field, formData, theme, customerPhotoKey, fieldFonts);
+    const row = (field, widthPt) =>
+      buildInlineFieldRow(
+        field,
+        formData,
+        theme,
+        customerPhotoKey,
+        fieldFonts,
+        compact,
+        widthPt
+      );
+    const rowGap = fieldRowGap;
     const { layout, fields: rowFields } = group;
 
     if (layout === 'full' || (layout === 'half' && rowFields.length === 1)) {
       tables.push({
-        stack: [row(rowFields[0])],
-        margin: [0, 0, 0, 2],
+        stack: [row(rowFields[0], innerWidth)],
+        margin: [0, 0, 0, rowGap],
       });
       return;
     }
 
     if (layout === 'small') {
+      const gap = compact ? 4 : 6;
+      const colCount = Math.max(1, rowFields.length);
+      const colW = innerWidth
+        ? Math.max(28, Math.floor((innerWidth - gap * (colCount - 1)) / colCount))
+        : 0;
+      const widths = innerWidth
+        ? rowFields.flatMap((_, i) => (i ? [gap, colW] : [colW]))
+        : rowFields.map(() => '*');
+      const cells = rowFields.flatMap((field, i) =>
+        i ? [{ text: '' }, row(field, colW)] : [row(field, colW)]
+      );
       tables.push({
-        columns: rowFields.map((field) => ({
-          width: '*',
-          stack: [row(field)],
-        })),
-        columnGap: 6,
-        margin: [0, 0, 0, 2],
+        table: { widths, body: [cells] },
+        layout: PDF_TIGHT_LAYOUT,
+        margin: [0, 0, 0, rowGap],
       });
       return;
     }
 
     const [leftField, rightField] = rowFields;
+    const gap = compact ? 6 : 10;
+    const colW = innerWidth ? Math.max(36, Math.floor((innerWidth - gap) / 2)) : 0;
     tables.push({
-      columns: [
-        { width: '*', stack: [row(leftField)] },
-        {
-          width: '*',
-          stack: [rightField ? row(rightField) : { text: '' }],
-        },
-      ],
-      columnGap: 10,
-      margin: [0, 0, 0, 2],
+      table: {
+        widths: innerWidth ? [colW, gap, colW] : ['*', 10, '*'],
+        body: [[
+          row(leftField, colW),
+          { text: '' },
+          rightField ? row(rightField, colW) : { text: '' },
+        ]],
+      },
+      layout: PDF_TIGHT_LAYOUT,
+      margin: [0, 0, 0, rowGap],
     });
   };
 
@@ -340,7 +378,7 @@ export const buildFormTemplatePdfDefinition = (
   firmName = 'Sample Firm',
   options = {}
 ) => {
-  const normalized = config;
+  const normalized = normalizeFormConfig(config);
   const formData = options.formData || buildFormTemplateTestData(firmName);
   const allTxnRows = options.transactionRows || TRANSACTION_TEST_ROWS;
   const transactionRows =
@@ -349,20 +387,27 @@ export const buildFormTemplatePdfDefinition = (
       : allTxnRows;
   const stockItemRows = options.stockItemRows || null;
   const layout = normalized.layout || {};
-  const pdfImages = {};
 
-  const registerPdfImage = (key, dataUrl) => {
+  const registerPdfImage = (_key, dataUrl) => {
     const safe = sanitizePdfImage(dataUrl);
-    if (!safe) return null;
-    pdfImages[key] = safe;
-    return key;
+    return safe || null;
   };
 
   const leftLogoKey = registerPdfImage('firmLogoLeft', options.leftLogoDataUrl);
   const rightLogoKey = registerPdfImage('firmLogoRight', options.rightLogoDataUrl);
+  const footerOnTemplate =
+    isForm8BlockEnabled(normalized, 'layout_footer_image') &&
+    hasFormTemplateFooterImage(normalized);
+  const templateFooter = footerOnTemplate
+    ? String(normalized.assets?.footerImageDataUrl || '').trim()
+    : '';
+  const footerRepeatsLogo =
+    templateFooter &&
+    (templateFooter === options.leftLogoDataUrl ||
+      templateFooter === options.rightLogoDataUrl);
   const footerImageKey = registerPdfImage(
     'formFooterImage',
-    options.footerImageDataUrl || null
+    footerOnTemplate && !footerRepeatsLogo ? templateFooter : null
   );
   const customerPhotoKey = registerPdfImage(
     'customerPhoto',
@@ -375,16 +420,35 @@ export const buildFormTemplatePdfDefinition = (
   const size = normalized.pageSize || 'A4';
   const orientation = normalized.orientation || 'portrait';
   const compact = Boolean(normalized.singlePageLayout);
-  const pageMargins = compact ? [28, 28, 28, 28] : [40, 40, 40, 40];
+  const useFreeCanvas = isForm8FreeCanvasLayout(normalized);
+  const mmToPt = (mm) => (mm * 72) / 25.4;
+  const pageMargins = useFreeCanvas
+    ? [
+        mmToPt(FORM8_PAGE_PADDING_MM.left),
+        mmToPt(FORM8_PAGE_PADDING_MM.top),
+        mmToPt(FORM8_PAGE_PADDING_MM.right),
+        mmToPt(FORM8_PAGE_PADDING_MM.bottom),
+      ]
+    : compact
+      ? [28, 28, 28, 28]
+      : [40, 40, 40, 40];
   const pageWidthPt =
     size === 'Letter' ? 612 : size === 'A5' ? 419.53 : orientation === 'landscape' ? 841.89 : 595.28;
   const pageHeightPt =
     size === 'Letter' ? 792 : size === 'A5' ? 595.28 : orientation === 'landscape' ? 595.28 : 841.89;
   const contentWidthPt = pageWidthPt - pageMargins[0] - pageMargins[2];
-  const useFreeCanvas = isForm8FreeCanvasLayout(normalized);
   const basePageHeightMm = normalized.pageHeightMm || (pageHeightPt * 25.4) / 72;
+  const showStockItemImages = layout.showStockItemImages !== false;
+  const layoutConfig = withForm8SideBySideFit(
+    withForm8StockRowFlow(
+      normalized,
+      showStockItemImages ? stockItemRows : [],
+      basePageHeightMm
+    ),
+    basePageHeightMm
+  );
   const canvasPageHeightMm = useFreeCanvas
-    ? computeForm8CanvasPageHeightMm(normalized, basePageHeightMm)
+    ? computeForm8CanvasPageHeightMm(layoutConfig, basePageHeightMm)
     : basePageHeightMm;
   const pdfPageHeightPt = (canvasPageHeightMm * 72) / 25.4;
   const refContentHeightPt =
@@ -394,8 +458,6 @@ export const buildFormTemplatePdfDefinition = (
     ).height *
       72) /
     25.4;
-  const showStockItemImages = layout.showStockItemImages !== false;
-
   const content = [];
   const blockOrder = getForm8BlockOrder(normalized);
   const sectionsById = new Map(
@@ -405,7 +467,7 @@ export const buildFormTemplatePdfDefinition = (
     blockOrder.includes('customer_photo') && layout.showCustomerPhoto !== false;
   const sectionPhotoKey = photoInSeparateBlock ? null : customerPhotoKey;
 
-  const pushSectionPdf = (section, target = content) => {
+  const pushSectionPdf = (section, target = content, widthPt = 0) => {
     if (!section?.enabled) return;
     const titleProps = getForm8SectionPdfTitleProps(section, theme, fontPt);
     const sectionFieldFonts = getForm8SectionFieldPdfStyle(section, labelFontPt, valueFontPt);
@@ -461,13 +523,15 @@ export const buildFormTemplatePdfDefinition = (
         formData,
         theme,
         sectionPhotoKey,
-        sectionFieldFonts
+        sectionFieldFonts,
+        compact,
+        widthPt
       ).forEach((block) => {
         sectionChunks.push(block);
       });
     }
 
-    wrapSectionPdfBlocks(section, theme, sectionChunks).forEach((block) => {
+    wrapSectionPdfBlocks(section, theme, sectionChunks, { compact, widthPt }).forEach((block) => {
       target.push(block);
     });
   };
@@ -482,9 +546,9 @@ export const buildFormTemplatePdfDefinition = (
 
   const pushFreeCanvasMediaPdf = (blockId, imageKey, target) => {
     if (!imageKey) return false;
-    const spec = getBlockLayout(normalized, blockId);
+    const spec = getBlockLayout(layoutConfig, blockId);
     if (useFreeCanvas && spec.freePosition) {
-      const img = buildForm8MediaPdfImage(normalized, blockId, imageKey, contentWidthPt);
+      const img = buildForm8MediaPdfImage(layoutConfig, blockId, imageKey, contentWidthPt);
       if (img) target.push(img);
       return true;
     }
@@ -497,7 +561,14 @@ export const buildFormTemplatePdfDefinition = (
     const sectionId = parseSectionBlockId(blockId);
     if (sectionId) {
       if (sectionId === 'item_details') return;
-      pushSectionPdf(sectionsById.get(sectionId), target);
+      const sectionPos = getForm8BlockPdfAbsolutePos(
+        layoutConfig,
+        blockId,
+        contentWidthPt,
+        refContentHeightPt,
+        pageMargins
+      );
+      pushSectionPdf(sectionsById.get(sectionId), target, sectionPos.widthPt);
       return;
     }
 
@@ -587,7 +658,7 @@ export const buildFormTemplatePdfDefinition = (
               style: 'title',
               alignment: 'center',
               color: hexToRgb(theme.primaryColor),
-              margin: [0, 0, 0, 4],
+              margin: [0, 0, 0, compact ? 1 : 4],
             },
             titleProps
           )
@@ -600,7 +671,7 @@ export const buildFormTemplatePdfDefinition = (
                 style: 'subtitle',
                 alignment: 'center',
                 color: hexToRgb(theme.sectionTitleColor),
-                margin: [0, 0, 0, 4],
+                margin: [0, 0, 0, compact ? 1 : 4],
               },
               headerLine('subtitle', labelFontPt)
             )
@@ -614,7 +685,7 @@ export const buildFormTemplatePdfDefinition = (
                 style: 'compliance',
                 alignment: 'center',
                 color: hexToRgb(theme.textColor),
-                margin: [0, 0, 0, compact ? 4 : 8],
+                margin: [0, 0, 0, compact ? 1 : 8],
               },
               headerLine('compliance', labelFontPt)
             )
@@ -628,7 +699,7 @@ export const buildFormTemplatePdfDefinition = (
                 style: 'note',
                 alignment: 'center',
                 color: hexToRgb(theme.textColor),
-                margin: [0, 0, 0, compact ? 4 : 10],
+                margin: [0, 0, 0, 0],
               },
               headerLine('note', valueFontPt)
             )
@@ -661,7 +732,7 @@ export const buildFormTemplatePdfDefinition = (
               hLineColor: () => lineColor,
               vLineColor: () => lineColor,
             },
-            margin: [0, 0, 0, compact ? 6 : 10],
+            margin: [0, 0, 0, compact ? 0 : 10],
           });
         } else {
           headerChunks.forEach((block) => target.push(block));
@@ -733,7 +804,17 @@ export const buildFormTemplatePdfDefinition = (
           );
           if (stockTable) stockChunks.push(stockTable);
         }
-        wrapSectionPdfBlocks(wrapStyles, theme, stockChunks).forEach((block) => {
+        const stockPos = getForm8BlockPdfAbsolutePos(
+          layoutConfig,
+          blockId,
+          contentWidthPt,
+          refContentHeightPt,
+          pageMargins
+        );
+        wrapSectionPdfBlocks(wrapStyles, theme, stockChunks, {
+          compact,
+          widthPt: stockPos.widthPt,
+        }).forEach((block) => {
           target.push(block);
         });
         break;
@@ -753,7 +834,8 @@ export const buildFormTemplatePdfDefinition = (
               fontSize: termsTitle.fontSize,
               bold: termsTitle.bold,
             },
-            theme
+            theme,
+            compact
           )
         );
         target.push(
@@ -766,7 +848,8 @@ export const buildFormTemplatePdfDefinition = (
               fontSize: termsBody.fontSize,
               bold: termsBody.bold,
             },
-            theme
+            theme,
+            compact
           )
         );
         break;
@@ -790,7 +873,8 @@ export const buildFormTemplatePdfDefinition = (
               fontSize: footerTitle.fontSize,
               bold: footerTitle.bold,
             },
-            theme
+            theme,
+            compact
           )
         );
         target.push(
@@ -803,13 +887,14 @@ export const buildFormTemplatePdfDefinition = (
               fontSize: footerBody.fontSize,
               bold: footerBody.bold,
             },
-            theme
+            theme,
+            compact
           )
         );
         break;
       }
       case 'layout_footer_image': {
-        const footerImgKey = footerImageKey || rightLogoKey || leftLogoKey;
+        const footerImgKey = footerOnTemplate ? footerImageKey : null;
         if (footerImgKey) {
           if (!pushFreeCanvasMediaPdf(blockId, footerImgKey, target)) {
             const block = buildForm8LogoPdfDefinition(
@@ -878,16 +963,25 @@ export const buildFormTemplatePdfDefinition = (
       pushBlockPdf(seg.id, chunk);
       if (!chunk.length) return;
       const pos = getForm8BlockPdfAbsolutePos(
-        normalized,
+        layoutConfig,
         seg.id,
         contentWidthPt,
         refContentHeightPt,
         pageMargins
       );
-      content.push({
-        stack: chunk,
-        absolutePosition: { x: pos.x, y: pos.y },
-      });
+      const boxed = chunk.length === 1 && chunk[0]?.table?.widths?.[0] === pos.widthPt;
+      content.push(
+        boxed
+          ? { ...chunk[0], absolutePosition: { x: pos.x, y: pos.y } }
+          : {
+              absolutePosition: { x: pos.x, y: pos.y },
+              table: {
+                widths: [pos.widthPt],
+                body: [[{ stack: chunk }]],
+              },
+              layout: PDF_TIGHT_LAYOUT,
+            }
+      );
     });
   } else {
     partitionForm8BlockOrder(blockOrder).forEach((seg) => {
@@ -920,10 +1014,10 @@ export const buildFormTemplatePdfDefinition = (
     pageOrientation: useFreeCanvas && canvasPageHeightMm > basePageHeightMm + 0.5 ? undefined : orientation,
     pageMargins,
     background: () => null,
-    ...(Object.keys(pdfImages).length ? { images: pdfImages } : {}),
     content,
     defaultStyle: {
       fontSize: fontPt,
+      lineHeight: compact ? FORM8_PDF_LINE_HEIGHT_COMPACT : FORM8_PDF_LINE_HEIGHT,
       color: hexToRgb(theme.textColor),
     },
     styles: {
@@ -932,7 +1026,11 @@ export const buildFormTemplatePdfDefinition = (
         bold: pdfBoldFromWeight(theme.titleFontWeight, true),
       },
       subtitle: { fontSize: fontPt + 1 },
-      compliance: { fontSize: fontPt - 2, italics: true, lineHeight: 1.25 },
+      compliance: {
+        fontSize: fontPt - 2,
+        italics: true,
+        lineHeight: compact ? FORM8_PDF_LINE_HEIGHT_COMPACT : FORM8_PDF_LINE_HEIGHT,
+      },
       sectionTitle: { fontSize: fontPt, bold: true },
       meta: { fontSize: fontPt - 1, color: hexToRgb(theme.mutedTextColor) },
       note: { fontSize: fontPt - 1, color: hexToRgb(theme.mutedTextColor) },
@@ -948,7 +1046,10 @@ export const buildFormTemplatePdfDefinition = (
       fieldValueSmall: { fontSize: clampFieldFontPt(valueFontPt - 1), bold: true },
       tableHeader: { fontSize: fontPt - 1, bold: true },
       tableCell: { fontSize: fontPt - 1 },
-      body: { fontSize: fontPt - 1, lineHeight: 1.35 },
+      body: {
+        fontSize: fontPt - 1,
+        lineHeight: compact ? FORM8_PDF_LINE_HEIGHT_COMPACT : 1.35,
+      },
       sigLabel: { fontSize: fontPt - 2, color: hexToRgb(theme.mutedTextColor) },
       sigTitle: { fontSize: fontPt - 0.5, color: hexToRgb(theme.textColor) },
       sigName: { fontSize: fontPt, color: hexToRgb(theme.textColor) },

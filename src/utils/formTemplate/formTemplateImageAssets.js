@@ -70,6 +70,14 @@ export const getFormTemplateAssets = (config) => ({
   footerImageDataUrl: config?.assets?.footerImageDataUrl || '',
 });
 
+/** True only when this firm's template has its own uploaded footer image. */
+export const hasFormTemplateFooterImage = (config) => {
+  const value = String(config?.assets?.footerImageDataUrl || '').trim();
+  if (!value.startsWith('data:image')) return false;
+  if (value === SAMPLE_FIRM_LOGO_DATA_URL) return false;
+  return true;
+};
+
 /** Preview URLs: template upload → firm logo → optional sample. */
 export const resolveForm8BuilderImageUrls = (config, firm, { useSampleAssets = true } = {}) => {
   const layout = config?.layout || {};
@@ -87,11 +95,7 @@ export const resolveForm8BuilderImageUrls = (config, firm, { useSampleAssets = t
     firmRight ||
     (useSampleAssets && layout.showRightLogo ? SAMPLE_FIRM_LOGO_DATA_URL : null);
 
-  const footerImageUrl =
-    assets.footerImageDataUrl ||
-    rightLogoUrl ||
-    leftLogoUrl ||
-    (useSampleAssets && layout.showFooterImage ? SAMPLE_FIRM_LOGO_DATA_URL : null);
+  const footerImageUrl = assets.footerImageDataUrl || null;
 
   return {
     leftLogoUrl,
@@ -109,12 +113,6 @@ export const resolveForm8PdfImageDataUrls = (config, firmAssets = {}) => {
       assets.leftLogoDataUrl || firmAssets.leftLogoDataUrl || null,
     rightLogoDataUrl:
       assets.rightLogoDataUrl || firmAssets.rightLogoDataUrl || null,
-    footerImageDataUrl:
-      assets.footerImageDataUrl ||
-      assets.rightLogoDataUrl ||
-      firmAssets.rightLogoDataUrl ||
-      assets.leftLogoDataUrl ||
-      firmAssets.leftLogoDataUrl ||
-      null,
+    footerImageDataUrl: hasFormTemplateFooterImage(config) ? assets.footerImageDataUrl : null,
   };
 };

@@ -17,6 +17,7 @@ import { normalizeForm8SignatureLabels } from './form8Signatures';
 import {
   compressDataUrlIfNeeded,
   FORM_TEMPLATE_ASSET_KEYS,
+  hasFormTemplateFooterImage,
 } from './formTemplateImageAssets';
 import { SAMPLE_FIRM_LOGO_DATA_URL } from './formTemplatePreviewAssets';
 
@@ -32,15 +33,6 @@ export const syncForm8LogoBlocks = (config) => {
   const wantsRight = layout.showRightLogo !== false || onOrder;
   if (!wantsRight) {
     blockLayouts = seedForm8FreeMediaBlockLayout(blockLayouts, 'layout_left_logo');
-    const wantsFooterEarly =
-      layout.showFooterImage || builderBlockOrder.includes('layout_footer_image');
-    if (wantsFooterEarly) {
-      layout.showFooterImage = true;
-      blockLayouts = seedForm8FreeMediaBlockLayout(blockLayouts, 'layout_footer_image');
-    }
-    if (layout.showCustomerPhoto !== false || builderBlockOrder.includes('customer_photo')) {
-      blockLayouts = seedForm8FreeMediaBlockLayout(blockLayouts, 'customer_photo');
-    }
     return { ...config, builderBlockOrder, layout, blockLayouts };
   }
 
@@ -55,16 +47,6 @@ export const syncForm8LogoBlocks = (config) => {
 
   blockLayouts = seedForm8FreeMediaBlockLayout(blockLayouts, 'layout_left_logo');
   blockLayouts = seedForm8FreeMediaBlockLayout(blockLayouts, 'layout_right_logo');
-
-  const wantsFooter = layout.showFooterImage || builderBlockOrder.includes('layout_footer_image');
-  if (wantsFooter) {
-    layout.showFooterImage = true;
-    blockLayouts = seedForm8FreeMediaBlockLayout(blockLayouts, 'layout_footer_image');
-  }
-
-  if (layout.showCustomerPhoto !== false || builderBlockOrder.includes('customer_photo')) {
-    blockLayouts = seedForm8FreeMediaBlockLayout(blockLayouts, 'customer_photo');
-  }
 
   return { ...config, builderBlockOrder, layout, blockLayouts };
 };
@@ -140,6 +122,43 @@ export const THEME_FIELDS = [
   { key: 'tableHeaderBackground', label: 'Table header' },
   { key: 'pageBackground', label: 'Page background' },
 ];
+
+/** Old seed used boxes shorter than the text, so the footer note sat on the terms. */
+const isCrampedForm8Seed = (layouts = {}) =>
+  Number(layouts.form_terms?.heightMm) === 14 && Number(layouts.form_footer?.heightMm) === 9;
+
+const READABLE_FORM8_BLOCK_IDS = [
+  'form_header',
+  'section:firm_details',
+  'section:customer_details',
+  'customer_photo',
+  'section:loan_details',
+  'stock_line_items',
+  'form_terms',
+  'form_footer',
+  'layout_footer_image',
+  'signature_lines',
+];
+
+const applyReadableForm8Layouts = (blockLayouts, showFooterImage, assets) => {
+  if (!isCrampedForm8Seed(blockLayouts)) {
+    return { blockLayouts, showFooterImage, showCustomerPhoto: null };
+  }
+  const nextLayouts = { ...blockLayouts };
+  READABLE_FORM8_BLOCK_IDS.forEach((id) => {
+    const def = DEFAULT_FORM_CONFIG.blockLayouts?.[id];
+    if (def) nextLayouts[id] = { ...def };
+  });
+  const pinnedFooter =
+    blockLayouts.layout_footer_image?.freePosition &&
+    Number(blockLayouts.layout_footer_image?.posYPct) >= 80;
+  const hasFooterImage = Boolean(assets?.footerImageDataUrl);
+  return {
+    blockLayouts: nextLayouts,
+    showFooterImage: pinnedFooter && !hasFooterImage ? false : showFooterImage,
+    showCustomerPhoto: false,
+  };
+};
 
 const findDefaultSection = (sectionId) =>
   (DEFAULT_FORM_CONFIG.sections || []).find((s) => s.id === sectionId);
@@ -323,23 +342,37 @@ export const normalizeFormConfig = (config) => {
       ? Boolean(layoutFromConfig.showFooterImage)
       : Boolean(DEFAULT_FORM_CONFIG.layout.showFooterImage);
 
+  const readable = applyReadableForm8Layouts(
+    isLegacyBuilder
+      ? { ...(DEFAULT_FORM_CONFIG.blockLayouts || {}) }
+      : {
+          ...(DEFAULT_FORM_CONFIG.blockLayouts || {}),
+          ...(config.blockLayouts || {}),
+        },
+    showFooterImage,
+    config.assets || {}
+  );
+
   const dividerMigrated = migrateForm8DividerBlocks({
     builderBlockOrder: normalizeBuilderBlockOrder(
       Array.isArray(config.builderBlockOrder) && config.builderBlockOrder.length
         ? config.builderBlockOrder
         : DEFAULT_FORM_CONFIG.builderBlockOrder || []
     ).filter((id) => id !== 'layout_logo'),
-    blockLayouts: isLegacyBuilder
-      ? { ...(DEFAULT_FORM_CONFIG.blockLayouts || {}) }
-      : {
-          ...(DEFAULT_FORM_CONFIG.blockLayouts || {}),
-          ...(config.blockLayouts || {}),
-        },
+    blockLayouts: readable.blockLayouts,
   });
-  const builderBlockOrder = dividerMigrated.builderBlockOrder;
+  const hasFooterImageAsset = hasFormTemplateFooterImage(config);
+  const resolvedShowFooterImage = hasFooterImageAsset && Boolean(readable.showFooterImage);
+  const builderBlockOrder = dividerMigrated.builderBlockOrder.filter(
+    (id) => id !== 'layout_footer_image' || resolvedShowFooterImage
+  );
   const blockLayouts = dividerMigrated.blockLayouts;
+  const resolvedShowCustomerPhoto =
+    readable.showCustomerPhoto == null
+      ? layoutFromConfig.showCustomerPhoto !== false
+      : readable.showCustomerPhoto;
 
-  const pageDims = getPageStyle({ ...DEFAULT_FORM_CONFIG, ...config, sections, builderBlockOrder, blockLayouts, layout: isLegacyBuilder ? DEFAULT_FORM_CONFIG.layout : { ...DEFAULT_FORM_CONFIG.layout, ...layoutFromConfig, showStockItemImages, showFooterImage } });
+  const pageDims = getPageStyle({ ...DEFAULT_FORM_CONFIG, ...config, sections, builderBlockOrder, blockLayouts, layout: isLegacyBuilder ? DEFAULT_FORM_CONFIG.layout : { ...DEFAULT_FORM_CONFIG.layout, ...layoutFromConfig, showStockItemImages, showFooterImage: resolvedShowFooterImage, showCustomerPhoto: resolvedShowCustomerPhoto } });
 
   let merged = syncForm8LogoBlocks({
     ...DEFAULT_FORM_CONFIG,
@@ -372,13 +405,17 @@ export const normalizeFormConfig = (config) => {
           ...DEFAULT_FORM_CONFIG.layout,
           ...layoutFromConfig,
           showStockItemImages,
-          showFooterImage,
+          showFooterImage: resolvedShowFooterImage,
+          showCustomerPhoto: resolvedShowCustomerPhoto,
         },
     builderBlockOrder,
     blockLayouts,
     assets: {
       ...(DEFAULT_FORM_CONFIG.assets || {}),
       ...(config.assets || {}),
+      footerImageDataUrl: resolvedShowFooterImage
+        ? String(config.assets?.footerImageDataUrl || '').trim()
+        : '',
     },
     signatureLabels: normalizeForm8SignatureLabels(config.signatureLabels),
     singlePageLayout,

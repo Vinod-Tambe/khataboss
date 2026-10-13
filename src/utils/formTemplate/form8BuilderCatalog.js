@@ -56,6 +56,12 @@ export const FORM8_SPECIAL_BLOCKS = [
     description: 'Statutory note (Rule 18 / Section 24)',
   },
   {
+    id: 'layout_footer_image',
+    label: 'Footer image',
+    category: 'optional',
+    description: 'Shown only after an image is uploaded for this firm',
+  },
+  {
     id: 'form_divider',
     label: 'Divider',
     category: 'optional',

@@ -1,4 +1,5 @@
 import { pickBlockStyleFields, wrapPdfImageWithBorder } from './form8BlockStyle';
+import { hasFormTemplateFooterImage } from './formTemplateImageAssets';
 import {
   FORM8_OPTIONAL_SECTION_IDS,
   isForm8PaletteBlockHidden,
@@ -87,7 +88,6 @@ export const FORM8_DEFAULT_BLOCK_ORDER = [
   'stock_line_items',
   'form_terms',
   'form_footer',
-  'layout_footer_image',
   'signature_lines',
 ];
 
@@ -188,7 +188,7 @@ export const FORM8_DEFAULT_BLOCK_LAYOUTS = {
   layout_left_logo: { widthPct: 28, heightMm: 14, heightMode: 'fixed' },
   layout_right_logo: { widthPct: 28, heightMm: 14, heightMode: 'fixed' },
   layout_logo: { widthPct: 100, heightMm: 11, heightMode: 'fixed' },
-  form_header: { widthPct: 100, heightMm: 14, heightMode: 'fixed' },
+  form_header: { widthPct: 100, heightMm: 22, heightMode: 'fixed' },
   'field:today_date': {
     widthPct: 34,
     heightMm: 6,
@@ -216,24 +216,16 @@ export const FORM8_DEFAULT_BLOCK_LAYOUTS = {
     freePosition: true,
     hAlign: 'right',
   },
-  'section:firm_details': { widthPct: 100, heightMm: 22, heightMode: 'fixed' },
-  'section:customer_details': { widthPct: 100, heightMm: 20, heightMode: 'fixed' },
-  customer_photo: { widthPct: 28, heightMm: 14, heightMode: 'fixed' },
-  'section:loan_details': { widthPct: 100, heightMm: 26, heightMode: 'fixed' },
+  'section:firm_details': { widthPct: 100, heightMm: 28, heightMode: 'fixed' },
+  'section:customer_details': { widthPct: 100, heightMm: 24, heightMode: 'fixed' },
+  customer_photo: { widthPct: 22, heightMm: 24, heightMode: 'fixed' },
+  'section:loan_details': { widthPct: 100, heightMm: 32, heightMode: 'fixed' },
   stock_line_items: { widthPct: 100, heightMm: null, heightMode: 'auto' },
   form_divider: { widthPct: 100, heightMm: 6, heightMode: 'fixed' },
-  form_terms: { widthPct: 100, heightMm: 14, heightMode: 'fixed' },
-  form_footer: { widthPct: 100, heightMm: 9, heightMode: 'fixed' },
-  layout_footer_image: {
-    widthPct: 100,
-    heightMm: 14,
-    heightMode: 'fixed',
-    posXPct: 0,
-    posYPct: 90,
-    freePosition: true,
-    hAlign: 'center',
-  },
-  signature_lines: { widthPct: 100, heightMm: 11, heightMode: 'fixed' },
+  form_terms: { widthPct: 100, heightMm: 28, heightMode: 'fixed' },
+  form_footer: { widthPct: 100, heightMm: 18, heightMode: 'fixed' },
+  layout_footer_image: { widthPct: 100, heightMm: 12, heightMode: 'fixed', hAlign: 'center' },
+  signature_lines: { widthPct: 100, heightMm: 20, heightMode: 'fixed' },
   'section:transaction_history': { widthPct: 100, heightMm: 14, heightMode: 'fixed' },
   'section:item_details': { widthPct: 100, heightMm: 16, heightMode: 'fixed' },
   'section:redemption_details': { widthPct: 100, heightMm: 10, heightMode: 'fixed' },
@@ -395,7 +387,8 @@ export const buildForm8PaletteItems = (config, sections = []) => {
       } else if (blockId === 'stock_line_items') {
         enabled = config.layout?.showStockItemImages !== false;
       } else if (blockId === 'layout_footer_image') {
-        enabled = Boolean(config.layout?.showFooterImage);
+        enabled =
+          Boolean(config.layout?.showFooterImage) && hasFormTemplateFooterImage(config);
       } else if (blockId === 'form_terms') {
         enabled = Boolean(config.termsAndConditions);
       } else if (blockId === 'form_footer') {
@@ -449,7 +442,7 @@ export const isForm8BlockEnabled = (config, blockId) => {
     case 'stock_line_items':
       return layout.showStockItemImages !== false;
     case 'layout_footer_image':
-      return Boolean(layout.showFooterImage);
+      return Boolean(layout.showFooterImage) && hasFormTemplateFooterImage(config);
     case 'form_terms':
       return Boolean(config?.termsAndConditions);
     case 'form_footer':
@@ -615,8 +608,10 @@ export const buildForm8LogoPdfDefinition = (
 /** Free canvas: image sized exactly to saved layout box (pt). */
 export const buildForm8MediaPdfImage = (normalized, blockId, imageKey, contentWidthPt) => {
   if (!imageKey) return null;
-  const { widthPct, heightMm } = getBlockLayout(normalized, blockId);
-  const widthPt = Math.max(24, Math.round(((widthPct ?? 28) / 100) * contentWidthPt));
+  const { widthPct, heightMm, posXPct } = getBlockLayout(normalized, blockId);
+  const rawWidthPct = widthPct ?? 28;
+  const clampedWidthPct = Math.min(rawWidthPct, Math.max(0, 100 - (posXPct ?? 0)));
+  const widthPt = Math.max(24, Math.round((clampedWidthPct / 100) * contentWidthPt));
   const heightPt = Math.max(24, Math.round(mmToPt(heightMm ?? 14)));
   return wrapPdfImageWithBorder(
     {

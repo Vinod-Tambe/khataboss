@@ -440,7 +440,7 @@ export const getForm8TextPartPreviewStyle = (layoutSpec = {}, part, theme = {}, 
 };
 
 /** pdfMake block for a Terms title or body row with its own box. */
-export const buildForm8TextPartPdfBlock = (layoutSpec, part, textProps, theme) => {
+export const buildForm8TextPartPdfBlock = (layoutSpec, part, textProps, theme, compact = false) => {
   const isBody = part === 'body';
   const showBorder = isForm8TextPartBorderOn(layoutSpec, part);
   const borderColor = hexToPdf(
@@ -465,7 +465,8 @@ export const buildForm8TextPartPdfBlock = (layoutSpec, part, textProps, theme) =
             fillColor: hasValue(fill) ? hexToPdf(fill, fill) : undefined,
             fontSize: textProps.fontSize,
             bold: textProps.bold,
-            margin: [8, 5, 8, 5],
+            lineHeight: compact ? 1.15 : 1.25,
+            margin: compact ? [2, 1, 2, 1] : [8, 5, 8, 5],
           },
         ],
       ],
@@ -476,7 +477,7 @@ export const buildForm8TextPartPdfBlock = (layoutSpec, part, textProps, theme) =
       hLineColor: () => borderColor,
       vLineColor: () => borderColor,
     },
-    margin: [0, 0, 0, isBody ? 0 : 2],
+    margin: [0, 0, 0, compact || isBody ? 0 : 2],
   };
 };
 

@@ -28,6 +28,7 @@ import {
 } from '../../utils/loanUpdateRules';
 import ImageUploadSquare from '../common/ImageUploadSquare';
 import FormUniqueCodeBadge from '../common/FormUniqueCodeBadge';
+import { getCustomerFirmId } from '../../utils/customerFormatters';
 import '../../css/ProfileDocumentsSection.css';
 
 const UpdateLoan = () => {
@@ -49,7 +50,6 @@ const UpdateLoan = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loanUniqueCode, setLoanUniqueCode] = useState('');
   const [firmRates, setFirmRates] = useState([]);
-  const { selectedFirmId, firms: reduxFirms } = useSelector((state) => state.firm);
   const { selectedUser } = useSelector((state) => state.user);
   const {
     hasTransactions,
@@ -280,18 +280,17 @@ const UpdateLoan = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [id]);
 
-  // Sync firm ID with Header selection (only if not already set by fetched loan data)
+  const customerFirmId = getCustomerFirmId(selectedUser);
+  const firmLocked = Boolean(formData.girv_firm_id || customerFirmId);
+
+  // Keep the loan's firm. If missing, use the customer's firm — never the header firm.
   useEffect(() => {
-    if (!formData.girv_firm_id) {
-      if (selectedFirmId === 'all') {
-        if (reduxFirms.length > 0) {
-          setFormData(prev => ({ ...prev, girv_firm_id: reduxFirms[0].firm_id }));
-        }
-      } else if (selectedFirmId) {
-        setFormData(prev => ({ ...prev, girv_firm_id: selectedFirmId }));
-      }
+    if (formData.girv_firm_id) return;
+    const locked = getCustomerFirmId(selectedUser);
+    if (locked) {
+      setFormData((prev) => (prev.girv_firm_id ? prev : { ...prev, girv_firm_id: locked }));
     }
-  }, [selectedFirmId, reduxFirms, formData.girv_firm_id]);
+  }, [selectedUser, formData.girv_firm_id]);
 
   // Fetch accounts when firm changes
   useEffect(() => {
@@ -813,7 +812,7 @@ const UpdateLoan = () => {
 
         <div className="col-12 col-md-6 col-lg-3">
           <label className="form-label fw-medium">Firm Name <span className="text-danger">*</span></label>
-          <select name="girv_firm_id" className="form-select border-dark" value={formData.girv_firm_id || ''} onChange={handleChange} required>
+          <select name="girv_firm_id" className="form-select border-dark" value={formData.girv_firm_id || ''} onChange={handleChange} required disabled={firmLocked}>
             <option value="" disabled>Select firm</option>
             {firms.map(firm => (
               <option key={firm.firm_id} value={firm.firm_id}>

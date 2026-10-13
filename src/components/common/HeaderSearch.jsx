@@ -288,7 +288,7 @@ const HeaderSearch = ({
   };
 
   const onKeyDown = (e) => {
-    if (!open || items.length === 0) return;
+    if (!open || !items?.length) return;
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setActiveIndex((prev) => (prev < items.length - 1 ? prev + 1 : prev));

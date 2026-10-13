@@ -12,6 +12,7 @@ import { createFinance } from '../../api/financeApi';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import FormUniqueCodeBadge from '../common/FormUniqueCodeBadge';
+import { getCustomerFirmId } from '../../utils/customerFormatters';
 
 
 const AddFinance = () => {
@@ -131,16 +132,28 @@ const AddFinance = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Sync firm ID with Header selection
+  const customerFirmId = getCustomerFirmId(selectedUser);
+  const firmLocked = Boolean(customerFirmId);
+
+  // Customer's firm wins; otherwise follow header firm.
   useEffect(() => {
+    const locked = getCustomerFirmId(selectedUser);
+    if (locked) {
+      setFormData((prev) =>
+        String(prev.fin_firm_id) === String(locked) ? prev : { ...prev, fin_firm_id: locked }
+      );
+      return;
+    }
     if (selectedFirmId === 'all') {
       if (reduxFirms.length > 0 && !formData.fin_firm_id) {
-        setFormData(prev => ({ ...prev, fin_firm_id: reduxFirms[0].firm_id }));
+        setFormData((prev) => ({ ...prev, fin_firm_id: reduxFirms[0].firm_id }));
       }
-    } else if (selectedFirmId && selectedFirmId !== formData.fin_firm_id) {
-      setFormData(prev => ({ ...prev, fin_firm_id: selectedFirmId }));
+      return;
     }
-  }, [selectedFirmId, reduxFirms, formData.fin_firm_id]);
+    if (selectedFirmId && String(selectedFirmId) !== String(formData.fin_firm_id)) {
+      setFormData((prev) => ({ ...prev, fin_firm_id: selectedFirmId }));
+    }
+  }, [selectedUser, selectedFirmId, reduxFirms, formData.fin_firm_id]);
 
   // Sync User ID with Active User selection
   useEffect(() => {
@@ -409,6 +422,8 @@ const AddFinance = () => {
             className="form-select border-dark"
             value={formData.fin_firm_id}
             onChange={handleChange}
+            required
+            disabled={firmLocked}
           >
             <option value="">Select Firm</option>
             {firms.map(firm => (

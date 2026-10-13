@@ -118,6 +118,10 @@ export const buildForm8PaletteCatalog = (config, sections = []) => {
       const n = Number(String(id).split(':')[1] || 1);
       return (stock >= 0 ? stock : 8) + 0.5 + n / 100;
     }
+    if (id === 'layout_footer_image') {
+      const signatures = FORM8_DEFAULT_BLOCK_ORDER.indexOf('signature_lines');
+      return (signatures >= 0 ? signatures : 10) - 0.1;
+    }
     const idx = FORM8_DEFAULT_BLOCK_ORDER.indexOf(id);
     return idx >= 0 ? idx : 999;
   };

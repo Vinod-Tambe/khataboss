@@ -244,9 +244,49 @@ const isPdfSectionTitleBlock = (block) =>
   typeof block.text === 'string' &&
   (block.fillColor != null || block.style === 'sectionTitle');
 
+/** pdfMake `*` / `%` columns resolve to page width, not the parent box. */
+export const PDF_TIGHT_LAYOUT = {
+  defaultBorder: false,
+  hLineWidth: () => 0,
+  vLineWidth: () => 0,
+  paddingLeft: () => 0,
+  paddingRight: () => 0,
+  paddingTop: () => 0,
+  paddingBottom: () => 0,
+};
+
+/** Matches `.form-custom-a4-page--single` field / section line-height. */
+export const FORM8_PDF_LINE_HEIGHT = 1.2;
+export const FORM8_PDF_LINE_HEIGHT_COMPACT = 1.15;
+
+/** Title + body insets — same as preview section padding / title bar. */
+export const getForm8SectionPdfBoxMetrics = (compact) =>
+  compact
+    ? {
+        titleMargin: [4, 1.5, 4, 1.5],
+        bodyMargin: [4, 1.5, 4, 2],
+        outerMargin: [0, 0, 0, 0],
+        bodyPadX: 8,
+        fieldRowGap: 1.5,
+        fieldPadY: 0.75,
+      }
+    : {
+        titleMargin: [8, 5, 8, 5],
+        bodyMargin: [8, 4, 8, 8],
+        outerMargin: [0, 0, 0, 8],
+        bodyPadX: 16,
+        fieldRowGap: 4,
+        fieldPadY: 1.5,
+      };
+
 /** PDF section box (outer border only) — matches preview section + title bar. */
-export const wrapSectionPdfBlocks = (section, theme, blocks) => {
+export const wrapSectionPdfBlocks = (section, theme, blocks, options = {}) => {
   if (!blocks?.length) return [];
+  const compact = Boolean(options.compact);
+  const { titleMargin, bodyMargin, outerMargin } = getForm8SectionPdfBoxMetrics(compact);
+  const boxWidthPt = Number(options.widthPt);
+  const tableWidths =
+    Number.isFinite(boxWidthPt) && boxWidthPt > 24 ? [boxWidthPt] : ['*'];
 
   const lineColor = hexToRgb(
     hasValue(section?.borderColor) ? section.borderColor : theme.borderColor || '#2c5282'
@@ -266,6 +306,10 @@ export const wrapSectionPdfBlocks = (section, theme, blocks) => {
     vLineWidth: () => lineW,
     hLineColor: () => lineColor,
     vLineColor: () => lineColor,
+    paddingLeft: () => 0,
+    paddingRight: () => 0,
+    paddingTop: () => 0,
+    paddingBottom: () => 0,
   };
 
   const [first, ...rest] = blocks;
@@ -273,7 +317,7 @@ export const wrapSectionPdfBlocks = (section, theme, blocks) => {
     return [
       {
         table: {
-          widths: ['*'],
+          widths: tableWidths,
           body: [
             [
               {
@@ -281,21 +325,22 @@ export const wrapSectionPdfBlocks = (section, theme, blocks) => {
                 color: first.color,
                 fillColor: first.fillColor,
                 fontSize: first.fontSize,
+                lineHeight: compact ? FORM8_PDF_LINE_HEIGHT_COMPACT : FORM8_PDF_LINE_HEIGHT,
                 bold: first.bold != null ? first.bold : true,
-                margin: [8, 5, 8, 5],
+                margin: titleMargin,
               },
             ],
             [
               {
                 stack: rest,
                 fillColor: bodyFill,
-                margin: [8, 4, 8, 8],
+                margin: bodyMargin,
               },
             ],
           ],
         },
         layout: outerLayout,
-        margin: [0, 0, 0, 8],
+        margin: outerMargin,
       },
     ];
   }
@@ -303,19 +348,19 @@ export const wrapSectionPdfBlocks = (section, theme, blocks) => {
   return [
     {
       table: {
-        widths: ['*'],
+        widths: tableWidths,
         body: [
           [
             {
               stack: blocks,
               fillColor: bodyFill,
-              margin: [8, 8, 8, 8],
+              margin: bodyMargin,
             },
           ],
         ],
       },
       layout: outerLayout,
-      margin: [0, 0, 0, 8],
+      margin: outerMargin,
     },
   ];
 };
