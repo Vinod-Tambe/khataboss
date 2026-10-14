@@ -2,7 +2,7 @@ import React from 'react';
 import { Modal, Button } from 'react-bootstrap';
 import '../../css/IdleSession.css';
 
-const IdleSessionModal = ({ show, secondsLeft = 10, onContinue }) => (
+const IdleSessionModal = ({ show, secondsLeft = 10, idleMinutes = 2, onContinue }) => (
   <Modal
     show={show}
     centered
@@ -19,7 +19,7 @@ const IdleSessionModal = ({ show, secondsLeft = 10, onContinue }) => (
     </Modal.Header>
     <Modal.Body className="text-center pt-2 pb-3">
       <p className="text-muted mb-3 mb-md-4">
-        No activity detected for 2 minutes. You will be signed out unless you continue.
+        No activity detected for {idleMinutes} {idleMinutes === 1 ? 'minute' : 'minutes'}. You will be signed out unless you continue.
       </p>
       <div className="idle-session-modal__timer" aria-live="polite">
         <span className="idle-session-modal__timer-value">{secondsLeft}</span>

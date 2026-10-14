@@ -6,6 +6,12 @@ import ImageUploadSquare from "../common/ImageUploadSquare";
 import { getMyProfile, updateMyProfile } from "../../api/authApi";
 import { setUser } from "../../store/slices/authSlice";
 import { validateMobile, validatePhone, validatePincode } from "../../utils/validation";
+import {
+  DEFAULT_IDLE_TIMEOUT_MIN,
+  MAX_IDLE_TIMEOUT_MIN,
+  MIN_IDLE_TIMEOUT_MIN,
+  parseIdleTimeoutMinutes,
+} from "../../utils/idleSession";
 import { resolveImageUrl } from "../../utils/imageHelpers";
 import "../../css/ProfileDocumentsSection.css";
 
@@ -28,6 +34,7 @@ const OwnerProfile = () => {
     own_city: "",
     own_state: "",
     own_pincode: "",
+    own_idle_timeout_min: DEFAULT_IDLE_TIMEOUT_MIN,
     own_profile_img: null,
   });
 
@@ -49,6 +56,7 @@ const OwnerProfile = () => {
       own_city: profile.own_city || "",
       own_state: profile.own_state || "",
       own_pincode: profile.own_pincode || "",
+      own_idle_timeout_min: parseIdleTimeoutMinutes(profile.own_idle_timeout_min),
       own_profile_img: null,
     });
     setPhotoPreview(resolveImageUrl(profile.own_profile_img));
@@ -126,6 +134,10 @@ const OwnerProfile = () => {
       payload.append("own_city", formData.own_city.trim());
       payload.append("own_state", formData.own_state.trim());
       payload.append("own_pincode", formData.own_pincode.trim());
+      payload.append(
+        "own_idle_timeout_min",
+        String(parseIdleTimeoutMinutes(formData.own_idle_timeout_min))
+      );
       if (formData.own_profile_img instanceof File) {
         payload.append("own_profile_img", formData.own_profile_img);
       }
@@ -163,14 +175,15 @@ const OwnerProfile = () => {
       </div>
       <div className="card-body">
         <form onSubmit={handleSubmit}>
-          <div className="row g-3">
-            <div className="col-md-3">
+          <div className="row g-3 align-items-center">
+            <div className="col-md-3 d-flex justify-content-center">
               <ImageUploadSquare
                 preview={photoPreview}
                 onFile={handleProfileFile}
                 onRemove={handleProfileRemove}
                 modalTitle="Profile Photo"
                 label="Profile Photo"
+                size="large"
               />
             </div>
             <div className="col-md-9">
@@ -181,6 +194,7 @@ const OwnerProfile = () => {
                     type="text"
                     name="own_first_name"
                     className="form-control border-dark"
+                    placeholder="Enter first name"
                     value={formData.own_first_name}
                     onChange={handleChange}
                     required
@@ -192,6 +206,7 @@ const OwnerProfile = () => {
                     type="text"
                     name="own_middle_name"
                     className="form-control border-dark"
+                    placeholder="Enter middle name"
                     value={formData.own_middle_name}
                     onChange={handleChange}
                   />
@@ -202,6 +217,7 @@ const OwnerProfile = () => {
                     type="text"
                     name="own_last_name"
                     className="form-control border-dark"
+                    placeholder="Enter last name"
                     value={formData.own_last_name}
                     onChange={handleChange}
                     required
@@ -214,6 +230,7 @@ const OwnerProfile = () => {
                   <input
                     type="text"
                     className="form-control border-dark"
+                    placeholder={user?.role === "STAFF" ? "Staff login ID" : "Login ID"}
                     value={
                       user?.role === "STAFF"
                         ? user?.staff_login_id || formData.own_login_id
@@ -234,6 +251,7 @@ const OwnerProfile = () => {
                     type="email"
                     name="own_email"
                     className="form-control border-dark"
+                    placeholder="Enter email"
                     value={formData.own_email}
                     onChange={handleChange}
                     required
@@ -245,6 +263,7 @@ const OwnerProfile = () => {
                     type="text"
                     name="own_mobile_no"
                     className="form-control border-dark"
+                    placeholder="Enter 10-digit mobile number"
                     value={formData.own_mobile_no}
                     onChange={handleChange}
                     maxLength={10}
@@ -256,9 +275,23 @@ const OwnerProfile = () => {
                     type="text"
                     name="own_phone_no"
                     className="form-control border-dark"
+                    placeholder="Enter phone number"
                     value={formData.own_phone_no}
                     onChange={handleChange}
                     maxLength={12}
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label">Session timeout (minutes)</label>
+                  <input
+                    type="number"
+                    name="own_idle_timeout_min"
+                    className="form-control border-dark"
+                    min={MIN_IDLE_TIMEOUT_MIN}
+                    max={MAX_IDLE_TIMEOUT_MIN}
+                    placeholder={`Default ${DEFAULT_IDLE_TIMEOUT_MIN} minutes`}
+                    value={formData.own_idle_timeout_min}
+                    onChange={handleChange}
                   />
                 </div>
               </div>
@@ -270,6 +303,7 @@ const OwnerProfile = () => {
                 name="own_address"
                 className="form-control border-dark"
                 rows={2}
+                placeholder="Enter address"
                 value={formData.own_address}
                 onChange={handleChange}
               />
@@ -280,6 +314,7 @@ const OwnerProfile = () => {
                 type="text"
                 name="own_village"
                 className="form-control border-dark"
+                placeholder="Enter village"
                 value={formData.own_village}
                 onChange={handleChange}
               />
@@ -290,6 +325,7 @@ const OwnerProfile = () => {
                 type="text"
                 name="own_city"
                 className="form-control border-dark"
+                placeholder="Enter city"
                 value={formData.own_city}
                 onChange={handleChange}
               />
@@ -300,6 +336,7 @@ const OwnerProfile = () => {
                 type="text"
                 name="own_state"
                 className="form-control border-dark"
+                placeholder="Enter state"
                 value={formData.own_state}
                 onChange={handleChange}
               />
@@ -310,6 +347,7 @@ const OwnerProfile = () => {
                 type="text"
                 name="own_pincode"
                 className="form-control border-dark"
+                placeholder="Enter 6-digit pincode"
                 value={formData.own_pincode}
                 onChange={handleChange}
                 maxLength={6}

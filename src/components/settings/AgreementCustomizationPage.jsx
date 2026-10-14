@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 import moment from "moment";
 import {
   FiChevronDown,
@@ -38,6 +39,10 @@ import {
   resolveFirmLeftLogoUrl,
   resolveFirmRightLogoUrl,
 } from "../../utils/formTemplate/loadFirmAssetsForPdf";
+import {
+  resolveActiveFirmFilterId,
+  rowMatchesFirmFilter,
+} from "../../store/slices/firmSlice";
 import "../../css/FormCustomization.css";
 
 const EDITOR_TABS = [
@@ -80,6 +85,9 @@ const LAYOUT_FIELDS = [
 ];
 
 const AgreementCustomizationPage = () => {
+  const { selectedFirmId, firms: reduxFirms, selectedFirm } = useSelector(
+    (state) => state.firm
+  );
   const [agreementType, setAgreementType] = useState("Loan");
   const [templates, setTemplates] = useState([]);
   const [firmsById, setFirmsById] = useState({});
@@ -112,7 +120,7 @@ const AgreementCustomizationPage = () => {
       const res = await getFirms();
       const map = {};
       (Array.isArray(res?.data) ? res.data : []).forEach((firm) => {
-        if (firm?.firm_id != null) map[firm.firm_id] = firm;
+        if (firm?.firm_id != null) map[String(firm.firm_id)] = firm;
       });
       setFirmsById(map);
     } catch {
@@ -125,8 +133,35 @@ const AgreementCustomizationPage = () => {
   }, [loadFirms]);
 
   useEffect(() => {
+    if (!reduxFirms?.length) return;
+    setFirmsById((prev) => {
+      const next = { ...prev };
+      reduxFirms.forEach((firm) => {
+        if (firm?.firm_id == null) return;
+        const key = String(firm.firm_id);
+        next[key] = { ...next[key], ...firm };
+      });
+      return next;
+    });
+  }, [reduxFirms]);
+
+  useEffect(() => {
     loadTemplates();
   }, [loadTemplates]);
+
+  useEffect(() => {
+    if (!editingFirmId) return;
+    if (!rowMatchesFirmFilter(editingFirmId, selectedFirmId)) {
+      setEditingId(null);
+      setEditingFirmId(null);
+      setEditingFirmName("");
+      setFormConfig(null);
+      setStatus("Active");
+      setEditorTab("general");
+      setExpandedSectionIds(new Set());
+      setMobileMode("list");
+    }
+  }, [selectedFirmId, editingFirmId]);
 
   useEffect(() => {
     setEditingId(null);
@@ -280,7 +315,8 @@ const AgreementCustomizationPage = () => {
     [agreementType]
   );
 
-  const editingFirm = editingFirmId != null ? firmsById[editingFirmId] : null;
+  const editingFirm =
+    editingFirmId != null ? firmsById[String(editingFirmId)] : null;
 
   const handlePdfPreview = async () => {
     if (!formConfig) return;
@@ -324,9 +360,20 @@ const AgreementCustomizationPage = () => {
     () =>
       [...templates]
         .filter((row) => row && (!row.type || row.type === agreementType))
+        .filter((row) => rowMatchesFirmFilter(row?.firmId, selectedFirmId))
         .sort((a, b) => (a.firmName || "").localeCompare(b.firmName || "")),
-    [templates, agreementType]
+    [templates, agreementType, selectedFirmId]
   );
+
+  const listTitleSuffix = useMemo(() => {
+    const filterId = resolveActiveFirmFilterId(selectedFirmId);
+    if (!filterId) return "";
+    const name =
+      selectedFirm?.firm_name ||
+      sortedTemplates[0]?.firmName ||
+      "selected firm";
+    return ` — ${name}`;
+  }, [selectedFirmId, selectedFirm, sortedTemplates]);
 
   const sortedSections = useMemo(
     () => (formConfig ? getSortedSections(formConfig) : []),
@@ -793,9 +840,11 @@ const AgreementCustomizationPage = () => {
         ))}
       </div>
 
-      {!templates.length && !loading ? (
+      {!sortedTemplates.length && !loading ? (
         <div className="alert alert-warning">
-          Add at least one firm to manage {agreementType === "Finance" ? "finance" : "loan"} agreement templates.
+          {resolveActiveFirmFilterId(selectedFirmId)
+            ? `No ${agreementType === "Finance" ? "finance" : "loan"} agreement templates for the firm selected in the header. Choose another firm or switch to All Firm.`
+            : `Add at least one firm to manage ${agreementType === "Finance" ? "finance" : "loan"} agreement templates.`}
         </div>
       ) : null}
 
@@ -913,7 +962,7 @@ const AgreementCustomizationPage = () => {
         <List
           data={sortedTemplates}
           columns={columns}
-          title={`All Firms — ${agreementType === "Finance" ? "Finance" : "Loan"} Agreements${loading ? " (loading…)" : ""}`}
+          title={`${resolveActiveFirmFilterId(selectedFirmId) ? "Firm" : "All Firms"} — ${agreementType === "Finance" ? "Finance" : "Loan"} Agreements${listTitleSuffix}${loading ? " (loading…)" : ""}`}
           primaryKey="uuid"
           subtitleKey="updatedAt"
           hasDelete={false}
@@ -921,6 +970,7 @@ const AgreementCustomizationPage = () => {
           onEdit={handleEdit}
           showFooter={false}
           showSearch={true}
+          applyDefaultDateFilter={false}
         />
       </div>
     </div>

@@ -32,6 +32,19 @@
   opacity: 0.65;
 }
 
+.image-upload-square--large .image-upload-square__wrap {
+  width: 168px;
+  height: 168px;
+}
+
+.image-upload-square--large .profile-documents-section__square-upload i {
+  font-size: 2rem;
+}
+
+.image-upload-square--large .profile-documents-section__label {
+  font-size: 0.9rem;
+}
+
 .image-upload-square--compact .image-upload-square__wrap {
   width: 80px;
   height: 80px;

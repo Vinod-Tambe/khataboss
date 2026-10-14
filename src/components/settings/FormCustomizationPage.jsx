@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 import moment from "moment";
 import {
   FiEdit3,
@@ -53,9 +54,16 @@ import {
   isForm8SecuredTemplate,
   normalizeForm8LoanType,
 } from "../../utils/formTemplate/form8LoanType";
+import {
+  resolveActiveFirmFilterId,
+  rowMatchesFirmFilter,
+} from "../../store/slices/firmSlice";
 import "../../css/FormCustomization.css";
 
 const FormCustomizationPage = () => {
+  const { selectedFirmId, firms: reduxFirms, selectedFirm } = useSelector(
+    (state) => state.firm
+  );
   const [templates, setTemplates] = useState([]);
   const [firmsById, setFirmsById] = useState({});
   const [loading, setLoading] = useState(false);
@@ -88,7 +96,7 @@ const FormCustomizationPage = () => {
       const res = await getFirms();
       const map = {};
       (Array.isArray(res?.data) ? res.data : []).forEach((firm) => {
-        if (firm?.firm_id != null) map[firm.firm_id] = firm;
+        if (firm?.firm_id != null) map[String(firm.firm_id)] = firm;
       });
       setFirmsById(map);
     } catch {
@@ -101,8 +109,35 @@ const FormCustomizationPage = () => {
   }, [loadFirms]);
 
   useEffect(() => {
+    if (!reduxFirms?.length) return;
+    setFirmsById((prev) => {
+      const next = { ...prev };
+      reduxFirms.forEach((firm) => {
+        if (firm?.firm_id == null) return;
+        const key = String(firm.firm_id);
+        next[key] = { ...next[key], ...firm };
+      });
+      return next;
+    });
+  }, [reduxFirms]);
+
+  useEffect(() => {
     loadTemplates();
   }, [loadTemplates]);
+
+  useEffect(() => {
+    if (!editingFirmId) return;
+    if (!rowMatchesFirmFilter(editingFirmId, selectedFirmId)) {
+      setEditingId(null);
+      setEditingFirmId(null);
+      setEditingFirmName("");
+      setEditingLoanType("secured");
+      setFormConfig(null);
+      setSavedSnapshot(null);
+      setStatus("Active");
+      setMobileMode("list");
+    }
+  }, [selectedFirmId, editingFirmId]);
 
   const parseTemplateConfig = (raw) => {
     if (raw == null) return {};
@@ -408,7 +443,8 @@ const FormCustomizationPage = () => {
     }
   };
 
-  const editingFirm = editingFirmId != null ? firmsById[editingFirmId] : null;
+  const editingFirm =
+    editingFirmId != null ? firmsById[String(editingFirmId)] : null;
 
   const handlePdfPreview = async () => {
     if (!formConfig) return;
@@ -458,15 +494,27 @@ const FormCustomizationPage = () => {
 
   const sortedTemplates = useMemo(
     () =>
-      [...templates].sort((a, b) => {
-        const firmCmp = (a.firmName || "").localeCompare(b.firmName || "");
-        if (firmCmp !== 0) return firmCmp;
-        return normalizeForm8LoanType(a.loanType).localeCompare(
-          normalizeForm8LoanType(b.loanType)
-        );
-      }),
-    [templates]
+      [...templates]
+        .filter((row) => rowMatchesFirmFilter(row?.firmId, selectedFirmId))
+        .sort((a, b) => {
+          const firmCmp = (a.firmName || "").localeCompare(b.firmName || "");
+          if (firmCmp !== 0) return firmCmp;
+          return normalizeForm8LoanType(a.loanType).localeCompare(
+            normalizeForm8LoanType(b.loanType)
+          );
+        }),
+    [templates, selectedFirmId]
   );
+
+  const listTitleSuffix = useMemo(() => {
+    const filterId = resolveActiveFirmFilterId(selectedFirmId);
+    if (!filterId) return "";
+    const name =
+      selectedFirm?.firm_name ||
+      sortedTemplates[0]?.firmName ||
+      "selected firm";
+    return ` — ${name}`;
+  }, [selectedFirmId, selectedFirm, sortedTemplates]);
 
   const showBuilder = Boolean(editingId && formConfig);
 
@@ -525,9 +573,11 @@ const FormCustomizationPage = () => {
         </div>
       </div>
 
-      {!templates.length && !loading ? (
+      {!sortedTemplates.length && !loading ? (
         <div className="alert alert-warning">
-          Add at least one firm to manage form templates.
+          {resolveActiveFirmFilterId(selectedFirmId)
+            ? "No form templates for the firm selected in the header. Choose another firm or switch to All Firm."
+            : "Add at least one firm to manage form templates."}
         </div>
       ) : null}
 
@@ -592,7 +642,7 @@ const FormCustomizationPage = () => {
           <List
             data={sortedTemplates}
             columns={columns}
-            title={`Firm-wise Form Templates${loading ? " (loading…)" : ""}`}
+            title={`Firm-wise Form Templates${listTitleSuffix}${loading ? " (loading…)" : ""}`}
             primaryKey="uuid"
             subtitleKey="updatedAt"
             hasDelete={false}
@@ -600,6 +650,7 @@ const FormCustomizationPage = () => {
             onEdit={handleEdit}
             showFooter={false}
             showSearch={true}
+            applyDefaultDateFilter={false}
           />
         </div>
       ) : null}

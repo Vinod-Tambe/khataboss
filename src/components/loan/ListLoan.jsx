@@ -36,7 +36,11 @@ const ListLoan = ({ status = "ALL", global = false }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { selectedUser } = useSelector((state) => state.user);
-  const { selectedFirm } = useSelector((state) => state.firm);
+  const { selectedFirmId, selectedFirm } = useSelector((state) => state.firm);
+  const activeFirmId =
+    selectedFirmId && selectedFirmId !== "all"
+      ? selectedFirm?.firm_id ?? selectedFirmId
+      : undefined;
   const { can } = usePermissions();
   const canViewLoan = can("loan.view");
   const canEditLoan = can("loan.edit");
@@ -48,7 +52,7 @@ const ListLoan = ({ status = "ALL", global = false }) => {
     try {
       setLoading(true);
       const filters = {
-        firmId: selectedFirm?.firm_id,
+        firmId: activeFirmId,
         status: status,
       };
       if (!global && selectedUser?.user_id) {
@@ -63,7 +67,7 @@ const ListLoan = ({ status = "ALL", global = false }) => {
     } finally {
       setLoading(false);
     }
-  }, [selectedFirm?.firm_id, selectedUser?.user_id, status, global]);
+  }, [activeFirmId, selectedUser?.user_id, status, global]);
 
   useEffect(() => {
     if (global || selectedUser?.user_id) {

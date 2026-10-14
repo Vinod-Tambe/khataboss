@@ -6,6 +6,7 @@ import "../../css/ImageUploadSquare.css";
 
 const SIZE_CLASS = {
   default: "",
+  large: "image-upload-square--large",
   compact: "image-upload-square--compact",
   mini: "image-upload-square--mini",
 };
