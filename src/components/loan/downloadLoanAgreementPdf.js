@@ -50,7 +50,7 @@ export async function buildLoanAgreementPdfPack(loanDetails, customer = null) {
 
 export const downloadLoanAgreementPdf = async (loanDetails, customer = null) => {
   const pack = await buildLoanAgreementPdfPack(loanDetails, customer);
-  downloadFormTemplatePdf(pack.config, pack.displayFirmName, pack.pdfOptions);
+  await downloadFormTemplatePdf(pack.config, pack.displayFirmName, pack.pdfOptions);
   return pack.fileName;
 };
 

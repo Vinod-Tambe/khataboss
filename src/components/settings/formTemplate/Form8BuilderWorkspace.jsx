@@ -11,13 +11,16 @@ import { getSortedSections, normalizeFormConfig } from '../../../utils/formTempl
 import { resolveForm8BuilderImageUrls } from '../../../utils/formTemplate/formTemplateImageAssets';
 import { parseSectionBlockId } from '../../../utils/formTemplate/form8BuilderCatalog';
 import { isForm8DividerBlockId, isForm8DividerPaletteId } from '../../../utils/formTemplate/form8DividerBlocks';
+import { getForm8LoanTypeLabel, normalizeForm8LoanType } from '../../../utils/formTemplate/form8LoanType';
 
 const Form8BuilderWorkspace = ({
   firmName,
+  loanType,
   firm,
   formConfig,
   status,
   saving,
+  preparingPdf,
   onStatusChange,
   onSave,
   onBackToList,
@@ -67,6 +70,9 @@ const Form8BuilderWorkspace = ({
         <div className="f8-builder-topbar-left">
           <span className="f8-builder-brand">Form 8 Builder</span>
           <span className="f8-builder-firm">{firmName}</span>
+          <span className={`badge ${normalizeForm8LoanType(loanType || formConfig?.loanType) === 'secured' ? 'bg-primary-subtle text-primary' : 'bg-warning-subtle text-warning-emphasis'}`}>
+            {getForm8LoanTypeLabel(loanType || formConfig?.loanType)}
+          </span>
         </div>
         <div className="f8-builder-topbar-actions">
           {typeof onBackToList === 'function' ? (
@@ -74,8 +80,8 @@ const Form8BuilderWorkspace = ({
               Back to list
             </button>
           ) : null}
-          <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onPdfPreview}>
-            <FaFilePdf size={14} className="me-1" /> View
+          <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onPdfPreview} disabled={saving}>
+            <FaFilePdf size={14} className="me-1" /> {preparingPdf ? 'Preparing…' : saving ? 'Saving…' : 'View'}
           </button>
           <button type="button" className="btn btn-sm btn-primary" onClick={onSave} disabled={saving}>
             <FiSave size={14} className="me-1" />

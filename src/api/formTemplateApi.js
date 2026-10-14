@@ -18,10 +18,10 @@ export const getFormTemplates = async () => {
   }
 };
 
-export const getFormTemplate = async (firmId) => {
+export const getFormTemplate = async (firmId, loanType) => {
   try {
     const response = await axiosInstance.get('/form-templates/template', {
-      params: { firmId },
+      params: { firmId, loanType },
     });
     return response.data;
   } catch (error) {

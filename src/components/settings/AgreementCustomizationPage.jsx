@@ -291,7 +291,7 @@ const AgreementCustomizationPage = () => {
         transactionRows: previewTransactionRows,
         config: normalizeAgreementConfig(formConfig, agreementType),
       });
-      openFormTemplatePdfPreview(
+      await openFormTemplatePdfPreview(
         normalizeAgreementConfig(formConfig, agreementType),
         editingFirmName,
         pdfOptions
@@ -310,7 +310,7 @@ const AgreementCustomizationPage = () => {
         transactionRows: previewTransactionRows,
         config: normalizeAgreementConfig(formConfig, agreementType),
       });
-      downloadFormTemplatePdf(
+      await downloadFormTemplatePdf(
         normalizeAgreementConfig(formConfig, agreementType),
         editingFirmName,
         pdfOptions

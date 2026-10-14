@@ -101,8 +101,15 @@ const Form8BuilderBlockFrame = ({
     const minWmm = (minW / 100) * contentWidthMm;
     const maxWmm = (maxW / 100) * contentWidthMm;
 
-    const resizeMediaBox = freeCanvas && isImageLikeBlock && !heightLocked;
-    const boxAtStart = resizeMediaBox ? getLayoutBoxMm(config) : null;
+    const resizeExactBox = freeCanvas && !heightLocked;
+    const boxAtStart = resizeExactBox
+      ? isImageLikeBlock
+        ? getLayoutBoxMm(config)
+        : {
+            widthMm: ((startW) / 100) * contentWidthMm,
+            heightMm: startH,
+          }
+      : null;
     const startBoxW = boxAtStart?.widthMm ?? 0;
     const startBoxH = boxAtStart?.heightMm ?? 0;
 
@@ -117,7 +124,7 @@ const Form8BuilderBlockFrame = ({
       let posXPct = startPosX;
       let posYPct = startPosY;
 
-      if (resizeMediaBox) {
+      if (resizeExactBox) {
         let boxW = startBoxW;
         let boxH = startBoxH;
         if (handle.includes('e')) boxW += dWmm;
@@ -138,14 +145,14 @@ const Form8BuilderBlockFrame = ({
 
         if (handle.includes('w') || handle.includes('nw') || handle.includes('sw')) {
           posXPct = clamp(
-            Math.round(startPosX + ((startBoxW - unclampedBoxW) / contentWidthMm) * 100),
+            Math.round((startPosX + ((startBoxW - unclampedBoxW) / contentWidthMm) * 100) * 10) / 10,
             0,
             100
           );
         }
         if (handle.includes('n') || handle.includes('nw') || handle.includes('ne')) {
           posYPct = clamp(
-            Math.round(startPosY + ((startBoxH - unclampedBoxH) / contentHmm) * 100),
+            Math.round((startPosY + ((startBoxH - unclampedBoxH) / contentHmm) * 100) * 10) / 10,
             0,
             FORM8_MAX_POS_Y_PCT
           );
@@ -167,7 +174,7 @@ const Form8BuilderBlockFrame = ({
         }
 
         if (freeCanvas && (handle.includes('w') || handle.includes('nw') || handle.includes('sw'))) {
-          posXPct = clamp(Math.round(startPosX + (startW - unclampedW)), 0, 100);
+          posXPct = clamp(Math.round((startPosX + (startW - unclampedW)) * 10) / 10, 0, 100);
         }
         if (
           freeCanvas &&
@@ -175,7 +182,7 @@ const Form8BuilderBlockFrame = ({
           (handle.includes('n') || handle.includes('nw') || handle.includes('ne'))
         ) {
           posYPct = clamp(
-            Math.round(startPosY + ((startH - unclampedH) / contentHmm) * 100),
+            Math.round((startPosY + ((startH - unclampedH) / contentHmm) * 100) * 10) / 10,
             0,
             FORM8_MAX_POS_Y_PCT
           );
@@ -189,8 +196,8 @@ const Form8BuilderBlockFrame = ({
           : { heightMode: 'fixed', heightMm }),
       };
       if (freeCanvas) {
-        patch.posXPct = clamp(Math.round(posXPct), 0, 100);
-        patch.posYPct = clamp(Math.round(posYPct), 0, FORM8_MAX_POS_Y_PCT);
+        patch.posXPct = clamp(Math.round(posXPct * 10) / 10, 0, 100);
+        patch.posYPct = clamp(Math.round(posYPct * 10) / 10, 0, FORM8_MAX_POS_Y_PCT);
         patch.freePosition = true;
         patch.offsetXPct = null;
         const clamped = clampForm8BlockLayoutHorizontal(blockId, patch);
@@ -250,12 +257,12 @@ const Form8BuilderBlockFrame = ({
         layout.widthPct ?? (isImageLikeBlock ? 28 : isImageLikeBlock ? 28 : 100);
       const maxPosX = getForm8MaxPosXPct(blockId, dragWidthPct);
       const posXPct = clamp(
-        Math.round((pointerX / metrics.contentWidthPx) * 100),
+        Math.round((pointerX / metrics.contentWidthPx) * 1000) / 10,
         0,
         maxPosX
       );
       const posYPct = clamp(
-        Math.round((pointerY / metrics.contentHeightPx) * 100),
+        Math.round((pointerY / metrics.contentHeightPx) * 1000) / 10,
         0,
         FORM8_MAX_POS_Y_PCT
       );
@@ -361,15 +368,25 @@ const Form8BuilderBlockFrame = ({
           overflow: 'hidden',
           boxSizing: 'border-box',
         }
-      : freeCanvas && !heightLocked
+      : freeCanvas && heightLocked
         ? {
-            minHeight: `${fixedHeightMm}mm`,
-            height: `${fixedHeightMm}mm`,
-            maxHeight: `${fixedHeightMm}mm`,
+            width: '100%',
+            height: 'auto',
+            minHeight: 0,
+            maxHeight: 'none',
+            boxSizing: 'border-box',
+            overflow: 'visible',
+          }
+      : freeCanvas
+        ? {
+            width: '100%',
+            height: '100%',
+            minHeight: 0,
+            maxHeight: '100%',
             boxSizing: 'border-box',
             overflow: 'hidden',
           }
-        : isImageLikeBlock && !freeCanvas
+        : isImageLikeBlock
           ? { minHeight: 'unset', maxHeight: 'unset', height: 'auto', overflow: 'visible' }
           : heightLocked
             ? {}
@@ -408,6 +425,8 @@ const Form8BuilderBlockFrame = ({
     'f8-builder-block',
     isImageLikeBlock ? 'f8-builder-block--logo-chrome' : '',
     freeCanvas ? 'f8-builder-block--free-canvas' : '',
+    freeCanvas && !isImageLikeBlock ? 'f8-builder-block--box-chrome' : '',
+    heightLocked ? 'f8-builder-block--height-auto' : '',
     selected ? 'is-selected is-resize-active' : '',
     isDragging ? 'is-dragging' : '',
     isDropTarget ? 'is-drop-target' : '',

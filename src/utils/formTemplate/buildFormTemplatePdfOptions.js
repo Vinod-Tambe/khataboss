@@ -11,9 +11,11 @@ import {
   SAMPLE_CUSTOMER_PHOTO_DATA_URL,
   SAMPLE_FIRM_LOGO_DATA_URL,
 } from './formTemplatePreviewAssets';
-import { STOCK_ITEM_TEST_ROWS } from './formTemplateTestData';
+import { STOCK_ITEM_TEST_ROWS, buildFormTemplateTestData } from './formTemplateTestData';
 
-const shouldShowCustomerPhoto = (config) => config?.layout?.showCustomerPhoto !== false;
+const shouldShowCustomerPhoto = (config) =>
+  config?.layout?.showCustomerPhoto !== false ||
+  (config?.builderBlockOrder || []).includes('customer_photo');
 
 const shouldShowStockItemImages = (config) => config?.layout?.showStockItemImages !== false;
 
@@ -96,14 +98,13 @@ export async function buildPreviewFormTemplatePdfOptions({
   useSampleLogos = true,
 } = {}) {
   const showCustomerPhoto = shouldShowCustomerPhoto(config);
-  const showStockItemImages = shouldShowStockItemImages(config);
   const firmAssets = await loadFirmAssetsForPdf(firm);
   const templateImages = resolveForm8PdfImageDataUrls(config, firmAssets);
 
   return await preparePdfImageOptions({
-    ...(formData ? { formData } : {}),
+    formData: formData || buildFormTemplateTestData(firm?.firm_name || firm?.firm_shop_name || ''),
     ...(transactionRows ? { transactionRows } : {}),
-    ...(showStockItemImages ? { stockItemRows: STOCK_ITEM_TEST_ROWS } : {}),
+    stockItemRows: STOCK_ITEM_TEST_ROWS,
     customerPhotoDataUrl:
       showCustomerPhoto && useSampleCustomerPhoto ? SAMPLE_CUSTOMER_PHOTO_DATA_URL : null,
     leftLogoDataUrl:
@@ -115,5 +116,6 @@ export async function buildPreviewFormTemplatePdfOptions({
     footerImageDataUrl: templateImages.footerImageDataUrl,
     formHeader: firmAssets.formHeader,
     formFooter: firmAssets.formFooter,
+    matchTemplateLayout: true,
   });
 }

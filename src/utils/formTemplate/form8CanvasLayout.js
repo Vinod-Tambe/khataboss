@@ -28,7 +28,7 @@ export const clampForm8BlockLayoutHorizontal = (blockId, layoutPatch = {}) => {
   if (!Number.isFinite(widthPct)) widthPct = max;
   widthPct = clamp(widthPct, min, max);
   const maxPosX = Math.max(0, 100 - widthPct);
-  let posXPct = clamp(Math.round(Number(layoutPatch.posXPct) || 0), 0, maxPosX);
+  let posXPct = clamp(Math.round((Number(layoutPatch.posXPct) || 0) * 10) / 10, 0, maxPosX);
   widthPct = Math.min(widthPct, Math.max(min, 100 - posXPct));
   if (posXPct + widthPct > 100) {
     posXPct = Math.max(0, 100 - widthPct);
@@ -81,8 +81,11 @@ const defaultPosXForBlock = (spec, blockId) => {
 
 const blockStackHeightMm = (config, blockId) => {
   const spec = getBlockLayout(config, blockId);
-  if (spec.heightMode === 'auto' || blockId === 'stock_line_items') return 36;
-  return spec.heightMm ?? 12;
+  const saved = Number(spec.heightMm);
+  if (spec.heightMode === 'auto' || blockId === 'stock_line_items') {
+    return Number.isFinite(saved) && saved > 36 ? saved : 36;
+  }
+  return Number.isFinite(saved) && saved > 0 ? saved : 12;
 };
 
 /** One line-item row beyond the first sample row. Image rows are taller. */
@@ -343,6 +346,19 @@ export const getForm8ReferencePageHeightMm = (config, basePageHeightMm) =>
 
 const HANDLE_BLEED_MM = 6;
 
+/** How many A4 sheets the canvas needs (content below page 1 goes to page 2). */
+export const getForm8A4PageCount = (canvasPageHeightMm, basePageHeightMm = 297) => {
+  const pageH = Number(basePageHeightMm) > 0 ? Number(basePageHeightMm) : 297;
+  const contentH = Number(canvasPageHeightMm) > 0 ? Number(canvasPageHeightMm) : pageH;
+  return Math.max(1, Math.ceil((contentH - 0.5) / pageH));
+};
+
+/** Editor sheet height: snap up to full A4 pages so page borders stay visible. */
+export const getForm8EditorSheetHeightMm = (canvasPageHeightMm, basePageHeightMm = 297) => {
+  const pageH = Number(basePageHeightMm) > 0 ? Number(basePageHeightMm) : 297;
+  return getForm8A4PageCount(canvasPageHeightMm, pageH) * pageH;
+};
+
 /** Grow page height when blocks are dragged below the base sheet. */
 export const computeForm8CanvasPageHeightMm = (config, basePageHeightMm) => {
   const pageWidthMm = config?.pageWidthMm || 210;
@@ -429,14 +445,17 @@ export const blockAbsoluteFrameStyle = (config, blockId, pageWidthMm, basePageHe
     };
   }
 
+  const autoHeight = spec.heightMode === 'auto' || blockId === 'stock_line_items';
+
   return {
     position: 'absolute',
     left: `${leftMm}mm`,
     top: `${topMm}mm`,
     width: `${widthMm}mm`,
     maxWidth: `${widthMm}mm`,
-    minHeight: `${heightMm}mm`,
-    height: spec.heightMode === 'auto' ? 'auto' : `${heightMm}mm`,
+    height: autoHeight ? 'auto' : `${heightMm}mm`,
+    minHeight: autoHeight ? 0 : `${heightMm}mm`,
+    maxHeight: autoHeight ? 'none' : `${heightMm}mm`,
     boxSizing: 'border-box',
     zIndex: spec.zIndex ?? 2,
     margin: 0,
@@ -458,11 +477,14 @@ export const getForm8BlockPdfAbsolutePos = (
   const rawWidthPct = spec.widthPct ?? (isForm8FreeCanvasMediaBlock(blockId) ? 28 : 100);
   const widthPct = Math.min(rawWidthPct, Math.max(0, 100 - posXPct));
   const widthPt = Math.max(24, Math.round((widthPct / 100) * contentWidthPt));
+  const heightMm = spec.heightMm ?? (isForm8FreeCanvasMediaBlock(blockId) ? 14 : 12);
+  const heightPt = Math.max(16, Math.round((Number(heightMm) * 72) / 25.4));
 
   return {
     x: Math.round(pageMargins[0] + (posXPct / 100) * contentWidthPt),
     y: Math.round(pageMargins[1] + (posYPct / 100) * refContentHeightPt),
     widthPt,
+    heightPt,
   };
 };
 
@@ -499,7 +521,7 @@ export const pointerToCanvasPercent = (clientX, clientY, metrics, { maxYPct = FO
   if (!metrics) return { posXPct: 0, posYPct: 0 };
   const x = (clientX - metrics.contentLeft) / metrics.scale;
   const y = (clientY - metrics.contentTop) / metrics.scale;
-  const posXPct = clamp(Math.round((x / metrics.contentWidthPx) * 100), 0, 100);
-  const posYPct = clamp(Math.round((y / metrics.contentHeightPx) * 100), 0, maxYPct);
+  const posXPct = clamp(Math.round((x / metrics.contentWidthPx) * 1000) / 10, 0, 100);
+  const posYPct = clamp(Math.round((y / metrics.contentHeightPx) * 1000) / 10, 0, maxYPct);
   return { posXPct, posYPct };
 };

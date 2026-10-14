@@ -388,6 +388,7 @@ const Form8BuilderPropertiesPanel = ({
                       updateSectionField(sectionId, field.id, { enabled: e.target.checked })
                     }
                   />
+                  <span className="small">{getForm8FieldDisplayLabel(field)}</span>
                 </label>
                 <input
                   type="text"
@@ -1778,12 +1779,20 @@ const Form8BuilderPropertiesPanel = ({
         <div className="f8-builder-field-layout-list">
           {fields.map((field) => (
             <div key={field.id} className="mb-2">
-              <label className="form-label small">
-                {getForm8FieldDisplayLabel(field)}
+              <label className="form-custom-toggle-item mb-1">
+                <input
+                  type="checkbox"
+                  checked={Boolean(field.enabled)}
+                  onChange={(e) =>
+                    updateSectionField(sectionId, field.id, { enabled: e.target.checked })
+                  }
+                />
+                <span className="form-label small mb-0">{getForm8FieldDisplayLabel(field)}</span>
               </label>
               <select
                 className="form-select form-select-sm"
                 value={field.fieldLayout || 'half'}
+                disabled={!field.enabled}
                 onChange={(e) =>
                   updateSectionField(sectionId, field.id, { fieldLayout: e.target.value })
                 }

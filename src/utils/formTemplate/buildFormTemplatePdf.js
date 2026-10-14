@@ -12,6 +12,10 @@ import {
   resolveMainTitleFont,
 } from './formTemplateConfig';
 import { hasFormTemplateFooterImage } from './formTemplateImageAssets';
+import {
+  applyPdfMixedScriptFonts,
+  ensurePdfUnicodeFonts,
+} from './registerPdfUnicodeFonts';
 import { pdfBoldFromWeight } from './form8SectionStyle';
 import {
   buildFormTemplateTestData,
@@ -40,13 +44,11 @@ import {
 } from './form8StockTable';
 import { buildStockItemsTablePdf } from './form8StockTableStyle';
 import {
-  computeForm8CanvasPageHeightMm,
   FORM8_PAGE_PADDING_MM,
   getForm8BlockPdfAbsolutePos,
   getForm8ContentBoxMm,
   getForm8ReferencePageHeightMm,
   isForm8FreeCanvasLayout,
-  withForm8SideBySideFit,
   withForm8StockRowFlow,
 } from './form8CanvasLayout';
 import { parseSectionBlockId } from './form8BuilderCatalog';
@@ -56,6 +58,8 @@ import {
   getForm8BlockPdfBodyProps,
   getForm8BlockPdfTitleProps,
   buildForm8TextPartPdfBlock,
+  form8TextPartHasBox,
+  getForm8TextSectionPdfBoxSpec,
   getForm8SignatureLinePdf,
   signatureHasCustomBox,
   buildForm8DividerPdfBlock,
@@ -411,7 +415,10 @@ export const buildFormTemplatePdfDefinition = (
   );
   const customerPhotoKey = registerPdfImage(
     'customerPhoto',
-    layout.showCustomerPhoto === false ? null : options.customerPhotoDataUrl || null
+    layout.showCustomerPhoto === false &&
+      !(normalized.builderBlockOrder || []).includes('customer_photo')
+      ? null
+      : options.customerPhotoDataUrl || null
   );
   const firmFormHeader = options.formHeader || options.firmFormHeader || '';
   const firmFormFooter = options.formFooter || options.firmFormFooter || '';
@@ -439,18 +446,13 @@ export const buildFormTemplatePdfDefinition = (
   const contentWidthPt = pageWidthPt - pageMargins[0] - pageMargins[2];
   const basePageHeightMm = normalized.pageHeightMm || (pageHeightPt * 25.4) / 72;
   const showStockItemImages = layout.showStockItemImages !== false;
-  const layoutConfig = withForm8SideBySideFit(
-    withForm8StockRowFlow(
-      normalized,
-      showStockItemImages ? stockItemRows : [],
-      basePageHeightMm
-    ),
-    basePageHeightMm
-  );
-  const canvasPageHeightMm = useFreeCanvas
-    ? computeForm8CanvasPageHeightMm(layoutConfig, basePageHeightMm)
-    : basePageHeightMm;
-  const pdfPageHeightPt = (canvasPageHeightMm * 72) / 25.4;
+  const layoutConfig = options.matchTemplateLayout
+    ? normalized
+    : withForm8StockRowFlow(
+        normalized,
+        showStockItemImages ? stockItemRows : [],
+        basePageHeightMm
+      );
   const refContentHeightPt =
     (getForm8ContentBoxMm(
       normalized.pageWidthMm || (pageWidthPt * 25.4) / 72,
@@ -531,7 +533,10 @@ export const buildFormTemplatePdfDefinition = (
       });
     }
 
-    wrapSectionPdfBlocks(section, theme, sectionChunks, { compact, widthPt }).forEach((block) => {
+    wrapSectionPdfBlocks(section, theme, sectionChunks, {
+      compact,
+      widthPt,
+    }).forEach((block) => {
       target.push(block);
     });
   };
@@ -822,36 +827,74 @@ export const buildFormTemplatePdfDefinition = (
       case 'form_terms': {
         if (!normalized.termsAndConditions) break;
         const termsSpec = getBlockLayout(normalized, blockId);
-        const termsTitle = getForm8BlockPdfTitleProps(termsSpec, theme, fontPt);
-        const termsBody = getForm8BlockPdfBodyProps(termsSpec, theme, labelFontPt, valueFontPt);
-        target.push(
-          buildForm8TextPartPdfBlock(
-            termsSpec,
-            'title',
-            {
-              text: 'Terms & Conditions',
-              color: hexToRgb(termsTitle.color),
-              fontSize: termsTitle.fontSize,
-              bold: termsTitle.bold,
-            },
-            theme,
-            compact
-          )
+        const termsPos = getForm8BlockPdfAbsolutePos(
+          layoutConfig,
+          blockId,
+          contentWidthPt,
+          refContentHeightPt,
+          pageMargins
         );
-        target.push(
-          buildForm8TextPartPdfBlock(
-            termsSpec,
-            'body',
-            {
-              text: replaceTemplateVariables(normalized.termsAndConditions, formData),
-              color: hexToRgb(termsBody.color),
-              fontSize: termsBody.fontSize,
-              bold: termsBody.bold,
-            },
-            theme,
-            compact
-          )
-        );
+        const termsTitle = getForm8BlockPdfTitleProps(termsSpec, theme, fontPt + 1);
+        const termsBody = getForm8BlockPdfBodyProps(termsSpec, theme, labelFontPt, fontPt);
+        const termsText = String(
+          replaceTemplateVariables(normalized.termsAndConditions, formData) || ''
+        ).replace(/\r\n/g, '\n');
+        const termsChunks = [];
+        if (form8TextPartHasBox(termsSpec, 'title')) {
+          termsChunks.push(
+            buildForm8TextPartPdfBlock(
+              termsSpec,
+              'title',
+              {
+                text: 'Terms & Conditions',
+                color: hexToRgb(termsTitle.color),
+                fontSize: termsTitle.fontSize,
+                bold: termsTitle.bold,
+              },
+              theme,
+              compact
+            )
+          );
+        } else {
+          termsChunks.push({
+            text: 'Terms & Conditions',
+            color: hexToRgb(termsTitle.color),
+            fontSize: termsTitle.fontSize,
+            bold: termsTitle.bold,
+            lineHeight: FORM8_PDF_LINE_HEIGHT,
+            margin: [0, 0, 0, compact ? 2 : 4],
+          });
+        }
+        if (form8TextPartHasBox(termsSpec, 'body')) {
+          termsChunks.push(
+            buildForm8TextPartPdfBlock(
+              termsSpec,
+              'body',
+              {
+                text: termsText,
+                color: hexToRgb(termsBody.color),
+                fontSize: termsBody.fontSize,
+                bold: termsBody.bold,
+              },
+              theme,
+              compact
+            )
+          );
+        } else {
+          termsChunks.push({
+            text: termsText,
+            color: hexToRgb(termsBody.color),
+            fontSize: termsBody.fontSize,
+            bold: termsBody.bold,
+            lineHeight: FORM8_PDF_LINE_HEIGHT,
+          });
+        }
+        wrapSectionPdfBlocks(getForm8TextSectionPdfBoxSpec(termsSpec, theme), theme, termsChunks, {
+          compact,
+          widthPt: termsPos.widthPt,
+        }).forEach((block) => {
+          target.push(block);
+        });
         break;
       }
       case 'form_footer': {
@@ -860,37 +903,50 @@ export const buildFormTemplatePdfDefinition = (
             ? firmFormFooter
             : normalized.footerNote;
         if (!footerText) break;
-        const footerSpec = getBlockLayout(normalized, blockId);
-        const footerTitle = getForm8BlockPdfTitleProps(footerSpec, theme, fontPt);
-        const footerBody = getForm8BlockPdfBodyProps(footerSpec, theme, labelFontPt, valueFontPt);
-        target.push(
-          buildForm8TextPartPdfBlock(
-            footerSpec,
-            'title',
-            {
-              text: getForm8FooterNoteTitle(normalized),
-              color: hexToRgb(footerTitle.color),
-              fontSize: footerTitle.fontSize,
-              bold: footerTitle.bold,
-            },
-            theme,
-            compact
-          )
+        const footerSpec = getBlockLayout(layoutConfig, blockId);
+        const footerPos = getForm8BlockPdfAbsolutePos(
+          layoutConfig,
+          blockId,
+          contentWidthPt,
+          refContentHeightPt,
+          pageMargins
         );
-        target.push(
-          buildForm8TextPartPdfBlock(
-            footerSpec,
-            'body',
-            {
-              text: templateHtmlToPlain(replaceTemplateVariables(footerText, formData)),
-              color: hexToRgb(footerBody.color),
-              fontSize: footerBody.fontSize,
-              bold: footerBody.bold,
-            },
-            theme,
-            compact
-          )
-        );
+        const footerTitle = getForm8BlockPdfTitleProps(footerSpec, theme, fontPt + 1);
+        const footerBody = getForm8BlockPdfBodyProps(footerSpec, theme, labelFontPt, fontPt);
+        const footerPlain = templateHtmlToPlain(
+          replaceTemplateVariables(footerText, formData)
+        ).replace(/\r\n/g, '\n');
+        const pad = compact ? [3.75, 3, 3.75, 2] : [6, 6, 6, 6];
+        target.push({
+          table: {
+            widths: [footerPos.widthPt],
+            body: [
+              [
+                {
+                  stack: [
+                    {
+                      text: getForm8FooterNoteTitle(normalized),
+                      color: hexToRgb(footerTitle.color),
+                      fontSize: footerTitle.fontSize,
+                      bold: footerTitle.bold,
+                      lineHeight: FORM8_PDF_LINE_HEIGHT,
+                      margin: [0, 0, 0, compact ? 2 : 4],
+                    },
+                    {
+                      text: footerPlain,
+                      color: hexToRgb(footerBody.color),
+                      fontSize: footerBody.fontSize,
+                      bold: footerBody.bold,
+                      lineHeight: FORM8_PDF_LINE_HEIGHT,
+                    },
+                  ],
+                  margin: pad,
+                },
+              ],
+            ],
+          },
+          layout: PDF_TIGHT_LAYOUT,
+        });
         break;
       }
       case 'layout_footer_image': {
@@ -956,7 +1012,10 @@ export const buildFormTemplatePdfDefinition = (
     }
   };
 
+  const a4PageHeightPt = (basePageHeightMm * 72) / 25.4;
+
   if (useFreeCanvas) {
+    const byPage = [];
     partitionForm8BlockOrder(blockOrder).forEach((seg) => {
       if (seg.type === 'logo_band') return;
       const chunk = [];
@@ -969,19 +1028,25 @@ export const buildFormTemplatePdfDefinition = (
         refContentHeightPt,
         pageMargins
       );
+      const pageIndex = Math.max(0, Math.floor(pos.y / a4PageHeightPt));
+      const yOnPage = pos.y - pageIndex * a4PageHeightPt;
       const boxed = chunk.length === 1 && chunk[0]?.table?.widths?.[0] === pos.widthPt;
-      content.push(
-        boxed
-          ? { ...chunk[0], absolutePosition: { x: pos.x, y: pos.y } }
-          : {
-              absolutePosition: { x: pos.x, y: pos.y },
-              table: {
-                widths: [pos.widthPt],
-                body: [[{ stack: chunk }]],
-              },
-              layout: PDF_TIGHT_LAYOUT,
-            }
-      );
+      const node = boxed
+        ? { ...chunk[0], absolutePosition: { x: pos.x, y: yOnPage } }
+        : {
+            absolutePosition: { x: pos.x, y: yOnPage },
+            table: {
+              widths: [pos.widthPt],
+              body: [[{ stack: chunk }]],
+            },
+            layout: PDF_TIGHT_LAYOUT,
+          };
+      if (!byPage[pageIndex]) byPage[pageIndex] = [];
+      byPage[pageIndex].push(node);
+    });
+    byPage.forEach((nodes, pageIndex) => {
+      if (pageIndex > 0) content.push({ text: '', pageBreak: 'before' });
+      (nodes || []).forEach((node) => content.push(node));
     });
   } else {
     partitionForm8BlockOrder(blockOrder).forEach((seg) => {
@@ -1002,16 +1067,11 @@ export const buildFormTemplatePdfDefinition = (
     });
   }
 
-  const pageSize =
-    useFreeCanvas && canvasPageHeightMm > basePageHeightMm + 0.5
-      ? { width: pageWidthPt, height: pdfPageHeightPt }
-      : size === 'Letter'
-        ? 'LETTER'
-        : size;
+  const pageSize = size === 'Letter' ? 'LETTER' : size;
 
-  return {
+  const doc = {
     pageSize,
-    pageOrientation: useFreeCanvas && canvasPageHeightMm > basePageHeightMm + 0.5 ? undefined : orientation,
+    pageOrientation: orientation,
     pageMargins,
     background: () => null,
     content,
@@ -1060,9 +1120,12 @@ export const buildFormTemplatePdfDefinition = (
       author: firmName,
     },
   };
+  doc.content = applyPdfMixedScriptFonts(doc.content);
+  return doc;
 };
 
-export const openFormTemplatePdfPreview = (config, firmName, options = {}) => {
+export const openFormTemplatePdfPreview = async (config, firmName, options = {}) => {
+  await ensurePdfUnicodeFonts();
   const doc = buildFormTemplatePdfDefinition(config, firmName, options);
   pdfMake.createPdf(doc).open();
 };
@@ -1072,7 +1135,8 @@ export const getFormTemplatePdfFileName = (config, firmName, options = {}) => {
   return `${(config?.title || 'form').replace(/\s+/g, '_')}${loanRef}_${(firmName || 'firm').replace(/\s+/g, '_')}_${moment().format('DDMMYYYY')}.pdf`;
 };
 
-export const getFormTemplatePdfBlob = (config, firmName, options = {}) => {
+export const getFormTemplatePdfBlob = async (config, firmName, options = {}) => {
+  await ensurePdfUnicodeFonts();
   const doc = buildFormTemplatePdfDefinition(config, firmName, options);
   return new Promise((resolve, reject) => {
     try {
@@ -1083,7 +1147,8 @@ export const getFormTemplatePdfBlob = (config, firmName, options = {}) => {
   });
 };
 
-export const downloadFormTemplatePdf = (config, firmName, options = {}) => {
+export const downloadFormTemplatePdf = async (config, firmName, options = {}) => {
+  await ensurePdfUnicodeFonts();
   const fileName = getFormTemplatePdfFileName(config, firmName, options);
   const doc = buildFormTemplatePdfDefinition(config, firmName, options);
   pdfMake.createPdf(doc).download(fileName);

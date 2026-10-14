@@ -20,6 +20,7 @@ import {
   isForm8DividerPaletteId,
   listForm8DividerBlockIds,
 } from './form8DividerBlocks';
+import { FORM8_STOCK_BLOCK_ID, isForm8SecuredTemplate } from './form8LoanType';
 
 export const F8_PALETTE_DRAG_MIME = 'application/x-f8-palette-block';
 export const F8_CANVAS_BLOCK_DRAG_MIME = 'application/x-f8-block-id';
@@ -72,6 +73,7 @@ export const buildForm8PaletteCatalog = (config, sections = []) => {
 
   ids.forEach((blockId) => {
     if (blockId === 'layout_logo') return;
+    if (blockId === FORM8_STOCK_BLOCK_ID && !isForm8SecuredTemplate(config)) return;
     if (isForm8PaletteBlockHidden(blockId)) return;
     if (isForm8DividerInstanceId(blockId) && !isForm8DividerPaletteId(blockId)) return;
     const sectionId = parseSectionBlockId(blockId);

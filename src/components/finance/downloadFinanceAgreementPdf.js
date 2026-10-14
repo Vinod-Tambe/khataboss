@@ -49,7 +49,7 @@ export const downloadFinanceAgreementPdf = async ({
     config,
   });
 
-  const fileName = downloadFormTemplatePdf(config, firmName || template.firmName, pdfOptions);
+  const fileName = await downloadFormTemplatePdf(config, firmName || template.firmName, pdfOptions);
 
   return fileName;
 };

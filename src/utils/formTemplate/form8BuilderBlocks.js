@@ -13,11 +13,13 @@ import {
   parseFieldBlockId,
 } from './form8FieldBlocks';
 import { isForm8DividerBlockId, readForm8DividerOwnStyle } from './form8DividerBlocks';
+import { isForm8SecuredTemplate } from './form8LoanType';
 
 const FORM8_SETTINGS_BLOCKS = new Set(['page_settings', 'macro_keywords']);
 const FORM8_OPTIONAL_BLOCK_IDS = new Set([
   'layout_right_logo',
   'customer_photo',
+  'stock_line_items',
   'form_terms',
   'form_footer',
   'layout_footer_image',
@@ -216,10 +218,10 @@ export const FORM8_DEFAULT_BLOCK_LAYOUTS = {
     freePosition: true,
     hAlign: 'right',
   },
-  'section:firm_details': { widthPct: 100, heightMm: 28, heightMode: 'fixed' },
-  'section:customer_details': { widthPct: 100, heightMm: 24, heightMode: 'fixed' },
-  customer_photo: { widthPct: 22, heightMm: 24, heightMode: 'fixed' },
-  'section:loan_details': { widthPct: 100, heightMm: 32, heightMode: 'fixed' },
+  'section:firm_details': { widthPct: 100, heightMm: 52, heightMode: 'fixed' },
+  'section:customer_details': { widthPct: 100, heightMm: 56, heightMode: 'fixed' },
+  customer_photo: { widthPct: 22, heightMm: 36, heightMode: 'fixed' },
+  'section:loan_details': { widthPct: 100, heightMm: 52, heightMode: 'fixed' },
   stock_line_items: { widthPct: 100, heightMm: null, heightMode: 'auto' },
   form_divider: { widthPct: 100, heightMm: 6, heightMode: 'fixed' },
   form_terms: { widthPct: 100, heightMm: 28, heightMode: 'fixed' },
@@ -385,7 +387,7 @@ export const buildForm8PaletteItems = (config, sections = []) => {
       } else if (blockId === 'customer_photo') {
         enabled = config.layout?.showCustomerPhoto !== false;
       } else if (blockId === 'stock_line_items') {
-        enabled = config.layout?.showStockItemImages !== false;
+        enabled = isForm8SecuredTemplate(config);
       } else if (blockId === 'layout_footer_image') {
         enabled =
           Boolean(config.layout?.showFooterImage) && hasFormTemplateFooterImage(config);
@@ -440,7 +442,9 @@ export const isForm8BlockEnabled = (config, blockId) => {
     case 'customer_photo':
       return layout.showCustomerPhoto !== false;
     case 'stock_line_items':
-      return layout.showStockItemImages !== false;
+      if (!isForm8SecuredTemplate(config)) return false;
+      if (Array.isArray(order) && order.length && !order.includes(blockId)) return false;
+      return true;
     case 'layout_footer_image':
       return Boolean(layout.showFooterImage) && hasFormTemplateFooterImage(config);
     case 'form_terms':
@@ -471,10 +475,12 @@ export const blockShellStyle = (config, blockId, { inLogoBand = false } = {}) =>
       style.minHeight = `${heightMm}mm`;
     }
     if (isForm8MediaBlockId(blockId)) {
+      const fillPhoto = blockId === 'customer_photo';
       style.display = 'flex';
-      style.alignItems = 'center';
-      style.justifyContent =
-        hAlign === 'center' || isForm8FooterImageBlockId(blockId)
+      style.alignItems = fillPhoto ? 'stretch' : 'center';
+      style.justifyContent = fillPhoto
+        ? 'stretch'
+        : hAlign === 'center' || isForm8FooterImageBlockId(blockId)
           ? 'center'
           : hAlign === 'right' || blockId === 'layout_right_logo'
             ? 'flex-end'

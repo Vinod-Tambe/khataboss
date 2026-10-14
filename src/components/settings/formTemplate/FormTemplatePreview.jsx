@@ -33,9 +33,9 @@ import { templateLooksLikeHtml } from '../../../utils/formTemplate/formTemplateR
 import {
   blockAbsoluteFrameStyle,
   computeForm8CanvasPageHeightMm,
+  getForm8A4PageCount,
+  getForm8EditorSheetHeightMm,
   isForm8FreeCanvasLayout,
-  withForm8SideBySideFit,
-  withForm8StockRowFlow,
 } from '../../../utils/formTemplate/form8CanvasLayout';
 import Form8BuilderBlockFrame from './Form8BuilderBlockFrame';
 import Form8SignatureBlock from './Form8SignatureBlock';
@@ -119,15 +119,7 @@ const FormTemplatePreview = ({
   const showStockItemImages = config?.layout?.showStockItemImages !== false;
   const stockItemRows =
     stockItemRowsProp || (showStockItemImages ? STOCK_ITEM_TEST_ROWS : null);
-  const layoutConfig = useMemo(() => {
-    const flowed = withForm8StockRowFlow(
-      config,
-      showStockItemImages ? stockItemRows : [],
-      config?.pageHeightMm || 297
-    );
-    if (builderMode) return flowed;
-    return withForm8SideBySideFit(flowed, config?.pageHeightMm || 297);
-  }, [config, showStockItemImages, stockItemRows, builderMode]);
+  const layoutConfig = config;
   const blockOrder = useMemo(() => getForm8BlockOrder(layoutConfig), [layoutConfig]);
   const page = useMemo(() => getPageStyle(layoutConfig), [layoutConfig]);
   const basePageHeightMm = page.heightMm;
@@ -138,6 +130,17 @@ const FormTemplatePreview = ({
     if (!freeCanvas || !layoutConfig) return basePageHeightMm;
     return computeForm8CanvasPageHeightMm(layoutConfig, basePageHeightMm);
   }, [layoutConfig, freeCanvas, basePageHeightMm]);
+  const a4PageCount = useMemo(
+    () => getForm8A4PageCount(canvasPageHeightMm, basePageHeightMm),
+    [canvasPageHeightMm, basePageHeightMm]
+  );
+  const editorSheetHeightMm = useMemo(
+    () =>
+      freeCanvas
+        ? getForm8EditorSheetHeightMm(canvasPageHeightMm, basePageHeightMm)
+        : basePageHeightMm,
+    [freeCanvas, canvasPageHeightMm, basePageHeightMm]
+  );
   const { startPointerReorder, forcePointerReorder, getBlockDragUi, isCanvasSlotActive } =
     useForm8PointerReorder(blockOrder, onReorderBlocks, builderMode && !freeCanvas);
   const lastCanvasBlockId = blockOrder[blockOrder.length - 1];
@@ -623,28 +626,17 @@ const FormTemplatePreview = ({
         return wrapBlock(
           blockId,
           'f8-builder-block--photo',
-          <div
-            className={`form-custom-a4-photo-block${
-              logoFillsBlockBox(blockId) ? ' form-custom-a4-photo-block--fill' : ''
-            }`}
-          >
-            {!logoFillsBlockBox(blockId) ? (
-              <span className="form-custom-a4-photo-label">Photo of Pawner</span>
-            ) : null}
+          <div className="form-custom-a4-photo-block form-custom-a4-photo-block--fill">
             {resolvedCustomerPhoto ? (
               <img
                 src={resolvedCustomerPhoto}
                 alt="Customer"
-                className={`form-custom-a4-customer-photo${
-                  logoFillsBlockBox(blockId) ? ' form-custom-a4-logo-img--fill-box' : ''
-                }`}
+                className="form-custom-a4-customer-photo form-custom-a4-logo-img--fill-box"
                 {...logoMediaProps(blockId)}
               />
             ) : (
               <div
-                className={`form-custom-a4-photo-placeholder${
-                  logoFillsBlockBox(blockId) ? ' form-custom-a4-logo-placeholder--fill-box' : ''
-                }`}
+                className="form-custom-a4-photo-placeholder form-custom-a4-logo-placeholder--fill-box"
                 {...logoMediaProps(blockId)}
               >
                 Photo
@@ -656,7 +648,6 @@ const FormTemplatePreview = ({
 
       case 'stock_line_items': {
         const itemSection = sectionsById.get('item_details');
-        if (!showStockItemImages) return null;
         const stockBlockSpec = getBlockLayout(config, blockId);
         const stockStyle = itemSection
           ? getForm8SectionPreviewStyle(itemSection)
@@ -724,10 +715,14 @@ const FormTemplatePreview = ({
           ...getForm8TextPartPreviewStyle(termsSpec, 'body', theme, page.fontPt),
           whiteSpace: 'pre-wrap',
         };
+        const termsBox = getForm8SectionPreviewStyle(termsSpec);
         return wrapBlock(
           blockId,
           'f8-builder-block--legal',
-          <section className="form-custom-a4-section form-custom-a4-terms form-custom-a4-section--block">
+          <section
+            className={`form-custom-a4-section form-custom-a4-terms form-custom-a4-section--block${termsBox.sectionClassName}`}
+            style={Object.keys(termsBox.sectionStyle).length ? termsBox.sectionStyle : undefined}
+          >
             <h3 className="f8-text-part--custom" style={termsTitle}>
               Terms &amp; Conditions
             </h3>
@@ -751,10 +746,14 @@ const FormTemplatePreview = ({
           ...getForm8TextPartPreviewStyle(footerSpec, 'body', theme, page.fontPt),
           whiteSpace: 'pre-wrap',
         };
+        const footerBox = getForm8SectionPreviewStyle(footerSpec);
         return wrapBlock(
           blockId,
           'f8-builder-block--footer',
-          <section className="form-custom-a4-section form-custom-a4-section--block form-custom-a4-section--footer-note">
+          <section
+            className={`form-custom-a4-section form-custom-a4-section--block form-custom-a4-section--footer-note${footerBox.sectionClassName}`}
+            style={Object.keys(footerBox.sectionStyle).length ? footerBox.sectionStyle : undefined}
+          >
             <h3 className="f8-text-part--custom" style={footerTitle}>
               {getForm8FooterNoteTitle(config)}
             </h3>
@@ -834,7 +833,7 @@ const FormTemplatePreview = ({
 
   const safeScale = Number.isFinite(scale) && scale > 0 ? scale : 0.65;
   const pageWPx = page.widthMm * MM_PX;
-  const pageHPx = canvasPageHeightMm * MM_PX;
+  const pageHPx = editorSheetHeightMm * MM_PX;
 
   const handleBlankCanvasPointerDown = (e) => {
     if (!builderMode) return;
@@ -875,22 +874,22 @@ const FormTemplatePreview = ({
 
   const pageInner = freeCanvas ? (
     <div className="f8-builder-canvas-layer">
-      {builderMode ? (
-        <>
-          <div className="f8-a4-sheet-frame" aria-hidden="true" />
-          <div className="f8-a4-content-guide" aria-hidden="true" />
-          {canvasPageHeightMm > basePageHeightMm + 0.5 ? (
-            <>
-              <div className="f8-a4-overflow-surface" aria-hidden="true" />
-              <div className="f8-a4-page-continuation" aria-hidden="true">
-                <span className="f8-a4-page-continuation__label">
-                  Extra height — PDF adds pages when content continues
-                </span>
-              </div>
-            </>
+      {Array.from({ length: a4PageCount }, (_, pageIndex) => (
+        <div
+          key={`a4-sheet-${pageIndex}`}
+          className={`f8-a4-sheet-frame${pageIndex === 0 ? ' f8-a4-sheet-frame--first' : ''}`}
+          style={{ top: `${pageIndex * basePageHeightMm}mm`, height: `${basePageHeightMm}mm` }}
+          aria-hidden="true"
+        >
+          <span className="f8-a4-sheet-frame__badge">
+            A4 · Page {pageIndex + 1}
+          </span>
+          {pageIndex > 0 ? (
+            <span className="f8-a4-sheet-frame__break">Content below page 1 prints on this page</span>
           ) : null}
-        </>
-      ) : null}
+          <div className="f8-a4-content-guide" />
+        </div>
+      ))}
       {blockOrder.map((blockId) => (
         <React.Fragment key={blockId}>{renderBlock(blockId)}</React.Fragment>
       ))}
@@ -979,7 +978,7 @@ const FormTemplatePreview = ({
       </div>
       <p className="form-custom-a4-size-label">
         {config.pageSize || 'A4'} · {config.orientation || 'portrait'}
-        {singlePage ? ' · Single-page Form 8' : ''} · Test data ·{' '}
+        {a4PageCount > 1 ? ` · ${a4PageCount} pages` : ' · A4 page'} · Test data ·{' '}
         {moment().format('DD-MM-YYYY')}
       </p>
     </div>

@@ -34,6 +34,26 @@ const formatAmtCell = (value) => {
 
 const buildAddress = (parts = []) => parts.filter(Boolean).join(', ') || '—';
 
+const dash = (value) => {
+  const text = value == null ? '' : String(value).trim();
+  return text || '—';
+};
+
+const formatFirmType = (value) => {
+  const raw = dash(value);
+  if (raw === '—') return raw;
+  return raw
+    .replace(/_/g, ' ')
+    .replace(/\b(pvt|ltd|llp)\b/gi, (part) => part.toUpperCase())
+    .replace(/\b\w/g, (part) => part.toUpperCase());
+};
+
+const formatOptionalMoney = (value) => {
+  const num = Number(value);
+  if (!Number.isFinite(num) || num <= 0) return '—';
+  return formatMoney(num);
+};
+
 const formatAadhaar = (value) => {
   if (!value) return '—';
   const digits = String(value).replace(/\D/g, '');
@@ -283,34 +303,59 @@ export const buildFormTemplateLoanData = (loanDetails, customer = null) => {
     : 'SIMPLE';
 
   const formData = {
-    firm_name: firm.firm_name || '—',
-    firm_shop_name: firm.firm_shop_name || '—',
-    firm_reg_no: firm.firm_reg_no || '—',
-    firm_address: buildAddress([firm.firm_address, firm.firm_city, firm.firm_pincode]),
-    firm_phone_no: firm.firm_phone_no || '—',
-    firm_pan_no: firm.firm_pan_no || '—',
-    firm_gstin_no: firm.firm_gstin_no || '—',
+    firm_name: dash(firm.firm_name),
+    firm_shop_name: dash(firm.firm_shop_name),
+    firm_reg_no: dash(firm.firm_reg_no),
+    firm_phone_no: dash(firm.firm_phone_no),
+    firm_email_id: dash(firm.firm_email_id),
+    firm_website_link: dash(firm.firm_website_link),
+    firm_city: dash(firm.firm_city),
+    firm_pincode: dash(firm.firm_pincode),
+    firm_type: formatFirmType(firm.firm_type),
+    firm_owner: dash(firm.firm_owner),
+    firm_desc: dash(firm.firm_desc),
+    firm_address: dash(firm.firm_address),
+    firm_pan_no: dash(firm.firm_pan_no),
+    firm_gstin_no: dash(firm.firm_gstin_no),
+    firm_adhaar_no: dash(firm.firm_adhaar_no),
+    customer_id: dash(user.user_unique_code || (user.user_id != null ? `C${user.user_id}` : '')),
     customer_name: customerName,
-    customer_address: customerAddress,
-    customer_mobile: user.user_mobile_no || '—',
+    customer_father_name: dash(user.user_father_name),
+    customer_mobile: dash(user.user_mobile_no),
+    customer_phone: dash(user.user_phone_no),
+    customer_whatsapp: dash(user.user_whatsapp_no),
+    customer_email: dash(user.user_email_id),
+    customer_gender: dash(user.user_gender),
     customer_aadhaar: formatAadhaar(user.user_adhaar_no),
-    customer_pan: user.user_pan_no || '—',
+    customer_pan: dash(user.user_pan_no),
+    customer_gstin: dash(user.user_gstin),
+    customer_address: dash(user.user_per_address) === '—' ? customerAddress : dash(user.user_per_address),
+    customer_current_address: dash(user.user_curr_address),
+    customer_city: dash(user.user_city),
+    customer_state: dash(user.user_state),
+    customer_pincode: dash(user.user_pincode),
     customer_photo: user.user_profile_img || user.user_image || user.ur_image ? 'Photo attached' : '—',
     owner_name_address: redemption.redeeming_person !== '—' && loanDetails.girv_status === 'RELEASED'
       ? redemption.redeeming_person
-      : 'Same as pawner',
-    loan_no:
-      loanDetails.girv_unique_code ||
-      loanDetails.girv_loan_no ||
-      loanDetails.girv_packet_no ||
-      String(loanDetails.girv_id || '—'),
+      : 'Same as customer',
+    loan_no: dash(
+      loanDetails.girv_unique_code || loanDetails.girv_loan_no || loanDetails.girv_id
+    ),
     loan_date: formatDate(loanDetails.girv_start_date),
     loan_amount: formatMoney(interestSummary.originalPrincipal),
-    interest_rate: `${interestSummary.roi}% ${(loanDetails.girv_roi_type || '').toUpperCase()}`.trim(),
+    loan_packet_no: dash(loanDetails.girv_packet_no),
+    loan_locker_no: dash(loanDetails.girv_locker_no),
+    interest_rate:
+      interestSummary.roi != null && interestSummary.roi !== ''
+        ? `${interestSummary.roi}%`
+        : '—',
     interest_type: interestMethodLabel,
+    interest_option: dash(loanDetails.girv_roi_type),
+    loan_process_amt: formatOptionalMoney(loanDetails.girv_process_amt),
+    loan_charge_amt: formatOptionalMoney(loanDetails.girv_charge_amt),
     loan_period: buildForm8AgreedRedemptionPeriod(),
     due_date: buildForm8RedemptionDueDate(loanDetails),
-    loan_status: String(loanDetails.girv_status || 'ACTIVE').toUpperCase(),
+    loan_status: dash(loanDetails.girv_status || 'ACTIVE').toUpperCase(),
     item_description: buildItemSummary(items),
     item_metal: buildMetalSummary(items),
     item_gross_wt: sumWeight(items, 'st_gs_weight', 'st_gs_type'),

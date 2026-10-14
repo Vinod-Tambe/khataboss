@@ -1,6 +1,11 @@
 import { clampFieldFontPt } from './formTemplateConfig';
 import { getForm8TextSizePt, getForm8TextWeight } from './form8TypographyGroups';
-import { FORM8_FONT_WEIGHT_OPTIONS, isForm8SectionBorderOn, pdfBoldFromWeight } from './form8SectionStyle';
+import {
+  FORM8_FONT_WEIGHT_OPTIONS,
+  FORM8_PDF_LINE_HEIGHT,
+  isForm8SectionBorderOn,
+  pdfBoldFromWeight,
+} from './form8SectionStyle';
 
 export { FORM8_FONT_WEIGHT_OPTIONS };
 
@@ -82,7 +87,7 @@ export const FORM8_HEADER_LINE_DEFS = [
     weightKey: 'titleFontWeight',
     bgKey: 'titleBackgroundColor',
     fallbackColor: 'primaryColor',
-    fallbackHex: '#1e3a5f',
+    fallbackHex: '#3d4f63',
     defaultBold: true,
   },
   {
@@ -93,7 +98,7 @@ export const FORM8_HEADER_LINE_DEFS = [
     weightKey: 'subtitleFontWeight',
     bgKey: 'subtitleBackgroundColor',
     fallbackColor: 'sectionTitleColor',
-    fallbackHex: '#2c5282',
+    fallbackHex: '#5b6b7c',
     defaultBold: false,
   },
   {
@@ -376,6 +381,23 @@ const isFlagOn = (v) =>
 export const isForm8TextPartBorderOn = (layoutSpec, part) =>
   isFlagOn(part === 'body' ? layoutSpec?.bodyBorder : layoutSpec?.titleBorder);
 
+export const form8TextPartHasBox = (layoutSpec, part) => {
+  const bg = part === 'body' ? layoutSpec?.bodyBackgroundColor : layoutSpec?.titleBackgroundColor;
+  return hasValue(bg) || isForm8TextPartBorderOn(layoutSpec, part);
+};
+
+/** Preview `.form-custom-a4-section` box for terms / footer note. */
+export const getForm8TextSectionPdfBoxSpec = (layoutSpec = {}, theme = {}) => ({
+  ...layoutSpec,
+  borderColor: hasValue(layoutSpec.borderColor)
+    ? layoutSpec.borderColor
+    : theme.borderColor || '#2c5282',
+  backgroundColor: hasValue(layoutSpec.backgroundColor)
+    ? layoutSpec.backgroundColor
+    : theme.sectionBackground || '#ffffff',
+  sectionBorder: isForm8SectionBorderOn(layoutSpec) ? layoutSpec.sectionBorder || true : false,
+});
+
 const hexToPdf = (hex, fallback) => {
   const h = String(hex || fallback || '#000000').replace('#', '');
   return h.length === 6 ? `#${h}` : fallback || '#000000';
@@ -465,8 +487,8 @@ export const buildForm8TextPartPdfBlock = (layoutSpec, part, textProps, theme, c
             fillColor: hasValue(fill) ? hexToPdf(fill, fill) : undefined,
             fontSize: textProps.fontSize,
             bold: textProps.bold,
-            lineHeight: compact ? 1.15 : 1.25,
-            margin: compact ? [2, 1, 2, 1] : [8, 5, 8, 5],
+            lineHeight: FORM8_PDF_LINE_HEIGHT,
+            margin: compact ? [4, 2, 4, 2] : [8, 5, 8, 5],
           },
         ],
       ],

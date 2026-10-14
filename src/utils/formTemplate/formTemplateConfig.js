@@ -20,6 +20,11 @@ import {
   hasFormTemplateFooterImage,
 } from './formTemplateImageAssets';
 import { SAMPLE_FIRM_LOGO_DATA_URL } from './formTemplatePreviewAssets';
+import {
+  ensureForm8StockBlock,
+  normalizeForm8LoanType,
+  stripForm8StockBlocks,
+} from './form8LoanType';
 
 export const DEFAULT_FORM_CONFIG = defaultConfig;
 
@@ -195,24 +200,49 @@ const FORM8_TWO_COLUMN_FIELD_ORDER = {
     'firm_shop_name',
     'firm_reg_no',
     'firm_phone_no',
+    'firm_email_id',
+    'firm_website_link',
+    'firm_city',
+    'firm_pincode',
+    'firm_type',
+    'firm_owner',
+    'firm_desc',
     'firm_address',
     'firm_pan_no',
     'firm_gstin_no',
+    'firm_adhaar_no',
   ],
   customer_details: [
+    'customer_id',
     'customer_name',
+    'customer_father_name',
     'customer_mobile',
+    'customer_phone',
+    'customer_whatsapp',
+    'customer_email',
+    'customer_gender',
     'customer_aadhaar',
     'customer_pan',
+    'customer_gstin',
     'customer_address',
+    'customer_current_address',
+    'customer_city',
+    'customer_state',
+    'customer_pincode',
+    'owner_name_address',
     'customer_photo',
   ],
   loan_details: [
     'loan_no',
     'loan_date',
     'loan_amount',
+    'loan_packet_no',
+    'loan_locker_no',
     'interest_rate',
     'interest_type',
+    'interest_option',
+    'loan_process_amt',
+    'loan_charge_amt',
     'loan_period',
     'due_date',
     'loan_status',
@@ -266,9 +296,6 @@ export const normalizeFormConfig = (config) => {
         fieldLayout: normalizeFieldLayout(field.fieldLayout),
         backgroundColor: field.backgroundColor || '',
       };
-      if (section.id === 'customer_details' && field.id === 'owner_name_address') {
-        merged.enabled = false;
-      }
       if (section.id === 'item_details') {
         merged.enabled = false;
       }
@@ -291,7 +318,7 @@ export const normalizeFormConfig = (config) => {
     return applyTwoColumnFieldOrder(section.id, mergedFields);
   };
 
-  const sections = sourceSections.map((section, sIdx) => {
+  let sections = sourceSections.map((section, sIdx) => {
     const defSection = findDefaultSection(section.id);
     const merged = {
       ...defSection,
@@ -322,6 +349,19 @@ export const normalizeFormConfig = (config) => {
   });
 
   sections.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+  if (!config.form8AllDescFields) {
+    const descIds = new Set(['firm_details', 'customer_details', 'loan_details']);
+    sections = sections.map((section) => {
+      if (!descIds.has(section.id)) return section;
+      return {
+        ...section,
+        fields: (section.fields || []).map((field) =>
+          field.id === 'customer_photo' ? field : { ...field, enabled: true }
+        ),
+      };
+    });
+  }
 
   const singlePageLayout =
     config.singlePageLayout !== undefined
@@ -363,16 +403,20 @@ export const normalizeFormConfig = (config) => {
   });
   const hasFooterImageAsset = hasFormTemplateFooterImage(config);
   const resolvedShowFooterImage = hasFooterImageAsset && Boolean(readable.showFooterImage);
-  const builderBlockOrder = dividerMigrated.builderBlockOrder.filter(
-    (id) => id !== 'layout_footer_image' || resolvedShowFooterImage
-  );
+  const loanType = normalizeForm8LoanType(config.loanType || config.form8LoanType);
+  const builderBlockOrder = (
+    loanType === 'unsecured'
+      ? stripForm8StockBlocks(dividerMigrated.builderBlockOrder)
+      : ensureForm8StockBlock(dividerMigrated.builderBlockOrder)
+  ).filter((id) => id !== 'layout_footer_image' || resolvedShowFooterImage);
   const blockLayouts = dividerMigrated.blockLayouts;
+  const resolvedShowStockItemImages = loanType === 'unsecured' ? false : showStockItemImages;
   const resolvedShowCustomerPhoto =
     readable.showCustomerPhoto == null
       ? layoutFromConfig.showCustomerPhoto !== false
       : readable.showCustomerPhoto;
 
-  const pageDims = getPageStyle({ ...DEFAULT_FORM_CONFIG, ...config, sections, builderBlockOrder, blockLayouts, layout: isLegacyBuilder ? DEFAULT_FORM_CONFIG.layout : { ...DEFAULT_FORM_CONFIG.layout, ...layoutFromConfig, showStockItemImages, showFooterImage: resolvedShowFooterImage, showCustomerPhoto: resolvedShowCustomerPhoto } });
+  const pageDims = getPageStyle({ ...DEFAULT_FORM_CONFIG, ...config, sections, builderBlockOrder, blockLayouts, layout: isLegacyBuilder ? DEFAULT_FORM_CONFIG.layout : { ...DEFAULT_FORM_CONFIG.layout, ...layoutFromConfig, showStockItemImages: resolvedShowStockItemImages, showFooterImage: resolvedShowFooterImage, showCustomerPhoto: resolvedShowCustomerPhoto } });
 
   let merged = syncForm8LogoBlocks({
     ...DEFAULT_FORM_CONFIG,
@@ -404,12 +448,13 @@ export const normalizeFormConfig = (config) => {
       : {
           ...DEFAULT_FORM_CONFIG.layout,
           ...layoutFromConfig,
-          showStockItemImages,
+          showStockItemImages: resolvedShowStockItemImages,
           showFooterImage: resolvedShowFooterImage,
           showCustomerPhoto: resolvedShowCustomerPhoto,
         },
     builderBlockOrder,
     blockLayouts,
+    loanType,
     assets: {
       ...(DEFAULT_FORM_CONFIG.assets || {}),
       ...(config.assets || {}),
@@ -423,6 +468,7 @@ export const normalizeFormConfig = (config) => {
       ? config.variables
       : buildDefaultTemplateVariables(),
     sections,
+    form8AllDescFields: true,
     pageWidthMm: pageDims.widthMm,
     pageHeightMm: pageDims.heightMm,
     canvasLayout: config.canvasLayout || 'flow',
@@ -430,6 +476,24 @@ export const normalizeFormConfig = (config) => {
       config.canvasReferencePageHeightMm ?? pageDims.heightMm,
     canvasPageHeightMm: config.canvasPageHeightMm ?? pageDims.heightMm,
   });
+
+  const heightUpgrade = {
+    'section:firm_details': { from: [28, 36], to: 52 },
+    'section:customer_details': { from: [24, 36], to: 56 },
+    'section:loan_details': { from: [32, 42], to: 52 },
+    customer_photo: { from: [24], to: 36 },
+  };
+  const nextLayouts = { ...(merged.blockLayouts || {}) };
+  let layoutsChanged = false;
+  Object.entries(heightUpgrade).forEach(([id, { from, to }]) => {
+    const spec = nextLayouts[id];
+    if (!spec || !from.includes(Number(spec.heightMm))) return;
+    nextLayouts[id] = { ...spec, heightMm: to };
+    layoutsChanged = true;
+  });
+  if (layoutsChanged) {
+    merged = { ...merged, blockLayouts: nextLayouts };
+  }
 
   if (merged.singlePageLayout) {
     const seeded = seedForm8CanvasPositions(merged);

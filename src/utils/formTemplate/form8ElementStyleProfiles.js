@@ -16,12 +16,12 @@ const TYPO_BODY = { ...FORM8_TYPO_TEXT, label: 'Body text' };
 
 const BOX_COLORS = [
   { key: 'backgroundColor', label: 'Box background', fallback: 'sectionBackground', fallbackHex: '#ffffff' },
-  { key: 'borderColor', label: 'Box border', fallback: 'borderColor', fallbackHex: '#2c5282' },
+  { key: 'borderColor', label: 'Box border', fallback: 'borderColor', fallbackHex: '#d8e0ea' },
 ];
 
 const TITLE_COLORS = [
-  { key: 'titleColor', label: 'Heading text', fallback: 'sectionTitleColor', fallbackHex: '#1e3a5f' },
-  { key: 'titleBackgroundColor', label: 'Heading bar', fallback: 'tableHeaderBackground', fallbackHex: '#e8eef5' },
+  { key: 'titleColor', label: 'Heading text', fallback: 'sectionTitleColor', fallbackHex: '#3d4f63' },
+  { key: 'titleBackgroundColor', label: 'Heading bar', fallback: 'tableHeaderBackground', fallbackHex: '#eef3f8' },
 ];
 
 const SECTION_PROFILE = {

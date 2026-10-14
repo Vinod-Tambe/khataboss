@@ -43,9 +43,7 @@ const parseSectionNumber = (raw, fallback) => {
 
 export const isForm8SectionBorderOn = (section) => {
   const v = section?.sectionBorder;
-  if (v === true || v === 1 || v === '1' || String(v).toLowerCase() === 'true') return true;
-  if (v === '' || v === '0' || v === false) return false;
-  return hasValue(section?.borderColor);
+  return v === true || v === 1 || v === '1' || String(v).toLowerCase() === 'true';
 };
 
 export const pdfBoldFromWeight = (weight, defaultBold = false) => {
@@ -68,7 +66,7 @@ const resolveFontWeightCss = (raw, fallback) => {
 
 const hasValue = (v) => v != null && String(v).trim() !== '';
 
-const getForm8SectionFieldTextStyle = (section, kind) => {
+export const getForm8SectionFieldTextStyle = (section, kind) => {
   const style = {};
   const colorKey = kind === 'label' ? 'labelColor' : 'valueColor';
   const bgKey = kind === 'label' ? 'labelBackgroundColor' : 'valueBackgroundColor';
@@ -196,14 +194,16 @@ export const SECTION_STYLE_RESET_PATCH = Object.fromEntries(
 /** Baked-in Form 8 section look (preview + PDF); copied into default template JSON. */
 export const FORM8_DEFAULT_SECTION_STYLE = {
   backgroundColor: '#ffffff',
-  borderColor: '#2c5282',
-  sectionBorder: '1',
-  titleColor: '#1e3a5f',
-  titleBackgroundColor: '#e8eef5',
+  borderColor: '#d8e0ea',
+  sectionBorder: '',
+  titleColor: '#3d4f63',
+  titleBackgroundColor: '#eef3f8',
   titleFontSizePt: 10,
   titleFontWeight: '600',
+  labelColor: '#64748b',
   labelFontSizePt: 9,
   labelFontWeight: '500',
+  valueColor: '#334155',
   valueFontSizePt: 9,
   valueFontWeight: '600',
 };
@@ -256,8 +256,8 @@ export const PDF_TIGHT_LAYOUT = {
 };
 
 /** Matches `.form-custom-a4-page--single` field / section line-height. */
-export const FORM8_PDF_LINE_HEIGHT = 1.2;
-export const FORM8_PDF_LINE_HEIGHT_COMPACT = 1.15;
+export const FORM8_PDF_LINE_HEIGHT = 1.3;
+export const FORM8_PDF_LINE_HEIGHT_COMPACT = 1.3;
 
 /** Title + body insets — same as preview section padding / title bar. */
 export const getForm8SectionPdfBoxMetrics = (compact) =>
@@ -283,7 +283,7 @@ export const getForm8SectionPdfBoxMetrics = (compact) =>
 export const wrapSectionPdfBlocks = (section, theme, blocks, options = {}) => {
   if (!blocks?.length) return [];
   const compact = Boolean(options.compact);
-  const { titleMargin, bodyMargin, outerMargin } = getForm8SectionPdfBoxMetrics(compact);
+  const { titleMargin, bodyMargin } = getForm8SectionPdfBoxMetrics(compact);
   const boxWidthPt = Number(options.widthPt);
   const tableWidths =
     Number.isFinite(boxWidthPt) && boxWidthPt > 24 ? [boxWidthPt] : ['*'];
@@ -340,7 +340,7 @@ export const wrapSectionPdfBlocks = (section, theme, blocks, options = {}) => {
           ],
         },
         layout: outerLayout,
-        margin: outerMargin,
+        margin: [0, 0, 0, 0],
       },
     ];
   }
@@ -360,7 +360,7 @@ export const wrapSectionPdfBlocks = (section, theme, blocks, options = {}) => {
         ],
       },
       layout: outerLayout,
-      margin: outerMargin,
+      margin: [0, 0, 0, 0],
     },
   ];
 };

@@ -19,10 +19,11 @@ import {
   clampForm8BlockLayoutHorizontal,
   isForm8FreeCanvasLayout,
 } from "../../utils/formTemplate/form8CanvasLayout";
+import { buildFormTemplatePrintHtml } from "../../utils/formTemplate/buildFormTemplatePrintHtml";
 import {
-  openFormTemplatePdfPreview,
-  downloadFormTemplatePdf,
-} from "../../utils/formTemplate/buildFormTemplatePdf";
+  downloadFormTemplateHtmlPdf as downloadFormTemplatePdf,
+  openFormTemplateHtmlPdf as openFormTemplatePdfPreview,
+} from "../../utils/formTemplate/renderFormTemplateHtmlPdf";
 import { buildPreviewFormTemplatePdfOptions } from "../../utils/formTemplate/buildFormTemplatePdfOptions";
 import {
   ensureLogoBandOnAdd,
@@ -46,6 +47,12 @@ import {
   isForm8DividerBlockId,
   isForm8DividerPaletteId,
 } from "../../utils/formTemplate/form8DividerBlocks";
+import {
+  FORM8_STOCK_BLOCK_ID,
+  getForm8LoanTypeLabel,
+  isForm8SecuredTemplate,
+  normalizeForm8LoanType,
+} from "../../utils/formTemplate/form8LoanType";
 import "../../css/FormCustomization.css";
 
 const FormCustomizationPage = () => {
@@ -53,9 +60,11 @@ const FormCustomizationPage = () => {
   const [firmsById, setFirmsById] = useState({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [preparingPdf, setPreparingPdf] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editingFirmId, setEditingFirmId] = useState(null);
   const [editingFirmName, setEditingFirmName] = useState("");
+  const [editingLoanType, setEditingLoanType] = useState("secured");
   const [formConfig, setFormConfig] = useState(null);
   const [savedSnapshot, setSavedSnapshot] = useState(null);
   const [status, setStatus] = useState("Active");
@@ -113,11 +122,15 @@ const FormCustomizationPage = () => {
       toast.error("This template cannot be opened. Refresh the list and try again.");
       return;
     }
-    const nextConfig = normalizeFormConfig(parseTemplateConfig(row.config));
+    const nextConfig = normalizeFormConfig({
+      ...parseTemplateConfig(row.config),
+      loanType: normalizeForm8LoanType(row.loanType || row.config?.loanType),
+    });
     const nextStatus = row.status || "Active";
     setEditingId(id);
     setEditingFirmId(row.firmId ?? null);
     setEditingFirmName(row.firmName || "");
+    setEditingLoanType(normalizeForm8LoanType(row.loanType || nextConfig.loanType));
     setFormConfig(nextConfig);
     setSavedSnapshot({ config: nextConfig, status: nextStatus });
     setStatus(nextStatus);
@@ -140,6 +153,7 @@ const FormCustomizationPage = () => {
     setEditingId(null);
     setEditingFirmId(null);
     setEditingFirmName("");
+    setEditingLoanType("secured");
     setFormConfig(null);
     setSavedSnapshot(null);
     setStatus("Active");
@@ -269,6 +283,9 @@ const FormCustomizationPage = () => {
       return addedId;
     }
     setFormConfig((prev) => {
+      if (blockId === FORM8_STOCK_BLOCK_ID && !isForm8SecuredTemplate(prev)) {
+        return prev;
+      }
       const baseOrder = currentBlockOrder(prev);
       let order = insertBlockInOrder(baseOrder, blockId, insertBeforeBlockId);
       order = ensureLogoBandOnAdd(order, blockId);
@@ -351,6 +368,26 @@ const FormCustomizationPage = () => {
     });
   };
 
+  const persistTemplate = async () => {
+    if (!editingId || !formConfig) {
+      throw new Error("Select a firm template from the list to edit");
+    }
+    const payload = await prepareFormTemplateConfigForSave({
+      ...formConfig,
+      loanType: editingLoanType,
+    });
+    const html = buildFormTemplatePrintHtml(payload, {
+      firmName: editingFirmName,
+    });
+    const res = await updateFormTemplate(editingId, { config: payload, html, status });
+    setFormConfig(payload);
+    setSavedSnapshot({ config: payload, status });
+    return {
+      config: payload,
+      html: res?.data?.html || html,
+    };
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!editingId || !formConfig) {
@@ -360,11 +397,8 @@ const FormCustomizationPage = () => {
 
     setSaving(true);
     try {
-      const payload = await prepareFormTemplateConfigForSave(formConfig);
-      await updateFormTemplate(editingId, { config: payload, status });
+      await persistTemplate();
       toast.success("Form template updated");
-      setFormConfig(payload);
-      setSavedSnapshot({ config: payload, status });
       setMobileMode("edit");
       await loadTemplates();
     } catch (err) {
@@ -378,35 +412,59 @@ const FormCustomizationPage = () => {
 
   const handlePdfPreview = async () => {
     if (!formConfig) return;
+    setSaving(true);
+    setPreparingPdf(true);
+    const toastId = toast.loading("Preparing PDF…");
     try {
+      const saved = await persistTemplate();
       const pdfOptions = await buildPreviewFormTemplatePdfOptions({
         firm: editingFirm,
-        config: normalizeFormConfig(formConfig),
+        config: saved.config,
       });
-      openFormTemplatePdfPreview(normalizeFormConfig(formConfig), editingFirmName, pdfOptions);
+      await openFormTemplatePdfPreview(saved.html, saved.config, {
+        ...pdfOptions,
+        displayFirmName: editingFirmName,
+      });
+      toast.success("PDF ready", { id: toastId });
+      await loadTemplates();
     } catch (err) {
-      toast.error(err.message || "Could not open PDF preview");
+      toast.error(err.message || "Could not open PDF preview", { id: toastId });
+    } finally {
+      setPreparingPdf(false);
+      setSaving(false);
     }
   };
 
   const handlePdfDownload = async () => {
     if (!formConfig) return;
+    setSaving(true);
     try {
+      const saved = await persistTemplate();
       const pdfOptions = await buildPreviewFormTemplatePdfOptions({
         firm: editingFirm,
-        config: normalizeFormConfig(formConfig),
+        config: saved.config,
       });
-      downloadFormTemplatePdf(normalizeFormConfig(formConfig), editingFirmName, pdfOptions);
+      await downloadFormTemplatePdf(saved.html, saved.config, {
+        ...pdfOptions,
+        displayFirmName: editingFirmName,
+      });
+      await loadTemplates();
     } catch (err) {
       toast.error(err.message || "Could not download PDF");
+    } finally {
+      setSaving(false);
     }
   };
 
   const sortedTemplates = useMemo(
     () =>
-      [...templates].sort((a, b) =>
-        (a.firmName || "").localeCompare(b.firmName || "")
-      ),
+      [...templates].sort((a, b) => {
+        const firmCmp = (a.firmName || "").localeCompare(b.firmName || "");
+        if (firmCmp !== 0) return firmCmp;
+        return normalizeForm8LoanType(a.loanType).localeCompare(
+          normalizeForm8LoanType(b.loanType)
+        );
+      }),
     [templates]
   );
 
@@ -415,6 +473,21 @@ const FormCustomizationPage = () => {
   const columns = [
     { title: "Firm Name", key: "firmName", orderable: true, searchable: true },
     { title: "Reg. No.", key: "firmRegNo", orderable: true, searchable: true },
+    {
+      title: "Loan Type",
+      key: "loanType",
+      orderable: true,
+      searchable: true,
+      render: (_val, _type, row) => {
+        const type = normalizeForm8LoanType(row?.loanType);
+        const label = getForm8LoanTypeLabel(type);
+        const cls =
+          type === "secured"
+            ? "bg-primary-subtle text-primary"
+            : "bg-warning-subtle text-warning-emphasis";
+        return `<span class="badge ${cls}">${label}</span>`;
+      },
+    },
     {
       title: "Form Title",
       key: "title",
@@ -484,10 +557,12 @@ const FormCustomizationPage = () => {
         <div className="form-custom-workspace">
           <Form8BuilderWorkspace
             firmName={editingFirmName}
+            loanType={editingLoanType}
             firm={editingFirm}
             formConfig={formConfig}
             status={status}
             saving={saving}
+            preparingPdf={preparingPdf}
             onStatusChange={setStatus}
             onSave={() => handleSubmit({ preventDefault: () => {} })}
             onDiscard={handleDiscard}
@@ -518,7 +593,7 @@ const FormCustomizationPage = () => {
             data={sortedTemplates}
             columns={columns}
             title={`Firm-wise Form Templates${loading ? " (loading…)" : ""}`}
-            primaryKey="firmName"
+            primaryKey="uuid"
             subtitleKey="updatedAt"
             hasDelete={false}
             hasEdit={true}
