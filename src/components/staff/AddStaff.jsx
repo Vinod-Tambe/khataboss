@@ -7,6 +7,8 @@ import $ from 'jquery';
 import 'daterangepicker';
 import 'daterangepicker/daterangepicker.css';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { fetchCurrentUser } from '../../store/slices/authSlice';
 import useFormNavigation from '../../hooks/useFormNavigation';
 import { validateUploadFile } from '../../utils/fileUpload';
 import { createStaff } from '../../api/staffApi';
@@ -19,6 +21,7 @@ import PasswordRequirementsPanel from '../common/PasswordRequirementsPanel';
 
 const AddStaff = () => {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const [submitting, setSubmitting] = useState(false);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [currentStep, setCurrentStep] = useState(1);
@@ -278,6 +281,7 @@ const AddStaff = () => {
 
             const res = await createStaff(payload);
             showToast(res.message || 'Staff created successfully.');
+            dispatch(fetchCurrentUser());
             navigate(`/staff/staff-details/${res.data.staff_uuid}`);
         } catch (err) {
             showToast(err.message || 'Failed to create staff.', 'error');

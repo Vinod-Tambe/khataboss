@@ -3,17 +3,17 @@ import { buildDefaultTemplateVariables } from './formTemplateMacros';
 import {
   normalizeBuilderBlockOrder,
   seedForm8FreeMediaBlockLayout,
-} from './form8BuilderBlocks';
-import { insertBlockInOrder } from './form8BuilderPalette';
+} from './formBuilderBlocks';
+import { insertBlockInOrder } from './formBuilderPalette';
 import {
   clampAllForm8CanvasBlockLayouts,
   computeForm8CanvasPageHeightMm,
   seedForm8CanvasPositions,
-} from './form8CanvasLayout';
-import { FORM8_RETIRED_SECTION_IDS } from './form8BuilderCatalog';
-import { migrateForm8DividerBlocks } from './form8DividerBlocks';
-import { mergeSectionStyleFields } from './form8SectionStyle';
-import { normalizeForm8SignatureLabels } from './form8Signatures';
+} from './formCanvasLayout';
+import { FORM8_RETIRED_SECTION_IDS } from './formBuilderCatalog';
+import { migrateForm8DividerBlocks } from './formDividerBlocks';
+import { mergeSectionStyleFields } from './formSectionStyle';
+import { normalizeFormSignatureLabels } from './formSignatures';
 import {
   compressDataUrlIfNeeded,
   FORM_TEMPLATE_ASSET_KEYS,
@@ -24,7 +24,7 @@ import {
   ensureForm8StockBlock,
   normalizeForm8LoanType,
   stripForm8StockBlocks,
-} from './form8LoanType';
+} from './formLoanType';
 
 export const DEFAULT_FORM_CONFIG = defaultConfig;
 
@@ -403,7 +403,7 @@ export const normalizeFormConfig = (config) => {
   });
   const hasFooterImageAsset = hasFormTemplateFooterImage(config);
   const resolvedShowFooterImage = hasFooterImageAsset && Boolean(readable.showFooterImage);
-  const loanType = normalizeForm8LoanType(config.loanType || config.form8LoanType);
+  const loanType = normalizeForm8LoanType(config.loanType || config.formLoanType);
   const builderBlockOrder = (
     loanType === 'unsecured'
       ? stripForm8StockBlocks(dividerMigrated.builderBlockOrder)
@@ -462,7 +462,7 @@ export const normalizeFormConfig = (config) => {
         ? String(config.assets?.footerImageDataUrl || '').trim()
         : '',
     },
-    signatureLabels: normalizeForm8SignatureLabels(config.signatureLabels),
+    signatureLabels: normalizeFormSignatureLabels(config.signatureLabels),
     singlePageLayout,
     variables: config.variables?.length
       ? config.variables

@@ -23,6 +23,11 @@ import TemplateTestSend from "./TemplateTestSend";
 import WhatsAppSettingsModal from "./WhatsAppSettingsModal";
 import EmailSettingsModal from "./EmailSettingsModal";
 import { getMessageTemplates, updateMessageTemplate } from "../../api/smsApi";
+import usePermissions from "../../hooks/usePermissions";
+import {
+  canManageSmsChannel,
+  canViewSmsChannel,
+} from "../../utils/smsChannelPermissions";
 import "../../css/Sms.css";
 
 const CHANNELS = [
@@ -59,7 +64,13 @@ const channelTitle = (channel) => {
 };
 
 const SmsPage = () => {
+  const { can } = usePermissions();
   const { firms, selectedFirmId } = useSelector((state) => state.firm);
+
+  const visibleChannels = useMemo(
+    () => CHANNELS.filter(({ id }) => canViewSmsChannel(can, id)),
+    [can]
+  );
 
   const activeFirm = useMemo(() => {
     if (!firms?.length) return null;
@@ -73,6 +84,7 @@ const SmsPage = () => {
   const firmName = activeFirm?.firm_name || "Your Firm";
 
   const [activeChannel, setActiveChannel] = useState("whatsapp");
+  const canManageActiveChannel = canManageSmsChannel(can, activeChannel);
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -110,6 +122,13 @@ const SmsPage = () => {
   useEffect(() => {
     loadTemplates();
   }, [loadTemplates]);
+
+  useEffect(() => {
+    if (!visibleChannels.length) return;
+    if (!visibleChannels.some((c) => c.id === activeChannel)) {
+      setActiveChannel(visibleChannels[0].id);
+    }
+  }, [visibleChannels, activeChannel]);
 
   const filteredTemplates = useMemo(() => {
     return [...templates].sort(
@@ -171,6 +190,10 @@ const SmsPage = () => {
   };
 
   const handleEdit = (row) => {
+    if (!canManageSmsChannel(can, row.channel)) {
+      toast.error("You do not have permission to edit this channel.");
+      return;
+    }
     setEditingId(row.id || row.uuid);
     setActiveChannel(row.channel);
     setFormData({
@@ -249,7 +272,7 @@ const SmsPage = () => {
 
   const renderChannelTabs = (extraClass = "") => (
     <div className={`sms-tabs ${extraClass}`.trim()} role="tablist" aria-label="Template channels">
-      {CHANNELS.map(({ id, label, shortLabel, icon: Icon, iconClass }) => (
+      {visibleChannels.map(({ id, label, shortLabel, icon: Icon, iconClass }) => (
         <button
           key={id}
           type="button"
@@ -327,7 +350,7 @@ const SmsPage = () => {
           </p>
         </div>
         <div className="sms-page-header-actions">
-          {activeChannel === "whatsapp" ? (
+          {activeChannel === "whatsapp" && canManageActiveChannel ? (
             <button
               type="button"
               className="btn btn-sms-wa-settings"
@@ -338,7 +361,7 @@ const SmsPage = () => {
               <span>WhatsApp Settings</span>
             </button>
           ) : null}
-          {activeChannel === "email" ? (
+          {activeChannel === "email" && canManageActiveChannel ? (
             <button
               type="button"
               className="btn btn-sms-wa-settings"
@@ -357,7 +380,14 @@ const SmsPage = () => {
         </div>
       ) : null}
 
-      {renderChannelTabs("sms-tabs-desktop")}
+      {!visibleChannels.length ? (
+        <div className="alert alert-warning">
+          You do not have permission to view any messaging channel. Ask your owner to assign
+          WhatsApp, Text SMS, or Email permissions.
+        </div>
+      ) : null}
+
+      {visibleChannels.length ? renderChannelTabs("sms-tabs-desktop") : null}
 
       <div className="sms-mobile-mode-tabs" role="tablist" aria-label="Mobile sections">
         <button
@@ -393,7 +423,7 @@ const SmsPage = () => {
         </button>
       </div>
 
-      {renderChannelTabs("sms-tabs-mobile-channels")}
+      {visibleChannels.length ? renderChannelTabs("sms-tabs-mobile-channels") : null}
 
       <div className="sms-workspace">
         <div className="sms-workspace-body">

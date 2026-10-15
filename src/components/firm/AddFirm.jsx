@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-hot-toast';
 import { loadFirmsDropdown } from '../../store/slices/firmSlice';
+import { fetchCurrentUser } from '../../store/slices/authSlice';
 import moment from 'moment';
 import ImageUploadSquare from '../common/ImageUploadSquare';
 import { createFirm } from '../../api/firmApi';
@@ -212,6 +213,7 @@ const AddFirm = () => {
       const response = await createFirm(data);
       toast.success(response.message || 'Firm created successfully!');
       dispatch(loadFirmsDropdown());
+      dispatch(fetchCurrentUser());
 
       // Navigate to dashboard or firm list after a brief delay
       setTimeout(() => {

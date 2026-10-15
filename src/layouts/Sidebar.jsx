@@ -48,6 +48,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { signOutUser } from "../utils/signOut";
 import { setSelectedFirmId } from "../store/slices/firmSlice";
 import { filterMenuByPermissions, isOwner } from "../utils/permissions";
+import useOwnerLimits from "../hooks/useOwnerLimits";
 
 const Sidebar = () => {
   const location = useLocation();
@@ -57,6 +58,7 @@ const Sidebar = () => {
   const dispatch = useDispatch();
   const { firms, selectedFirmId } = useSelector((state) => state.firm);
   const user = useSelector((state) => state.auth.user);
+  const { canAddFirm, canAddStaff } = useOwnerLimits();
 
   const handleLogout = async (e) => {
     e.preventDefault();
@@ -269,7 +271,22 @@ const Sidebar = () => {
           { label: "Firm List", path: "/firm/list", icon: <FiGrid />, permission: "firm.view" },
         ],
       },
-      { id: "sms", label: "SMS", icon: <FiMessageSquare />, path: "/sms", anyOf: ["sms.view", "sms.manage"] },
+      {
+        id: "sms",
+        label: "SMS",
+        icon: <FiMessageSquare />,
+        path: "/sms",
+        anyOf: [
+          "sms.view",
+          "sms.manage",
+          "sms.whatsappView",
+          "sms.whatsappManage",
+          "sms.textView",
+          "sms.textManage",
+          "sms.emailView",
+          "sms.emailManage",
+        ],
+      },
       {
         id: "logs",
         label: "Logs",
@@ -284,10 +301,30 @@ const Sidebar = () => {
         subItems: [
           { label: "Rate", path: "/rate", icon: <FiTrendingUp />, permission: "settings.manage" },
           { label: "Purity", path: "/purity", icon: <FiAward />, permission: "settings.manage" },
-          { label: "Backup", path: "/backup", icon: <FiDatabase />, permission: "settings.manage" },
-          { label: "Form Customization", path: "/settings/form-customization", icon: <FiEdit />, permission: "settings.manage" },
-          { label: "Agreement Customization", path: "/settings/agreement-customization", icon: <FiFileText />, permission: "settings.manage" },
-          { label: "KYC Integration", path: "/settings/kyc-integration", icon: <FiShield />, permission: "settings.manage" },
+          {
+            label: "Backup",
+            path: "/backup",
+            icon: <FiDatabase />,
+            anyOf: ["backup.view", "backup.manage"],
+          },
+          {
+            label: "Form Builder",
+            path: "/settings/form-customization",
+            icon: <FiEdit />,
+            anyOf: ["formBuilder.view", "formBuilder.edit"],
+          },
+          {
+            label: "Agreement Builder",
+            path: "/settings/agreement-customization",
+            icon: <FiFileText />,
+            anyOf: ["agreementBuilder.view", "agreementBuilder.edit"],
+          },
+          {
+            label: "KYC Integration",
+            path: "/settings/kyc-integration",
+            icon: <FiShield />,
+            anyOf: ["kyc.view", "kyc.manage"],
+          },
           // Always allow self password update (no permission key)
           { label: "Update Password", path: "/settings/update-password", icon: <FiLock /> },
         ],
@@ -306,9 +343,21 @@ const Sidebar = () => {
 
   const menuItems = useMemo(() => {
     const filtered = filterMenuByPermissions(allMenuItems, user);
-    if (isOwner(user)) return filtered;
-    return filtered.filter((item) => !item.ownerOnly);
-  }, [allMenuItems, user]);
+    const withLimits = filtered
+      .map((item) => {
+        if (!item.subItems?.length) return item;
+        const subItems = item.subItems.filter((sub) => {
+          if (sub.path === "/firm/add" && !canAddFirm) return false;
+          if (sub.path === "/staff/add" && !canAddStaff) return false;
+          return true;
+        });
+        if (!subItems.length) return null;
+        return { ...item, subItems };
+      })
+      .filter(Boolean);
+    if (isOwner(user)) return withLimits;
+    return withLimits.filter((item) => !item.ownerOnly);
+  }, [allMenuItems, user, canAddFirm, canAddStaff]);
 
   const scrollableMenuItems = useMemo(
     () => menuItems.filter((item) => item.id !== "logout"),

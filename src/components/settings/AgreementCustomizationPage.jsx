@@ -1,111 +1,100 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import moment from "moment";
-import {
-  FiChevronDown,
-  FiChevronUp,
-  FiEdit3,
-  FiEye,
-  FiFileText,
-  FiList,
-  FiSave,
-  FiDownload,
-  FiExternalLink,
-} from "react-icons/fi";
+import { FiEdit3, FiEye, FiList } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import List from "../common/List";
 import { getAgreementTemplates, updateAgreementTemplate } from "../../api/agreementTemplateApi";
 import { getFirms } from "../../api/firmApi";
-import FormTemplatePreview from "./formTemplate/FormTemplatePreview";
-import DraggableList from "./formTemplate/DraggableList";
+import AgreementBuilderWorkspace from "./agreementBuilder/AgreementBuilderWorkspace";
 import {
   normalizeAgreementConfig,
-  getSortedSections,
-  getSortedFields,
-  THEME_FIELDS,
-  FIELD_LAYOUT_OPTIONS,
   AGREEMENT_TYPES,
-} from "../../utils/formTemplate/agreementTemplateConfig";
+} from "../../utils/agreementBuilder/templateConfig";
 import {
-  getAgreementTestData,
-  getAgreementTransactionRows,
-} from "../../utils/formTemplate/agreementTemplateTestData";
+  prepareFormTemplateConfigForSave,
+  syncForm8LogoBlocks,
+} from "../../utils/formTemplate/formTemplateConfig";
 import {
-  openFormTemplatePdfPreview,
-  downloadFormTemplatePdf,
-} from "../../utils/formTemplate/buildFormTemplatePdf";
+  clampForm8BlockLayoutHorizontal,
+  isForm8FreeCanvasLayout,
+} from "../../utils/formTemplate/formCanvasLayout";
+import { buildFormTemplatePrintHtml } from "../../utils/formTemplate/buildFormTemplatePrintHtml";
+import { openFormTemplateHtmlPdf as openFormTemplatePdfPreview } from "../../utils/formTemplate/renderFormTemplateHtmlPdf";
 import { buildPreviewFormTemplatePdfOptions } from "../../utils/formTemplate/buildFormTemplatePdfOptions";
 import {
-  resolveFirmLeftLogoUrl,
-  resolveFirmRightLogoUrl,
-} from "../../utils/formTemplate/loadFirmAssetsForPdf";
+  ensureLogoBandOnAdd,
+  getAddBlockPatches,
+  getRemoveBlockPatches,
+  insertBlockInOrder,
+  isAgreementBlockOnCanvas,
+} from "../../utils/agreementBuilder/agreementPalette";
+import { sectionBlockId } from "../../utils/formTemplate/formBuilderCatalog";
+import { FORM_TEMPLATE_ASSET_KEYS } from "../../utils/formTemplate/formTemplateImageAssets";
+import {
+  canRemoveAgreementBlock,
+  canToggleAgreementBlockOnCanvas,
+  getAgreementBlockOrder,
+  LOAN_AGREEMENT_BLOCK_ORDER,
+  normalizeBuilderBlockOrder,
+} from "../../utils/agreementBuilder/agreementBlocks";
+import {
+  createEmptyForm8DividerLayout,
+  createNextForm8DividerBlockId,
+  isForm8DividerBlockId,
+  isForm8DividerPaletteId,
+} from "../../utils/formTemplate/formDividerBlocks";
+import {
+  AGREEMENT_STOCK_BLOCK_ID,
+  getAgreementLoanTypeLabel,
+  isAgreementSecuredTemplate,
+  normalizeAgreementLoanType,
+} from "../../utils/agreementBuilder/loanType";
 import {
   resolveActiveFirmFilterId,
   rowMatchesFirmFilter,
 } from "../../store/slices/firmSlice";
+import {
+  getAgreementTestData,
+  getAgreementTransactionRows,
+} from "../../utils/agreementBuilder/testData";
+import usePermissions from "../../hooks/usePermissions";
+import {
+  canAccessAgreementBuilder,
+  canEditAgreementBuilder,
+} from "../../utils/builderPermissions";
 import "../../css/FormCustomization.css";
 
-const EDITOR_TABS = [
-  { id: "general", label: "General" },
-  { id: "colors", label: "Colors & Theme" },
-  { id: "sections", label: "Sections & Order" },
-  { id: "content", label: "Content" },
-];
-
-const FONT_SIZES = [
-  { value: "small", label: "Small" },
-  { value: "medium", label: "Medium" },
-  { value: "large", label: "Large" },
-];
-
-const PAGE_SIZES = [
-  { value: "A4", label: "A4" },
-  { value: "A5", label: "A5" },
-  { value: "Letter", label: "Letter" },
-];
-
-const ORIENTATIONS = [
-  { value: "portrait", label: "Portrait" },
-  { value: "landscape", label: "Landscape" },
-];
-
-const STATUS_OPTIONS = [
-  { value: "Active", label: "Active" },
-  { value: "Inactive", label: "Inactive" },
-];
-
-const LAYOUT_FIELDS = [
-  { key: "showLeftLogo", label: "Show left logo" },
-  { key: "showRightLogo", label: "Show right logo" },
-  { key: "showCustomerPhoto", label: "Show customer photo" },
-  { key: "showOwnerSign", label: "Show owner signature" },
-  { key: "showQrCode", label: "Show QR code" },
-  { key: "useFirmFormHeader", label: "Use firm form header" },
-  { key: "useFirmFormFooter", label: "Use firm form footer" },
-];
+const agreementTypeLabel = (type) =>
+  AGREEMENT_TYPES.find((t) => t.id === type)?.label || type || "Agreement";
 
 const AgreementCustomizationPage = () => {
+  const { can } = usePermissions();
+  const canOpenBuilder = canAccessAgreementBuilder(can);
+  const builderReadOnly = !canEditAgreementBuilder(can);
+
   const { selectedFirmId, firms: reduxFirms, selectedFirm } = useSelector(
     (state) => state.firm
   );
-  const [agreementType, setAgreementType] = useState("Loan");
   const [templates, setTemplates] = useState([]);
   const [firmsById, setFirmsById] = useState({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [preparingPdf, setPreparingPdf] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editingFirmId, setEditingFirmId] = useState(null);
   const [editingFirmName, setEditingFirmName] = useState("");
+  const [editingAgreementType, setEditingAgreementType] = useState("Loan");
+  const [editingLoanType, setEditingLoanType] = useState("secured");
   const [formConfig, setFormConfig] = useState(null);
+  const [, setSavedSnapshot] = useState(null);
   const [status, setStatus] = useState("Active");
   const [mobileMode, setMobileMode] = useState("list");
-  const [editorTab, setEditorTab] = useState("general");
-  const [expandedSectionIds, setExpandedSectionIds] = useState(() => new Set());
 
   const loadTemplates = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await getAgreementTemplates(agreementType);
+      const res = await getAgreementTemplates();
       setTemplates(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       toast.error(err.message || "Failed to load agreement templates");
@@ -113,7 +102,7 @@ const AgreementCustomizationPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [agreementType]);
+  }, []);
 
   const loadFirms = useCallback(async () => {
     try {
@@ -155,69 +144,70 @@ const AgreementCustomizationPage = () => {
       setEditingId(null);
       setEditingFirmId(null);
       setEditingFirmName("");
+      setEditingAgreementType("Loan");
+      setEditingLoanType("secured");
       setFormConfig(null);
+      setSavedSnapshot(null);
       setStatus("Active");
-      setEditorTab("general");
-      setExpandedSectionIds(new Set());
       setMobileMode("list");
     }
   }, [selectedFirmId, editingFirmId]);
 
-  useEffect(() => {
-    setEditingId(null);
-    setEditingFirmId(null);
-    setEditingFirmName("");
-    setFormConfig(null);
-    setStatus("Active");
-    setEditorTab("general");
-    setExpandedSectionIds(new Set());
-    setMobileMode("list");
-  }, [agreementType]);
+  const parseTemplateConfig = (raw) => {
+    if (raw == null) return {};
+    if (typeof raw === "string") {
+      try {
+        return JSON.parse(raw);
+      } catch {
+        return {};
+      }
+    }
+    return typeof raw === "object" ? raw : {};
+  };
 
   const handleEdit = (row) => {
-    if (!row?.uuid) {
-      toast.error("Template not ready yet — refresh the page or run tenant sync");
+    if (!canOpenBuilder) {
+      toast.error("You do not have permission to open Agreement Builder.");
       return;
     }
-    const rowType = row.type || agreementType;
-    setEditingId(row.uuid || row.id);
+    const id = row.uuid || row.id;
+    if (!id) {
+      toast.error("This template cannot be opened. Refresh the list and try again.");
+      return;
+    }
+    const agreementType = row.type === "Finance" ? "Finance" : "Loan";
+    const loanType = normalizeAgreementLoanType(row.loanType || row.config?.loanType);
+    const nextConfig = normalizeAgreementConfig(
+      {
+        ...parseTemplateConfig(row.config),
+        loanType,
+        agreementDocumentType: agreementType,
+      },
+      agreementType,
+      loanType
+    );
+    const nextStatus = row.status || "Active";
+    setEditingId(id);
     setEditingFirmId(row.firmId ?? null);
     setEditingFirmName(row.firmName || "");
-    setFormConfig(normalizeAgreementConfig(row.config, rowType));
-    setStatus(row.status || "Active");
-    setEditorTab("general");
-    setExpandedSectionIds(new Set());
+    setEditingAgreementType(agreementType);
+    setEditingLoanType(loanType);
+    setFormConfig(nextConfig);
+    setSavedSnapshot({ config: nextConfig, status: nextStatus });
+    setStatus(nextStatus);
     setMobileMode("edit");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const toggleSectionExpanded = (sectionId) => {
-    setExpandedSectionIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(sectionId)) {
-        next.delete(sectionId);
-      } else {
-        next.add(sectionId);
-      }
-      return next;
-    });
-  };
-
-  const handleDiscard = () => {
-    if (editingId) {
-      const existing = templates.find((t) => (t.uuid || t.id) === editingId);
-      if (existing) {
-        setFormConfig(normalizeAgreementConfig(existing.config, agreementType));
-        setStatus(existing.status || "Active");
-        return;
-      }
-    }
+  const handleBackToList = () => {
     setEditingId(null);
     setEditingFirmId(null);
     setEditingFirmName("");
+    setEditingAgreementType("Loan");
+    setEditingLoanType("secured");
     setFormConfig(null);
+    setSavedSnapshot(null);
     setStatus("Active");
-    setExpandedSectionIds(new Set());
     setMobileMode("list");
   };
 
@@ -226,26 +216,57 @@ const AgreementCustomizationPage = () => {
   };
 
   const updateTheme = (key, value) => {
-    setFormConfig((prev) => ({
-      ...prev,
-      theme: { ...(prev.theme || {}), [key]: value },
-    }));
+    setFormConfig((prev) => {
+      const patch =
+        key && typeof key === "object" && !Array.isArray(key)
+          ? key
+          : { [key]: value };
+      return {
+        ...prev,
+        theme: { ...(prev.theme || {}), ...patch },
+      };
+    });
   };
 
   const updateLayout = (key, checked) => {
-    setFormConfig((prev) => ({
-      ...prev,
-      layout: { ...(prev.layout || {}), [key]: checked },
-    }));
+    setFormConfig((prev) => {
+      const next = {
+        ...prev,
+        layout: { ...(prev.layout || {}), [key]: checked },
+      };
+      if (key === "showRightLogo" && checked) {
+        return syncForm8LogoBlocks(next);
+      }
+      return next;
+    });
   };
 
   const updateSection = (sectionId, patch) => {
-    setFormConfig((prev) => ({
-      ...prev,
-      sections: (prev.sections || []).map((s) =>
+    setFormConfig((prev) => {
+      const blockId = sectionBlockId(sectionId);
+      const sections = (prev.sections || []).map((s) =>
         s.id === sectionId ? { ...s, ...patch } : s
-      ),
-    }));
+      );
+      let builderBlockOrder = prev.builderBlockOrder?.length
+        ? normalizeBuilderBlockOrder(prev.builderBlockOrder)
+        : normalizeBuilderBlockOrder(LOAN_AGREEMENT_BLOCK_ORDER);
+
+      if (patch.enabled === true && !builderBlockOrder.includes(blockId)) {
+        builderBlockOrder = insertBlockInOrder(builderBlockOrder, blockId, null);
+      }
+      if (patch.enabled === false && builderBlockOrder.includes(blockId)) {
+        builderBlockOrder = builderBlockOrder.filter((id) => id !== blockId);
+      }
+
+      let next = { ...prev, sections, builderBlockOrder };
+      if (patch.enabled === true) {
+        next = { ...next, ...getAddBlockPatches(prev, blockId) };
+      }
+      if (patch.enabled === false) {
+        next = { ...next, ...getRemoveBlockPatches(next, blockId) };
+      }
+      return next;
+    });
   };
 
   const updateSectionField = (sectionId, fieldId, patch) => {
@@ -261,10 +282,6 @@ const AgreementCustomizationPage = () => {
         };
       }),
     }));
-  };
-
-  const reorderSections = (nextSections) => {
-    setFormConfig((prev) => ({ ...prev, sections: nextSections }));
   };
 
   const reorderSectionFields = (sectionId, nextFields) => {
@@ -283,8 +300,151 @@ const AgreementCustomizationPage = () => {
     }));
   };
 
+  const reorderBuilderBlocks = (blockIds) => {
+    setFormConfig((prev) => ({
+      ...prev,
+      builderBlockOrder: normalizeBuilderBlockOrder(blockIds),
+    }));
+  };
+
+  const currentBlockOrder = (prev) =>
+    prev.builderBlockOrder?.length
+      ? normalizeBuilderBlockOrder(prev.builderBlockOrder)
+      : getAgreementBlockOrder(prev);
+
+  const addBlockFromPalette = (blockId, insertBeforeBlockId = null) => {
+    if (isForm8DividerPaletteId(blockId)) {
+      let addedId = null;
+      setFormConfig((prev) => {
+        addedId = createNextForm8DividerBlockId(currentBlockOrder(prev));
+        const order = insertBlockInOrder(currentBlockOrder(prev), addedId, insertBeforeBlockId);
+        return {
+          ...prev,
+          builderBlockOrder: order,
+          blockLayouts: {
+            ...(prev.blockLayouts || {}),
+            [addedId]: createEmptyForm8DividerLayout(),
+          },
+        };
+      });
+      return addedId;
+    }
+    setFormConfig((prev) => {
+      if (
+        blockId === AGREEMENT_STOCK_BLOCK_ID &&
+        (editingAgreementType === "Finance" || !isAgreementSecuredTemplate(prev))
+      ) {
+        return prev;
+      }
+      const baseOrder = currentBlockOrder(prev);
+      let order = insertBlockInOrder(baseOrder, blockId, insertBeforeBlockId);
+      order = ensureLogoBandOnAdd(order, blockId);
+      const patches = getAddBlockPatches(prev, blockId);
+      return { ...prev, ...patches, builderBlockOrder: order };
+    });
+    return blockId;
+  };
+
+  const removeBlockFromCanvas = (blockId) => {
+    if (!canRemoveAgreementBlock(blockId)) return;
+    setFormConfig((prev) => {
+      const patches = getRemoveBlockPatches(prev, blockId);
+      const baseOrder = currentBlockOrder(prev);
+      const order = baseOrder.filter((id) => id !== blockId);
+      const next = { ...prev, ...patches, builderBlockOrder: order };
+      if (isForm8DividerBlockId(blockId) && next.blockLayouts?.[blockId]) {
+        const blockLayouts = { ...next.blockLayouts };
+        delete blockLayouts[blockId];
+        next.blockLayouts = blockLayouts;
+      }
+      return next;
+    });
+  };
+
+  const toggleBlockOnCanvas = (blockId) => {
+    if (isForm8DividerPaletteId(blockId)) {
+      return addBlockFromPalette(blockId);
+    }
+    if (!canToggleAgreementBlockOnCanvas(blockId)) return blockId;
+    if (isAgreementBlockOnCanvas(formConfig, blockId)) {
+      removeBlockFromCanvas(blockId);
+      return blockId;
+    }
+    return addBlockFromPalette(blockId);
+  };
+
+  const updateBlockLayout = (blockId, patch) => {
+    if (isForm8DividerPaletteId(blockId)) return;
+    setFormConfig((prev) => {
+      const merged = { ...(prev.blockLayouts?.[blockId] || {}), ...patch };
+      const layout =
+        prev.singlePageLayout && isForm8FreeCanvasLayout(prev)
+          ? clampForm8BlockLayoutHorizontal(blockId, merged)
+          : merged;
+      return {
+        ...prev,
+        blockLayouts: {
+          ...(prev.blockLayouts || {}),
+          [blockId]: layout,
+        },
+      };
+    });
+  };
+
+  const updateFormAsset = (key, value) => {
+    setFormConfig((prev) => {
+      const next = {
+        ...prev,
+        assets: { ...(prev.assets || {}), [key]: value || "" },
+      };
+      if (key !== FORM_TEMPLATE_ASSET_KEYS.footerImage) return next;
+      const hasImage = Boolean(String(value || "").trim());
+      next.layout = { ...(prev.layout || {}), showFooterImage: hasImage };
+      if (!hasImage) {
+        next.builderBlockOrder = currentBlockOrder(prev).filter(
+          (id) => id !== "layout_footer_image"
+        );
+        return next;
+      }
+      const order = currentBlockOrder(prev);
+      if (!order.includes("layout_footer_image")) {
+        next.builderBlockOrder = insertBlockInOrder(
+          order,
+          "layout_footer_image",
+          order.includes("signature_lines") ? "signature_lines" : null
+        );
+      }
+      return next;
+    });
+  };
+
+  const persistTemplate = async () => {
+    if (!editingId || !formConfig) {
+      throw new Error("Select a firm template from the list to edit");
+    }
+    const payload = await prepareFormTemplateConfigForSave({
+      ...formConfig,
+      loanType: editingLoanType,
+      agreementDocumentType: editingAgreementType,
+    });
+    const html = buildFormTemplatePrintHtml(payload, {
+      firmName: editingFirmName,
+    });
+    const res = await updateAgreementTemplate(editingId, { config: payload, html, status });
+    setFormConfig(payload);
+    setSavedSnapshot({ config: payload, status });
+    return {
+      config: payload,
+      html: res?.data?.html || html,
+    };
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!canEditAgreementBuilder(can)) {
+      toast.error("You do not have permission to save agreement templates.");
+      return;
+    }
     if (!editingId || !formConfig) {
       toast.error("Select a firm template from the list to edit");
       return;
@@ -292,11 +452,9 @@ const AgreementCustomizationPage = () => {
 
     setSaving(true);
     try {
-      const payload = normalizeAgreementConfig(formConfig, agreementType);
-      await updateAgreementTemplate(editingId, { config: payload, status });
-      toast.success(`${agreementType === "Finance" ? "Finance" : "Loan"} agreement updated`);
-      setFormConfig(payload);
-      setMobileMode("preview");
+      await persistTemplate();
+      toast.success("Agreement template updated");
+      setMobileMode("edit");
       await loadTemplates();
     } catch (err) {
       toast.error(err.message || "Failed to update template");
@@ -305,64 +463,60 @@ const AgreementCustomizationPage = () => {
     }
   };
 
-  const previewTestData = useMemo(
-    () => getAgreementTestData(agreementType, editingFirmName),
-    [agreementType, editingFirmName]
-  );
-
-  const previewTransactionRows = useMemo(
-    () => getAgreementTransactionRows(agreementType),
-    [agreementType]
-  );
-
   const editingFirm =
     editingFirmId != null ? firmsById[String(editingFirmId)] : null;
 
+  const previewFormData = useMemo(
+    () => getAgreementTestData(editingAgreementType, editingFirmName),
+    [editingAgreementType, editingFirmName]
+  );
+
+  const previewTransactionRows = useMemo(
+    () => getAgreementTransactionRows(editingAgreementType),
+    [editingAgreementType]
+  );
+
   const handlePdfPreview = async () => {
     if (!formConfig) return;
+    setSaving(true);
+    setPreparingPdf(true);
+    const toastId = toast.loading("Preparing PDF…");
     try {
+      const saved = await persistTemplate();
       const pdfOptions = await buildPreviewFormTemplatePdfOptions({
         firm: editingFirm,
-        formData: previewTestData,
+        config: saved.config,
+        formData: previewFormData,
         transactionRows: previewTransactionRows,
-        config: normalizeAgreementConfig(formConfig, agreementType),
       });
-      await openFormTemplatePdfPreview(
-        normalizeAgreementConfig(formConfig, agreementType),
-        editingFirmName,
-        pdfOptions
-      );
-    } catch (err) {
-      toast.error(err.message || "Could not open PDF preview");
-    }
-  };
-
-  const handlePdfDownload = async () => {
-    if (!formConfig) return;
-    try {
-      const pdfOptions = await buildPreviewFormTemplatePdfOptions({
-        firm: editingFirm,
-        formData: previewTestData,
-        transactionRows: previewTransactionRows,
-        config: normalizeAgreementConfig(formConfig, agreementType),
+      await openFormTemplatePdfPreview(saved.html, saved.config, {
+        ...pdfOptions,
+        displayFirmName: editingFirmName,
       });
-      await downloadFormTemplatePdf(
-        normalizeAgreementConfig(formConfig, agreementType),
-        editingFirmName,
-        pdfOptions
-      );
+      toast.success("PDF ready", { id: toastId });
+      await loadTemplates();
     } catch (err) {
-      toast.error(err.message || "Could not download PDF");
+      toast.error(err.message || "Could not open PDF preview", { id: toastId });
+    } finally {
+      setPreparingPdf(false);
+      setSaving(false);
     }
   };
 
   const sortedTemplates = useMemo(
     () =>
       [...templates]
-        .filter((row) => row && (!row.type || row.type === agreementType))
         .filter((row) => rowMatchesFirmFilter(row?.firmId, selectedFirmId))
-        .sort((a, b) => (a.firmName || "").localeCompare(b.firmName || "")),
-    [templates, agreementType, selectedFirmId]
+        .sort((a, b) => {
+          const firmCmp = (a.firmName || "").localeCompare(b.firmName || "");
+          if (firmCmp !== 0) return firmCmp;
+          const typeCmp = (a.type || "").localeCompare(b.type || "");
+          if (typeCmp !== 0) return typeCmp;
+          return normalizeAgreementLoanType(a.loanType).localeCompare(
+            normalizeAgreementLoanType(b.loanType)
+          );
+        }),
+    [templates, selectedFirmId]
   );
 
   const listTitleSuffix = useMemo(() => {
@@ -375,23 +529,47 @@ const AgreementCustomizationPage = () => {
     return ` — ${name}`;
   }, [selectedFirmId, selectedFirm, sortedTemplates]);
 
-  const sortedSections = useMemo(
-    () => (formConfig ? getSortedSections(formConfig) : []),
-    [formConfig]
-  );
+  const showBuilder = Boolean(editingId && formConfig);
 
   const columns = [
     { title: "Firm Name", key: "firmName", orderable: true, searchable: true },
     { title: "Reg. No.", key: "firmRegNo", orderable: true, searchable: true },
     {
-      title: "Agreement Title",
+      title: "Agreement",
+      key: "type",
+      orderable: true,
+      searchable: true,
+      render: (_val, _type, row) => {
+        const t = row?.type === "Finance" ? "Finance" : "Loan";
+        const cls =
+          t === "Finance"
+            ? "bg-info-subtle text-info-emphasis"
+            : "bg-secondary-subtle text-secondary-emphasis";
+        return `<span class="badge ${cls}">${agreementTypeLabel(t)}</span>`;
+      },
+    },
+    {
+      title: "Loan Type",
+      key: "loanType",
+      orderable: true,
+      searchable: true,
+      render: (_val, _type, row) => {
+        if (row?.type === "Finance") return "—";
+        const type = normalizeAgreementLoanType(row?.loanType);
+        const label = getAgreementLoanTypeLabel(type);
+        const cls =
+          type === "secured"
+            ? "bg-primary-subtle text-primary"
+            : "bg-warning-subtle text-warning-emphasis";
+        return `<span class="badge ${cls}">${label}</span>`;
+      },
+    },
+    {
+      title: "Title",
       key: "title",
       orderable: true,
       searchable: true,
-      render: (_val, _type, row) =>
-        row?.config?.title ||
-        row?.title ||
-        (agreementType === "Finance" ? "FINANCE AGREEMENT" : "LOAN AGREEMENT"),
+      render: (_val, _type, row) => row?.config?.title || row?.title || "Agreement",
     },
     {
       title: "Last Updated",
@@ -411,568 +589,116 @@ const AgreementCustomizationPage = () => {
     },
   ];
 
-  const renderGeneralTab = () => (
-    <>
-      <div className="col-12 col-md-4">
-        <label className="form-label" htmlFor="fc-title">Form Title</label>
-        <input
-          id="fc-title"
-          type="text"
-          className="form-control"
-          value={formConfig.title || ""}
-          onChange={(e) => updateConfig("title", e.target.value)}
-        />
-      </div>
-      <div className="col-12 col-md-4">
-        <label className="form-label" htmlFor="fc-subtitle">Subtitle</label>
-        <input
-          id="fc-subtitle"
-          type="text"
-          className="form-control"
-          value={formConfig.subtitle || ""}
-          onChange={(e) => updateConfig("subtitle", e.target.value)}
-        />
-      </div>
-      <div className="col-12 col-md-4">
-        <label className="form-label" htmlFor="fc-status">Status</label>
-        <select
-          id="fc-status"
-          className="form-select"
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-        >
-          {STATUS_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
-      </div>
-      <div className="col-12 col-md-4">
-        <label className="form-label" htmlFor="fc-page-size">Page Size</label>
-        <select
-          id="fc-page-size"
-          className="form-select"
-          value={formConfig.pageSize || "A4"}
-          onChange={(e) => updateConfig("pageSize", e.target.value)}
-        >
-          {PAGE_SIZES.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
-      </div>
-      <div className="col-12 col-md-4">
-        <label className="form-label" htmlFor="fc-orientation">Orientation</label>
-        <select
-          id="fc-orientation"
-          className="form-select"
-          value={formConfig.orientation || "portrait"}
-          onChange={(e) => updateConfig("orientation", e.target.value)}
-        >
-          {ORIENTATIONS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
-      </div>
-      <div className="col-12 col-md-4">
-        <label className="form-label" htmlFor="fc-font">Font Size</label>
-        <select
-          id="fc-font"
-          className="form-select"
-          value={formConfig.fontSize || "medium"}
-          onChange={(e) => updateConfig("fontSize", e.target.value)}
-        >
-          {FONT_SIZES.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
-      </div>
-      <div className="col-12">
-        <div className="form-custom-section-card">
-          <h5>Layout & Branding</h5>
-          <div className="form-custom-toggle-grid">
-            {LAYOUT_FIELDS.map(({ key, label }) => (
-              <label key={key} className="form-custom-toggle-item">
-                <input
-                  type="checkbox"
-                  checked={Boolean(formConfig.layout?.[key])}
-                  onChange={(e) => updateLayout(key, e.target.checked)}
-                />
-                <span>{label}</span>
-              </label>
-            ))}
-            <label className="form-custom-toggle-item">
-              <input
-                type="checkbox"
-                checked={Boolean(formConfig.showPageNumbers)}
-                onChange={(e) => updateConfig("showPageNumbers", e.target.checked)}
-              />
-              <span>Show page numbers</span>
-            </label>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-
-  const renderColorsTab = () => (
-    <div className="col-12">
-      <div className="form-custom-section-card">
-        <h5>Form Colors & Theme</h5>
-        <p className="form-custom-form-hint mb-3">
-          All colors are saved in the template and applied to the live preview and PDF.
-        </p>
-        <div className="form-custom-color-grid">
-          {THEME_FIELDS.map(({ key, label }) => (
-            <div key={key} className="form-custom-color-field">
-              <label className="form-label" htmlFor={`theme-${key}`}>{label}</label>
-              <div className="form-custom-color-input-row">
-                <input
-                  id={`theme-${key}`}
-                  type="color"
-                  value={formConfig.theme?.[key] || "#000000"}
-                  onChange={(e) => updateTheme(key, e.target.value)}
-                />
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  value={formConfig.theme?.[key] || ""}
-                  onChange={(e) => updateTheme(key, e.target.value)}
-                  placeholder="#000000"
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderSectionsTab = () => (
-    <div className="col-12">
-      <p className="form-custom-form-hint">
-        Drag sections to reorder. Expand a section to edit fields and drag them into order.
-        Set each field to Full (1 row), Half (2 per row), or Small (3 per row).
-      </p>
-      <DraggableList
-        items={sortedSections}
-        onReorder={reorderSections}
-        itemKey="id"
-        renderItem={(section) => {
-          const isExpanded = expandedSectionIds.has(section.id);
-          const fields = getSortedFields(section);
-          const enabledFieldCount = fields.filter((field) => field.enabled).length;
-
-          return (
-            <div
-              className={`form-custom-section-editor ${isExpanded ? "is-expanded" : "is-collapsed"}`}
-            >
-              <div className="form-custom-section-toolbar">
-                <button
-                  type="button"
-                  className="form-custom-section-collapse-toggle"
-                  onClick={() => toggleSectionExpanded(section.id)}
-                  aria-expanded={isExpanded}
-                  aria-label={
-                    isExpanded
-                      ? `Collapse ${section.label || "section"}`
-                      : `Expand ${section.label || "section"} to edit`
-                  }
-                >
-                  {isExpanded ? <FiChevronUp size={18} /> : <FiChevronDown size={18} />}
-                </button>
-                {!isExpanded ? (
-                  <button
-                    type="button"
-                    className="form-custom-section-collapse-summary"
-                    onClick={() => toggleSectionExpanded(section.id)}
-                  >
-                    <span className="form-custom-section-collapse-title">
-                      {section.label || "Untitled section"}
-                    </span>
-                    <span className="form-custom-section-collapse-meta">
-                      <span
-                        className={`form-custom-section-status ${section.enabled ? "is-enabled" : "is-disabled"}`}
-                      >
-                        {section.enabled ? "Enabled" : "Disabled"}
-                      </span>
-                      <span className="form-custom-section-field-count">
-                        {enabledFieldCount}/{fields.length} fields
-                      </span>
-                    </span>
-                  </button>
-                ) : (
-                  <span className="form-custom-section-expanded-label">
-                    {section.label || "Untitled section"}
-                  </span>
-                )}
-              </div>
-
-              {isExpanded ? (
-                <div className="form-custom-section-body">
-                  <div className="form-custom-section-head">
-                    <label className="form-custom-toggle-item mb-0">
-                      <input
-                        type="checkbox"
-                        checked={Boolean(section.enabled)}
-                        onChange={(e) =>
-                          updateSection(section.id, { enabled: e.target.checked })
-                        }
-                      />
-                      <span>Enabled</span>
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control form-control-sm form-custom-section-label-input"
-                      value={section.label || ""}
-                      onChange={(e) =>
-                        updateSection(section.id, { label: e.target.value })
-                      }
-                      placeholder="Section title"
-                    />
-                    <div className="form-custom-section-bg">
-                      <label
-                        className="form-label visually-hidden"
-                        htmlFor={`sec-bg-${section.id}`}
-                      >
-                        Section background
-                      </label>
-                      <input
-                        id={`sec-bg-${section.id}`}
-                        type="color"
-                        title="Section background color"
-                        value={section.backgroundColor || "#ffffff"}
-                        onChange={(e) =>
-                          updateSection(section.id, { backgroundColor: e.target.value })
-                        }
-                      />
-                    </div>
-                  </div>
-                  <DraggableList
-                    items={fields}
-                    onReorder={(nextFields) => reorderSectionFields(section.id, nextFields)}
-                    itemKey="id"
-                    renderItem={(field) => (
-                      <div className="form-custom-field-editor">
-                        <div className="form-custom-field-row">
-                          <label className="form-custom-toggle-item">
-                            <input
-                              type="checkbox"
-                              checked={Boolean(field.enabled)}
-                              onChange={(e) =>
-                                updateSectionField(section.id, field.id, {
-                                  enabled: e.target.checked,
-                                })
-                              }
-                            />
-                            <span className="visually-hidden">Enable {field.label}</span>
-                          </label>
-                          <input
-                            type="text"
-                            className="form-control form-control-sm"
-                            value={field.label || ""}
-                            onChange={(e) =>
-                              updateSectionField(section.id, field.id, {
-                                label: e.target.value,
-                              })
-                            }
-                            placeholder="Field label"
-                          />
-                        </div>
-                        <div className="form-custom-field-options">
-                          <select
-                            className="form-select form-select-sm"
-                            value={field.fieldLayout || "half"}
-                            onChange={(e) =>
-                              updateSectionField(section.id, field.id, {
-                                fieldLayout: e.target.value,
-                              })
-                            }
-                            title="Field layout width"
-                          >
-                            {FIELD_LAYOUT_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </option>
-                            ))}
-                          </select>
-                          <input
-                            type="color"
-                            className="form-custom-field-bg-picker"
-                            title="Field background color"
-                            value={field.backgroundColor || "#ffffff"}
-                            onChange={(e) =>
-                              updateSectionField(section.id, field.id, {
-                                backgroundColor: e.target.value,
-                              })
-                            }
-                          />
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-link form-custom-clear-bg"
-                            onClick={() =>
-                              updateSectionField(section.id, field.id, {
-                                backgroundColor: "",
-                              })
-                            }
-                          >
-                            Clear bg
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  />
-                </div>
-              ) : null}
-            </div>
-          );
-        }}
-      />
-    </div>
-  );
-
-  const renderContentTab = () => (
-    <>
-      <div className="col-12">
-        <label className="form-label" htmlFor="fc-compliance">Act / Compliance Reference</label>
-        <textarea
-          id="fc-compliance"
-          className="form-control"
-          rows={2}
-          value={formConfig.complianceReference || ""}
-          onChange={(e) => updateConfig("complianceReference", e.target.value)}
-          placeholder="Statutory act and form reference shown below the title"
-        />
-      </div>
-      <div className="col-12">
-        <label className="form-label" htmlFor="fc-header-note">Header Note</label>
-        <textarea
-          id="fc-header-note"
-          className="form-control"
-          rows={2}
-          value={formConfig.headerNote || ""}
-          onChange={(e) => updateConfig("headerNote", e.target.value)}
-        />
-      </div>
-      <div className="col-12">
-        <label className="form-label" htmlFor="fc-footer-note">Footer Note</label>
-        <textarea
-          id="fc-footer-note"
-          className="form-control"
-          rows={2}
-          value={formConfig.footerNote || ""}
-          onChange={(e) => updateConfig("footerNote", e.target.value)}
-        />
-      </div>
-      <div className="col-12">
-        <label className="form-label" htmlFor="fc-terms">Terms & Conditions</label>
-        <textarea
-          id="fc-terms"
-          className="form-control"
-          rows={4}
-          value={formConfig.termsAndConditions || ""}
-          onChange={(e) => updateConfig("termsAndConditions", e.target.value)}
-        />
-      </div>
-      <div className="col-12">
-        <label className="form-label" htmlFor="fc-declaration">Declaration Text</label>
-        <textarea
-          id="fc-declaration"
-          className="form-control"
-          rows={2}
-          value={formConfig.declarationText || ""}
-          onChange={(e) => updateConfig("declarationText", e.target.value)}
-        />
-      </div>
-      <div className="col-12">
-        <h5 className="mb-2">Signature Labels</h5>
-        <div className="row g-2">
-          {Object.entries(formConfig.signatureLabels || {}).map(([key, label]) => (
-            <div className="col-12 col-md-4" key={key}>
-              <label className="form-label text-capitalize" htmlFor={`sig-${key}`}>{key}</label>
-              <input
-                id={`sig-${key}`}
-                type="text"
-                className="form-control"
-                value={label}
-                onChange={(e) => updateSignatureLabel(key, e.target.value)}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-      {formConfig.variables?.length ? (
-        <div className="col-12">
-          <label className="form-label">Available Variables</label>
-          <div className="form-custom-variables">
-            {formConfig.variables.map((v) => (
-              <span key={v.key} className="form-custom-variable-chip" title={v.label}>
-                {v.key}
-              </span>
-            ))}
-          </div>
-        </div>
-      ) : null}
-    </>
-  );
-
   return (
-    <div className={`form-custom-page mobile-mode-${mobileMode}`}>
+    <div
+      className={`form-custom-page mobile-mode-${mobileMode}${
+        showBuilder ? " form-custom-page--editing" : ""
+      }`}
+    >
       <div className="form-custom-page-header">
         <div>
-          <h2 className="form-custom-page-title">Agreement Customization</h2>
-          <p className="form-custom-page-subtitle">
-            Customize loan and finance agreement templates per firm — layout, colors, sections, terms, and signatures.
-          </p>
+          <h2 className="form-custom-page-title">Agreement Builder</h2>
         </div>
-      </div>
-
-      <div className="form-custom-editor-tabs mb-3" role="tablist" aria-label="Agreement type">
-        {AGREEMENT_TYPES.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            aria-selected={agreementType === tab.id}
-            className={`form-custom-editor-tab ${agreementType === tab.id ? "active" : ""}`}
-            onClick={() => setAgreementType(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
       </div>
 
       {!sortedTemplates.length && !loading ? (
         <div className="alert alert-warning">
           {resolveActiveFirmFilterId(selectedFirmId)
-            ? `No ${agreementType === "Finance" ? "finance" : "loan"} agreement templates for the firm selected in the header. Choose another firm or switch to All Firm.`
-            : `Add at least one firm to manage ${agreementType === "Finance" ? "finance" : "loan"} agreement templates.`}
+            ? "No agreement templates for the firm selected in the header. Choose another firm or switch to All Firm."
+            : "Add at least one firm to manage agreement templates."}
         </div>
       ) : null}
 
       <div className="form-custom-mobile-mode-tabs" role="tablist" aria-label="Mobile sections">
-        <button type="button" role="tab" aria-selected={mobileMode === "list"}
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mobileMode === "list"}
           className={`form-custom-mobile-mode-tab ${mobileMode === "list" ? "active" : ""}`}
-          onClick={() => setMobileMode("list")}>
-          <FiList size={16} /><span>Firm List</span>
+          onClick={() => {
+            if (showBuilder) return;
+            setMobileMode("list");
+          }}
+          disabled={showBuilder}
+        >
+          <FiList size={16} />
+          <span>Firm List</span>
         </button>
-        <button type="button" role="tab" aria-selected={mobileMode === "edit"}
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mobileMode === "edit"}
           className={`form-custom-mobile-mode-tab ${mobileMode === "edit" ? "active" : ""}`}
-          onClick={() => editingId && setMobileMode("edit")} disabled={!editingId}>
-          <FiEdit3 size={16} /><span>Edit</span>
+          onClick={() => editingId && setMobileMode("edit")}
+          disabled={!editingId}
+        >
+          <FiEdit3 size={16} />
+          <span>Edit</span>
         </button>
-        <button type="button" role="tab" aria-selected={mobileMode === "preview"}
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mobileMode === "preview"}
           className={`form-custom-mobile-mode-tab ${mobileMode === "preview" ? "active" : ""}`}
-          onClick={() => setMobileMode("preview")}>
-          <FiEye size={16} /><span>Preview</span>
+          onClick={() => setMobileMode("preview")}
+        >
+          <FiEye size={16} />
+          <span>Preview</span>
         </button>
       </div>
 
-      <div className="form-custom-workspace">
-        <div className="form-custom-workspace-body">
-          {editingId && formConfig ? (
-            <div className="form-custom-form-card">
-              <div className="form-custom-form-card-head">
-                <div>
-                  <h4>
-                    <FiFileText size={16} className="me-1" />
-                    Edit {agreementType === "Finance" ? "Finance" : "Loan"} Agreement — {editingFirmName}
-                  </h4>
-                </div>
-                <span className="form-custom-edit-badge">Editing</span>
-              </div>
-
-              <div className="form-custom-editor-tabs" role="tablist">
-                {EDITOR_TABS.map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={editorTab === tab.id}
-                    className={`form-custom-editor-tab ${editorTab === tab.id ? "active" : ""}`}
-                    onClick={() => setEditorTab(tab.id)}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
-              <form noValidate onSubmit={handleSubmit}>
-                <div className="row g-3">
-                  {editorTab === "general" && renderGeneralTab()}
-                  {editorTab === "colors" && renderColorsTab()}
-                  {editorTab === "sections" && renderSectionsTab()}
-                  {editorTab === "content" && renderContentTab()}
-                </div>
-
-                <div className="form-custom-form-actions">
-                  <button type="button" className="btn btn-form-custom-discard" onClick={handleDiscard}>
-                    Cancel
-                  </button>
-                  <button type="submit" className="btn btn-form-custom-save" disabled={saving}>
-                    <FiSave size={16} className="me-1" />
-                    {saving ? "Saving…" : "Save Template"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          ) : (
-            <div className="form-custom-form-card form-custom-form-empty">
-              <FiFileText size={28} className="form-custom-form-empty-icon" />
-              <h4>Select a firm agreement to customize</h4>
-              <p className="form-custom-form-hint mb-0">
-                Choose {agreementType === "Finance" ? "Finance" : "Loan"} Agreement tab above, then edit any firm below.
-              </p>
-            </div>
-          )}
-
-          <aside className="form-custom-preview-panel">
-            <div className="form-custom-preview-panel-head">
-              <div>
-                <h5>A4 PDF Preview</h5>
-                <p>Sample {agreementType === "Finance" ? "finance" : "loan"} test data · {editingFirmName || "select firm"}</p>
-              </div>
-              {formConfig ? (
-                <div className="form-custom-preview-actions">
-                  <button type="button" className="btn btn-sm btn-outline-primary" onClick={handlePdfPreview}>
-                    <FiExternalLink size={14} className="me-1" /> Open PDF
-                  </button>
-                  <button type="button" className="btn btn-sm btn-outline-secondary" onClick={handlePdfDownload}>
-                    <FiDownload size={14} className="me-1" /> Download
-                  </button>
-                </div>
-              ) : null}
-            </div>
-            <div className="form-custom-preview-wrap">
-              <FormTemplatePreview
-                config={formConfig ? normalizeAgreementConfig(formConfig, agreementType) : null}
-                firmName={editingFirmName}
-                scale={0.55}
-                testData={previewTestData}
-                transactionRows={previewTransactionRows}
-                leftLogoUrl={resolveFirmLeftLogoUrl(editingFirm)}
-                rightLogoUrl={resolveFirmRightLogoUrl(editingFirm)}
-                firmFormHeader={editingFirm?.firm_form_header || ""}
-                firmFormFooter={editingFirm?.firm_form_footer || ""}
-              />
-            </div>
-          </aside>
+      {showBuilder ? (
+        <div className="form-custom-workspace">
+          <AgreementBuilderWorkspace
+            agreementType={editingAgreementType}
+            firmName={editingFirmName}
+            loanType={editingLoanType}
+            firm={editingFirm}
+            formConfig={formConfig}
+            status={status}
+            saving={saving}
+            preparingPdf={preparingPdf}
+            onStatusChange={setStatus}
+            onSave={() => handleSubmit({ preventDefault: () => {} })}
+            onBackToList={handleBackToList}
+            onPdfPreview={handlePdfPreview}
+            updateConfig={updateConfig}
+            updateTheme={updateTheme}
+            updateLayout={updateLayout}
+            updateSection={updateSection}
+            updateSectionField={updateSectionField}
+            reorderSectionFields={reorderSectionFields}
+            updateSignatureLabel={updateSignatureLabel}
+            reorderBuilderBlocks={reorderBuilderBlocks}
+            addBlockFromPalette={addBlockFromPalette}
+            removeBlockFromCanvas={removeBlockFromCanvas}
+            toggleBlockOnCanvas={toggleBlockOnCanvas}
+            updateBlockLayout={updateBlockLayout}
+            updateFormAsset={updateFormAsset}
+            previewFormData={previewFormData}
+            previewTransactionRows={previewTransactionRows}
+            readOnly={builderReadOnly}
+          />
         </div>
-      </div>
+      ) : null}
 
-      <div className="form-custom-list-card card shadow-sm border-0 border-md-1 border-secondary">
-        <List
-          data={sortedTemplates}
-          columns={columns}
-          title={`${resolveActiveFirmFilterId(selectedFirmId) ? "Firm" : "All Firms"} — ${agreementType === "Finance" ? "Finance" : "Loan"} Agreements${listTitleSuffix}${loading ? " (loading…)" : ""}`}
-          primaryKey="uuid"
-          subtitleKey="updatedAt"
-          hasDelete={false}
-          hasEdit={true}
-          onEdit={handleEdit}
-          showFooter={false}
-          showSearch={true}
-          applyDefaultDateFilter={false}
-        />
-      </div>
+      {!showBuilder ? (
+        <div className="form-custom-list-card card shadow-sm border-0 border-md-1 border-secondary">
+          <List
+            data={sortedTemplates}
+            columns={columns}
+            title={`Agreement Template List${listTitleSuffix}${loading ? " (loading…)" : ""}`}
+            primaryKey="uuid"
+            subtitleKey="updatedAt"
+            hasDelete={false}
+            hasEdit={canOpenBuilder}
+            onEdit={handleEdit}
+            showFooter={false}
+            showSearch={true}
+            applyDefaultDateFilter={false}
+          />
+        </div>
+      ) : null}
     </div>
   );
 };

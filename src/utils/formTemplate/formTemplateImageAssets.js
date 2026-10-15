@@ -79,7 +79,7 @@ export const hasFormTemplateFooterImage = (config) => {
 };
 
 /** Preview URLs: template upload → firm logo → optional sample. */
-export const resolveForm8BuilderImageUrls = (config, firm, { useSampleAssets = true } = {}) => {
+export const resolveFormBuilderImageUrls = (config, firm, { useSampleAssets = true } = {}) => {
   const layout = config?.layout || {};
   const assets = getFormTemplateAssets(config);
   const firmLeft = resolveFirmLeftLogoUrl(firm);

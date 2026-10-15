@@ -10,7 +10,7 @@ import { toast } from "react-hot-toast";
 import List from "../common/List";
 import { getFormTemplates, updateFormTemplate } from "../../api/formTemplateApi";
 import { getFirms } from "../../api/firmApi";
-import Form8BuilderWorkspace from "./formTemplate/Form8BuilderWorkspace";
+import FormBuilderWorkspace from "./formTemplate/FormBuilderWorkspace";
 import {
   normalizeFormConfig,
   prepareFormTemplateConfigForSave,
@@ -19,7 +19,7 @@ import {
 import {
   clampForm8BlockLayoutHorizontal,
   isForm8FreeCanvasLayout,
-} from "../../utils/formTemplate/form8CanvasLayout";
+} from "../../utils/formTemplate/formCanvasLayout";
 import { buildFormTemplatePrintHtml } from "../../utils/formTemplate/buildFormTemplatePrintHtml";
 import {
   downloadFormTemplateHtmlPdf as downloadFormTemplatePdf,
@@ -32,8 +32,8 @@ import {
   getRemoveBlockPatches,
   insertBlockInOrder,
   isForm8BlockOnCanvas,
-} from "../../utils/formTemplate/form8BuilderPalette";
-import { sectionBlockId } from "../../utils/formTemplate/form8BuilderCatalog";
+} from "../../utils/formTemplate/formBuilderPalette";
+import { sectionBlockId } from "../../utils/formTemplate/formBuilderCatalog";
 import { FORM_TEMPLATE_ASSET_KEYS } from "../../utils/formTemplate/formTemplateImageAssets";
 import {
   canRemoveForm8Block,
@@ -41,26 +41,35 @@ import {
   FORM8_DEFAULT_BLOCK_ORDER,
   getForm8BlockOrder,
   normalizeBuilderBlockOrder,
-} from "../../utils/formTemplate/form8BuilderBlocks";
+} from "../../utils/formTemplate/formBuilderBlocks";
 import {
   createEmptyForm8DividerLayout,
   createNextForm8DividerBlockId,
   isForm8DividerBlockId,
   isForm8DividerPaletteId,
-} from "../../utils/formTemplate/form8DividerBlocks";
+} from "../../utils/formTemplate/formDividerBlocks";
 import {
   FORM8_STOCK_BLOCK_ID,
   getForm8LoanTypeLabel,
   isForm8SecuredTemplate,
   normalizeForm8LoanType,
-} from "../../utils/formTemplate/form8LoanType";
+} from "../../utils/formTemplate/formLoanType";
 import {
   resolveActiveFirmFilterId,
   rowMatchesFirmFilter,
 } from "../../store/slices/firmSlice";
+import usePermissions from "../../hooks/usePermissions";
+import {
+  canAccessFormBuilder,
+  canEditFormBuilder,
+} from "../../utils/builderPermissions";
 import "../../css/FormCustomization.css";
 
 const FormCustomizationPage = () => {
+  const { can } = usePermissions();
+  const canOpenBuilder = canAccessFormBuilder(can);
+  const builderReadOnly = !canEditFormBuilder(can);
+
   const { selectedFirmId, firms: reduxFirms, selectedFirm } = useSelector(
     (state) => state.firm
   );
@@ -152,6 +161,10 @@ const FormCustomizationPage = () => {
   };
 
   const handleEdit = (row) => {
+    if (!canOpenBuilder) {
+      toast.error("You do not have permission to open Form Builder.");
+      return;
+    }
     const id = row.uuid || row.id;
     if (!id) {
       toast.error("This template cannot be opened. Refresh the list and try again.");
@@ -425,6 +438,10 @@ const FormCustomizationPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!canEditFormBuilder(can)) {
+      toast.error("You do not have permission to save form templates.");
+      return;
+    }
     if (!editingId || !formConfig) {
       toast.error("Select a firm template from the list to edit");
       return;
@@ -569,7 +586,7 @@ const FormCustomizationPage = () => {
     >
       <div className="form-custom-page-header">
         <div>
-          <h2 className="form-custom-page-title">Form Customization</h2>
+          <h2 className="form-custom-page-title">Form Builder</h2>
         </div>
       </div>
 
@@ -605,7 +622,7 @@ const FormCustomizationPage = () => {
 
       {showBuilder ? (
         <div className="form-custom-workspace">
-          <Form8BuilderWorkspace
+          <FormBuilderWorkspace
             firmName={editingFirmName}
             loanType={editingLoanType}
             firm={editingFirm}
@@ -633,6 +650,7 @@ const FormCustomizationPage = () => {
             toggleBlockOnCanvas={toggleBlockOnCanvas}
             updateBlockLayout={updateBlockLayout}
             updateFormAsset={updateFormAsset}
+            readOnly={builderReadOnly}
           />
         </div>
       ) : null}
@@ -642,11 +660,11 @@ const FormCustomizationPage = () => {
           <List
             data={sortedTemplates}
             columns={columns}
-            title={`Firm-wise Form Templates${listTitleSuffix}${loading ? " (loading…)" : ""}`}
+            title={`Form Template List${listTitleSuffix}${loading ? " (loading…)" : ""}`}
             primaryKey="uuid"
             subtitleKey="updatedAt"
             hasDelete={false}
-            hasEdit={true}
+            hasEdit={canOpenBuilder}
             onEdit={handleEdit}
             showFooter={false}
             showSearch={true}

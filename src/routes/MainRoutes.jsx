@@ -220,7 +220,18 @@ const MainRoutes = () => {
               <Route
                 path="/sms"
                 element={
-                  <PermissionRoute anyOf={["sms.view", "sms.manage"]}>
+                  <PermissionRoute
+                    anyOf={[
+                      "sms.view",
+                      "sms.manage",
+                      "sms.whatsappView",
+                      "sms.whatsappManage",
+                      "sms.textView",
+                      "sms.textManage",
+                      "sms.emailView",
+                      "sms.emailManage",
+                    ]}
+                  >
                     <SmsPage />
                   </PermissionRoute>
                 }
@@ -228,7 +239,7 @@ const MainRoutes = () => {
               <Route
                 path="/backup"
                 element={
-                  <PermissionRoute permission="settings.manage">
+                  <PermissionRoute anyOf={["backup.view", "backup.manage"]}>
                     <BackupRoutes />
                   </PermissionRoute>
                 }
@@ -253,7 +264,7 @@ const MainRoutes = () => {
               <Route
                 path="/settings/kyc-integration"
                 element={
-                  <PermissionRoute permission="settings.manage">
+                  <PermissionRoute anyOf={["kyc.view", "kyc.manage"]}>
                     <KycIntegrationPage />
                   </PermissionRoute>
                 }
@@ -261,7 +272,7 @@ const MainRoutes = () => {
               <Route
                 path="/settings/form-customization"
                 element={
-                  <PermissionRoute permission="settings.manage">
+                  <PermissionRoute anyOf={["formBuilder.view", "formBuilder.edit"]}>
                     <FormCustomizationPage />
                   </PermissionRoute>
                 }
@@ -269,7 +280,9 @@ const MainRoutes = () => {
               <Route
                 path="/settings/agreement-customization"
                 element={
-                  <PermissionRoute permission="settings.manage">
+                  <PermissionRoute
+                    anyOf={["agreementBuilder.view", "agreementBuilder.edit"]}
+                  >
                     <AgreementCustomizationPage />
                   </PermissionRoute>
                 }

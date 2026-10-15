@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import usePermissions from '../../hooks/usePermissions'
+import useOwnerLimits from '../../hooks/useOwnerLimits'
 
 import QuickAddUserModal from '../user/QuickAddUserModal'
 import FinanceCollectionModal from '../finance/FinanceCollectionModal'
@@ -95,13 +96,20 @@ const allActionItems = [
 
 const ActionCards = ({ firms, selectedFirmId }) => {
   const { can } = usePermissions();
+  const { canAddFirm, canAddStaff } = useOwnerLimits();
   const [showModal, setShowModal] = useState(false);
   const [showFinanceModal, setShowFinanceModal] = useState(false);
   const [showLoanModal, setShowLoanModal] = useState(false);
 
   const actionItems = useMemo(
-    () => allActionItems.filter((item) => !item.permission || can(item.permission)),
-    [can]
+    () =>
+      allActionItems.filter((item) => {
+        if (item.to === '/firm/add' && !canAddFirm) return false;
+        if (item.to === '/staff/add' && !canAddStaff) return false;
+        if (!item.permission) return true;
+        return can(item.permission);
+      }),
+    [can, canAddFirm, canAddStaff]
   );
 
   const handleItemClick = (item) => {

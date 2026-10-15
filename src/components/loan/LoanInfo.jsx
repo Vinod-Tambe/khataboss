@@ -1347,7 +1347,11 @@ const LoanInfo = () => {
   const canDeleteLoan = can('loan.delete');
   const canForm8 = can('loan.form8') || can('loan.view');
   const canAgreement = can('loan.agreement') || can('loan.view');
-  const canSendLoanMessages = can('sms.manage');
+  const canSendLoanMessages =
+    can('sms.manage') ||
+    can('sms.whatsappManage') ||
+    can('sms.textManage') ||
+    can('sms.emailManage');
   const canSendLoanNotice = can('loan.notice');
 
   const openLoanCustomerMessage = (kind) => {

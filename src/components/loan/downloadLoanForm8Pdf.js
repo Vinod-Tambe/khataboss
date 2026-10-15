@@ -9,7 +9,7 @@ import {
 } from '../../utils/formTemplate/renderFormTemplateHtmlPdf';
 import { buildLiveFormTemplatePdfOptions } from '../../utils/formTemplate/buildFormTemplatePdfOptions';
 import resolveFirmForPdf, { mergeCustomerForPdf } from '../../utils/formTemplate/resolveFirmForPdf';
-import { normalizeForm8LoanType } from '../../utils/formTemplate/form8LoanType';
+import { normalizeForm8LoanType } from '../../utils/formTemplate/formLoanType';
 
 export async function buildLoanForm8PdfPack(loanDetails, customer = null) {
   if (!loanDetails) {

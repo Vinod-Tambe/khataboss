@@ -1,7 +1,8 @@
 import { getAgreementTemplate } from '../../api/agreementTemplateApi';
-import { normalizeAgreementConfig } from '../../utils/formTemplate/agreementTemplateConfig';
+import { normalizeAgreementConfig } from '../../utils/agreementBuilder/templateConfig';
 import { buildFormTemplateFinanceData } from '../../utils/formTemplate/buildFormTemplateFinanceData';
-import { downloadFormTemplatePdf } from '../../utils/formTemplate/buildFormTemplatePdf';
+import { buildFormTemplatePrintHtml } from '../../utils/formTemplate/buildFormTemplatePrintHtml';
+import { downloadFormTemplateHtmlPdf } from '../../utils/formTemplate/renderFormTemplateHtmlPdf';
 import { buildLiveFormTemplatePdfOptions } from '../../utils/formTemplate/buildFormTemplatePdfOptions';
 import resolveFirmForPdf, { mergeCustomerForPdf } from '../../utils/formTemplate/resolveFirmForPdf';
 
@@ -49,7 +50,16 @@ export const downloadFinanceAgreementPdf = async ({
     config,
   });
 
-  const fileName = await downloadFormTemplatePdf(config, firmName || template.firmName, pdfOptions);
+  const displayFirmName = firmName || template.firmName;
+  const html =
+    template.html ||
+    template.printHtml ||
+    buildFormTemplatePrintHtml(config, { firmName: displayFirmName });
+
+  const fileName = await downloadFormTemplateHtmlPdf(html, config, {
+    ...pdfOptions,
+    displayFirmName,
+  });
 
   return fileName;
 };

@@ -4,6 +4,7 @@ import AddFirm from '../../components/firm/AddFirm';
 import FirmList from '../../components/firm/FirmList';
 import UpdateFirm from '../../components/firm/UpdateFirm';
 import PermissionRoute from '../../routes/PermissionRoute';
+import OwnerLimitRoute from '../../routes/OwnerLimitRoute';
 import { nestedRoutesProps } from '../../utils/moduleRouteUtils';
 
 const FirmRoutes = () => {
@@ -12,7 +13,16 @@ const FirmRoutes = () => {
   return (
     <div>
       <Routes {...nestedRoutesProps(location)}>
-        <Route path="add" element={<PermissionRoute permission="firm.create"><AddFirm /></PermissionRoute>} />
+        <Route
+          path="add"
+          element={
+            <PermissionRoute permission="firm.create">
+              <OwnerLimitRoute resource="firm" redirectTo="/firm/list">
+                <AddFirm />
+              </OwnerLimitRoute>
+            </PermissionRoute>
+          }
+        />
         <Route path="list" element={<PermissionRoute permission="firm.view"><FirmList /></PermissionRoute>} />
         <Route path="edit/:uuid" element={<PermissionRoute permission="firm.edit"><UpdateFirm /></PermissionRoute>} />
         <Route path="*" element={<Navigate to="/firm/list" replace />} />

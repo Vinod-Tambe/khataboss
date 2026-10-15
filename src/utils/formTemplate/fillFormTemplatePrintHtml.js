@@ -1,4 +1,4 @@
-import { getForm8StockCellValue, getForm8StockFooterCellValue } from './form8StockTable';
+import { getForm8StockCellValue, getForm8StockFooterCellValue } from './formStockTable';
 
 const esc = (s) =>
   String(s ?? '')

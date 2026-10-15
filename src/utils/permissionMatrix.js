@@ -11,7 +11,11 @@ export const MODULE_META = {
   stock: { label: "Stock access", icon: "bi-box-seam" },
   finance: { label: "Finance access", icon: "bi-currency-rupee" },
   reports: { label: "Reports access", icon: "bi-bar-chart-line" },
-  settings: { label: "Settings access", icon: "bi-gear-fill" },
+  settings: { label: "Rate & Purity access", icon: "bi-sliders" },
+  formBuilder: { label: "Form Builder access", icon: "bi-ui-checks" },
+  agreementBuilder: { label: "Agreement Builder access", icon: "bi-file-earmark-text" },
+  kyc: { label: "KYC Integration access", icon: "bi-shield-check" },
+  backup: { label: "Backup access", icon: "bi-database" },
   sms: { label: "SMS / Messaging access", icon: "bi-chat-dots-fill" },
 };
 

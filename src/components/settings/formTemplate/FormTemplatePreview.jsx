@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { useForm8PointerReorder } from './useForm8PointerReorder';
+import { useFormPointerReorder } from './useFormPointerReorder';
 import moment from 'moment';
 import {
   getSortedSections,
@@ -19,16 +19,16 @@ import {
   SAMPLE_CUSTOMER_PHOTO_DATA_URL,
   SAMPLE_FIRM_LOGO_DATA_URL,
 } from '../../../utils/formTemplate/formTemplatePreviewAssets';
-import { parseSectionBlockId } from '../../../utils/formTemplate/form8BuilderCatalog';
-import { parseFieldBlockId } from '../../../utils/formTemplate/form8FieldBlocks';
-import { isForm8DividerBlockId } from '../../../utils/formTemplate/form8DividerBlocks';
+import { parseSectionBlockId } from '../../../utils/formTemplate/formBuilderCatalog';
+import { parseFieldBlockId } from '../../../utils/formTemplate/formFieldBlocks';
+import { isForm8DividerBlockId } from '../../../utils/formTemplate/formDividerBlocks';
 import {
   getBlockLayout,
   getForm8BlockOrder,
   getForm8LogoMediaStyle,
   isForm8BlockEnabled,
   isForm8MediaBlockId,
-} from '../../../utils/formTemplate/form8BuilderBlocks';
+} from '../../../utils/formTemplate/formBuilderBlocks';
 import { templateLooksLikeHtml } from '../../../utils/formTemplate/formTemplateRichText';
 import {
   blockAbsoluteFrameStyle,
@@ -36,49 +36,49 @@ import {
   getForm8A4PageCount,
   getForm8EditorSheetHeightMm,
   isForm8FreeCanvasLayout,
-} from '../../../utils/formTemplate/form8CanvasLayout';
-import Form8BuilderBlockFrame from './Form8BuilderBlockFrame';
-import Form8SignatureBlock from './Form8SignatureBlock';
-import { getForm8SignatureEntries } from '../../../utils/formTemplate/form8Signatures';
+} from '../../../utils/formTemplate/formCanvasLayout';
+import FormBuilderBlockFrame from './FormBuilderBlockFrame';
+import FormSignatureBlock from './FormSignatureBlock';
+import { getFormSignatureEntries } from '../../../utils/formTemplate/formSignatures';
 import {
   getForm8SectionPreviewStyle,
   getForm8SectionTitlePreviewStyle,
-} from '../../../utils/formTemplate/form8SectionStyle';
+} from '../../../utils/formTemplate/formSectionStyle';
 import {
   FORM8_HEADER_LINE_DEFS,
   getForm8BlockTitlePreviewStyle,
   getForm8TextPartPreviewStyle,
-  getForm8SignatureSectionBoxStyle,
-  getForm8SignatureLinePreviewStyle,
-  getForm8SignatureNamePreviewStyle,
+  getFormSignatureSectionBoxStyle,
+  getFormSignatureLinePreviewStyle,
+  getFormSignatureNamePreviewStyle,
   getForm8DividerPreviewStyle,
   getForm8HeaderBoxPreviewStyle,
   getForm8HeaderLinePreviewStyle,
   getForm8ImageBorderPreviewStyle,
-} from '../../../utils/formTemplate/form8BlockStyle';
-import { getForm8TextSizePt } from '../../../utils/formTemplate/form8TypographyGroups';
+} from '../../../utils/formTemplate/formBlockStyle';
+import { getForm8TextSizePt } from '../../../utils/formTemplate/formTypographyGroups';
 import {
   getForm8StockCellBorderStyle,
   getForm8StockSectionBoxStyle,
   getForm8StockTablePreviewVars,
   isForm8TableBorderOn,
-} from '../../../utils/formTemplate/form8StockTableStyle';
+} from '../../../utils/formTemplate/formStockTableStyle';
 import {
   getForm8FieldDisplayLabel,
   getForm8FooterNoteTitle,
   getForm8SectionDisplayTitle,
-} from '../../../utils/formTemplate/form8SectionDisplay';
+} from '../../../utils/formTemplate/formSectionDisplay';
 import {
   getForm8StockCellValue,
   getForm8StockFooterCellValue,
   getVisibleForm8StockColumns,
-} from '../../../utils/formTemplate/form8StockTable';
-import Form8BuilderCanvasDropSlot from './Form8BuilderCanvasDropSlot';
-import { F8_PALETTE_DRAG_MIME } from '../../../utils/formTemplate/form8BuilderPalette';
+} from '../../../utils/formTemplate/formStockTable';
+import FormBuilderCanvasDropSlot from './FormBuilderCanvasDropSlot';
+import { F8_PALETTE_DRAG_MIME } from '../../../utils/formTemplate/formBuilderPalette';
 import {
   dragTransferHas,
   readPaletteDragBlockId,
-} from '../../../utils/formTemplate/form8BuilderDnD';
+} from '../../../utils/formTemplate/formBuilderDnD';
 
 const CUSTOMER_PHOTO_FIELD_ID = 'customer_photo';
 const MM_PX = 96 / 25.4;
@@ -142,10 +142,10 @@ const FormTemplatePreview = ({
     [freeCanvas, canvasPageHeightMm, basePageHeightMm]
   );
   const { startPointerReorder, forcePointerReorder, getBlockDragUi, isCanvasSlotActive } =
-    useForm8PointerReorder(blockOrder, onReorderBlocks, builderMode && !freeCanvas);
+    useFormPointerReorder(blockOrder, onReorderBlocks, builderMode && !freeCanvas);
   const lastCanvasBlockId = blockOrder[blockOrder.length - 1];
   const signatureEntries = useMemo(
-    () => getForm8SignatureEntries(config, testData),
+    () => getFormSignatureEntries(config, testData),
     [config, testData]
   );
 
@@ -181,7 +181,7 @@ const FormTemplatePreview = ({
     const safeScale = Number.isFinite(scale) && scale > 0 ? scale : 1;
     const { isDragging, isDropTarget } = getBlockDragUi(blockId);
     return (
-      <Form8BuilderBlockFrame
+      <FormBuilderBlockFrame
         blockId={blockId}
         selected={selected}
         isDragging={isDragging}
@@ -203,7 +203,7 @@ const FormTemplatePreview = ({
         pageHeightMm={basePageHeightMm}
       >
         {children}
-      </Form8BuilderBlockFrame>
+      </FormBuilderBlockFrame>
     );
   };
 
@@ -780,19 +780,19 @@ const FormTemplatePreview = ({
       case 'signature_lines': {
         const sigSpec = getBlockLayout(config, blockId);
         const sigTheme = config.theme || {};
-        const sigBox = getForm8SignatureSectionBoxStyle(sigSpec);
+        const sigBox = getFormSignatureSectionBoxStyle(sigSpec);
         return wrapBlock(
           blockId,
           'f8-builder-block--signatures',
-          <Form8SignatureBlock
+          <FormSignatureBlock
             entries={signatureEntries}
             boxStyle={Object.keys(sigBox).length ? sigBox : undefined}
-            captionStyle={getForm8SignatureNamePreviewStyle(
+            captionStyle={getFormSignatureNamePreviewStyle(
               sigSpec,
               sigTheme,
               page.valueFontPt
             )}
-            lineStyle={getForm8SignatureLinePreviewStyle(sigSpec, sigTheme)}
+            lineStyle={getFormSignatureLinePreviewStyle(sigSpec, sigTheme)}
           />
         );
       }
@@ -813,7 +813,7 @@ const FormTemplatePreview = ({
                 {replaceTemplateVariables(config.declarationText, testData)}
               </p>
             ) : null}
-            <Form8SignatureBlock entries={signatureEntries} />
+            <FormSignatureBlock entries={signatureEntries} />
           </>
         );
 
@@ -857,7 +857,7 @@ const FormTemplatePreview = ({
 
   const renderCanvasDropBefore = (beforeId) =>
     builderMode ? (
-      <Form8BuilderCanvasDropSlot
+      <FormBuilderCanvasDropSlot
         key={`drop-before-${beforeId}`}
         dropBeforeId={beforeId}
         active={isCanvasSlotActive({ beforeId })}
@@ -907,7 +907,7 @@ const FormTemplatePreview = ({
         </React.Fragment>
       ))}
       {builderMode && lastCanvasBlockId ? (
-        <Form8BuilderCanvasDropSlot
+        <FormBuilderCanvasDropSlot
           dropAfterId={lastCanvasBlockId}
           active={isCanvasSlotActive({ afterId: lastCanvasBlockId })}
           onAddBlockFromPalette={onAddBlockFromPalette}

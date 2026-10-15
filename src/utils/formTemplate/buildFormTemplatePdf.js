@@ -16,7 +16,7 @@ import {
   applyPdfMixedScriptFonts,
   ensurePdfUnicodeFonts,
 } from './registerPdfUnicodeFonts';
-import { pdfBoldFromWeight } from './form8SectionStyle';
+import { pdfBoldFromWeight } from './formSectionStyle';
 import {
   buildFormTemplateTestData,
   getFormFieldValue,
@@ -29,20 +29,20 @@ import {
   getForm8BlockOrder,
   isForm8BlockEnabled,
   partitionForm8BlockOrder,
-} from './form8BuilderBlocks';
+} from './formBuilderBlocks';
 import { templateHtmlToPlain } from './formTemplateRichText';
-import { getForm8SignatureEntries } from './form8Signatures';
+import { getFormSignatureEntries } from './formSignatures';
 import {
   getForm8FieldDisplayLabel,
   getForm8FooterNoteTitle,
   getForm8SectionDisplayTitle,
-} from './form8SectionDisplay';
-import { getForm8FieldBlockValue, parseFieldBlockId } from './form8FieldBlocks';
+} from './formSectionDisplay';
+import { getForm8FieldBlockValue, parseFieldBlockId } from './formFieldBlocks';
 import {
   getForm8StockCellValue,
   getVisibleForm8StockColumns,
-} from './form8StockTable';
-import { buildStockItemsTablePdf } from './form8StockTableStyle';
+} from './formStockTable';
+import { buildStockItemsTablePdf } from './formStockTableStyle';
 import {
   FORM8_PAGE_PADDING_MM,
   getForm8BlockPdfAbsolutePos,
@@ -50,9 +50,9 @@ import {
   getForm8ReferencePageHeightMm,
   isForm8FreeCanvasLayout,
   withForm8StockRowFlow,
-} from './form8CanvasLayout';
-import { parseSectionBlockId } from './form8BuilderCatalog';
-import { isForm8DividerBlockId } from './form8DividerBlocks';
+} from './formCanvasLayout';
+import { parseSectionBlockId } from './formBuilderCatalog';
+import { isForm8DividerBlockId } from './formDividerBlocks';
 import {
   FORM8_HEADER_LINE_DEFS,
   getForm8BlockPdfBodyProps,
@@ -60,13 +60,13 @@ import {
   buildForm8TextPartPdfBlock,
   form8TextPartHasBox,
   getForm8TextSectionPdfBoxSpec,
-  getForm8SignatureLinePdf,
+  getFormSignatureLinePdf,
   signatureHasCustomBox,
   buildForm8DividerPdfBlock,
   getForm8HeaderLinePdfProps,
   headerHasCustomBox,
   isForm8HeaderBorderOn,
-} from './form8BlockStyle';
+} from './formBlockStyle';
 import {
   FORM8_PDF_LINE_HEIGHT,
   FORM8_PDF_LINE_HEIGHT_COMPACT,
@@ -75,7 +75,7 @@ import {
   getForm8SectionPdfTitleProps,
   PDF_TIGHT_LAYOUT,
   wrapSectionPdfBlocks,
-} from './form8SectionStyle';
+} from './formSectionStyle';
 
 const CUSTOMER_PHOTO_FIELD_ID = 'customer_photo';
 const LOGO_WIDTH = 72;
@@ -87,12 +87,12 @@ const sanitizePdfImage = (dataUrl) =>
 
 pdfMake.vfs = pdfFonts.vfs || pdfFonts.default?.vfs || pdfFonts;
 
-const buildForm8SignaturePdfBlock = (normalized, formData, compact, theme, valueFontPt) => {
-  const entries = getForm8SignatureEntries(normalized, formData);
+const buildFormSignaturePdfBlock = (normalized, formData, compact, theme, valueFontPt) => {
+  const entries = getFormSignatureEntries(normalized, formData);
   if (!entries.length) return null;
   const sigSpec = getBlockLayout(normalized, 'signature_lines');
   const body = getForm8BlockPdfBodyProps(sigSpec, theme, valueFontPt, valueFontPt);
-  const line = getForm8SignatureLinePdf(sigSpec, theme, compact);
+  const line = getFormSignatureLinePdf(sigSpec, theme, compact);
   const columns = {
     columns: entries.map((entry) => ({
       stack: [
@@ -966,7 +966,7 @@ export const buildFormTemplatePdfDefinition = (
         break;
       }
       case 'signature_lines': {
-        const sigBlock = buildForm8SignaturePdfBlock(
+        const sigBlock = buildFormSignaturePdfBlock(
           normalized,
           formData,
           compact,
@@ -998,7 +998,7 @@ export const buildFormTemplatePdfDefinition = (
             margin: [0, 0, 0, 16],
           });
         }
-        const legalSig = buildForm8SignaturePdfBlock(
+        const legalSig = buildFormSignaturePdfBlock(
           normalized,
           formData,
           compact,

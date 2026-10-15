@@ -1,12 +1,12 @@
-import { getForm8BlockOrder, getBlockLayout, isForm8BlockEnabled } from './form8BuilderBlocks';
-import { parseSectionBlockId } from './form8BuilderCatalog';
-import { parseFieldBlockId } from './form8FieldBlocks';
-import { isForm8DividerBlockId } from './form8DividerBlocks';
+import { getForm8BlockOrder, getBlockLayout, isForm8BlockEnabled } from './formBuilderBlocks';
+import { parseSectionBlockId } from './formBuilderCatalog';
+import { parseFieldBlockId } from './formFieldBlocks';
+import { isForm8DividerBlockId } from './formDividerBlocks';
 import {
   getForm8FieldDisplayLabel,
   getForm8FooterNoteTitle,
   getForm8SectionDisplayTitle,
-} from './form8SectionDisplay';
+} from './formSectionDisplay';
 import {
   getFieldLayoutClass,
   getPageStyle,
@@ -17,20 +17,20 @@ import {
   getForm8SectionFieldTextStyle,
   getForm8SectionPreviewStyle,
   getForm8SectionTitlePreviewStyle,
-} from './form8SectionStyle';
+} from './formSectionStyle';
 import {
   blockAbsoluteFrameStyle,
   computeForm8CanvasPageHeightMm,
   getForm8EditorSheetHeightMm,
-} from './form8CanvasLayout';
-import { getVisibleForm8StockColumns } from './form8StockTable';
-import { getForm8SignatureEntries } from './form8Signatures';
-import { isForm8SecuredTemplate } from './form8LoanType';
+} from './formCanvasLayout';
+import { getVisibleForm8StockColumns } from './formStockTable';
+import { getFormSignatureEntries } from './formSignatures';
+import { isForm8SecuredTemplate } from './formLoanType';
 import {
   FORM8_HEADER_LINE_DEFS,
   getForm8HeaderBoxPreviewStyle,
   getForm8HeaderLinePreviewStyle,
-} from './form8BlockStyle';
+} from './formBlockStyle';
 
 const esc = (s) =>
   String(s ?? '')
@@ -323,7 +323,7 @@ const renderStockHtml = (config) => {
 };
 
 const renderSignaturesHtml = (config) => {
-  const entries = getForm8SignatureEntries(config, {});
+  const entries = getFormSignatureEntries(config, {});
   const cells = entries
     .map(
       (entry) =>

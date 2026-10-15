@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { getStaffList, deleteStaff } from "../../api/staffApi";
 import { showToast } from "../common/ToastAlert";
 import usePermissions from "../../hooks/usePermissions";
-import PermissionGate from "../common/PermissionGate";
+import useOwnerLimits from "../../hooks/useOwnerLimits";
 import { resolveImageUrl } from "../../utils/imageHelpers";
 
 const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
@@ -25,6 +25,7 @@ const StaffGrid = () => {
   const [staffList, setStaffList] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const { canAddStaff } = useOwnerLimits({ staffCount: staffList.length });
 
   const loadStaff = useCallback(async (q = "") => {
     setLoading(true);
@@ -83,11 +84,11 @@ const StaffGrid = () => {
           </div>
         </div>
         <div className="col-3 text-end">
-          <PermissionGate permission="staff.create">
+          {can("staff.create") && canAddStaff ? (
             <Link className="btn btn-outline-success" to="/staff/add">
               <i className="bi bi-plus-square-dotted"></i>
             </Link>
-          </PermissionGate>
+          ) : null}
         </div>
       </div>
 
@@ -97,10 +98,15 @@ const StaffGrid = () => {
 
       {!loading && staffList.length === 0 && (
         <div className="text-center text-muted py-4">
-          No staff found.{" "}
-          <Link to="/staff/add" className="text-success fw-bold">
-            Add staff
-          </Link>
+          No staff found.
+          {can("staff.create") && canAddStaff ? (
+            <>
+              {" "}
+              <Link to="/staff/add" className="text-success fw-bold">
+                Add staff
+              </Link>
+            </>
+          ) : null}
         </div>
       )}
 
