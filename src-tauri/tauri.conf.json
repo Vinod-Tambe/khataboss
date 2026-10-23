@@ -5,7 +5,7 @@
   "identifier": "com.khataboss.app",
   "build": {
     "beforeDevCommand": "npm run start",
-    "beforeBuildCommand": "npm run react-build",
+    "beforeBuildCommand": "npm run build",
     "devUrl": "http://localhost:3001",
     "frontendDist": "../build"
   },

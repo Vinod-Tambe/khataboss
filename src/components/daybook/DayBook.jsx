@@ -13,11 +13,15 @@ import { getDaybookEntries } from "../../api/daybookApi";
 import { useSelector } from "react-redux";
 import { getFirmsDropdown } from "../../api/firmApi";
 import { showToast } from "../../components/common/ToastAlert";
-import { DAYBOOK_SECTIONS, isProcessingDaybookSection, isFirstMonthInterestDaybookSection, isInterAccountTransferDaybookSection } from "./dayBookUtils";
 import {
-  downloadDayBookPdf,
-  getDayBookPdfBlob,
-} from "./downloadDayBookPdf";
+  DAYBOOK_SECTIONS,
+  getOpeningTotalFormulaText,
+  getSignedBalanceTextClass,
+  isProcessingDaybookSection,
+  isFirstMonthInterestDaybookSection,
+  isInterAccountTransferDaybookSection,
+} from "./dayBookUtils";
+import DaybookBalanceFormulaHint from "./DaybookBalanceFormulaHint";
 import {
   resolveWhatsAppFirmId,
   sendReportWhatsAppPdf,
@@ -29,13 +33,6 @@ const Daybook = () => {
   const mobileDateRef = useRef(null);
   const { selectedFirmId } = useSelector((state) => state.firm);
   const authUser = useSelector((state) => state.auth.user);
-  const [firms, setFirms] = useState([]);
-  const [selectedFirm, setSelectedFirm] = useState(selectedFirmId === 'all' ? "" : selectedFirmId);
-
-  useEffect(() => {
-    setSelectedFirm(selectedFirmId === 'all' ? "" : selectedFirmId);
-  }, [selectedFirmId]);
-
   const { fyStart, fyEnd } = useMemo(() => {
     const currentYear = moment().year();
     const isAfterMarch = moment().month() >= 3;
@@ -47,6 +44,13 @@ const Daybook = () => {
       : moment(`${currentYear}-03-31`);
     return { fyStart: start, fyEnd: end };
   }, []);
+
+  const [firms, setFirms] = useState([]);
+  const [selectedFirm, setSelectedFirm] = useState(selectedFirmId === 'all' ? "" : selectedFirmId);
+
+  useEffect(() => {
+    setSelectedFirm(selectedFirmId === 'all' ? "" : selectedFirmId);
+  }, [selectedFirmId]);
 
   const [dateRange, setDateRange] = useState({
     startDate: fyStart.format('YYYY-MM-DD'),
@@ -257,6 +261,16 @@ const Daybook = () => {
   const formattedStart = moment(dateRange.startDate).format("DD-MM-YYYY");
   const formattedEnd = moment(dateRange.endDate).format("DD-MM-YYYY");
   const openingDisplay = daybookResponse.summary?.total_open_amt || "0.00";
+  const openingSummary = daybookResponse.summary || {};
+  const openingAmount = parseFloat(openingSummary.total_open_amt ?? openingDisplay) || 0;
+  const openingAmountClass = getSignedBalanceTextClass(openingAmount);
+  const openingFormula = getOpeningTotalFormulaText({
+    cash: openingSummary.total_cash_amt,
+    bank: openingSummary.total_bank_amt,
+    online: openingSummary.total_online_amt,
+    card: openingSummary.total_card_amt,
+    total: openingAmount,
+  });
 
   const sectionMetaByTitle = useMemo(
     () => Object.fromEntries(DAYBOOK_SECTIONS.map((section) => [section.title, section])),
@@ -303,9 +317,15 @@ const Daybook = () => {
     window.print();
   };
 
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
     if (loading) return;
-    downloadDayBookPdf(pdfOptions);
+    try {
+      const { downloadDayBookPdf } = await import("./downloadDayBookPdf");
+      downloadDayBookPdf(pdfOptions);
+    } catch (error) {
+      console.error("PDF download failed:", error);
+      showToast("Could not load PDF export.", "error");
+    }
   };
 
   const handleWhatsAppShare = async () => {
@@ -316,6 +336,7 @@ const Daybook = () => {
     const firmId = resolveWhatsAppFirmId(selectedFirm, firms, selectedFirmId);
 
     try {
+      const { getDayBookPdfBlob } = await import("./downloadDayBookPdf");
       const blob = await getDayBookPdfBlob(pdfOptions);
       const { message } = await sendReportWhatsAppPdf({
         reportType: 'daybook',
@@ -521,8 +542,10 @@ const Daybook = () => {
           <h6 className="fw-semibold text-dark mb-0">
             OPENING BALANCE :
           </h6>
-          <h6 className="fw-semibold text-brown mb-0">
-            {openingDisplay}
+          <h6 className={`fw-semibold mb-0 ${openingAmountClass}`.trim()}>
+            <DaybookBalanceFormulaHint formula={openingFormula}>
+              {openingDisplay}
+            </DaybookBalanceFormulaHint>
           </h6>
         </div>
       </div>
@@ -530,7 +553,11 @@ const Daybook = () => {
       <div className="d-md-none no-print daybook-mobile-meta">
         <div className="daybook-opening-chip">
           <span className="daybook-opening-chip__label">Opening Balance</span>
-          <span className="daybook-opening-chip__value">{openingDisplay}</span>
+          <span className={`daybook-opening-chip__value ${openingAmountClass}`.trim()}>
+            <DaybookBalanceFormulaHint formula={openingFormula}>
+              {openingDisplay}
+            </DaybookBalanceFormulaHint>
+          </span>
         </div>
         <div className="daybook-legend-mobile">
           <span className="text-danger">CR AMOUNT ●</span>

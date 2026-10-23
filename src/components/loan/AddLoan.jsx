@@ -8,7 +8,8 @@ import 'daterangepicker/daterangepicker.css';
 import { toast } from 'react-hot-toast';
 import { getFirmsDropdown } from '../../api/firmApi';
 import { getAccountsDropdown } from '../../api/accountApi';
-import { addGirvi, uploadItemImage, buildItemImageFormData } from '../../api/girviApi';
+import { addGirvi, getGirviById, uploadItemImage, buildItemImageFormData } from '../../api/girviApi';
+import { buildLoanInfoPath } from '../../utils/loanInfoRoute';
 import { getPurities } from '../../api/purityApi';
 import { getRates } from '../../api/rateApi';
 import useFormNavigation from '../../hooks/useFormNavigation';
@@ -545,8 +546,22 @@ const AddLoan = () => {
       toast.success('Loan saved successfully!');
 
       const girvId = res?.data?.girv_id;
-      navigate('/user/home/loan-info', {
-        state: girvId ? { loan: { girv_id: girvId } } : undefined,
+      if (!girvId) {
+        navigate('/user/home/active-loan');
+        return;
+      }
+
+      let loanForState = { girv_id: girvId };
+      try {
+        const detailRes = await getGirviById(girvId);
+        loanForState = detailRes?.data || detailRes || loanForState;
+      } catch (loadErr) {
+        console.warn('Loan created; detail fetch deferred:', loadErr);
+      }
+
+      navigate(buildLoanInfoPath(girvId), {
+        replace: true,
+        state: { loan: loanForState },
       });
     } catch (error) {
       console.error('Error saving loan:', error);

@@ -7,6 +7,7 @@ import {
   calculateFirstMonthInterestSectionTotals,
   calculateInterAccountTransferSectionTotals,
   formatCurrency,
+  getSignedBalancePdfColor,
   getRowAmounts,
   getProcessingRowAmounts,
   getFirstMonthInterestRowAmounts,
@@ -380,25 +381,47 @@ const buildSummaryTable = (keyedDaybookData, openingData) => {
     row('TODAY TOTAL:', s.today, COLORS.title),
     row('CLOSING AMOUNT:', s.closing, COLORS.cellText),
     [
-      { text: 'FINAL TOTAL :', style: 'tableFooter', alignment: 'right' },
       {
-        text: `CR : ${money(s.finalCr)}`,
+        text: [
+          { text: 'OPENING BAL : ', color: COLORS.footerText, bold: true },
+          {
+            text: money(s.opening.total),
+            color: getSignedBalancePdfColor(s.opening.total, COLORS),
+            bold: true,
+          },
+        ],
+        style: 'tableFooter',
+        alignment: 'right',
+      },
+      {
+        text: [
+          { text: 'TOTAL CR : ', color: COLORS.footerText, bold: true },
+          { text: money(s.finalCr), color: COLORS.cr, bold: true },
+        ],
         style: 'tableFooter',
         colSpan: 2,
         alignment: 'center',
-        color: COLORS.cr,
       },
       {},
       {
-        text: `DR : ${money(s.finalDr)}`,
+        text: [
+          { text: 'TOTAL DR : ', color: COLORS.footerText, bold: true },
+          { text: money(s.finalDr), color: COLORS.dr, bold: true },
+        ],
         style: 'tableFooter',
         colSpan: 2,
         alignment: 'center',
-        color: COLORS.dr,
       },
       {},
       {
-        text: money(s.finalTotal),
+        text: [
+          { text: 'CLOSING BAL : ', color: COLORS.footerText, bold: true },
+          {
+            text: money(s.finalTotal),
+            color: getSignedBalancePdfColor(s.finalTotal, COLORS),
+            bold: true,
+          },
+        ],
         style: 'tableFooter',
         colSpan: 2,
         alignment: 'center',

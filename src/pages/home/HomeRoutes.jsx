@@ -9,7 +9,7 @@ const HomeRoutes = () => {
   return (
     <div>
       <Routes {...nestedRoutesProps(location)}>
-        <Route path="*" element={<HomePage />} />
+        <Route path="/*" element={<HomePage />} />
       </Routes>
     </div>
   );

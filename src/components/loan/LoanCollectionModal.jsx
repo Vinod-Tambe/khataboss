@@ -13,6 +13,7 @@ import { getGirvisDropdown, getGirviById } from '../../api/girviApi';
 import { addDeposit } from '../../api/depositApi';
 import { getAccountsDropdown } from '../../api/accountApi';
 import { setSelectedUser } from '../../store/slices/userSlice';
+import { buildLoanInfoPath } from '../../utils/loanInfoRoute';
 import { getLoanInterestSummary } from '../../utils/loanInterest';
 
 const getLoanPendingSummary = (data) => {
@@ -414,9 +415,9 @@ const LoanCollectionModal = ({ show, onClose, firms = [], selectedFirmId, initia
             try {
                 const res = await getGirviById(girvId);
                 const fullData = res.data || res;
-                navigate('/user/home/loan-info', { state: { loan: fullData } });
+                navigate(buildLoanInfoPath(fullData), { state: { loan: fullData } });
             } catch {
-                navigate('/user/home/loan-info', { state: { loan: { girv_id: girvId } } });
+                navigate(buildLoanInfoPath(girvId), { state: { loan: { girv_id: girvId } } });
             }
         } catch (err) {
             toast.error(err.message || err.error || "Failed to process loan deposit");

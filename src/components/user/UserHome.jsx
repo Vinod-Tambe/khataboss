@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { getFinanceDetails } from "../../api/financeApi";
 import { getGirviById } from "../../api/girviApi";
+import { buildLoanInfoPath } from "../../utils/loanInfoRoute";
 import { getUserDashboard } from "../../api/dashboardApi";
 import moment from "moment";
 import {
@@ -173,7 +174,7 @@ const UserHome = () => {
     try {
       const res = await getGirviById(loanId);
       const fullData = res.data || res;
-      navigate("/user/home/loan-info", { state: { loan: fullData } });
+      navigate(buildLoanInfoPath(fullData), { state: { loan: fullData } });
     } catch (err) {
       console.error("Error viewing loan:", err);
     }

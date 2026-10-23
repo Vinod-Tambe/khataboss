@@ -10,6 +10,7 @@ import { useParams } from 'react-router-dom';
 import { getFirmsDropdown } from '../../api/firmApi';
 import { getAccountsDropdown } from '../../api/accountApi';
 import { getGirviById, updateGirvi, uploadItemImage, buildItemImageFormData } from '../../api/girviApi';
+import { buildLoanInfoPath } from '../../utils/loanInfoRoute';
 import { getPurities } from '../../api/purityApi';
 import { getRates } from '../../api/rateApi';
 import { toast } from 'react-hot-toast';
@@ -673,7 +674,7 @@ const UpdateLoan = () => {
       toast.success('Loan updated successfully!');
 
       const girvId = res?.data?.girv_id || formData.girv_id || id;
-      navigate('/user/home/loan-info', { state: { loan: { girv_id: girvId } } });
+      navigate(buildLoanInfoPath(girvId), { state: { loan: { girv_id: girvId } } });
     } catch (error) {
       console.error('Error updating loan:', error);
       toast.error(error?.error || 'Failed to update loan.');

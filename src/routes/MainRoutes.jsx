@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { nestedRoutesProps } from '../utils/moduleRouteUtils';
 import SubscriptionExpiryLoginModal from '../components/common/SubscriptionExpiryLoginModal';
 import IdleSessionGuard from '../components/common/IdleSessionGuard';
@@ -288,7 +288,8 @@ const MainRoutes = () => {
                 }
               />
               <Route path="/settings/update-password" element={<UpdatePassword />} />
-              <Route path="/*" element={< HomeRoutes />} />
+              <Route path="/home/*" element={<HomeRoutes />} />
+              <Route path="*" element={<Navigate to="/home" replace />} />
 
             </Routes>
           </div>

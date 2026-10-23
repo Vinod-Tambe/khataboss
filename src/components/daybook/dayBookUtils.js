@@ -3,6 +3,7 @@ import {
   getPersonalExpenseDaybookSection,
   isPersonalExpensesDaybookSection,
 } from "../../constants/personalExpense";
+import { getBalanceTone } from "../trial-balance/trialBalanceUtils";
 
 export {
   PERSONAL_EXPENSES_DAYBOOK_TITLE,
@@ -10,10 +11,69 @@ export {
   isPersonalExpensesDaybookSection,
 };
 
+export { getBalanceTone };
+
+/** Opening/closing signed totals: positive = DR (green), negative = CR (red). */
+export const getSignedBalanceAmountClass = (val) => {
+  const tone = getBalanceTone(val);
+  if (tone === "dr") return "daybook-summary-final__dr-amt";
+  if (tone === "cr") return "daybook-summary-final__cr-amt";
+  return "daybook-summary-final__bal-amt--zero";
+};
+
+export const getSignedBalanceTextClass = (val) => {
+  const tone = getBalanceTone(val);
+  if (tone === "dr") return "text-success";
+  if (tone === "cr") return "text-danger";
+  return "";
+};
+
+export const getSignedBalancePdfColor = (val, colors) => {
+  const tone = getBalanceTone(val);
+  if (tone === "dr") return colors.dr;
+  if (tone === "cr") return colors.cr;
+  return colors.footerText;
+};
+
 export const formatCurrency = (val) =>
   Math.abs(parseFloat(val) || 0).toLocaleString("en-IN", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
+  });
+
+export const formulaAmount = (val) => (parseFloat(val) || 0).toFixed(2);
+
+/** Tooltip text: opening total = sum of modes (excludes discount in total). */
+export const getOpeningTotalFormulaText = ({ cash, bank, online, card, total }) =>
+  [
+    "Opening Balance = Cash + Bank + Online + Card",
+    `${formulaAmount(cash)} + ${formulaAmount(bank)} + ${formulaAmount(online)} + ${formulaAmount(card)} = ${formulaAmount(total)}`,
+  ].join("\n");
+
+export const getOpeningModeFormulaText = (modeLabel, amount) =>
+  `Opening ${modeLabel} = ${formulaAmount(amount)}`;
+
+/** Tooltip text: closing total = opening total + today net total. */
+export const getClosingTotalFormulaText = ({ openingTotal, todayTotal, closingTotal }) =>
+  [
+    "Closing Balance = Opening Balance + Today Total",
+    `${formulaAmount(openingTotal)} + ${formulaAmount(todayTotal)} = ${formulaAmount(closingTotal)}`,
+  ].join("\n");
+
+export const getClosingModeFormulaText = (modeLabel, opening, today, closing) =>
+  [
+    `Closing ${modeLabel} = Opening ${modeLabel} + Today ${modeLabel}`,
+    `${formulaAmount(opening)} + ${formulaAmount(today)} = ${formulaAmount(closing)}`,
+  ].join("\n");
+
+export const getOpeningTotalFormulaFromSummary = (summary) =>
+  getOpeningTotalFormulaText(summary.opening);
+
+export const getClosingTotalFormulaFromSummary = (summary) =>
+  getClosingTotalFormulaText({
+    openingTotal: summary.opening.total,
+    todayTotal: summary.today.total,
+    closingTotal: summary.closing.total,
   });
 
 export const isInterAccountTransferDaybookSection = isPersonalExpensesDaybookSection;

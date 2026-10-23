@@ -16,6 +16,7 @@ import {
   normalizeLoanListRow,
 } from "../../utils/listFormatters";
 import { formatCustomerListName, formatCustomerListNameHtml } from "../../utils/customerFormatters";
+import { buildLoanInfoPath } from "../../utils/loanInfoRoute";
 
 const renderLoanMetalWeightColumn = (metal) => (data, type, row) => {
   const isSecured = String(row?.girv_type || "").toLowerCase() === "secured";
@@ -30,6 +31,19 @@ const renderLoanMetalWeightColumn = (metal) => (data, type, row) => {
     return num;
   }
   return formatLoanMetalFinalWeightDisplay(row, metal, num);
+};
+
+/** Loan No column — uses List `.view-btn` click handler when view is allowed. */
+const renderLoanNoCell = (canView) => (data, type, row) => {
+  const value =
+    data || row?.girv_loan_no || (row?.girv_id ? String(row.girv_id) : "");
+  if (type !== "display") return value || "-";
+  if (!value) return "-";
+  const className = canView
+    ? "text-brown fw-bold cursor-pointer view-btn"
+    : "text-brown fw-bold";
+  const title = canView ? ' title="View loan"' : "";
+  return `<span class="${className}"${title}>${value}</span>`;
 };
 
 const ListLoan = ({ status = "ALL", global = false }) => {
@@ -79,7 +93,21 @@ const ListLoan = ({ status = "ALL", global = false }) => {
   }, [selectedUser?.user_id, fetchLoans, global]);
 
   const handleView = (rowData) => {
-    navigate("/user/home/loan-info", { state: { loan: rowData } });
+    const user = rowData?.user;
+    const userId = user?.user_id || rowData?.girv_user_id;
+    if (userId) {
+      dispatch(
+        setSelectedUser({
+          ...user,
+          user_id: userId,
+          user_uuid: user?.user_uuid,
+          user_first_name: user?.user_first_name || "",
+          user_last_name: user?.user_last_name || "",
+          user_mobile_no: user?.user_mobile_no || "",
+        })
+      );
+    }
+    navigate(buildLoanInfoPath(rowData), { state: { loan: rowData } });
   };
 
   const handleEdit = (rowData) => {
@@ -142,13 +170,7 @@ const ListLoan = ({ status = "ALL", global = false }) => {
           key: "girv_unique_code",
           title: "Loan No",
           searchable: true,
-          render: (data, type, row) => {
-            const value = data || row?.girv_loan_no || (row?.girv_id ? String(row.girv_id) : "");
-            if (type !== "display") return value || "-";
-            return value
-              ? `<span class="text-brown fw-bold">${value}</span>`
-              : "-";
-          },
+          render: renderLoanNoCell(canViewLoan),
         },
         {
           key: "girv_start_date",
@@ -220,13 +242,7 @@ const ListLoan = ({ status = "ALL", global = false }) => {
         key: "girv_unique_code",
         title: "Loan No",
         searchable: true,
-        render: (data, type, row) => {
-          const value = data || row?.girv_loan_no || (row?.girv_id ? String(row.girv_id) : "");
-          if (type !== "display") return value || "-";
-          return value
-            ? `<span class="text-brown fw-bold">${value}</span>`
-            : "-";
-        },
+        render: renderLoanNoCell(canViewLoan),
       },
     ];
 
@@ -408,7 +424,7 @@ const ListLoan = ({ status = "ALL", global = false }) => {
     }
 
     return cols;
-  }, [status, isPendingInterestList, isTodayPendingInterestList, showCustomerColumns]);
+  }, [status, isPendingInterestList, isTodayPendingInterestList, showCustomerColumns, canViewLoan]);
 
   const getTitle = () => {
     let baseTitle = "";

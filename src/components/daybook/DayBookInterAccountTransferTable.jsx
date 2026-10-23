@@ -1,7 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
-import $ from "jquery";
-import "datatables.net-bs5";
-import "datatables.net-bs5/css/dataTables.bootstrap5.min.css";
+import React, { useState } from "react";
 import "../../css/DataTable.css";
 import {
   calculateInterAccountTransferSectionTotals,
@@ -9,6 +6,12 @@ import {
   getInterAccountTransferRowAmount,
 } from "./dayBookUtils";
 import { PERSONAL_EXPENSES_DAYBOOK_TITLE } from "../../constants/personalExpense";
+import DaybookSectionTableToolbar from "./DaybookSectionTableToolbar";
+import {
+  DAYBOOK_PAGE_LENGTH_ALL,
+  DAYBOOK_PAGE_LENGTH_DEFAULT,
+  useDaybookDisplayRows,
+} from "./daybookTableDisplay";
 
 const renderToDetail = (item) => {
   const lines = item.db_to_lines;
@@ -29,63 +32,32 @@ const renderToDetail = (item) => {
 };
 
 const DayBookInterAccountTransferTable = ({ title, data = [], isPrint = false }) => {
-  const tableRef = useRef(null);
-  const dataTable = useRef(null);
   const [search, setSearch] = useState("");
+  const [pageLength, setPageLength] = useState(DAYBOOK_PAGE_LENGTH_DEFAULT);
+  const displayRows = useDaybookDisplayRows(
+    data,
+    isPrint ? "" : search,
+    isPrint ? DAYBOOK_PAGE_LENGTH_ALL : pageLength
+  );
   const totals = calculateInterAccountTransferSectionTotals(data);
 
-  useEffect(() => {
-    if (isPrint || !tableRef.current) return;
-
-    if (dataTable.current) {
-      dataTable.current.destroy();
-    }
-
-    dataTable.current = $(tableRef.current).DataTable({
-      responsive: false,
-      ordering: false,
-      paging: true,
-      info: false,
-      dom: "l t",
-      pageLength: 10,
-      lengthMenu: [
-        [10, 25, 50, 100, -1],
-        [10, 25, 50, 100, "All"],
-      ],
-    });
-
-    return () => {
-      if (dataTable.current) {
-        dataTable.current.destroy();
-      }
-    };
-  }, [data, isPrint]);
-
-  useEffect(() => {
-    if (isPrint || !dataTable.current) return;
-    dataTable.current.search(search).draw();
-  }, [search, isPrint]);
-
   return (
-    <div className="border border-secondary border-dashed mb-3">
-      <div className="d-flex justify-content-between align-items-center">
+    <div className="daybook-section-table border border-secondary border-dashed mb-3">
+      <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
         <h6 className="fw-bold mb-0 ms-2">{title || PERSONAL_EXPENSES_DAYBOOK_TITLE}</h6>
         {!isPrint && (
-          <input
-            type="search"
-            className="form-control form-control-sm border border-dark w-auto mt-2 mb-2 me-2"
-            placeholder={title || PERSONAL_EXPENSES_DAYBOOK_TITLE}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+          <DaybookSectionTableToolbar
+            search={search}
+            onSearchChange={setSearch}
+            pageLength={pageLength}
+            onPageLengthChange={setPageLength}
+            searchPlaceholder={title || PERSONAL_EXPENSES_DAYBOOK_TITLE}
           />
         )}
       </div>
 
       <div className="table-responsive">
-        <table
-          ref={tableRef}
-          className="table table-hover table-bordered text-capitalize mb-1 dynamic-data-table"
-        >
+        <table className="table table-hover table-bordered text-capitalize mb-0 dynamic-data-table">
           <thead className="table-light">
             <tr>
               <th className="bg-pink border border-dark">DATE</th>
@@ -102,7 +74,7 @@ const DayBookInterAccountTransferTable = ({ title, data = [], isPrint = false })
             </tr>
           </thead>
           <tbody>
-            {data.map((item, index) => {
+            {displayRows.map((item, index) => {
               const amount = getInterAccountTransferRowAmount(item);
               return (
                 <tr key={item.db_mtf_uuid || index}>
@@ -144,3 +116,4 @@ const DayBookInterAccountTransferTable = ({ title, data = [], isPrint = false })
 };
 
 export default DayBookInterAccountTransferTable;
+

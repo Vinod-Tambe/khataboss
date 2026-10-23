@@ -619,11 +619,20 @@
 }
 
 .header-search__dropdown--panel .header-search__actions--table .header-search__action {
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
-  min-height: 34px;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  min-height: 30px;
   font-size: 0.95rem;
+}
+
+.header-search__actions--table .header-search__action .bi {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.header-search__dropdown--panel .header-search__actions--table .header-search__action .bi {
+  font-size: 1.2rem;
 }
 
 @media (max-width: 991.98px) {
@@ -637,6 +646,10 @@
     min-width: 38px;
     min-height: 38px;
     font-size: 1rem;
+  }
+
+  .header-search__actions--table .header-search__action .bi {
+    font-size: 1.25rem;
   }
 
   .header-search__result-section--customer .header-search__customer-th-actions,
@@ -653,6 +666,10 @@
     min-height: 42px;
     font-size: 1.1rem;
     border-radius: 10px;
+  }
+
+  .header-search__actions--table .header-search__action .bi {
+    font-size: 1.3rem;
   }
 
   .header-search__customer-th-actions,
@@ -1642,6 +1659,10 @@
     min-width: 44px;
     min-height: 44px;
     font-size: 1.15rem;
+  }
+
+  .mobile-search-bar .header-search__actions--table .header-search__action .bi {
+    font-size: 1.35rem;
   }
 
   .mobile-search-bar .header-search__result-section--customer .header-search__customer-actions-cell {

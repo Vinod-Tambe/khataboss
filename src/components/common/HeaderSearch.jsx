@@ -12,6 +12,7 @@ import {
 import HeaderSearchCustomerTable from "./HeaderSearchCustomerTable";
 import HeaderSearchLoanTable from "./HeaderSearchLoanTable";
 import HeaderSearchFinanceTable from "./HeaderSearchFinanceTable";
+import { buildLoanInfoPath } from "../../utils/loanInfoRoute";
 
 const buildSearchItems = (payload = {}) => {
   const items = [];
@@ -221,7 +222,7 @@ const HeaderSearch = ({
   const openLoan = (loan) => {
     if (loan?.user) dispatch(setSelectedUser(loan.user));
     resetSearch();
-    navigate("/user/home/loan-info", { state: { loan: { girv_id: loan.girv_id } } });
+    navigate(buildLoanInfoPath(loan), { state: { loan: { girv_id: loan.girv_id } } });
   };
 
   const openFinance = (finance) => {

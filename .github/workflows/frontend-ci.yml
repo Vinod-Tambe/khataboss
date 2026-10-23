@@ -5,16 +5,13 @@ on:
     branches:
       - main
       - develop
-    paths:
-      - 'Frontend/**'
-      - '.github/workflows/frontend-ci.yml'
+      - production
 
   pull_request:
     branches:
       - main
       - develop
-    paths:
-      - 'Frontend/**'
+      - production
 
 # Cancel in-progress runs for the same branch
 concurrency:
@@ -27,14 +24,6 @@ jobs:
     name: Build Frontend
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: Frontend
-
-    env:
-      CI: false                         # Suppress CRA build warnings as errors
-      REACT_APP_API_URL: http://localhost:9000
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -44,7 +33,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: Frontend/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -57,17 +46,13 @@ jobs:
         if: github.ref == 'refs/heads/main'
         with:
           name: frontend-build-${{ github.sha }}
-          path: Frontend/build/
+          path: build/
           retention-days: 7
 
   # ─── Job 2: Security Audit ───────────────────────────────────────────────────
   audit:
     name: Security Audit
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: Frontend
 
     steps:
       - name: Checkout code
@@ -78,10 +63,13 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: Frontend/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Run npm audit (high severity only)
-        run: npm audit --audit-level=high --production || true
+      - name: Production dependency audit
+        run: npm run audit
+
+      - name: Full dependency audit
+        run: npm run audit:all

@@ -1,18 +1,25 @@
-import React, { useEffect, useRef, useState } from "react";
-import $ from "jquery";
-import "datatables.net-bs5";
-import "datatables.net-bs5/css/dataTables.bootstrap5.min.css";
+import React, { useState } from "react";
 import "../../css/DataTable.css";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { getUser } from "../../api/userApi";
 import { setSelectedUser } from "../../store/slices/userSlice";
 import { showToast } from "../../components/common/ToastAlert";
+import DaybookSectionTableToolbar from "./DaybookSectionTableToolbar";
+import {
+  DAYBOOK_PAGE_LENGTH_ALL,
+  DAYBOOK_PAGE_LENGTH_DEFAULT,
+  useDaybookDisplayRows,
+} from "./daybookTableDisplay";
 
 const DayBookTable = ({ title, colorClass, amtColor, data = [], isPrint = false }) => {
-  const tableRef = useRef(null);
-  const dataTable = useRef(null);
   const [search, setSearch] = useState("");
+  const [pageLength, setPageLength] = useState(DAYBOOK_PAGE_LENGTH_DEFAULT);
+  const displayRows = useDaybookDisplayRows(
+    data,
+    isPrint ? "" : search,
+    isPrint ? DAYBOOK_PAGE_LENGTH_ALL : pageLength
+  );
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -35,61 +42,25 @@ const DayBookTable = ({ title, colorClass, amtColor, data = [], isPrint = false 
   const totalCard = data.reduce((sum, item) => sum + (parseFloat(item.db_card_amt) || 0), 0);
   const totalDisc = data.reduce((sum, item) => sum + (parseFloat(item.db_disc_amt) || 0), 0);
 
-  useEffect(() => {
-    if (isPrint || !tableRef.current) return;
-
-    if (dataTable.current) {
-      dataTable.current.destroy();
-    }
-
-    dataTable.current = $(tableRef.current).DataTable({
-      responsive: false,
-      ordering: false,
-      paging: true,
-      info: false,
-      dom: "l t",
-      pageLength: 10,
-      lengthMenu: [
-        [10, 25, 50, 100, -1],
-        [10, 25, 50, 100, "All"],
-      ],
-    });
-
-    return () => {
-      if (dataTable.current) {
-        dataTable.current.destroy();
-      }
-    };
-  }, [data, isPrint]);
-
-  useEffect(() => {
-    if (isPrint || !dataTable.current) return;
-    dataTable.current.search(search).draw();
-  }, [search, isPrint]);
-
   return (
-    <div className={`border border-secondary border-dashed mb-3`}>
+    <div className="daybook-section-table border border-secondary border-dashed mb-3">
       {/* Header */}
-      <div className={`d-flex justify-content-between align-items-center`}>
+      <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
         <h6 className="fw-bold mb-0 ms-2">{title || "DATA"}</h6>
-
         {!isPrint && (
-          <input
-            type="search"
-            className="form-control form-control-sm border border-dark w-auto mt-2 mb-2 me-2"
-            placeholder={`${title || "Table"}`}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+          <DaybookSectionTableToolbar
+            search={search}
+            onSearchChange={setSearch}
+            pageLength={pageLength}
+            onPageLengthChange={setPageLength}
+            searchPlaceholder={title || "Table"}
           />
         )}
       </div>
 
       {/* Bootstrap responsive wrapper */}
       <div className="table-responsive">
-        <table
-          ref={tableRef}
-          className="table table-hover table-bordered text-capitalize mb-1 dynamic-data-table"
-        >
+        <table className="table table-hover table-bordered text-capitalize mb-0 dynamic-data-table">
           <thead className="table-light ">
             <tr>
               <th className="bg-pink border border-dark">DATE</th>
@@ -105,7 +76,7 @@ const DayBookTable = ({ title, colorClass, amtColor, data = [], isPrint = false 
           </thead>
 
           <tbody>
-            {data.map((item, index) => {
+            {displayRows.map((item, index) => {
               const cash = parseFloat(item.db_cash_amt) || 0;
               const bank = parseFloat(item.db_bank_amt) || 0;
               const online = parseFloat(item.db_online_amt) || 0;

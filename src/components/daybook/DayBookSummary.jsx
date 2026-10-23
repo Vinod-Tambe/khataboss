@@ -1,6 +1,15 @@
 import React from 'react';
 import '../../css/DataTable.css';
-import { getPersonalExpenseDaybookSection } from './dayBookUtils';
+import {
+    getClosingModeFormulaText,
+    getClosingTotalFormulaText,
+    getOpeningModeFormulaText,
+    getOpeningTotalFormulaText,
+    getPersonalExpenseDaybookSection,
+    getSignedBalanceAmountClass,
+    getSignedBalanceTextClass,
+} from './dayBookUtils';
+import DaybookBalanceFormulaHint from './DaybookBalanceFormulaHint';
 // import useConfigStore from '../../zustand/config.store';
 
 const DayBookSummary = ({ DayBookData,opening_data }) => {
@@ -112,9 +121,23 @@ const DayBookSummary = ({ DayBookData,opening_data }) => {
     let total_close_final_amt=total_close_amt;
     //  setDaybookAmounts({ openingAmount: total_open_final_amt.toFixed(2) });
      //Calculate Total Final CR And DR Amount With Final Amoutn (CR-DR)
+
+    const openingTotalFormula = getOpeningTotalFormulaText({
+        cash: total_open_cash_amt,
+        bank: total_open_bank_amt,
+        online: total_open_online_amt,
+        card: total_open_card_amt,
+        total: total_open_amt,
+    });
+    const closingTotalFormula = getClosingTotalFormulaText({
+        openingTotal: total_open_amt,
+        todayTotal: total_today_amt,
+        closingTotal: total_close_amt,
+    });
+
     return (
-        <div className="table-responsive mt-4 table-wrapper bg-green border border-secondary">
-            <table className="table table-hover table-bordered table-dashed p-0 m-0 dynamic-data-table">
+        <div className="table-responsive mt-4 table-wrapper bg-green daybook-section-table border border-secondary border-dashed">
+            <table className="table table-hover table-bordered p-0 m-0 mb-0 dynamic-data-table">
                 <thead className="table-light fw-bold border-bottom border-secondary">
                     <tr>
                         <th className="fw-bold border-bottom border-secondary bg-red"></th>
@@ -156,12 +179,36 @@ const DayBookSummary = ({ DayBookData,opening_data }) => {
                     </tr>
                     <tr>
                         <td className="fw-bold text-end">OPENING BALANCE:</td>
-                        <td className="text-end">{total_open_cash_amt.toFixed(2)}</td>
-                        <td className="text-end">{total_open_bank_amt.toFixed(2)}</td>
-                        <td className="text-end">{total_open_online_amt.toFixed(2)}</td>
-                        <td className="text-end">{total_open_card_amt.toFixed(2)}</td>
-                        <td className="text-end">{total_open_disc_amt.toFixed(2)}</td>
-                        <td className="text-end">{total_open_amt.toFixed(2)}</td>
+                        <td className="text-end">
+                            <DaybookBalanceFormulaHint formula={getOpeningModeFormulaText('Cash', total_open_cash_amt)}>
+                                {total_open_cash_amt.toFixed(2)}
+                            </DaybookBalanceFormulaHint>
+                        </td>
+                        <td className="text-end">
+                            <DaybookBalanceFormulaHint formula={getOpeningModeFormulaText('Bank', total_open_bank_amt)}>
+                                {total_open_bank_amt.toFixed(2)}
+                            </DaybookBalanceFormulaHint>
+                        </td>
+                        <td className="text-end">
+                            <DaybookBalanceFormulaHint formula={getOpeningModeFormulaText('Online', total_open_online_amt)}>
+                                {total_open_online_amt.toFixed(2)}
+                            </DaybookBalanceFormulaHint>
+                        </td>
+                        <td className="text-end">
+                            <DaybookBalanceFormulaHint formula={getOpeningModeFormulaText('Card', total_open_card_amt)}>
+                                {total_open_card_amt.toFixed(2)}
+                            </DaybookBalanceFormulaHint>
+                        </td>
+                        <td className="text-end">
+                            <DaybookBalanceFormulaHint formula={getOpeningModeFormulaText('Discount', total_open_disc_amt)}>
+                                {total_open_disc_amt.toFixed(2)}
+                            </DaybookBalanceFormulaHint>
+                        </td>
+                        <td className={`text-end ${getSignedBalanceTextClass(total_open_amt)}`.trim()}>
+                            <DaybookBalanceFormulaHint formula={openingTotalFormula}>
+                                {total_open_amt.toFixed(2)}
+                            </DaybookBalanceFormulaHint>
+                        </td>
                     </tr>
                     <tr>
                         <td className="fw-bold text-end text-brown">TODAY TOTAL:</td>
@@ -174,25 +221,71 @@ const DayBookSummary = ({ DayBookData,opening_data }) => {
                     </tr>
                     <tr>
                         <td className="fw-bold text-end">CLOSING AMOUNT:</td>
-                        <td className="text-end">{total_close_cash_amt.toFixed(2)}</td>
-                        <td className="text-end">{total_close_bank_amt.toFixed(2)}</td>
-                        <td className="text-end">{total_close_online_amt.toFixed(2)}</td>
-                        <td className="text-end">{total_close_card_amt.toFixed(2)}</td>
-                        <td className="text-end">{total_close_disc_amt.toFixed(2)}</td>
-                        <td className="text-end">{total_close_amt.toFixed(2)}</td>
+                        <td className="text-end">
+                            <DaybookBalanceFormulaHint
+                                formula={getClosingModeFormulaText('Cash', total_open_cash_amt, total_today_cash_amt, total_close_cash_amt)}
+                            >
+                                {total_close_cash_amt.toFixed(2)}
+                            </DaybookBalanceFormulaHint>
+                        </td>
+                        <td className="text-end">
+                            <DaybookBalanceFormulaHint
+                                formula={getClosingModeFormulaText('Bank', total_open_bank_amt, total_today_bank_amt, total_close_bank_amt)}
+                            >
+                                {total_close_bank_amt.toFixed(2)}
+                            </DaybookBalanceFormulaHint>
+                        </td>
+                        <td className="text-end">
+                            <DaybookBalanceFormulaHint
+                                formula={getClosingModeFormulaText('Online', total_open_online_amt, total_today_online_amt, total_close_online_amt)}
+                            >
+                                {total_close_online_amt.toFixed(2)}
+                            </DaybookBalanceFormulaHint>
+                        </td>
+                        <td className="text-end">
+                            <DaybookBalanceFormulaHint
+                                formula={getClosingModeFormulaText('Card', total_open_card_amt, total_today_card_amt, total_close_card_amt)}
+                            >
+                                {total_close_card_amt.toFixed(2)}
+                            </DaybookBalanceFormulaHint>
+                        </td>
+                        <td className="text-end">
+                            <DaybookBalanceFormulaHint
+                                formula={getClosingModeFormulaText('Discount', total_open_disc_amt, total_today_disc_amt, total_close_disc_amt)}
+                            >
+                                {total_close_disc_amt.toFixed(2)}
+                            </DaybookBalanceFormulaHint>
+                        </td>
+                        <td className={`text-end ${getSignedBalanceTextClass(total_close_amt)}`.trim()}>
+                            <DaybookBalanceFormulaHint formula={closingTotalFormula}>
+                                {total_close_amt.toFixed(2)}
+                            </DaybookBalanceFormulaHint>
+                        </td>
                     </tr>
-                    <tr className="fw-bold bg-final">
-                        <td className="text-end bg-blue fs-6" >
-                            FINAL TOTAL :
+                    <tr className="fw-bold bg-final daybook-summary-final">
+                        <td className="text-end bg-blue fs-6">
+                            <span className="daybook-summary-final__bal-label">OPENING BAL :</span>{' '}
+                            <DaybookBalanceFormulaHint formula={openingTotalFormula}>
+                                <span className={getSignedBalanceAmountClass(total_open_amt)}>
+                                    {total_open_amt.toFixed(2)}
+                                </span>
+                            </DaybookBalanceFormulaHint>
                         </td>
-                        <td className="text-danger text-center bg-blue fs-6" colSpan={2}>
-                            CR : {total_final_cr_amt.toFixed(2)}
+                        <td className="text-center bg-blue fs-6" colSpan={2}>
+                            <span className="daybook-summary-final__cr-label">TOTAL CR :</span>{' '}
+                            <span className="daybook-summary-final__cr-amt">{total_final_cr_amt.toFixed(2)}</span>
                         </td>
-                        <td className="text-success text-center bg-blue fs-6" colSpan={2}>
-                            DR : {total_final_dr_amt.toFixed(2)}
+                        <td className="text-center bg-blue fs-6" colSpan={2}>
+                            <span className="daybook-summary-final__dr-label">TOTAL DR :</span>{' '}
+                            <span className="daybook-summary-final__dr-amt">{total_final_dr_amt.toFixed(2)}</span>
                         </td>
-                        <td className="text-dark text-center bg-blue fw-bold fs-6" colSpan={2}>
-                          {total_close_final_amt.toFixed(2)}
+                        <td className="text-center bg-blue fs-6" colSpan={2}>
+                            <span className="daybook-summary-final__bal-label">CLOSING BAL :</span>{' '}
+                            <DaybookBalanceFormulaHint formula={closingTotalFormula}>
+                                <span className={getSignedBalanceAmountClass(total_close_final_amt)}>
+                                    {total_close_final_amt.toFixed(2)}
+                                </span>
+                            </DaybookBalanceFormulaHint>
                         </td>
                     </tr>
                 </tbody>

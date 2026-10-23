@@ -1,12 +1,10 @@
-import React from 'react'
-import DayBook from '../../components/daybook/DayBook'
+import React from 'react';
+import DayBook from '../../components/daybook/DayBook';
 
-const DayBookRoutes = () => {
-  return (
-    <div>
-    <DayBook/>
-    </div>
-  )
-}
+const DayBookRoutes = () => (
+  <div>
+    <DayBook />
+  </div>
+);
 
-export default DayBookRoutes
+export default DayBookRoutes;

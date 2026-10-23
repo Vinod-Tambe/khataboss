@@ -149,7 +149,7 @@ export const applyPdfMixedScriptFonts = (node, inherited = {}) => {
 let fontsPromise = null;
 
 const fontUrl = (fileName) => {
-  const base = String(process.env.PUBLIC_URL || '').replace(/\/$/, '');
+  const base = String(import.meta.env.BASE_URL || "/").replace(/\/$/, "");
   return `${base}/fonts/${fileName}`;
 };
 

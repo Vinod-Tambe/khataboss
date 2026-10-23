@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { getGirvis } from "../api/girviApi";
 import { getFinances } from "../api/financeApi";
+import { buildLoanInfoPath } from "../utils/loanInfoRoute";
 
 const normalizeList = (response) => {
   if (Array.isArray(response)) return response;
@@ -72,7 +73,7 @@ const useUserRecordNavigation = ({
     (record) => {
       if (!record) return;
       if (type === "loan") {
-        navigate(loanPath, { state: { loan: record }, replace: true });
+        navigate(buildLoanInfoPath(record), { state: { loan: record }, replace: true });
       } else {
         navigate(financePath, { state: { finance: record }, replace: true });
       }

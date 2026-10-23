@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import '../../css/ActiveLoanPanel.css';
 import DepositModal from './modal/DepositModal';
@@ -1336,6 +1336,7 @@ const LoanInfo = () => {
 
   const location = useLocation();
   const navigate = useNavigate();
+  const { loanRef: routeLoanRef } = useParams();
   const { selectedUser } = useSelector((state) => state.user);
   const { selectedFirm, selectedFirmId } = useSelector((state) => state.firm);
   const { can } = usePermissions();
@@ -1431,33 +1432,40 @@ const LoanInfo = () => {
     }
   };
 
+  const loanId =
+    routeLoanRef ??
+    location.state?.loan?.girv_id ??
+    location.state?.loan?.girv_uuid ??
+    location.state?.loanData?.girv_id;
+
   const fetchLoan = useCallback(async () => {
+    if (!loanId) {
+      toast.error("No loan selected");
+      navigate('/user/home/active-loan');
+      return;
+    }
     try {
       setLoading(true);
-      const loanId =
-        location.state?.loan?.girv_id ??
-        location.state?.loanData?.girv_id;
-      if (!loanId) {
-        toast.error("No loan selected");
-        navigate('/user/home/active-loan');
-        return;
-      }
+      setLoanDetails(null);
       const response = await getGirviById(loanId);
       const details = response?.data || response || {};
+      if (!details?.girv_id) {
+        throw new Error("Loan not found");
+      }
       const fromDetails = getLoanItems(details);
       const resolvedItems = fromDetails.length ? fromDetails : getLoanItems(response);
-      // Keep items even if API nests them beside `data`
       setLoanDetails({
         ...details,
         items: resolvedItems,
       });
     } catch (err) {
-      toast.error("Failed to load loan details");
+      toast.error(err?.error || err?.message || "Failed to load loan details");
       console.error(err);
+      setLoanDetails(null);
     } finally {
       setLoading(false);
     }
-  }, [location.state, navigate]);
+  }, [loanId, navigate]);
 
   useEffect(() => {
     if (!loanDetails?.girv_id) {
@@ -1578,7 +1586,9 @@ const LoanInfo = () => {
 
   const currentLoanId =
     loanDetails?.girv_id ??
+    routeLoanRef ??
     location.state?.loan?.girv_id ??
+    location.state?.loan?.girv_uuid ??
     location.state?.loanData?.girv_id;
 
   const navUserId =

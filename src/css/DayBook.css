@@ -1,5 +1,68 @@
 /* Day Book mobile styles — desktop tables unchanged */
 
+/* Section tables: dashed outer frame, flush footer (no bottom border gaps) */
+.daybook-section-table {
+  padding: 0;
+  overflow: hidden;
+  border-style: dashed !important;
+}
+
+.daybook-section-table > .table-responsive,
+.daybook-section-table.table-responsive {
+  margin: 0;
+  padding: 0;
+}
+
+.daybook-section-table .dataTables_wrapper {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100%;
+}
+
+.daybook-section-table .dataTables_length {
+  display: none !important;
+}
+
+.daybook-section-table__controls {
+  flex-shrink: 0;
+}
+
+.daybook-section-table__search {
+  width: min(220px, 42vw);
+  min-width: 140px;
+}
+
+.daybook-page-length-select {
+  width: auto;
+  min-width: 4.25rem;
+}
+
+.daybook-section-table .dataTables_paginate {
+  display: none !important;
+}
+
+.daybook-section-table .dynamic-data-table {
+  margin-bottom: 0 !important;
+  width: 100% !important;
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+}
+
+/* Avoid double outer line; cell grid + dashed section border */
+.daybook-section-table .dynamic-data-table.table-bordered {
+  border: 0 !important;
+}
+
+.daybook-section-table .dynamic-data-table > :not(caption) > * > * > th,
+.daybook-section-table .dynamic-data-table > :not(caption) > * > * > td {
+  border-color: grey !important;
+}
+
+.daybook-section-table .dynamic-data-table > tfoot > tr:last-child > th,
+.daybook-section-table .dynamic-data-table > tfoot > tr:last-child > td {
+  border-bottom: 1px solid grey !important;
+}
+
 .daybook-page {
   overflow: hidden;
 }
@@ -474,6 +537,39 @@
   font-weight: 700;
 }
 
+/* Summary footer: labels vs amounts (desktop table + mobile final row) */
+.daybook-summary-final__bal-label,
+.daybook-summary-final__cr-label,
+.daybook-summary-final__dr-label {
+  color: var(--datatable-body-text, var(--color-black-soft, #212529));
+  font-weight: 700;
+}
+
+.daybook-summary-final__bal-amt--zero {
+  color: var(--datatable-body-text, var(--color-black-soft, #212529));
+  font-weight: 700;
+}
+
+.daybook-summary-final__cr-amt {
+  color: var(--btn-danger-text, #dc143c);
+  font-weight: 700;
+}
+
+.daybook-summary-final__dr-amt {
+  color: var(--btn-success-text, #006400);
+  font-weight: 700;
+}
+
+.dynamic-data-table tr.daybook-summary-final td.bg-blue .daybook-summary-final__bal-label,
+.dynamic-data-table tr.daybook-summary-final td.bg-blue .daybook-summary-final__cr-label,
+.dynamic-data-table tr.daybook-summary-final td.bg-blue .daybook-summary-final__dr-label {
+  color: var(--datatable-body-text, var(--color-black-soft, #212529));
+}
+
+.dynamic-data-table tr.daybook-summary-final td.bg-blue .daybook-summary-final__bal-amt--zero {
+  color: var(--datatable-body-text, var(--color-black-soft, #212529));
+}
+
 .is-cr {
   color: var(--btn-danger-text, #dc143c) !important;
 }
@@ -484,6 +580,57 @@
 
 .is-final {
   color: var(--color-black-soft, #212529) !important;
+}
+
+.daybook-balance-formula-hint {
+  position: relative;
+  display: inline;
+  cursor: help;
+}
+
+.daybook-balance-formula-hint__popup {
+  position: absolute;
+  z-index: 1080;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  min-width: 220px;
+  max-width: min(360px, 92vw);
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.45;
+  white-space: pre-line;
+  text-align: left;
+  color: var(--color-black-soft, #212529);
+  background: var(--color-white, #fff);
+  border: 1px solid var(--layout-item-border, #ced4da);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, visibility 0.15s ease;
+}
+
+.daybook-balance-formula-hint:hover .daybook-balance-formula-hint__popup,
+.daybook-balance-formula-hint:focus-visible .daybook-balance-formula-hint__popup,
+.daybook-balance-formula-hint:focus-within .daybook-balance-formula-hint__popup {
+  opacity: 1;
+  visibility: visible;
+}
+
+.dynamic-data-table td .daybook-balance-formula-hint__popup {
+  right: 0;
+  left: auto;
+  transform: none;
+}
+
+[data-theme="dark"] .daybook-balance-formula-hint__popup,
+[data-theme="brand-dark"] .daybook-balance-formula-hint__popup {
+  color: var(--datatable-body-text, #e2e8f0);
+  background: var(--color-white, #1e1e2e);
+  border-color: var(--app-border, #3d3d5c);
 }
 
 .daybook-actions-wrap {
@@ -598,6 +745,28 @@
 [data-theme="dark"] .daybook-mobile-summary, [data-theme="brand-dark"] .daybook-mobile-summary{
   background: var(--color-white, #1e1e2e);
   border-color: var(--app-border, #3d3d5c);
+}
+
+[data-theme="dark"] .daybook-summary-final__bal-label,
+[data-theme="brand-dark"] .daybook-summary-final__bal-label,
+[data-theme="dark"] .daybook-summary-final__cr-label,
+[data-theme="brand-dark"] .daybook-summary-final__cr-label,
+[data-theme="dark"] .daybook-summary-final__dr-label,
+[data-theme="brand-dark"] .daybook-summary-final__dr-label,
+[data-theme="dark"] .dynamic-data-table tr.daybook-summary-final td.bg-blue .daybook-summary-final__bal-label,
+[data-theme="brand-dark"] .dynamic-data-table tr.daybook-summary-final td.bg-blue .daybook-summary-final__bal-label,
+[data-theme="dark"] .dynamic-data-table tr.daybook-summary-final td.bg-blue .daybook-summary-final__cr-label,
+[data-theme="brand-dark"] .dynamic-data-table tr.daybook-summary-final td.bg-blue .daybook-summary-final__cr-label,
+[data-theme="dark"] .dynamic-data-table tr.daybook-summary-final td.bg-blue .daybook-summary-final__dr-label,
+[data-theme="brand-dark"] .dynamic-data-table tr.daybook-summary-final td.bg-blue .daybook-summary-final__dr-label {
+  color: var(--datatable-body-text, #e2e8f0) !important;
+}
+
+[data-theme="dark"] .daybook-summary-final__bal-amt--zero,
+[data-theme="brand-dark"] .daybook-summary-final__bal-amt--zero,
+[data-theme="dark"] .dynamic-data-table tr.daybook-summary-final td.bg-blue .daybook-summary-final__bal-amt--zero,
+[data-theme="brand-dark"] .dynamic-data-table tr.daybook-summary-final td.bg-blue .daybook-summary-final__bal-amt--zero {
+  color: var(--datatable-body-text, #e2e8f0) !important;
 }
 
 [data-theme="dark"] .daybook-mobile-panel__collapse-header, [data-theme="brand-dark"] .daybook-mobile-panel__collapse-header{

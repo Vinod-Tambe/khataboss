@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import moment from "moment";
 import List from "../common/List";
 import { setSelectedUser } from "../../store/slices/userSlice";
+import { buildLoanInfoPath } from "../../utils/loanInfoRoute";
 
 const AuctionLoanList = ({ global = false }) => {
   const navigate = useNavigate();
@@ -43,7 +44,7 @@ const AuctionLoanList = ({ global = false }) => {
 
   const handleView = (rowData) => {
     if (rowData.girviDetails) {
-      navigate("/user/home/loan-info", { state: { loan: rowData.girviDetails } });
+      navigate(buildLoanInfoPath(rowData.girviDetails), { state: { loan: rowData.girviDetails } });
     }
   };
 

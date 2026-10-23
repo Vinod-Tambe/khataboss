@@ -373,7 +373,7 @@ const UserHomeRoutes = () => {
         {/* ================= ROUTES ================= */}
         <Routes {...nestedRoutesProps(location)}>
           <Route index element={<UserHome />} />
-          <Route path="loan-info" element={<PermissionRoute permission="loan.view"><LoanInfo /></PermissionRoute>} />
+          <Route path="loan-info/:loanRef?" element={<PermissionRoute permission="loan.view"><LoanInfo /></PermissionRoute>} />
           <Route path="add-loan" element={<PermissionRoute permission="loan.create"><AddLoan /></PermissionRoute>} />
           <Route path="edit-loan/:id" element={<PermissionRoute permission="loan.edit"><UpdateLoan /></PermissionRoute>} />
           <Route path="add-finance" element={<PermissionRoute permission="finance.create"><AddFinance /></PermissionRoute>} />

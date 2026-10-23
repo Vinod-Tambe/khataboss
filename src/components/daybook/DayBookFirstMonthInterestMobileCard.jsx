@@ -4,6 +4,7 @@ import { useDispatch } from "react-redux";
 import { getUser } from "../../api/userApi";
 import { setSelectedUser } from "../../store/slices/userSlice";
 import { showToast } from "../common/ToastAlert";
+import { buildLoanInfoPath } from "../../utils/loanInfoRoute";
 import { formatCurrency, getFirstMonthInterestRowAmounts } from "./dayBookUtils";
 
 const DayBookFirstMonthInterestMobileCard = ({ item, cardKey, expanded, onToggle }) => {
@@ -26,7 +27,7 @@ const DayBookFirstMonthInterestMobileCard = ({ item, cardKey, expanded, onToggle
 
   const handleRefClick = () => {
     if (item.db_ref_type === "LOAN" && item.db_girv_uuid) {
-      navigate("/user/home/loan-info", {
+      navigate(buildLoanInfoPath(item.db_girv_uuid), {
         state: { loan: { girv_uuid: item.db_girv_uuid } },
       });
     }

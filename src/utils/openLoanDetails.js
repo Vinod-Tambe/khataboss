@@ -1,4 +1,5 @@
 import { setSelectedUser } from '../store/slices/userSlice';
+import { buildLoanInfoPath } from './loanInfoRoute';
 
 /**
  * Navigate to customer home → loan info (same as loan list).
@@ -26,7 +27,7 @@ export function openLoanDetailsPage(navigate, dispatch, loan, user) {
     );
   }
 
-  navigate('/user/home/loan-info', {
+  navigate(buildLoanInfoPath(loan), {
     state: { loan },
   });
   return true;
